@@ -1,11 +1,11 @@
 package com.github.sanctum.clanspro;
 
-import com.youtube.hempfest.clans.HempfestClans;
+import com.github.sanctum.clans.ClansPro;
 
 public class ClansVersion {
 
 	public static String get() {
-		return HempfestClans.getInstance().getDescription().getVersion();
+		return ClansPro.getInstance().getDescription().getVersion();
 	}
 
 }
