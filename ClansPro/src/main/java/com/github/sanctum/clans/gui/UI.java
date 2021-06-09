@@ -1,0 +1,1647 @@
+package com.github.sanctum.clans.gui;
+
+import com.github.sanctum.clans.ClansPro;
+import com.github.sanctum.clans.construct.ClanAssociate;
+import com.github.sanctum.clans.construct.DefaultClan;
+import com.github.sanctum.clans.construct.api.Clan;
+import com.github.sanctum.clans.construct.api.ClansAPI;
+import com.github.sanctum.labyrinth.data.AdvancedHook;
+import com.github.sanctum.labyrinth.data.FileManager;
+import com.github.sanctum.labyrinth.data.VaultHook;
+import com.github.sanctum.labyrinth.formatting.string.ColoredString;
+import com.github.sanctum.labyrinth.formatting.string.Paragraph;
+import com.github.sanctum.labyrinth.gui.InventoryRows;
+import com.github.sanctum.labyrinth.gui.menuman.Menu;
+import com.github.sanctum.labyrinth.gui.menuman.MenuBuilder;
+import com.github.sanctum.labyrinth.gui.menuman.PaginatedBuilder;
+import com.github.sanctum.labyrinth.gui.menuman.PaginatedClickAction;
+import com.github.sanctum.labyrinth.gui.menuman.PaginatedCloseAction;
+import com.github.sanctum.labyrinth.gui.printer.AnvilBuilder;
+import com.github.sanctum.labyrinth.gui.printer.AnvilMenu;
+import com.github.sanctum.labyrinth.library.Entities;
+import com.github.sanctum.labyrinth.library.HUID;
+import com.github.sanctum.labyrinth.library.Item;
+import com.github.sanctum.labyrinth.library.SkullItem;
+import com.github.sanctum.labyrinth.library.StringUtils;
+import com.github.sanctum.link.CycleList;
+import com.github.sanctum.link.EventCycle;
+import java.text.MessageFormat;
+import java.time.ZoneId;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.UUID;
+import java.util.stream.Collectors;
+import org.bukkit.Bukkit;
+import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
+import org.bukkit.OfflinePlayer;
+import org.bukkit.Statistic;
+import org.bukkit.enchantments.Enchantment;
+import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemFlag;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.persistence.PersistentDataHolder;
+import org.bukkit.persistence.PersistentDataType;
+
+public class UI {
+
+	private static final Map<UUID, ClanEditOperation.Option> CLAN_OPTION_MAP = new HashMap<>();
+	private static final Map<UUID, ClanEditOperation> CLAN_EDIT_OPERATION_MAP = new HashMap<>();
+	private static final Map<UUID, MemberEditOperation.Option> MEMBER_OPTION_MAP = new HashMap<>();
+	private static final Map<UUID, MemberEditOperation> MEMBER_EDIT_OPERATION_MAP = new HashMap<>();
+	private static final Map<UUID, Paginated> LAST_MENU = new HashMap<>();
+
+	private static final NamespacedKey clanKey = new NamespacedKey(ClansPro.getInstance(), "clan_id");
+	private static final NamespacedKey memberKey = new NamespacedKey(ClansPro.getInstance(), "clan_member");
+	private static final NamespacedKey addonKey = new NamespacedKey(ClansPro.getInstance(), "clan_addon");
+
+	public static NamespacedKey getClanKey() {
+		return clanKey;
+	}
+
+	public static NamespacedKey getMemberKey() {
+		return memberKey;
+	}
+
+	public static NamespacedKey getAddonKey() {
+		return addonKey;
+	}
+
+	private static ItemStack getLeft() {
+		ItemStack left = ClansAPI.getData().getItem("navigate_left");
+		ItemMeta meta = left.getItemMeta();
+		meta.setDisplayName(StringUtils.use(ClansAPI.getData().getNavigate("left")).translate());
+		left.setItemMeta(meta);
+		return left;
+	}
+
+	private static ItemStack getRight() {
+		ItemStack right = ClansAPI.getData().getItem("navigate_right");
+		ItemMeta meta = right.getItemMeta();
+		meta.setDisplayName(StringUtils.use(ClansAPI.getData().getNavigate("right")).translate());
+		right.setItemMeta(meta);
+		return right;
+	}
+
+	private static ItemStack getBack() {
+		ItemStack back = ClansAPI.getData().getItem("back");
+		ItemMeta meta = back.getItemMeta();
+		meta.setDisplayName(StringUtils.use(ClansAPI.getData().getNavigate("back")).translate());
+		back.setItemMeta(meta);
+		return back;
+	}
+
+	public static InventoryRows getRows() {
+		return InventoryRows.valueOf(ClansAPI.getData().getPath("pagination-size"));
+	}
+
+	public static int getSwitchSlot() {
+		int amnt = 0;
+		switch (getRows().getSlotCount()) {
+			case 9:
+				amnt = 5;
+				break;
+			case 18:
+				amnt = 14;
+				break;
+			case 27:
+				amnt = 18;
+				break;
+			case 36:
+				amnt = 27;
+				break;
+			case 45:
+				amnt = 36;
+				break;
+			case 54:
+				amnt = 45;
+				break;
+		}
+		return amnt;
+	}
+
+	public static int getBackSlot() {
+		int amnt = 0;
+		switch (getRows().getSlotCount()) {
+			case 9:
+				amnt = 7;
+				break;
+			case 18:
+				amnt = 16;
+				break;
+			case 27:
+				amnt = 22;
+				break;
+			case 36:
+				amnt = 31;
+				break;
+			case 45:
+				amnt = 40;
+				break;
+			case 54:
+				amnt = 49;
+				break;
+		}
+		return amnt;
+	}
+
+	public static int getRightSlot() {
+		int amnt = 0;
+		switch (getRows().getSlotCount()) {
+			case 9:
+				amnt = 8;
+				break;
+			case 18:
+				amnt = 17;
+				break;
+			case 27:
+				amnt = 23;
+				break;
+			case 36:
+				amnt = 32;
+				break;
+			case 45:
+				amnt = 41;
+				break;
+			case 54:
+				amnt = 50;
+				break;
+		}
+		return amnt;
+	}
+
+	public static int getLeftSlot() {
+		int amnt = 0;
+		switch (getRows().getSlotCount()) {
+			case 9:
+				amnt = 6;
+				break;
+			case 18:
+				amnt = 15;
+				break;
+			case 27:
+				amnt = 21;
+				break;
+			case 36:
+				amnt = 30;
+				break;
+			case 45:
+				amnt = 39;
+				break;
+			case 54:
+				amnt = 48;
+				break;
+		}
+		return amnt;
+	}
+
+	public static int getAmntPer() {
+		int amnt = 0;
+		switch (getRows().getSlotCount()) {
+			case 9:
+				amnt = 6;
+				break;
+			case 18:
+				amnt = 15;
+				break;
+			case 27:
+				amnt = 7;
+				break;
+			case 36:
+				amnt = 14;
+				break;
+			case 45:
+				amnt = 21;
+				break;
+			case 54:
+				amnt = 28;
+				break;
+		}
+		return amnt;
+	}
+
+	public static void clearOperations(UUID id) {
+		if (CLAN_OPTION_MAP.containsKey(id)) {
+			CLAN_OPTION_MAP.remove(id);
+			CLAN_EDIT_OPERATION_MAP.remove(id);
+		}
+		if (MEMBER_OPTION_MAP.containsKey(id)) {
+			MEMBER_EDIT_OPERATION_MAP.remove(id);
+			MEMBER_OPTION_MAP.remove(id);
+		}
+	}
+
+	public static ClanEditOperation.Option getClanEditOption(UUID id) {
+		return CLAN_OPTION_MAP.getOrDefault(id, null);
+	}
+
+	public static ClanEditOperation getClanEditOperation(UUID id) {
+		return CLAN_EDIT_OPERATION_MAP.getOrDefault(id, null);
+	}
+
+	public static MemberEditOperation.Option getMemberEditOption(UUID id) {
+		return MEMBER_OPTION_MAP.getOrDefault(id, null);
+	}
+
+	public static MemberEditOperation getMemberEditOperation(UUID id) {
+		return MEMBER_EDIT_OPERATION_MAP.getOrDefault(id, null);
+	}
+
+	protected static List<String> color(String... text) {
+		ArrayList<String> convert = new ArrayList<>();
+		for (String t : text) {
+			if (Bukkit.getVersion().contains("1.16")) {
+				convert.add(new ColoredString(t, ColoredString.ColorType.HEX).toString());
+			} else {
+				convert.add(new ColoredString(t, ColoredString.ColorType.MC).toString());
+			}
+		}
+		return convert;
+	}
+
+	public static AnvilMenu write() {
+		return AnvilBuilder
+				.from(StringUtils.use("&3Search for a clan.").translate())
+				.setLeftItem(builder -> {
+					ItemStack paper = new ItemStack(Material.PAPER);
+					ItemMeta meta = paper.getItemMeta();
+					meta.setDisplayName(StringUtils.use("&b&oType a clan name then click the other paper &a&l→").translate());
+					paper.setItemMeta(meta);
+					builder.setItem(paper);
+					builder.setClick((player, text, args) -> {
+						if (args.length == 0) {
+							String clanId = ClansAPI.getInstance().getClanID(text.replace("?", ""));
+							if (clanId != null) {
+								Clan c = ClansAPI.getInstance().getClan(clanId);
+								UI.view(c).open(player);
+								return;
+							} else {
+								DefaultClan.action.sendMessage(player, "&cThis clan name is available.");
+							}
+							return;
+						}
+						for (String arg : args) {
+							String clanId = ClansAPI.getInstance().getClanID(arg.replace("?", ""));
+							if (clanId != null) {
+								Clan c = ClansAPI.getInstance().getClan(clanId);
+								UI.view(c).open(player);
+								return;
+							} else {
+								DefaultClan.action.sendMessage(player, "&cThis clan name is available.");
+							}
+						}
+					});
+				}).get();
+	}
+
+	public static Menu select(Singular type, HUID id) {
+		MenuBuilder builder;
+		Clan c = ClansAPI.getInstance().getClan(id.toString());
+		if (type == Singular.CLAN_EDIT) {
+			builder = new MenuBuilder(InventoryRows.THREE, StringUtils.use("&0&l» " + c.getColor() + c.getName() + " settings").translate())
+					.cancelLowerInventoryClicks(false)
+					.addElement(new ItemStack(Material.PLAYER_HEAD))
+					.setLore(StringUtils.use("&5Click to manage clan members.").translate())
+					.setText(StringUtils.use("&7[&6Member Edit&7]").translate())
+					.setAction(click -> {
+						Player p = click.getPlayer();
+						UI.edit(c).open(p);
+					})
+					.assignToSlots(13)
+					.addElement(new ItemStack(Material.BOOK))
+					.setLore(StringUtils.use("&5Click to change our password.").translate())
+					.setText(StringUtils.use("&7[&bPassword Change&7]").translate())
+					.setAction(click -> {
+						Player p = click.getPlayer();
+						CLAN_OPTION_MAP.put(p.getUniqueId(), ClanEditOperation.Option.PASSWORD);
+						CLAN_EDIT_OPERATION_MAP.put(p.getUniqueId(), new ClanEditOperation(c, p));
+						DefaultClan.action.sendMessage(p, "&3Enter a new password with &f/c respond <context...>");
+						p.closeInventory();
+					})
+					.assignToSlots(4)
+					.addElement(new ItemStack(Material.ENDER_CHEST))
+					.setLore(StringUtils.use("&5Click to live manage our stash.").translate())
+					.setText(StringUtils.use("&7[&5Stash&7]").translate())
+					.setAction(click -> {
+						Player p = click.getPlayer();
+						p.closeInventory();
+						Bukkit.dispatchCommand(p, "cla view " + c.getName() + " stash");
+					})
+					.assignToSlots(3)
+					.addElement(new ItemStack(Material.CHEST))
+					.setLore(StringUtils.use("&5Click to live manage our vault.").translate())
+					.setText(StringUtils.use("&7[&5Vault&7]").translate())
+					.setAction(click -> {
+						Player p = click.getPlayer();
+						p.closeInventory();
+						Bukkit.dispatchCommand(p, "cla view " + c.getName() + " vault");
+					})
+					.assignToSlots(5)
+					.addElement(new ItemStack(Material.SLIME_BALL))
+					.setLore(StringUtils.use("&5Click to give us claims.").translate())
+					.setText(StringUtils.use("&7[&bGive Claims&7]").translate())
+					.setAction(click -> {
+						Player p = click.getPlayer();
+						CLAN_OPTION_MAP.put(p.getUniqueId(), ClanEditOperation.Option.CLAIMS_GIVE);
+						CLAN_EDIT_OPERATION_MAP.put(p.getUniqueId(), new ClanEditOperation(c, p));
+						DefaultClan.action.sendMessage(p, "&3Enter an amount with &f/c respond <context...>");
+						p.closeInventory();
+					})
+					.assignToSlots(1)
+					.addElement(new ItemStack(Material.LIME_DYE))
+					.setLore(StringUtils.use("&5Click to give us power.").translate())
+					.setText(StringUtils.use("&7[&bGive Power&7]").translate())
+					.setAction(click -> {
+						Player p = click.getPlayer();
+						CLAN_OPTION_MAP.put(p.getUniqueId(), ClanEditOperation.Option.POWER_GIVE);
+						CLAN_EDIT_OPERATION_MAP.put(p.getUniqueId(), new ClanEditOperation(c, p));
+						DefaultClan.action.sendMessage(p, "&3Enter an amount with &f/c respond <context...>");
+						p.closeInventory();
+					})
+					.assignToSlots(10)
+					.addElement(new ItemStack(Material.GOLD_NUGGET))
+					.setLore(StringUtils.use("&5Click to give us money.").translate())
+					.setText(StringUtils.use("&7[&bGive Money&7]").translate())
+					.setAction(click -> {
+						Player p = click.getPlayer();
+						CLAN_OPTION_MAP.put(p.getUniqueId(), ClanEditOperation.Option.MONEY_GIVE);
+						CLAN_EDIT_OPERATION_MAP.put(p.getUniqueId(), new ClanEditOperation(c, p));
+						DefaultClan.action.sendMessage(p, "&3Enter an amount with &f/c respond <context...>");
+						p.closeInventory();
+					})
+					.assignToSlots(19)
+					.addElement(new ItemStack(Material.SNOWBALL))
+					.setLore(StringUtils.use("&5Click to take claims from us.").translate())
+					.setText(StringUtils.use("&7[&bTake Claims&7]").translate())
+					.setAction(click -> {
+						Player p = click.getPlayer();
+						CLAN_OPTION_MAP.put(p.getUniqueId(), ClanEditOperation.Option.CLAIMS_TAKE);
+						CLAN_EDIT_OPERATION_MAP.put(p.getUniqueId(), new ClanEditOperation(c, p));
+						DefaultClan.action.sendMessage(p, "&3Enter an amount with &f/c respond <context...>");
+						p.closeInventory();
+					})
+					.assignToSlots(7)
+					.addElement(new ItemStack(Material.GRAY_DYE))
+					.setLore(StringUtils.use("&5Click to take power from us.").translate())
+					.setText(StringUtils.use("&7[&bTake Power&7]").translate())
+					.setAction(click -> {
+						Player p = click.getPlayer();
+						CLAN_OPTION_MAP.put(p.getUniqueId(), ClanEditOperation.Option.POWER_TAKE);
+						CLAN_EDIT_OPERATION_MAP.put(p.getUniqueId(), new ClanEditOperation(c, p));
+						DefaultClan.action.sendMessage(p, "&3Enter an amount with &f/c respond <context...>");
+						p.closeInventory();
+					})
+					.assignToSlots(16)
+					.addElement(new ItemStack(Material.IRON_NUGGET))
+					.setLore(StringUtils.use("&5Click to take money from us.").translate())
+					.setText(StringUtils.use("&7[&bTake Money&7]").translate())
+					.setAction(click -> {
+						Player p = click.getPlayer();
+						CLAN_OPTION_MAP.put(p.getUniqueId(), ClanEditOperation.Option.MONEY_TAKE);
+						CLAN_EDIT_OPERATION_MAP.put(p.getUniqueId(), new ClanEditOperation(c, p));
+						DefaultClan.action.sendMessage(p, "&3Enter an amount with &f/c respond <context...>");
+						p.closeInventory();
+					})
+					.assignToSlots(25)
+					.addElement(new ItemStack(Material.ENCHANTED_BOOK))
+					.setLore(StringUtils.use("&5Click to change our name.").translate())
+					.setText(StringUtils.use("&7[&6&lTag Change&7]").translate())
+					.setAction(click -> {
+						Player p = click.getPlayer();
+						CLAN_OPTION_MAP.put(p.getUniqueId(), ClanEditOperation.Option.TAG);
+						CLAN_EDIT_OPERATION_MAP.put(p.getUniqueId(), new ClanEditOperation(c, p));
+						DefaultClan.action.sendMessage(p, "&3Enter a new name with &f/c respond <context...>");
+						p.closeInventory();
+					})
+					.assignToSlots(22)
+					.addElement(new ItemStack(Material.WRITABLE_BOOK))
+					.setLore(StringUtils.use("&5Click to change our description.").translate())
+					.setText(StringUtils.use("&7[&3Description Change&7]").translate())
+					.setAction(click -> {
+						Player p = click.getPlayer();
+						CLAN_OPTION_MAP.put(p.getUniqueId(), ClanEditOperation.Option.DESCRIPTION);
+						CLAN_EDIT_OPERATION_MAP.put(p.getUniqueId(), new ClanEditOperation(c, p));
+						DefaultClan.action.sendMessage(p, "&3Enter a new description with &f/c respond <context...>");
+						p.closeInventory();
+					})
+					.assignToSlots(12)
+					.addElement(new ItemStack(Material.WRITTEN_BOOK))
+					.setLore(StringUtils.use("&5Click to change our color.").translate())
+					.setText(StringUtils.use("&7[&aC&2o&6l&eo&fr &8Change&7]").translate())
+					.setAction(click -> {
+						Player p = click.getPlayer();
+						CLAN_OPTION_MAP.put(p.getUniqueId(), ClanEditOperation.Option.COLOR);
+						CLAN_EDIT_OPERATION_MAP.put(p.getUniqueId(), new ClanEditOperation(c, p));
+						DefaultClan.action.sendMessage(p, "&3Enter a new color with &f/c respond <context...>");
+						p.closeInventory();
+					})
+					.assignToSlots(14)
+					.addElement(getBack())
+					.setAction(click -> {
+						Player p = click.getPlayer();
+						UI.browseEdit().open(p);
+					})
+					.assignToSlots(17)
+					.addElement(new ItemStack(Material.ACACIA_DOOR))
+					.setText(StringUtils.use("&7[&6Update Base&7]").translate())
+					.setLore(StringUtils.use("&5Click to update our base location").translate(), StringUtils.use("&5to your current location.").translate())
+					.setAction(click -> {
+						Player p = click.getPlayer();
+						CLAN_OPTION_MAP.put(p.getUniqueId(), ClanEditOperation.Option.UPDATE_BASE);
+						new ClanEditOperation(c, p).execute();
+						clearOperations(p.getUniqueId());
+						p.closeInventory();
+					})
+					.assignToSlots(8)
+					.addElement(new ItemStack(Material.LAVA_BUCKET))
+					.setText(StringUtils.use("&7[&4&lClose&7]").translate())
+					.setLore(StringUtils.use("&5Click to forcibly close our clan.").translate())
+					.setAction(click -> {
+						Player p = click.getPlayer();
+						CLAN_OPTION_MAP.put(p.getUniqueId(), ClanEditOperation.Option.CLOSE);
+						CLAN_EDIT_OPERATION_MAP.put(p.getUniqueId(), new ClanEditOperation(c, p));
+						DefaultClan.action.sendMessage(p, "&3Confirm deletion with &f/c respond confirm");
+						DefaultClan.action.sendMessage(p, "&cCancel with &f/c respond cancel");
+						p.closeInventory();
+					})
+					.assignToSlots(26)
+					.setFiller(new ItemStack(Material.GRAY_STAINED_GLASS_PANE))
+					.setText(" ")
+					.set();
+			return builder.create(ClansPro.getInstance());
+		}
+		throw new IllegalStateException("Unable to create UI builder!");
+	}
+
+	public static Menu select(Singular type, UUID... uuids) {
+		MenuBuilder builder = null;
+		List<UUID> ids = new ArrayList<>(Arrays.asList(uuids));
+		UUID uuid = null;
+		if (!ids.isEmpty()) {
+			uuid = ids.get(0);
+		}
+		switch (type) {
+			case ROSTER_ORGANIZATION:
+				builder = new MenuBuilder(InventoryRows.ONE, StringUtils.use(ClansAPI.getData().getTitle("list-types")).translate())
+						.cancelLowerInventoryClicks(false)
+						.addElement(new ItemStack(ClansAPI.getData().getMaterial("top-list") != null ? ClansAPI.getData().getMaterial("top-list") : Material.PAPER))
+						.setLore("")
+						.setText(StringUtils.use(ClansAPI.getData().getCategory("top-list")).translate())
+						.setAction(click -> {
+							Player p = click.getPlayer();
+							UI.browse(Paginated.CLAN_TOP).open(p);
+						})
+						.assignToSlots(3)
+						.addElement(new ItemStack(Material.ENCHANTED_BOOK))
+						.setText(StringUtils.use("&7[&f&oSearch&7]").translate())
+						.setLore(StringUtils.use("&7Search for a clan.").translate())
+						.setAction(click -> {
+							Player p = click.getPlayer();
+							write().setViewer(p).open();
+						})
+						.assignToSlots(4)
+						.addElement(new ItemStack(ClansAPI.getData().getMaterial("roster-list") != null ? ClansAPI.getData().getMaterial("roster-list") : Material.PAPER))
+						.setLore("")
+						.setText(StringUtils.use(ClansAPI.getData().getCategory("roster-list")).translate())
+						.setAction(click -> {
+							Player p = click.getPlayer();
+							UI.browse(Paginated.CLAN_ROSTER).open(p);
+						})
+						.assignToSlots(5)
+						.setFiller(new ItemStack(Material.LIGHT_GRAY_STAINED_GLASS_PANE))
+						.setText(" ")
+						.set();
+				break;
+
+			case MEMBER_INFO:
+
+				ClanAssociate associate = Optional.ofNullable(uuid)
+						.flatMap(ClansAPI.getInstance()::getAssociate)
+						.orElseThrow(() -> new IllegalStateException("Associate cannot be null"));
+				Clan c = associate.getClan();
+
+				String o = c.getColor();
+				String balance;
+				try {
+					balance = c.format(String.valueOf(AdvancedHook.getEconomy() != null ? AdvancedHook.getEconomy().getWallet(Bukkit.getOfflinePlayer(uuid)).getBalance().doubleValue() : VaultHook.getEconomy().getBalance(Bukkit.getOfflinePlayer(uuid))));
+				} catch (NoClassDefFoundError | NullPointerException e) {
+					balance = "Un-Known";
+				}
+				String stats;
+				String rank = associate.getRankTag();
+				String date = associate.getJoinDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDate().toString();
+				String bio = associate.getBiography();
+				String kd = "" + associate.getKD();
+				if (Bukkit.getVersion().contains("1.16") || Bukkit.getVersion().contains("1.15")) {
+					OfflinePlayer p = Bukkit.getOfflinePlayer(uuid);
+					stats = o + "Banners washed: &f" + p.getStatistic(Statistic.BANNER_CLEANED) + "|" +
+							o + "Bell's rang: &f" + p.getStatistic(Statistic.BELL_RING) + "|" +
+							o + "Chest's opened: &f" + p.getStatistic(Statistic.CHEST_OPENED) + "|" +
+							o + "Creeper death's: &f" + p.getStatistic(Statistic.ENTITY_KILLED_BY, Entities.getEntity("Creeper")) + "|" +
+							o + "Beat's dropped: &f" + p.getStatistic(Statistic.RECORD_PLAYED) + "|" +
+							o + "Animal's bred: &f" + p.getStatistic(Statistic.ANIMALS_BRED);
+				} else {
+					stats = "&c&oVersion under &61.15 |" +
+							"&fOffline stat's unattainable.";
+				}
+
+				String[] statist = DefaultClan.action.color(stats).split("\\|");
+
+				builder = new MenuBuilder(InventoryRows.THREE, DefaultClan.action.color(MessageFormat.format(ClansAPI.getData().getTitle("member-information"), Bukkit.getOfflinePlayer(uuid).getName())))
+						.cancelLowerInventoryClicks(false)
+						.addElement(new ItemStack(Material.BELL))
+						.setLore(StringUtils.use(c.getColor() + c.getName()).translate())
+						.setText(StringUtils.use("Clan:").translate())
+						.setAction(click -> {
+							Player p = click.getPlayer();
+							Bukkit.dispatchCommand(p, "c info " + c.getName());
+						})
+						.assignToSlots(13)
+						.addElement(SkullItem.Head.search(associate.getPlayer()) != null ? new Item.Edit(SkullItem.Head.search(associate.getPlayer())).setFlags(ItemFlag.HIDE_ENCHANTS).addEnchantment(Enchantment.LOYALTY, 69).build() : new ItemStack(Material.PLAYER_HEAD))
+						.setLore(StringUtils.use(bio + " &f-" + associate.getNickname()).translate())
+						.setText(StringUtils.use(" ").translate())
+						.setAction(click -> {
+							Player p = click.getPlayer();
+						})
+						.assignToSlots(4)
+						.addElement(new ItemStack(Material.BOOK))
+						.setLore(statist)
+						.setText(StringUtils.use(o + "Statistics:").translate())
+						.setAction(click -> {
+							Player p = click.getPlayer();
+						})
+						.assignToSlots(12)
+						.addElement(new ItemStack(Material.BARRIER))
+						.setLore("")
+						.setText(StringUtils.use("&eClick to: &cgo back.").translate())
+						.setAction(click -> {
+							Player p = click.getPlayer();
+							UI.view(c).open(p);
+						})
+						.assignToSlots(19)
+						.addElement(new ItemStack(Material.GOLDEN_PICKAXE))
+						.setLore(StringUtils.use(o + rank).translate())
+						.setText(StringUtils.use("Rank:").translate())
+						.setAction(click -> {
+							Player p = click.getPlayer();
+						})
+						.assignToSlots(14)
+						.addElement(new ItemStack(Material.END_PORTAL_FRAME))
+						.setLore(StringUtils.use(o + date).translate())
+						.setText(StringUtils.use("Join Date:").translate())
+						.setAction(click -> {
+							Player p = click.getPlayer();
+						})
+						.assignToSlots(22)
+						.addElement(new ItemStack(Material.DIAMOND_SWORD))
+						.setLore(StringUtils.use(o + kd).translate())
+						.setText(StringUtils.use("K/D:").translate())
+						.setAction(click -> {
+							Player p = click.getPlayer();
+						})
+						.assignToSlots(10)
+						.addElement(new ItemStack(Material.GOLD_INGOT))
+						.setLore(StringUtils.use(o + balance).translate())
+						.setText(StringUtils.use("Wallet:").translate())
+						.setAction(click -> {
+							Player p = click.getPlayer();
+						})
+						.assignToSlots(16)
+						.setFiller(new ItemStack(Material.BLACK_STAINED_GLASS_PANE))
+						.setText(" ")
+						.set();
+				break;
+			case MEMBER_EDIT:
+				Clan cl = Optional.ofNullable(uuid)
+						.map(DefaultClan.action::getClanID)
+						.map(ClansAPI.getInstance()::getClan)
+						.orElseThrow(() -> new IllegalStateException("Error loading clan data for member"));
+
+				OfflinePlayer player = Bukkit.getOfflinePlayer(uuid);
+				builder = new MenuBuilder(InventoryRows.THREE, StringUtils.use("&0&l» " + cl.getColor() + player.getName() + " settings").translate())
+						.cancelLowerInventoryClicks(false)
+						.addElement(new Item.Edit(SkullItem.Head.search(player)).setFlags(ItemFlag.HIDE_ENCHANTS).addEnchantment(Enchantment.LOYALTY, 69).build())
+						.setText(StringUtils.use(ClansAPI.getData().getNavigate("back")).translate())
+						.setAction(click -> {
+							Player p = click.getPlayer();
+							UI.edit(cl).open(p);
+						})
+						.assignToSlots(13)
+						.addElement(new ItemStack(Material.BOOK))
+						.setLore(StringUtils.use("&5Click to change my bio.").translate())
+						.setText(StringUtils.use("&7[&bBio change&7]").translate())
+						.setAction(click -> {
+							Player p = click.getPlayer();
+							MEMBER_OPTION_MAP.put(p.getUniqueId(), MemberEditOperation.Option.BIO);
+							MEMBER_EDIT_OPERATION_MAP.put(p.getUniqueId(), new MemberEditOperation(cl, p, player.getUniqueId()));
+							DefaultClan.action.sendMessage(p, "&3Enter a new bio with &f/c respond <context...>");
+							p.closeInventory();
+						})
+						.assignToSlots(4)
+						.addElement(new ItemStack(Material.ENCHANTED_BOOK))
+						.setLore(StringUtils.use("&5Click to change my nickname.").translate())
+						.setText(StringUtils.use("&7[&6&lName Change&7]").translate())
+						.setAction(click -> {
+							Player p = click.getPlayer();
+							MEMBER_OPTION_MAP.put(p.getUniqueId(), MemberEditOperation.Option.NICKNAME);
+							MEMBER_EDIT_OPERATION_MAP.put(p.getUniqueId(), new MemberEditOperation(cl, p, player.getUniqueId()));
+							DefaultClan.action.sendMessage(p, "&3Enter a new name with &f/c respond <context...>");
+							p.closeInventory();
+						})
+						.assignToSlots(22)
+						.addElement(new ItemStack(Material.WRITABLE_BOOK))
+						.setLore(StringUtils.use("&5Click to put me in another clan.").translate())
+						.setText(StringUtils.use("&7[&4Switch Clans&7]").translate())
+						.setAction(click -> {
+							Player p = click.getPlayer();
+							MEMBER_OPTION_MAP.put(p.getUniqueId(), MemberEditOperation.Option.SWITCH_CLANS);
+							MEMBER_EDIT_OPERATION_MAP.put(p.getUniqueId(), new MemberEditOperation(cl, p, player.getUniqueId()));
+							DefaultClan.action.sendMessage(p, "&3Enter a clan name with &f/c respond <context...>");
+							p.closeInventory();
+						})
+						.assignToSlots(12)
+						.addElement(new ItemStack(Material.IRON_BOOTS))
+						.setLore(StringUtils.use("&5Click to kick me.").translate())
+						.setText(StringUtils.use("&7[&4Kick&7]").translate())
+						.setAction(click -> {
+							Player p = click.getPlayer();
+							MEMBER_OPTION_MAP.put(p.getUniqueId(), MemberEditOperation.Option.KICK);
+							new MemberEditOperation(cl, p, player.getUniqueId()).execute();
+							clearOperations(p.getUniqueId());
+							p.closeInventory();
+						})
+						.assignToSlots(11)
+						.addElement(new ItemStack(Material.DIAMOND))
+						.setLore(StringUtils.use("&5Click to promote me.").translate())
+						.setText(StringUtils.use("&7[&aPromotion&7]").translate())
+						.setAction(click -> {
+							Player p = click.getPlayer();
+							MEMBER_OPTION_MAP.put(p.getUniqueId(), MemberEditOperation.Option.PROMOTE);
+							new MemberEditOperation(cl, p, player.getUniqueId()).execute();
+							clearOperations(p.getUniqueId());
+							p.closeInventory();
+						})
+						.assignToSlots(14)
+						.addElement(new ItemStack(Material.REDSTONE))
+						.setLore(StringUtils.use("&5Click to demote me.").translate())
+						.setText(StringUtils.use("&7[&cDemotion&7]").translate())
+						.setAction(click -> {
+							Player p = click.getPlayer();
+							MEMBER_OPTION_MAP.put(p.getUniqueId(), MemberEditOperation.Option.DEMOTE);
+							new MemberEditOperation(cl, p, player.getUniqueId()).execute();
+							clearOperations(p.getUniqueId());
+							p.closeInventory();
+						})
+						.assignToSlots(15)
+						.setFiller(new ItemStack(Material.GRAY_STAINED_GLASS_PANE))
+						.setText(" ")
+						.set();
+
+				break;
+			case SHIELD_TAMPER:
+				builder = new MenuBuilder(InventoryRows.ONE, StringUtils.use("&2&oRaid-Shield Settings &0&l»").translate())
+						.cancelLowerInventoryClicks(false)
+						.addElement(new ItemStack(Material.SHIELD))
+						.setLore(StringUtils.use("&bClick to change the raid-shield to enable on sunrise").translate())
+						.setText(StringUtils.use("&a&oUp: Sunrise").translate())
+						.setAction(click -> {
+							Player p = click.getPlayer();
+							ClansAPI.getInstance().getShieldManager().getTamper().setUpOverride(0);
+							ClansAPI.getInstance().getShieldManager().getTamper().setDownOverride(13000);
+						})
+						.assignToSlots(3)
+						.addElement(new ItemStack(Material.SHIELD))
+						.setLore(StringUtils.use("&bClick to change the raid-shield to enable mid-day").translate())
+						.setText(StringUtils.use("&a&oUp: Mid-day").translate())
+						.setAction(click -> {
+							Player p = click.getPlayer();
+							ClansAPI.getInstance().getShieldManager().getTamper().setUpOverride(6000);
+							ClansAPI.getInstance().getShieldManager().getTamper().setDownOverride(18000);
+						})
+						.assignToSlots(4)
+						.addElement(new ItemStack(Material.SHIELD))
+						.setLore(StringUtils.use("&bClick to freeze the raid-shield @ its curent status").translate())
+						.setText(StringUtils.use("&a&oPermanent protection.").translate())
+						.setAction(click -> {
+							Player p = click.getPlayer();
+							if (ClansAPI.getInstance().getShieldManager().getTamper().isOff()) {
+								p.closeInventory();
+								DefaultClan.action.sendMessage(p, "&aRaid-shield block has been lifted.");
+								ClansAPI.getInstance().getShieldManager().getTamper().setIsOff(false);
+							} else {
+								DefaultClan.action.sendMessage(p, "&cRaid-shield has been blocked.");
+								ClansAPI.getInstance().getShieldManager().getTamper().setIsOff(true);
+							}
+						})
+						.assignToSlots(5)
+						.addElement(getBack())
+						.setAction(click -> {
+							Player p = click.getPlayer();
+							UI.select(Singular.SETTINGS_WINDOW).open(p);
+						})
+						.assignToSlots(8)
+						.setFiller(new ItemStack(Material.LIGHT_GRAY_STAINED_GLASS_PANE))
+						.setText(" ")
+						.set();
+				break;
+			case ARENA_SETUP:
+				builder = new MenuBuilder(InventoryRows.ONE, StringUtils.use("&2&oArena Spawns &0&l»").translate())
+						.cancelLowerInventoryClicks(false)
+						.addElement(new ItemStack(Material.HEART_OF_THE_SEA))
+						.setLore(StringUtils.use("&bClick to update the red team start location.").translate())
+						.setText(StringUtils.use("&7[&cRed Start&7]").translate())
+						.setAction(click -> {
+							Player p = click.getPlayer();
+							Bukkit.dispatchCommand(p, "cla setspawn red");
+						})
+						.assignToSlots(2)
+						.addElement(new ItemStack(Material.HEART_OF_THE_SEA))
+						.setLore(StringUtils.use("&bClick to update the red team re-spawn location.").translate())
+						.setText(StringUtils.use("&7[&cRed Spawn&7]").translate())
+						.setAction(click -> {
+							Player p = click.getPlayer();
+							Bukkit.dispatchCommand(p, "cla setspawn red_death");
+						})
+						.assignToSlots(3)
+						.addElement(new ItemStack(Material.HEART_OF_THE_SEA))
+						.setLore(StringUtils.use("&bClick to update the blue team start location.").translate())
+						.setText(StringUtils.use("&7[&9Blue Start&7]").translate())
+						.setAction(click -> {
+							Player p = click.getPlayer();
+							Bukkit.dispatchCommand(p, "cla setspawn blue");
+						})
+						.assignToSlots(5)
+						.addElement(new ItemStack(Material.HEART_OF_THE_SEA))
+						.setLore(StringUtils.use("&bClick to update the blue team re-spawn location.").translate())
+						.setText(StringUtils.use("&7[&9Blue Spawn&7]").translate())
+						.setAction(click -> {
+							Player p = click.getPlayer();
+							Bukkit.dispatchCommand(p, "cla setspawn blue_death");
+						})
+						.assignToSlots(6)
+						.addElement(getBack())
+						.setAction(click -> {
+							Player p = click.getPlayer();
+							UI.select(Singular.SETTINGS_WINDOW).open(p);
+						})
+						.assignToSlots(8)
+						.setFiller(new ItemStack(Material.LIGHT_GRAY_STAINED_GLASS_PANE))
+						.setText(" ")
+						.set();
+				break;
+			case SETTINGS_WINDOW:
+				builder = new MenuBuilder(InventoryRows.SIX, StringUtils.use(" &0&l» &2&oManagement Area").translate())
+						.cancelLowerInventoryClicks(false)
+						.addElement(new ItemStack(Material.NAUTILUS_SHELL))
+						.setLore(StringUtils.use("&bClick to manage all &dclans addons").translate())
+						.setText(StringUtils.use("&7[&5Addon Management&7]").translate())
+						.setAction(click -> {
+							Player p = click.getPlayer();
+							// TODO: open the addon inventory.
+							UI.select(Singular.CYCLE_ORGANIZATION).open(p);
+						})
+						.assignToSlots(33)
+						.addElement(new ItemStack(Material.SHIELD))
+						.setLore(StringUtils.use("&bClick to edit the &3raid-shield").translate())
+						.setText(StringUtils.use("&7[&2Shield Edit&7]").translate())
+						.setAction(click -> {
+							Player p = click.getPlayer();
+							UI.select(Singular.SHIELD_TAMPER).open(p);
+						})
+						.assignToSlots(29)
+						.addElement(new ItemStack(Material.ENCHANTED_BOOK))
+						.setLore(StringUtils.use("&7Click to toggle spy ability on all clan chat channels.").translate())
+						.setText(StringUtils.use("&7[&cAll Spy&7]").translate())
+						.setAction(click -> {
+							Player p = click.getPlayer();
+							Bukkit.dispatchCommand(p, "cla spy clan");
+							Bukkit.dispatchCommand(p, "cla spy ally");
+							Bukkit.dispatchCommand(p, "cla spy custom");
+						})
+						.assignToSlots(12)
+						.addElement(new ItemStack(Material.ANVIL))
+						.setLore(StringUtils.use("&7Click to manage clans.").translate())
+						.setText(StringUtils.use("&7[&eClan Edit&7]").translate())
+						.setAction(click -> {
+							Player p = click.getPlayer();
+							UI.browseEdit().open(p);
+						})
+						.assignToSlots(10)
+						.addElement(new ItemStack(Material.DIAMOND_SWORD))
+						.setLore(StringUtils.use("&7Click to manage arena spawns.").translate())
+						.setText(StringUtils.use("&7[&2War Arena&7]").translate())
+						.setAction(click -> {
+							Player p = click.getPlayer();
+							UI.select(Singular.ARENA_SETUP).open(p);
+						})
+						.assignToSlots(16)
+						.addElement(new ItemStack(ClansAPI.getData().getMaterial("clan") != null ? ClansAPI.getData().getMaterial("clan") : Material.PAPER))
+						.setLore(StringUtils.use("&bClick to view the entire &6clan roster").translate())
+						.setText(StringUtils.use("&7[&eClan List&7]").translate())
+						.setAction(click -> {
+							Player p = click.getPlayer();
+							UI.select(Singular.ROSTER_ORGANIZATION).open(p);
+						})
+						.assignToSlots(14)
+						.addElement(getBack())
+						.setText(StringUtils.use("&7[&4Close&7]").translate())
+						.setAction(click -> {
+							Player p = click.getPlayer();
+							p.closeInventory();
+						})
+						.assignToSlots(49)
+						.addElement(new ItemStack(Material.HEART_OF_THE_SEA))
+						.setText(StringUtils.use("&7[&cReload&7]").translate())
+						.setLore(StringUtils.use("&7Reload all configuration files.").translate())
+						.setAction(click -> {
+							Player p = click.getPlayer();
+							FileManager config = ClansAPI.getInstance().getFileList().find("Config", "Configuration");
+							FileManager message = ClansAPI.getInstance().getFileList().find("Messages", "Configuration");
+							FileManager regions = ClansAPI.getInstance().getFileList().find("Regions", "Configuration");
+							config.reload();
+							message.reload();
+							regions.reload();
+							UI.select(Singular.SETTINGS_WINDOW).open(p);
+							DefaultClan.action.sendMessage(p, "&b&oAll configuration files reloaded.");
+						})
+						.assignToSlots(31)
+						.setFiller(new ItemStack(Material.GRAY_STAINED_GLASS_PANE))
+						.setText(" ")
+						.set();
+				break;
+
+			case CYCLE_ORGANIZATION:
+				builder = new MenuBuilder(InventoryRows.ONE, StringUtils.use("&2&oManage Addon Cycles &0&l»").translate())
+						.cancelLowerInventoryClicks(false)
+						.addElement(new ItemStack(Material.WATER_BUCKET))
+						.setLore(StringUtils.use("&2&oTurn off running addons.").translate())
+						.setText(StringUtils.use("&7[&3&lRunning&7]").translate())
+						.setAction(click -> {
+							Player p = click.getPlayer();
+							UI.moderate(Paginated.ACTIVATED_CYCLES).open(p);
+						})
+						.assignToSlots(3)
+						.addElement(new ItemStack(Material.BUCKET))
+						.setLore(StringUtils.use("&a&oTurn on disabled addons.").translate(), StringUtils.use("&f&oMay require players to re-log with specific addons.").translate())
+						.setText(StringUtils.use("&7[&c&lDisabled&7]").translate())
+						.setAction(click -> {
+							Player p = click.getPlayer();
+							UI.moderate(Paginated.DEACTIVATED_CYCLES).open(p);
+						})
+						.assignToSlots(5)
+						.addElement(new ItemStack(Material.LAVA_BUCKET))
+						.setLore(StringUtils.use("&b&oView a list of all currently persistently cached addons.").translate())
+						.setText(StringUtils.use("&7[&e&lLoaded&7]").translate())
+						.setAction(click -> {
+							Player p = click.getPlayer();
+							UI.moderate(Paginated.REGISTERED_CYCLES).open(p);
+						})
+						.assignToSlots(4)
+						.addElement(getBack())
+						.setAction(click -> {
+							Player p = click.getPlayer();
+							UI.select(Singular.SETTINGS_WINDOW).open(p);
+						})
+						.assignToSlots(8)
+						.setFiller(new ItemStack(Material.LIGHT_GRAY_STAINED_GLASS_PANE))
+						.setText(" ")
+						.set();
+				break;
+			default:
+				throw new IllegalStateException("Illegal menu type present.");
+		}
+		return builder.create(ClansPro.getInstance());
+	}
+
+	public static Menu.Paginated<EventCycle> moderate(Paginated type) {
+		switch (type) {
+			case REGISTERED_CYCLES:
+				return new PaginatedBuilder<>(new LinkedList<>(CycleList.getRegisteredCycles()))
+						.forPlugin(ClansPro.getInstance())
+						.setTitle(DefaultClan.action.color("&3&oRegistered Cycles &f(&6&lCACHE&f) &8&l»"))
+						.setAlreadyFirst(DefaultClan.action.color(DefaultClan.action.alreadyFirstPage()))
+						.setAlreadyLast(DefaultClan.action.color(DefaultClan.action.alreadyLastPage()))
+						.setNavigationLeft(getLeft(), 45, PaginatedClickAction::sync)
+						.setNavigationRight(getRight(), 53, PaginatedClickAction::sync)
+						.setNavigationBack(getBack(), 49, click -> UI.select(Singular.CYCLE_ORGANIZATION).open(click.getPlayer()))
+						.setSize(InventoryRows.SIX)
+						.setCloseAction(PaginatedCloseAction::clear)
+						.setupProcess(e -> e.setItem(() -> {
+							EventCycle cycle = e.getContext();
+							ItemStack i = new ItemStack(Material.CHEST);
+
+							ItemMeta meta = i.getItemMeta();
+
+							meta.setLore(color("&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬", "&2&oPersistent: &f" + cycle.persist(), "&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬", "&2&oDescription: &f" + cycle.getDescription(), "&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬", "&2&oVersion: &f" + cycle.getVersion(), "&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬", "&2&oAuthors: &f" + Arrays.toString(cycle.getAuthors()), "&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬", "&2&oActive: &6&o" + CycleList.getUsedAddons().contains(cycle.getName()), "&7Clicking these icons won't do anything."));
+
+							meta.getPersistentDataContainer().set(addonKey, PersistentDataType.STRING, e.getContext().getName());
+
+							meta.setDisplayName(StringUtils.use("&3&o " + e.getContext().getName() + " &8&l»").translate());
+
+							i.setItemMeta(meta);
+
+							return i;
+						}).setClick(click -> {
+							Player p = click.getPlayer();
+						}))
+						.setupBorder()
+						.setBorderType(Material.GRAY_STAINED_GLASS_PANE)
+						.setFillType(Material.LIGHT_GRAY_STAINED_GLASS_PANE)
+						.build()
+						.limit(28)
+						.build();
+			case ACTIVATED_CYCLES:
+				return new PaginatedBuilder<>(CycleList.getUsedAddons().stream().map(CycleList::getAddon).collect(Collectors.toList()))
+						.forPlugin(ClansPro.getInstance())
+						.setTitle(DefaultClan.action.color("&3&oRegistered Cycles &f(&2RUNNING&f) &8&l»"))
+						.setAlreadyFirst(DefaultClan.action.color(DefaultClan.action.alreadyFirstPage()))
+						.setAlreadyLast(DefaultClan.action.color(DefaultClan.action.alreadyLastPage()))
+						.setNavigationLeft(getLeft(), 45, PaginatedClickAction::sync)
+						.setNavigationRight(getRight(), 53, PaginatedClickAction::sync)
+						.setNavigationBack(getBack(), 49, click -> UI.select(Singular.CYCLE_ORGANIZATION).open(click.getPlayer()))
+						.setSize(InventoryRows.SIX)
+						.setCloseAction(PaginatedCloseAction::clear)
+						.setupProcess(e -> {
+							e.setItem(() -> {
+								EventCycle cycle = e.getContext();
+								ItemStack i = new ItemStack(Material.CHEST);
+
+								ItemMeta meta = i.getItemMeta();
+
+								meta.setLore(color("&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬", "&2&oPersistent: &f" + cycle.persist(), "&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬", "&2&oDescription: &f" + cycle.getDescription(), "&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬", "&2&oVersion: &f" + cycle.getVersion(), "&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬", "&2&oAuthors: &f" + Arrays.toString(cycle.getAuthors()), "&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬", "&2&oActive: &6&o" + CycleList.getUsedAddons().contains(cycle.getName())));
+
+								meta.getPersistentDataContainer().set(addonKey, PersistentDataType.STRING, e.getContext().getName());
+
+								meta.setDisplayName(StringUtils.use("&3&o " + e.getContext().getName() + " &8&l»").translate());
+
+								i.setItemMeta(meta);
+
+								return i;
+							}).setClick(click -> {
+								Player p = click.getPlayer();
+								String addon = click.getClickedItem().getItemMeta().getPersistentDataContainer().get(UI.getAddonKey(), PersistentDataType.STRING);
+								if (addon == null)
+									throw new IllegalStateException("Invalid addon action selected.");
+								// disable addon logic
+								EventCycle ec = CycleList.getAddon(addon);
+								CycleList.unregisterAll(ec);
+								for (String d : CycleList.getDataLog()) {
+									p.sendMessage(DefaultClan.action.color("&b" + d.replace("Clans [Pro]", "&3Clans &7[&6Pro&7]&b")));
+								}
+								UI.moderate(Paginated.ACTIVATED_CYCLES).open(p);
+							});
+						})
+						.setupBorder()
+						.setBorderType(Material.GRAY_STAINED_GLASS_PANE)
+						.setFillType(Material.LIGHT_GRAY_STAINED_GLASS_PANE)
+						.build()
+						.limit(28)
+						.build();
+			case DEACTIVATED_CYCLES:
+				return new PaginatedBuilder<>(CycleList.getUnusedAddons().stream().map(CycleList::getAddon).collect(Collectors.toList()))
+						.forPlugin(ClansPro.getInstance())
+						.setTitle(DefaultClan.action.color("&3&oRegistered Cycles &f(&4DISABLED&f) &8&l»"))
+						.setAlreadyFirst(DefaultClan.action.color(DefaultClan.action.alreadyFirstPage()))
+						.setAlreadyLast(DefaultClan.action.color(DefaultClan.action.alreadyLastPage()))
+						.setNavigationLeft(getLeft(), 45, PaginatedClickAction::sync)
+						.setNavigationRight(getRight(), 53, PaginatedClickAction::sync)
+						.setNavigationBack(getBack(), 49, click -> UI.select(Singular.CYCLE_ORGANIZATION).open(click.getPlayer()))
+						.setSize(InventoryRows.SIX)
+						.setCloseAction(PaginatedCloseAction::clear)
+						.setupProcess(e -> {
+							e.setItem(() -> {
+								EventCycle cycle = e.getContext();
+								ItemStack i = new ItemStack(Material.CHEST);
+
+								ItemMeta meta = i.getItemMeta();
+
+								meta.setLore(color("&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬", "&2&oPersistent: &f" + cycle.persist(), "&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬", "&2&oDescription: &f" + cycle.getDescription(), "&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬", "&2&oVersion: &f" + cycle.getVersion(), "&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬", "&2&oAuthors: &f" + Arrays.toString(cycle.getAuthors()), "&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬", "&2&oActive: &6&o" + CycleList.getUsedAddons().contains(cycle.getName())));
+
+								meta.getPersistentDataContainer().set(addonKey, PersistentDataType.STRING, e.getContext().getName());
+
+								meta.setDisplayName(StringUtils.use("&3&o " + e.getContext().getName() + " &8&l»").translate());
+
+								i.setItemMeta(meta);
+
+								return i;
+							}).setClick(click -> {
+								Player p = click.getPlayer();
+								String addon = click.getClickedItem().getItemMeta().getPersistentDataContainer().get(UI.getAddonKey(), PersistentDataType.STRING);
+								if (addon == null) throw new IllegalStateException("Action cannot be null");
+								// disable addon logic
+								EventCycle ec = CycleList.getAddon(addon);
+								CycleList.registerAll(ec);
+								for (String d : CycleList.getDataLog()) {
+									p.sendMessage(DefaultClan.action.color("&b" + DefaultClan.action.format(d, "Clans [Pro]", "&3Clans &7[&6Pro&7]&b")));
+								}
+								UI.moderate(Paginated.DEACTIVATED_CYCLES).open(p);
+							});
+						})
+						.setupBorder()
+						.setBorderType(Material.GRAY_STAINED_GLASS_PANE)
+						.setFillType(Material.LIGHT_GRAY_STAINED_GLASS_PANE)
+						.build()
+						.limit(28)
+						.build();
+			default:
+				throw new IllegalStateException("Invalid menu request!");
+		}
+	}
+
+	public static Menu.Paginated<Clan> browse(Paginated type) {
+		switch (type) {
+			case CLAN_ROSTER:
+				return new PaginatedBuilder<>(ClansAPI.getData().CLANS)
+						.forPlugin(ClansPro.getInstance())
+						.setTitle(DefaultClan.action.color(ClansAPI.getData().getTitle("roster-list")))
+						.setAlreadyFirst(DefaultClan.action.color(DefaultClan.action.alreadyFirstPage()))
+						.setAlreadyLast(DefaultClan.action.color(DefaultClan.action.alreadyLastPage()))
+						.setNavigationLeft(getLeft(), getLeftSlot(), PaginatedClickAction::sync)
+						.setNavigationRight(getRight(), getRightSlot(), PaginatedClickAction::sync)
+						.setNavigationBack(getBack(), getBackSlot(), click -> UI.select(Singular.ROSTER_ORGANIZATION).open(click.getPlayer()))
+						.setSize(getRows())
+						.setCloseAction(close -> {
+							LAST_MENU.put(close.getPlayer().getUniqueId(), Paginated.CLAN_ROSTER);
+							close.clear();
+						})
+						.setupProcess(e -> {
+							Material mat = ClansAPI.getData().getMaterial("clan");
+							if (mat == null) {
+								mat = Material.PAPER;
+							}
+							Material finalMat = mat;
+							e.setItem(() -> {
+								ItemStack i = new ItemStack(finalMat);
+								Clan c = e.getContext();
+								int a1 = 0;
+								int a2 = 0;
+								int a3 = 0;
+								StringBuilder members = new StringBuilder("&b&o");
+								for (String id : c.getMembersList()) {
+									a1++;
+									if (a1 == 1) {
+										members.append("&b&o").append(Bukkit.getOfflinePlayer(UUID.fromString(id)).getName());
+									} else {
+										members.append("&f, &b&o").append(Bukkit.getOfflinePlayer(UUID.fromString(id)).getName());
+									}
+								}
+
+								StringBuilder allies = new StringBuilder("&a&o");
+								for (String id : c.getAllyList()) {
+									a2++;
+									if (a2 == 1) {
+										allies.append("&b&o").append(ClansAPI.getInstance().getClanName(id));
+									} else {
+										allies.append("&f, &b&o").append(ClansAPI.getInstance().getClanName(id));
+									}
+								}
+								StringBuilder enemies = new StringBuilder("&a&o");
+								for (String id : c.getAllyList()) {
+									a3++;
+									if (a3 == 1) {
+										enemies.append("&b&o").append(ClansAPI.getInstance().getClanName(id));
+									} else {
+										enemies.append("&f, &b&o").append(ClansAPI.getInstance().getClanName(id));
+									}
+								}
+								String memlist = members.toString();
+								if (memlist.length() > 44) {
+									memlist = memlist.substring(0, 44) + "...";
+								}
+								String allylist = allies.toString();
+								if (allylist.length() > 44) {
+									allylist = allylist.substring(0, 44) + "...";
+								}
+								String enemylist = enemies.toString();
+								if (enemylist.length() > 44) {
+									enemylist = enemylist.substring(0, 44) + "...";
+								}
+
+								String color = c.getColor().replace("&k", "");
+
+								double power = c.getPower();
+
+								String pvp;
+
+								if (c.isPeaceful()) {
+									pvp = "&a&lPEACE";
+								} else {
+									pvp = "&4&lWAR";
+								}
+
+								int ownedLand = c.getOwnedClaimsList().length;
+
+								StringBuilder idShort = new StringBuilder();
+								for (int j = 0; j < 4; j++) {
+									idShort.append(c.getId().toString().charAt(j));
+								}
+								String id = idShort.toString();
+
+								boolean baseSet = c.getBase() != null;
+
+								String desc = c.getDescription();
+
+								if (c.getAllyList().isEmpty()) {
+									allylist = "&cEmpty";
+								}
+
+								if (c.getEnemyList().isEmpty()) {
+									enemylist = "&cEmpty";
+								}
+
+								ItemMeta meta = i.getItemMeta();
+
+
+								String[] par = new Paragraph(desc).setRegex(Paragraph.COMMA_AND_PERIOD).get();
+
+								final String memEdit = "&3Members: " + color + memlist.replace("&b&o", color).replace("&f, &b...", color + "...");
+								final String allEdit = "&3Allies: " + color + allylist.replace("&b&o", color).replace("&f, &b...", color + "...");
+								final String enemEdit = "&3Enemies: " + color + enemylist.replace("&b&o", color).replace("&f, &b...", color + "...");
+								if (par.length == 1) {
+									meta.setLore(color("&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬",
+											"&3Color: " + color.replace("&", "&f»" + color),
+											"&3Description: " + color + par[0] + ".",
+											"&3Power: " + color + c.format(String.valueOf(power)),
+											"&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬",
+											"&3Has base: " + color + baseSet,
+											"&3Land Owned: &f(" + color + ownedLand + "&f)",
+											"&3Mode: " + pvp,
+											"&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬",
+											memEdit,
+											allEdit,
+											enemEdit,
+											"&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬",
+											"&b&oClick to reveal clan members."));
+								}
+
+								if (par.length == 2) {
+									meta.setLore(color("&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬",
+											"&3Color: " + color.replace("&", "&f»" + color),
+											"&3Description: " + color + par[0] + ", ",
+											color + par[1] + ".",
+											"&3Power: " + color + c.format(String.valueOf(power)),
+											"&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬",
+											"&3Has base: " + color + baseSet,
+											"&3Land Owned: &f(" + color + ownedLand + "&f)",
+											"&3Mode: " + pvp,
+											"&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬",
+											memEdit,
+											allEdit,
+											enemEdit,
+											"&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬",
+											"&b&oClick to reveal clan members."));
+								}
+
+								if (par.length == 3) {
+									meta.setLore(color("&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬",
+											"&3Color: " + color.replace("&", "&f»" + color),
+											"&3Description: " + color + par[0] + ", ",
+											color + par[1] + ", ",
+											color + par[2] + ".",
+											"&3Power: " + color + c.format(String.valueOf(power)),
+											"&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬",
+											"&3Has base: " + color + baseSet,
+											"&3Land Owned: &f(" + color + ownedLand + "&f)",
+											"&3Mode: " + pvp,
+											"&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬",
+											memEdit,
+											allEdit,
+											enemEdit,
+											"&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬",
+											"&b&oClick to reveal clan members."));
+								}
+
+								if (par.length == 4) {
+									meta.setLore(color("&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬",
+											"&3Color: " + color.replace("&", "&f»" + color),
+											"&3Description: " + color + par[0] + ", ",
+											color + par[1] + ", ",
+											color + par[2] + ", ",
+											color + par[3] + ".",
+											"&3Power: " + color + c.format(String.valueOf(power)),
+											"&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬",
+											"&3Has base: " + color + baseSet,
+											"&3Land Owned: &f(" + color + ownedLand + "&f)",
+											"&3Mode: " + pvp,
+											"&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬",
+											memEdit,
+											allEdit,
+											enemEdit,
+											"&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬",
+											"&b&oClick to reveal clan members."));
+								}
+
+								if (par.length == 5) {
+									meta.setLore(color("&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬",
+											"&3Color: " + color.replace("&", "&f»" + color),
+											"&3Description: " + color + par[0] + ", ",
+											color + par[1] + ", ",
+											color + par[2] + ", ",
+											color + par[3] + ", ",
+											color + par[4] + ".",
+											"&3Power: " + color + c.format(String.valueOf(power)),
+											"&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬",
+											"&3Has base: " + color + baseSet,
+											"&3Land Owned: &f(" + color + ownedLand + "&f)",
+											"&3Mode: " + pvp,
+											"&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬",
+											memEdit,
+											allEdit,
+											enemEdit,
+											"&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬",
+											"&b&oClick to reveal clan members."));
+								}
+
+								if (par.length >= 6) {
+									meta.setLore(color("&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬",
+											"&3Color: " + color.replace("&", "&f»" + color),
+											"&3Description: " + color + par[0] + ", ",
+											color + par[1] + ", ",
+											color + par[2] + ", ",
+											color + par[3] + ", ",
+											color + par[4] + ", ",
+											color + par[5] + ".",
+											"&3Power: " + color + c.format(String.valueOf(power)),
+											"&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬",
+											"&3Has base: " + color + baseSet,
+											"&3Land Owned: &f(" + color + ownedLand + "&f)",
+											"&3Mode: " + pvp,
+											"&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬",
+											memEdit,
+											allEdit,
+											enemEdit,
+											"&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬",
+											"&b&oClick to reveal clan members."));
+								}
+
+								meta.getPersistentDataContainer().set(clanKey, PersistentDataType.STRING, e.getContext().getId().toString());
+
+								meta.setDisplayName(StringUtils.use("&6&lTag: " + c.getColor() + c.getName() + "&r &f(" + "&3#" + color + id + "&f)").translate());
+
+								i.setItemMeta(meta);
+
+								return i;
+							}).setClick(click -> {
+								Player p = click.getPlayer();
+								String id = click.getClickedItem().getItemMeta().getPersistentDataContainer().get(UI.getClanKey(), PersistentDataType.STRING);
+								if (id == null) throw new IllegalStateException("UI action id cannot be null!");
+								UI.view(ClansAPI.getInstance().getClan(id)).open(p);
+							});
+						})
+						.setupBorder()
+						.setBorderType(Material.GRAY_STAINED_GLASS_PANE)
+						.setFillType(Material.LIGHT_GRAY_STAINED_GLASS_PANE)
+						.build()
+						.limit(getAmntPer())
+						.build();
+			case CLAN_TOP:
+				return new PaginatedBuilder<>(DefaultClan.action.getTop())
+						.forPlugin(ClansPro.getInstance())
+						.setTitle(DefaultClan.action.color(ClansAPI.getData().getTitle("top-list")))
+						.setAlreadyFirst(DefaultClan.action.color(DefaultClan.action.alreadyFirstPage()))
+						.setAlreadyLast(DefaultClan.action.color(DefaultClan.action.alreadyLastPage()))
+						.setNavigationLeft(getLeft(), getLeftSlot(), PaginatedClickAction::sync)
+						.setNavigationRight(getRight(), getRightSlot(), PaginatedClickAction::sync)
+						.setNavigationBack(getBack(), getBackSlot(), click -> UI.select(Singular.ROSTER_ORGANIZATION).open(click.getPlayer()))
+						.setSize(getRows())
+						.setCloseAction(close -> {
+							LAST_MENU.put(close.getPlayer().getUniqueId(), Paginated.CLAN_TOP);
+							close.clear();
+						})
+						.setupProcess(e -> {
+							Material mat = ClansAPI.getData().getMaterial("clan");
+							if (mat == null) {
+								mat = Material.PAPER;
+							}
+							Material finalMat = mat;
+							e.setItem(() -> {
+								ItemStack i = new ItemStack(finalMat);
+								Clan c = e.getContext();
+								int a1 = 0;
+								int a2 = 0;
+								int a3 = 0;
+								StringBuilder members = new StringBuilder("&b&o");
+								for (String id : c.getMembersList()) {
+									a1++;
+									if (a1 == 1) {
+										members.append("&b&o").append(Bukkit.getOfflinePlayer(UUID.fromString(id)).getName());
+									} else {
+										members.append("&f, &b&o").append(Bukkit.getOfflinePlayer(UUID.fromString(id)).getName());
+									}
+								}
+
+								StringBuilder allies = new StringBuilder("&a&o");
+								for (String id : c.getAllyList()) {
+									a2++;
+									if (a2 == 1) {
+										allies.append("&b&o").append(ClansAPI.getInstance().getClanName(id));
+									} else {
+										allies.append("&f, &b&o").append(ClansAPI.getInstance().getClanName(id));
+									}
+								}
+								StringBuilder enemies = new StringBuilder("&a&o");
+								for (String id : c.getAllyList()) {
+									a3++;
+									if (a3 == 1) {
+										enemies.append("&b&o").append(ClansAPI.getInstance().getClanName(id));
+									} else {
+										enemies.append("&f, &b&o").append(ClansAPI.getInstance().getClanName(id));
+									}
+								}
+								String memlist = members.toString();
+								if (memlist.length() > 44) {
+									memlist = memlist.substring(0, 44) + "...";
+								}
+								String allylist = allies.toString();
+								if (allylist.length() > 44) {
+									allylist = allylist.substring(0, 44) + "...";
+								}
+								String enemylist = enemies.toString();
+								if (enemylist.length() > 44) {
+									enemylist = enemylist.substring(0, 44) + "...";
+								}
+
+								String color = c.getColor().replace("&k", "");
+
+								double power = c.getPower();
+
+								String pvp;
+
+								if (c.isPeaceful()) {
+									pvp = "&a&lPEACE";
+								} else {
+									pvp = "&4&lWAR";
+								}
+
+								int ownedLand = c.getOwnedClaimsList().length;
+
+								StringBuilder idShort = new StringBuilder();
+								for (int j = 0; j < 4; j++) {
+									idShort.append(c.getId().toString().charAt(j));
+								}
+								String id = idShort.toString();
+
+								boolean baseSet = c.getBase() != null;
+
+								String desc = c.getDescription();
+
+								if (c.getAllyList().isEmpty()) {
+									allylist = "&cEmpty";
+								}
+
+								if (c.getEnemyList().isEmpty()) {
+									enemylist = "&cEmpty";
+								}
+
+								ItemMeta meta = i.getItemMeta();
+
+								String[] par = new Paragraph(desc).setRegex(Paragraph.COMMA_AND_PERIOD).get();
+
+								meta.setLore(color("&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬",
+										"&3Color: " + color.replace("&", "&f»" + color),
+										"&3Description: " + color + par[0] + "...",
+										"&3Power: " + color + c.format(String.valueOf(power)),
+										"&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬",
+										"&3Has base: " + color + baseSet,
+										"&3Land Owned: &f(" + color + ownedLand + "&f)",
+										"&3Mode: " + pvp,
+										"&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬",
+										"&3Members: " + color + memlist.replace("&b&o", color).replace("&f, &b...", color + "..."),
+										"&3Allies: " + color + allylist.replace("&b&o", color).replace("&f, &b...", color + "..."),
+										"&3Enemies: " + color + enemylist.replace("&b&o", color).replace("&f, &b...", color + "..."),
+										"&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬",
+										"&b&oClick to reveal clan members."));
+
+								meta.getPersistentDataContainer().set(clanKey, PersistentDataType.STRING, e.getContext().getId().toString());
+
+								meta.setDisplayName(StringUtils.use("&6&lTag: " + c.getColor() + c.getName() + "&r &f(" + "&3#" + color + id + "&f)").translate());
+
+								i.setItemMeta(meta);
+
+								return i;
+							}).setClick(click -> {
+								Player p = click.getPlayer();
+								String id = click.getClickedItem().getItemMeta().getPersistentDataContainer().get(UI.getClanKey(), PersistentDataType.STRING);
+								if (id == null) throw new IllegalStateException("UI action id cannot be null");
+								UI.view(ClansAPI.getInstance().getClan(id)).open(p);
+							});
+						})
+						.setupBorder()
+						.setBorderType(Material.GRAY_STAINED_GLASS_PANE)
+						.setFillType(Material.LIGHT_GRAY_STAINED_GLASS_PANE)
+						.build()
+						.limit(getAmntPer())
+						.build();
+			default:
+				throw new IllegalStateException("Invalid menu type proposed!");
+		}
+	}
+
+	public static Menu.Paginated<ClanAssociate> view(Clan c) {
+		return new PaginatedBuilder<>(c.getMembers().list())
+				.forPlugin(ClansPro.getInstance())
+				.setTitle(DefaultClan.action.color(ClansAPI.getData().getTitle("member-list")))
+				.setAlreadyFirst(DefaultClan.action.color(DefaultClan.action.alreadyFirstPage()))
+				.setAlreadyLast(DefaultClan.action.color(DefaultClan.action.alreadyLastPage()))
+				.setNavigationLeft(getLeft(), getLeftSlot(), PaginatedClickAction::sync)
+				.setNavigationRight(getRight(), getRightSlot(), PaginatedClickAction::sync)
+				.setNavigationBack(getBack(), getBackSlot(), click -> UI.browse(LAST_MENU.getOrDefault(click.getPlayer().getUniqueId(), Paginated.CLAN_ROSTER)).open(click.getPlayer()))
+				.setSize(getRows())
+				.setCloseAction(PaginatedCloseAction::clear)
+				.setupProcess(e -> {
+					e.setItem(() -> {
+						ItemStack copy = SkullItem.Head.search(e.getContext().getPlayer());
+						if (copy == null)
+							copy = new ItemStack(Material.PLAYER_HEAD);
+						ItemStack i = new ItemStack(copy);
+						ClanAssociate associate = e.getContext();
+						ItemMeta meta = Objects.requireNonNull(i.getItemMeta());
+
+						meta.setLore(color("&b&oClick to reveal player information."));
+
+						meta.getPersistentDataContainer().set(memberKey, PersistentDataType.STRING, e.getContext().getPlayer().getUniqueId().toString());
+
+						meta.setDisplayName(StringUtils.use("&f&lDisplay name: " + c.getColor() + associate.getNickname()).translate());
+
+						i.setItemMeta(meta);
+
+						return i;
+					}).setClick(click -> {
+						Player p = click.getPlayer();
+						String id = Optional.ofNullable(click.getClickedItem().getItemMeta())
+								.map(PersistentDataHolder::getPersistentDataContainer)
+								.map(pdc -> pdc.get(UI.getMemberKey(), PersistentDataType.STRING))
+								.orElseThrow(() -> new IllegalStateException("Unable to process menu action"));
+						UI.select(Singular.MEMBER_INFO, UUID.fromString(id)).open(p);
+					});
+				})
+				.setupBorder()
+				.setBorderType(Material.GRAY_STAINED_GLASS_PANE)
+				.setFillType(Material.LIGHT_GRAY_STAINED_GLASS_PANE)
+				.build()
+				.limit(getAmntPer())
+				.build();
+	}
+
+	public static Menu.Paginated<Clan> browseEdit() {
+		return new PaginatedBuilder<>(DefaultClan.action.getTop())
+				.forPlugin(ClansPro.getInstance())
+				.setTitle(DefaultClan.action.color("&0&l» &3&lSelect a clan"))
+				.setAlreadyFirst(DefaultClan.action.color(DefaultClan.action.alreadyFirstPage()))
+				.setAlreadyLast(DefaultClan.action.color(DefaultClan.action.alreadyLastPage()))
+				.setNavigationLeft(getLeft(), getLeftSlot(), PaginatedClickAction::sync)
+				.setNavigationRight(getRight(), getRightSlot(), PaginatedClickAction::sync)
+				.setNavigationBack(getBack(), getBackSlot(), click -> UI.select(Singular.SETTINGS_WINDOW).open(click.getPlayer()))
+				.setSize(getRows())
+				.setCloseAction(close -> {
+					LAST_MENU.put(close.getPlayer().getUniqueId(), Paginated.CLAN_ROSTER);
+					close.clear();
+				})
+				.setupProcess(e -> {
+					Material mat = ClansAPI.getData().getMaterial("clan");
+					if (mat == null) {
+						mat = Material.PAPER;
+					}
+					Material finalMat = mat;
+					e.setItem(() -> {
+						ItemStack i = new ItemStack(finalMat);
+						i.setType(finalMat);
+						Clan cl = e.getContext();
+						int a1 = 0;
+						StringBuilder members = new StringBuilder("&b&o");
+						for (String id : cl.getMembersList()) {
+							a1++;
+							if (a1 == 1) {
+								members.append("&b&o").append(Bukkit.getOfflinePlayer(UUID.fromString(id)).getName());
+							} else {
+								members.append("&f, &b&o").append(Bukkit.getOfflinePlayer(UUID.fromString(id)).getName());
+							}
+						}
+						String memlist = members.toString();
+						if (memlist.length() > 44) {
+							memlist = memlist.substring(0, 44) + "...";
+						}
+
+						String color = cl.getColor().replace("&k", "");
+
+						double power = cl.getPower();
+
+						String pvp;
+
+						if (cl.isPeaceful()) {
+							pvp = "&a&lPEACE";
+						} else {
+							pvp = "&4&lWAR";
+						}
+
+						int ownedLand = cl.getOwnedClaimsList().length;
+
+						StringBuilder idShort = new StringBuilder();
+						for (int j = 0; j < 4; j++) {
+							idShort.append(cl.getId().toString().charAt(j));
+						}
+						String id = idShort.toString();
+
+						boolean baseSet = cl.getBase() != null;
+
+						String desc = cl.getDescription();
+
+						ItemMeta meta = i.getItemMeta();
+
+						meta.setLore(color("&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬",
+								"&3Color: " + color.replace("&", "&f»" + color),
+								"&3Description: " + color + desc,
+								"&3Power: " + color + cl.format(String.valueOf(power)),
+								"&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬",
+								"&3Has base: " + color + baseSet,
+								"&3Land Owned: &f(" + color + ownedLand + "&f)",
+								"&3Mode: " + pvp,
+								"&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬",
+								"&3Members: " + color + memlist.replace("&b&o", color).replace("&f, &b...", color + "..."),
+								"&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬",
+								"&b&oClick to edit this clan."));
+
+						meta.getPersistentDataContainer().set(clanKey, PersistentDataType.STRING, e.getContext().getId().toString());
+
+						meta.setDisplayName(StringUtils.use("&5&lClan: " + cl.getColor() + cl.getName() + "&r &f(" + "&3#" + color + id + "&f)").translate());
+
+						i.setItemMeta(meta);
+
+						return i;
+					}).setClick(click -> {
+						Player p = click.getPlayer();
+						String id = click.getClickedItem().getItemMeta().getPersistentDataContainer().get(UI.getClanKey(), PersistentDataType.STRING);
+						if (id == null) throw new IllegalStateException("UI action id cannot be null");
+						// clan id ^ open clan edit window
+						UI.select(Singular.CLAN_EDIT, HUID.fromString(id)).open(p);
+					});
+				})
+				.setupBorder()
+				.setBorderType(Material.GRAY_STAINED_GLASS_PANE)
+				.setFillType(Material.LIGHT_GRAY_STAINED_GLASS_PANE)
+				.build()
+				.limit(getAmntPer())
+				.build();
+	}
+
+	public static Menu.Paginated<ClanAssociate> edit(Clan c) {
+		return new PaginatedBuilder<>(c.getMembers().list())
+				.forPlugin(ClansPro.getInstance())
+				.setTitle(DefaultClan.action.color("&0&l» &3&lSelect a member"))
+				.setAlreadyFirst(DefaultClan.action.color(DefaultClan.action.alreadyFirstPage()))
+				.setAlreadyLast(DefaultClan.action.color(DefaultClan.action.alreadyLastPage()))
+				.setNavigationLeft(getLeft(), getLeftSlot(), PaginatedClickAction::sync)
+				.setNavigationRight(getRight(), getRightSlot(), PaginatedClickAction::sync)
+				.setNavigationBack(getBack(), getBackSlot(), click -> UI.select(Singular.CLAN_EDIT, c.getId()).open(click.getPlayer()))
+				.setSize(getRows())
+				.setCloseAction(PaginatedCloseAction::clear)
+				.setupProcess(e -> {
+					e.setItem(() -> {
+						ItemStack copy = SkullItem.Head.search(e.getContext().getPlayer());
+						if (copy == null)
+							copy = new ItemStack(Material.PLAYER_HEAD);
+						ItemStack i = new ItemStack(copy);
+						ClanAssociate associate = e.getContext();
+						ItemMeta meta = Objects.requireNonNull(i.getItemMeta());
+
+						meta.setLore(color("&e&oClick to edit me."));
+
+						meta.getPersistentDataContainer().set(memberKey, PersistentDataType.STRING, e.getContext().getPlayer().getUniqueId().toString());
+
+						meta.setDisplayName(StringUtils.use("&6&oDisplay name:&r " + c.getColor() + associate.getNickname()).translate());
+
+						i.setItemMeta(meta);
+
+						return i;
+					}).setClick(click -> {
+						Player p = click.getPlayer();
+						String id = Objects.requireNonNull(click.getClickedItem().getItemMeta())
+								.getPersistentDataContainer().get(UI.getMemberKey(), PersistentDataType.STRING);
+						if (id == null) throw new IllegalStateException("UI action id must not be null!");
+						UI.select(Singular.MEMBER_EDIT, UUID.fromString(id)).open(p);
+					});
+				})
+				.setupBorder()
+				.setBorderType(Material.GRAY_STAINED_GLASS_PANE)
+				.setFillType(Material.LIGHT_GRAY_STAINED_GLASS_PANE)
+				.build()
+				.limit(getAmntPer())
+				.build();
+	}
+
+	public enum Paginated {
+		CLAN_ROSTER, CLAN_ROSTER_EDIT, CLAN_TOP, MEMBER_LIST, MEMBER_LIST_EDIT, REGISTERED_CYCLES, ACTIVATED_CYCLES, DEACTIVATED_CYCLES
+	}
+
+	public enum Singular {
+		ROSTER_ORGANIZATION, MEMBER_INFO, CYCLE_ORGANIZATION, SETTINGS_WINDOW, SHIELD_TAMPER, CLAN_EDIT, MEMBER_EDIT, ARENA_SETUP
+	}
+
+}

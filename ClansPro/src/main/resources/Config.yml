@@ -1,0 +1,472 @@
+#
+# --------------------------------------------------------------------------------------- #
+#   ██████╗██╗      █████╗ ███╗   ██╗███████╗    ██████╗ ██████╗  ██████╗
+#  ██╔════╝██║     ██╔══██╗████╗  ██║██╔════╝    ██╔══██╗██╔══██╗██╔═══██╗
+#  ██║     ██║     ███████║██╔██╗ ██║███████╗    ██████╔╝██████╔╝██║   ██║
+#  ██║     ██║     ██╔══██║██║╚██╗██║╚════██║    ██╔═══╝ ██╔══██╗██║   ██║
+#  ╚██████╗███████╗██║  ██║██║ ╚████║███████║    ██║     ██║  ██║╚██████╔╝
+#   ╚═════╝╚══════╝╚═╝  ╚═╝╚═╝  ╚═══╝╚══════╝    ╚═╝     ╚═╝  ╚═╝ ╚═════╝
+# --------------------------------------------------------------------------------------- #
+#
+Clans:
+  #################################
+  ##                             ##
+  ## Allow plugin update checks? ##
+  ##                             ##
+  #################################
+  check-version: true
+
+  #################################
+  ##                             ##
+  ## Specify the amount of ticks ##
+  ##     for the data cleaner.   ##
+  ##                             ##
+  #################################
+  data-cleaner: 600
+
+  ##############################################
+  ##                                          ##
+  ## Max amount of clans the server can have. ##
+  ##                                          ##
+  ##############################################
+  max-clans: 60
+
+  #################################
+  ##                             ##
+  ## Modify clan pvp mode change ##
+  ##          settings.          ##
+  ##                             ##
+  #################################
+  mode-change:
+    # Change what pvp mode a clan gets put in on creation {Valid types = peace, war}
+    default: peace
+    # Allow a cooldown every use of mode switch? If so how long.
+    timer:
+      use: true
+      cooldown-in-seconds: 1800
+    # Charge for pvp mode change? If so how much.
+    charge: false
+    amount: 420.0
+
+  ######################################
+  ##                                  ##
+  ## Clan pre-creation settings apply ##
+  ##                                  ##
+  ######################################
+  creation:
+    charge: false
+    amount: 420.0
+    # Only allow players to create clans every so often?
+    cooldown:
+      enabled: true
+      # After how long in seconds will the cooldown expire?
+      time: 120
+
+  ########################
+  ##                    ##
+  ## Clan bank settings ##
+  ##                    ##
+  ########################
+  banks:
+    # Let a clans bank balance effect their total power level.
+    influence: true
+    # Configure starting balance of clan banks
+    starting-balance: 0
+    # Optionally set the maximum balance of clan banks
+    #    maximum-balance: 10000000000.00 # Uncomment this line to activate
+    # 0 - Silent, 1 - Successful and cancelled transaction, 2 - ALL transactions
+    log-level: 0
+    # Manage default clan bank access permissions
+    default-access:
+      balance: 0  # Clan rank 0 or higher can access bank balance
+      deposit: 1  # Clan rank 1 or higher can deposit
+      withdraw: 2 # Clan rank 2 can withdraw
+      view-log: 3 # Clan rank 3 can view transaction log
+
+  ###########################
+  ##                       ##
+  ## Clan WORLD whitelist. ##
+  ##                       ##
+  ###########################
+  world-whitelist:
+    - world
+    - world_nether
+    - world_the_end
+
+  ##########################
+  ##                      ##
+  ## Clan NAME blacklist. ##
+  ##                      ##
+  ##########################
+  # Any words here found within a clans name will NOT be allowed.
+  name-blacklist:
+    faggot:
+      action: 'kick {PLAYER} This type of name use is not allowed!'
+    nigger:
+      action: 'ban {PLAYER} This type of name use is not allowed!'
+
+  ##########################
+  ##                      ##
+  ## Clan COLOR blacklist. ##
+  ##                      ##
+  ##########################
+  # Any color-codes attempted to be used from this list will NOT be allowed.
+  color-blacklist:
+    - '&k'
+
+  #########################
+  ##                     ##
+  ## Clan claim settings ##
+  ##                     ##
+  #########################
+  land-claiming:
+    allow: true
+    # Change the minimum clearance level needed to claim/unclaim land.
+    clearance: 2
+    # Change the minimum clearance level needed to un-claim all owned land.
+    unclaim-all-clearance: 2
+    # Allow nether portals to be generated within clan claims.
+    ports-in-claims: true
+    # Allow clan member size and clan bank to decide claim amounts.
+    claim-influence:
+      allow: true
+      ## NORMAL = Depend on a clans bank balance for obtaining land.
+      ## LOW = Assist the base multiplier and all other power additions for no / slower bank situations.
+      dependence: NORMAL
+    # All claims must be connected to their initial claim.
+    claim-connections: true
+    # Turn on or off titles as players traverse land-scape.
+    send-titles: true
+    # Turn on or off the messages that get sent in chat when you traverse.
+    send-messages: true
+    # Use an alternate detection system for bucket interaction. (Use only if players can still place water and lava in claims; primarily w/ EssentialsX)
+    debug: false
+    # Set a cooldown for when players over-power a specified amount of land.
+    over-powering:
+      cooldown:
+        # Use cooldown?
+        enabled: true
+        # How long will the cooldown last in seconds?
+        length: 920
+        # After how many un-claims will the cooldown trigger?
+        after-uses: 4
+    # Change the information displayed to the player
+    in-land:
+      title: '&3&oOwned land &6{0}'
+      sub-title: 'This land is owned by &b{0}'
+      message: '&7You are now entering {0}''s land'
+    wilderness:
+      title: 'Leaving &6{0}'
+      sub-title: 'Leaving {0}''s land'
+      message: '&7Now leaving {0}''s land'
+
+  #################################
+  ##                             ##
+  ## Clan friendly-fire settings ##
+  ##                             ##
+  #################################
+  friendly-fire:
+    clearance: 3
+    # Allow a cooldown every use of friendly fire? If so how long.
+    timer:
+      use: false
+      cooldown-in-seconds: 120
+
+  ##########################
+  ##                      ##
+  ## Raid-shield settings ##
+  ##                      ##
+  ##########################
+  raid-shield:
+    # Allow the raid-shield to run, enabling claim raiding?
+    allow: true
+    main-world: 'world'
+    # Default: 0 for dawn
+    up-time: 0
+    # Default: 13000 for dusk
+    down-time: 13000
+    # Allow land over-powering while the shield is up.
+    claiming: false
+    # Clans will only be able to overclaim enemy clans with this option turned on.
+    claiming-only-enemy: true
+    # Allow chat messages to send
+    send-messages: true
+    # Change the messages for the raid-shield announcements [%s gets the configured prefix.]
+    messages:
+      enabled: '{0} &8» &aRaid shield enabled.'
+      disabled: '{0} &8» &cRaid shield lifted.'
+
+
+  ##################################
+  ##                              ##
+  ## Clan miscellaneous clearance ##
+  ##           section.           ##
+  ##                              ##
+  ##################################
+
+  ##----------------------------( Clearance start )----------------------------##
+  ## Clearance levels: [Member: 0, Moderator: 1, Admin: 2, Owner:3]
+
+  # Change the minimum clearance required to change the clans name.
+  rename-clearance: 3
+
+  # Change the minimum clearance required to change the clans name COLOR.
+  recolor-clearance: 1
+
+  # Change the minimum clearance level needed to kick other clan members.
+  kick-clearance: 2
+
+  # Change the minimum clearance needed to promote/demote clan members.
+  position-clearance: 2
+
+  # Change the minimum clearance needed to update the clan description.
+  description-clearance: 3
+
+  # Change the minimum clearance needed to view & change the clans password.
+  password-clearance: 2
+
+  # Change the minimum rank clearance needed to update the clan base.
+  base-clearance: 1
+
+  # Change the minimum rank clearance needed to invite players to the clan.
+  invite-clearance: 1
+
+  # Change the minimum rank clearance needed to change the clans pvp mode.
+  mode-clearanmce: 2
+  ##----------------------------( Clearance end )----------------------------##
+
+  ###################################
+  ##                               ##
+  ## Clan war (TDM) & pvp settings ##
+  ##                               ##
+  ###################################
+  war:
+    # If someone is getting spawn camped penalize the attacker?
+    killstreak:
+      # The amount of kills to check for.
+      amount: 7
+      # The amount of time to check for.
+      time-span: 5
+      # The time threshold to calculate in
+      # Valid thresholds: [ SECONDS, MINUTES, HOURS, DAYS ]
+      threshold: SECONDS
+      # The amount of power to take
+      deduction: 2.15
+      # If the attacker is in a clan, allow clans to deduct power based off the given information?
+      penalize: true
+    # Blocked commands while in a war
+    blocked-commands:
+      - 'clan base'
+      - 'spawn'
+      - 'home'
+    # Change the minimum rank clearance needed to request war from another clan.
+    clearance: 2
+    # Change the minimum length of time a clan war can last.
+    battle-length-seconds: 60
+    # Change the maximum length of time a clan war can last.
+    battle-length-max: 120
+    # The amount of members required to be online to participate in a war.
+    online-needed: 1
+    # The amount of time to wait before starting the match.
+    wait-time-seconds: 60
+
+#-------------------------------------------------------------------
+#
+#-------------------------------------------------------------
+#  ███████╗ ██████╗ ██████╗ ███╗   ███╗ █████╗ ████████╗
+#  ██╔════╝██╔═══██╗██╔══██╗████╗ ████║██╔══██╗╚══██╔══╝
+#  █████╗  ██║   ██║██████╔╝██╔████╔██║███████║   ██║
+#  ██╔══╝  ██║   ██║██╔══██╗██║╚██╔╝██║██╔══██║   ██║
+#  ██║     ╚██████╔╝██║  ██║██║ ╚═╝ ██║██║  ██║   ██║
+#  ╚═╝      ╚═════╝ ╚═╝  ╚═╝╚═╝     ╚═╝╚═╝  ╚═╝   ╚═╝
+#-------------------------------------------------------------
+#
+#-------------------------------------------------------------------
+Formatting:
+  # Let the plugin include native chat formatting?
+  allow: true
+  # Allow clans to put prefixes before player names above heads.
+  nametag-prefix:
+    use: true
+    show-health: true
+    text: '&7[{0}{1}&7] '
+  # Change number formatting lang. [en = English, fr = French, de = german, nl = Dutch]
+  # Warning: REQUIRES a full server restart.
+  locale: en
+  # Change the max size a clan tag can be.
+  tag-size: 15
+  # Allow for tasks to print debug messages in console?
+  console-debug: true
+  # Allow console to spy on messages from clan/ally chat channels
+  chat-spy-console: true
+  # Change the prefix displayed for the plugin.
+  Prefix: '&7[&6&lClans&7]'
+  # Rank presentation style: [FULL, WORDLESS]
+  Rank-Style: WORDLESS
+  # Set custom command aliases.
+  # Warning: REQUIRES a full server restart.
+  Aliase:
+    - guild
+  # Change the format for the /clan message command
+  Clan-broadcast-prefix: '&7{0} say''s :'
+  Styles:
+    Full:
+      # Note: Changing these styles will have an effect regardless of rank style.
+      # They are displayed in certain areas of the plugin.
+      Member: 'Member'
+      Moderator: 'Moderator'
+      Admin: 'Admin'
+      Owner: 'Owner'
+    Wordless:
+      Member: '•'
+      Moderator: '••'
+      Admin: '•••'
+      Owner: '&4•❂•'
+
+  # Change the formatting for different chat channels
+  Chat:
+    global: '&8(&b{0}&8)&r &8[&3{1}&8]&r'
+    clan:
+      prefix: '&8(&3&lCC&8) &b{0} '
+      divider: '&8: &r'
+      highlight: '&8({0}{1}&8)'
+      hover: 'My clan rank is: &a{0}'
+    ally:
+      prefix: '&8(&2&lAC&8) &b{0} '
+      divider: '&8: &r'
+      highlight: '&8({0}{1}&8)'
+      hover: 'My clan rank is: &d{0}'
+#----------------------------------------------------------------
+#   █████╗ ██████╗ ██████╗  ██████╗ ███╗   ██╗███████╗
+#  ██╔══██╗██╔══██╗██╔══██╗██╔═══██╗████╗  ██║██╔════╝
+#  ███████║██║  ██║██║  ██║██║   ██║██╔██╗ ██║███████╗
+#  ██╔══██║██║  ██║██║  ██║██║   ██║██║╚██╗██║╚════██║
+#  ██║  ██║██████╔╝██████╔╝╚██████╔╝██║ ╚████║███████║
+#  ╚═╝  ╚═╝╚═════╝ ╚═════╝  ╚═════╝ ╚═╝  ╚═══╝╚══════╝
+#----------------------------------------------------------------
+Addon:
+  Stashes:
+    ################################################
+    ##                                            ##
+    ## A private clan inventory with only 9 slots ##
+    ##         Default clearance is 2             ##
+    ##                                            ##
+    ################################################
+    enabled: true
+    clearance: 2
+  Vaults:
+    #######################################################
+    ##                                                   ##
+    ## A virtual clan vault inventory for storing items. ##
+    ##            Default clearance is 1                 ##
+    ##                                                   ##
+    #######################################################
+    enabled: true
+    clearance: 1
+  Borders:
+    ##################################################################
+    ##                                                              ##
+    ## Allows users to see chunk borders in relation to clan status ##
+    ##                                                              ##
+    ##################################################################
+    enabled: true
+  Kingdoms:
+    ###########################################################################
+    ##                                                                       ##
+    ## Enabling this at the moment will do nothing. Feature not yet-started. ##
+    ##                                                                       ##
+    ###########################################################################
+    enabled: false
+  Map:
+    #####################################################
+    ##                                                 ##
+    ##        An ms5984 (Regurgitator) original        ##
+    ##   Map surrounding chunks around you and display ##
+    ##          information for them in chat.          ##
+    ##                                                 ##
+    #####################################################
+    enabled: true
+  Bounty:
+    ##############################################################
+    ##                                                          ##
+    ## Requires Vault or Enterprise. Place bounties on players! ##
+    ##                                                          ##
+    ##############################################################
+    enabled: true
+    settings:
+      # Choose where the rewarded money gets sent. To the killer or the killers clan?
+      # Valid types: [ PLAYER, CLAN ]
+      deposit-type: PLAYER
+      # Whether or not to announce retrieval of the bounty globally.
+      announce-defeat: true
+      # Turning this to false will take the money from the players clan bank if possible or if not in a clan no money will be taken from the killed player.
+      # Otherwise the money will be taken from the killed player's wallet.
+      take-from-killed: true
+      # The message broadcast when a bounty gets called on a player.
+      called-message: '&6{PLAYER} &7from clan {CLAN} put a bounty on {TARGET} for &6&l$&e{BOUNTY}'
+      # The message broadcast when a players bounty gets collected.
+      defeat-message: '&c&o{KILLER} from clan {KILLER_CLAN} collected the &6${BOUNTY} &c&obounty for killing {PLAYER}'
+  ##---------------------------( Clans [Misc] required for below addons )---------------------------##
+  ExpBottle:
+    ###############################################################
+    ##                                                           ##
+    ##       Allow players in clans to bottle experience.        ##
+    ##         Crafting recipe for xp containers here:           ##
+    ##  https://i.gyazo.com/9ab12102580335d588f635a9af10b350.png ##
+    ##                                                           ##
+    ###############################################################
+    clearance: 0
+    enabled: true
+  InstaSoup:
+    ###############################################################
+    ##                                                           ##
+    ##           When player's consume mushroom stew             ##
+    ## their health and food levels will heal by a small margin. ##
+    ##                                                           ##
+    ###############################################################
+    enabled: false
+  HardcapOptimizer:
+    ##################################################################
+    ##                                                              ##
+    ##       If a clan has more claimed land than max claims        ##
+    ## this addon will unclaim their claims to attempt rebalancing. ##
+    ##                                                              ##
+    ##################################################################
+    enabled: false
+  ClanMail:
+    ####################################################
+    ##                                                ##
+    ## Allows clan's to send each-other gift's & mail ##
+    ##                                                ##
+    ####################################################
+    mail:
+      clearance: 0
+    gift:
+      clearance: 0
+    enabled: true
+  CombatTag:
+    ######################################################################
+    ##                                                                  ##
+    ##         Add's combat cooldowns to prevent broken pvp.            ##
+    ## If a combat tagged player leaves the server they will be killed. ##
+    ##         If a combat tagged player attempts teleporting           ##
+    ##                     they will be denied.                         ##
+    ##                                                                  ##
+    ######################################################################
+    pvp-timer: 90
+    enabled: false
+  AntiAFK:
+    ################################################
+    ##                                            ##
+    ## Adds simple optimized anti-afk to the game ##
+    ##                                            ##
+    ################################################
+    afk-announce-min: 5
+    afk-kick-min: 15
+    enabled: false
+  ##---------------------------( Clans [Misc] required for above addons )---------------------------##
+##------------------------
+## -- DO NOT EDIT BELOW --
+# Authors: Hempfest, ms5984
+##------------------------
+Version: 1.2.8
