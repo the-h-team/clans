@@ -1,18 +1,10 @@
 package com.github.sanctum.clans.util.events.command;
 
-import com.github.sanctum.clans.construct.DefaultClan;
-import com.github.sanctum.clans.construct.actions.ClanAction;
-import com.github.sanctum.clans.util.StringLibrary;
 import com.github.sanctum.clans.util.events.ClanEventBuilder;
 import java.util.ArrayList;
 import java.util.List;
-import org.bukkit.event.HandlerList;
-import org.jetbrains.annotations.NotNull;
 
-@Deprecated
 public class TabInsertEvent extends ClanEventBuilder {
-
-	private static final HandlerList handlers = new HandlerList();
 
 	private final List<String> args1 = new ArrayList<>();
 
@@ -24,25 +16,6 @@ public class TabInsertEvent extends ClanEventBuilder {
 
 	public TabInsertEvent(String[] commandArgs) {
 		this.commandArgs = commandArgs;
-	}
-
-	@Override
-	public @NotNull HandlerList getHandlers() {
-		return handlers;
-	}
-
-	@Override
-	public ClanAction getUtil() {
-		return DefaultClan.action;
-	}
-
-	@Override
-	public StringLibrary stringLibrary() {
-		return DefaultClan.action;
-	}
-
-	public static HandlerList getHandlerList() {
-		return handlers;
 	}
 
 	public String[] getCommandArgs() {
@@ -97,6 +70,11 @@ public class TabInsertEvent extends ClanEventBuilder {
 				args3.remove(value);
 				break;
 		}
+	}
+
+	@Override
+	public String getName() {
+		return getClass().getSimpleName();
 	}
 
 

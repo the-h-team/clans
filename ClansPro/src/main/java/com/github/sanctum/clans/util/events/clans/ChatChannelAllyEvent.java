@@ -1,10 +1,8 @@
 package com.github.sanctum.clans.util.events.clans;
 
 import com.github.sanctum.clans.construct.DefaultClan;
-import com.github.sanctum.clans.construct.actions.ClanAction;
 import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClansAPI;
-import com.github.sanctum.clans.util.StringLibrary;
 import com.github.sanctum.clans.util.events.AsyncClanEventBuilder;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -13,21 +11,14 @@ import java.util.Set;
 import org.bukkit.Bukkit;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
-import org.bukkit.event.Cancellable;
-import org.bukkit.event.HandlerList;
-import org.jetbrains.annotations.NotNull;
 
-public class ChatChannelAllyEvent extends AsyncClanEventBuilder implements Cancellable {
-
-	private static final HandlerList handlers = new HandlerList();
+public class ChatChannelAllyEvent extends AsyncClanEventBuilder {
 
 	private final Player chatting;
 
 	private final Set<Player> receivers;
 
 	private String message;
-
-	private boolean cancelled;
 
 	private String static1 = "&7[&a&l&nAC&7] ";
 
@@ -51,25 +42,6 @@ public class ChatChannelAllyEvent extends AsyncClanEventBuilder implements Cance
 		this.chatting = sender;
 		this.receivers = receivers;
 		this.message = message;
-	}
-
-	@Override
-	public boolean isCancelled() {
-		return cancelled;
-	}
-
-	@Override
-	public void setCancelled(boolean b) {
-		this.cancelled = b;
-	}
-
-	@Override
-	public @NotNull HandlerList getHandlers() {
-		return handlers;
-	}
-
-	public static HandlerList getHandlerList() {
-		return handlers;
 	}
 
 	public Player getChatting() {
@@ -143,13 +115,7 @@ public class ChatChannelAllyEvent extends AsyncClanEventBuilder implements Cance
 	}
 
 	@Override
-	public ClanAction getUtil() {
-		return DefaultClan.action;
+	public String getName() {
+		return getClass().getSimpleName();
 	}
-
-	@Override
-	public StringLibrary stringLibrary() {
-		return new StringLibrary();
-	}
-
 }

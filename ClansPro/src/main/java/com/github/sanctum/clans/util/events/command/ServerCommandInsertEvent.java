@@ -1,23 +1,16 @@
 package com.github.sanctum.clans.util.events.command;
 
-import com.github.sanctum.clans.construct.DefaultClan;
-import com.github.sanctum.clans.construct.actions.ClanAction;
-import com.github.sanctum.clans.util.StringLibrary;
 import com.github.sanctum.clans.util.events.ClanEventBuilder;
 import java.util.Optional;
 import org.bukkit.Bukkit;
 import org.bukkit.command.ConsoleCommandSender;
-import org.bukkit.event.HandlerList;
-import org.jetbrains.annotations.NotNull;
 
 /**
  * Called to add custom console-side '/clan' subcommands.
  *
  * @author msanders5984
  */
-@Deprecated
 public final class ServerCommandInsertEvent extends ClanEventBuilder {
-    private static final HandlerList HANDLERS = new HandlerList();
     private final String[] args;
     private String errorMessage;
     private boolean isCommand;
@@ -76,6 +69,11 @@ public final class ServerCommandInsertEvent extends ClanEventBuilder {
         this.isCommand = isCommand;
     }
 
+    @Override
+    public String getName() {
+        return getClass().getSimpleName();
+    }
+
     /**
      * Get the Console's CommandSender.
      *
@@ -87,26 +85,4 @@ public final class ServerCommandInsertEvent extends ClanEventBuilder {
         return Bukkit.getConsoleSender();
     }
 
-    // builder utils
-
-    @Override
-    public ClanAction getUtil() {
-        return DefaultClan.action;
-    }
-
-    @Override
-    public StringLibrary stringLibrary() {
-        return DefaultClan.action;
-    }
-
-    // event impl
-
-    @Override
-    public @NotNull HandlerList getHandlers() {
-        return HANDLERS;
-    }
-
-    public static HandlerList getHandlerList() {
-        return HANDLERS;
-    }
 }

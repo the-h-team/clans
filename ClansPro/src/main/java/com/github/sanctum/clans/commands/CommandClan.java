@@ -32,6 +32,7 @@ import com.github.sanctum.labyrinth.formatting.string.ColoredString;
 import com.github.sanctum.labyrinth.library.Message;
 import com.github.sanctum.labyrinth.library.StringUtils;
 import com.github.sanctum.labyrinth.library.TextLib;
+import com.github.sanctum.link.ClanVentBus;
 import com.github.sanctum.link.CycleList;
 import com.github.sanctum.link.EventCycle;
 import com.google.common.collect.MapMaker;
@@ -93,8 +94,7 @@ public class CommandClan extends Command {
 		for (String s : msg.getConfig().getConfigurationSection("Commands").getKeys(false)) {
 			help.add(msg.getConfig().getString("Commands." + s + ".text"));
 		}
-		CommandHelpInsertEvent e = new CommandHelpInsertEvent(help);
-		Bukkit.getPluginManager().callEvent(e);
+		CommandHelpInsertEvent e = ClanVentBus.call(new CommandHelpInsertEvent(help));
 		return e.getHelpMenu().stream().map(s -> s.replace("clan", label)).collect(Collectors.toList());
 	}
 
@@ -130,8 +130,7 @@ public class CommandClan extends Command {
 					arguments.add(a);
 				}
 			}
-			TabInsertEvent event = new TabInsertEvent(args);
-			Bukkit.getPluginManager().callEvent(event);
+			TabInsertEvent event = ClanVentBus.call(new TabInsertEvent(args));
 			arguments.addAll(event.getArgs(1));
 			for (String a : arguments) {
 				if (a.toLowerCase().startsWith(args[0].toLowerCase()))
@@ -140,8 +139,7 @@ public class CommandClan extends Command {
 			return result;
 		}
 		if (args.length == 2) {
-			TabInsertEvent event = new TabInsertEvent(args);
-			Bukkit.getPluginManager().callEvent(event);
+			TabInsertEvent event = ClanVentBus.call(new TabInsertEvent(args));
 			arguments.addAll(event.getArgs(2));
 
 			for (String t : event.getArgs(2)) {
@@ -329,14 +327,14 @@ public class CommandClan extends Command {
 			return result;
 		}
 		if (args.length == 3) {
-			TabInsertEvent event = new TabInsertEvent(args);
-			Bukkit.getPluginManager().callEvent(event);
+			TabInsertEvent event = ClanVentBus.call(new TabInsertEvent(args));
 			arguments.addAll(event.getArgs(3));
 
 			for (String t : event.getArgs(3)) {
 				if (t.toLowerCase().startsWith(args[2].toLowerCase()))
 					result.add(t);
 			}
+
 			if (args[0].equalsIgnoreCase("ally")) {
 				if (!p.hasPermission(this.getPermission() + "." + DataManager.Security.getPermission("ally"))) {
 					return result;
@@ -439,8 +437,7 @@ public class CommandClan extends Command {
 					}
 				}
 
-				final ServerCommandInsertEvent event = new ServerCommandInsertEvent(args);
-				Bukkit.getPluginManager().callEvent(event);
+				final ServerCommandInsertEvent event = ClanVentBus.call(new ServerCommandInsertEvent(args));
 				if (event.getReturn()) return true;
 				event.getErrorMessage().map(s -> StringUtils.use(s).translate())
 						.ifPresent(sender::sendMessage);
@@ -478,8 +475,7 @@ public class CommandClan extends Command {
 			}
 		}
 
-		CommandInsertEvent event = new CommandInsertEvent(p, args);
-		Bukkit.getPluginManager().callEvent(event);
+		CommandInsertEvent event = ClanVentBus.call(new CommandInsertEvent(p, args));
 		if (event.isCommand()) {
 			return event.isCommand();
 		}
@@ -530,6 +526,7 @@ public class CommandClan extends Command {
 			}).decorate((pagination, string, page, max, placement) -> {
 				Message.form(p).send(string);
 			}).get(1);
+
 			return true;
 		}
 		if (this.getPermission() == null) throw new IllegalStateException("Permission cannot be null!");
@@ -1061,6 +1058,67 @@ public class CommandClan extends Command {
 				}
 				return true;
 			}
+
+			try {
+
+				int pa = Integer.parseInt(args0);
+
+				List<String> list = new LinkedList<>(helpMenu(label));
+
+				PaginatedList<String> help = new PaginatedList<>(list)
+						.limit(lib.menuSize())
+						.start((pagination, page, max) -> {
+							lib.sendMessage(p, lib.menuTitle());
+							Message.form(p).send(lib.menuBorder());
+						});
+
+				help.finish((pagination, page, max) -> {
+
+					Message.form(p).send(lib.menuBorder());
+					TextLib component = TextLib.getInstance();
+					int next = page + 1;
+					int last = Math.max(page - 1, 1);
+					List<BaseComponent> toSend = new LinkedList<>();
+					if (page == 1) {
+						if (page == max) {
+							toSend.add(component.textHoverable("", "&8« ", "&cYou are on the first page already."));
+							toSend.add(component.textHoverable("&f<&7" + page + "&f/&7" + max + "&f>", "", ""));
+							toSend.add(component.textHoverable("", " &8»", "&cYou are already on the last page."));
+							p.spigot().sendMessage(toSend.toArray(new BaseComponent[0]));
+							return;
+						}
+						toSend.add(component.textHoverable("", "&8« ", "&cYou are on the first page already."));
+						toSend.add(component.textHoverable("&f<&7" + page + "&f/&7" + max + "&f>", "", ""));
+						toSend.add(component.execute(() -> help.get(next), component.textHoverable("", " &3»", "&aGoto the next page.")));
+						p.spigot().sendMessage(toSend.toArray(new BaseComponent[0]));
+						return;
+					}
+					if (page == max) {
+						toSend.add(component.execute(() -> help.get(last), component.textHoverable("", "&3« ", "&aGoto the previous page.")));
+						toSend.add(component.textHoverable("&f<&7" + page + "&f/&7" + max + "&f>", "", ""));
+						toSend.add(component.textHoverable("", " &8»", "&cYou are already on the last page."));
+						p.spigot().sendMessage(toSend.toArray(new BaseComponent[0]));
+						return;
+					}
+					if (next <= max) {
+						toSend.add(component.execute(() -> help.get(last), component.textHoverable("", "&3« ", "&aGoto the previous page.")));
+						toSend.add(component.textHoverable("&f<&7" + page + "&f/&7" + max + "&f>", "", ""));
+						toSend.add(component.execute(() -> help.get(next), component.textHoverable("", " &3»", "&aGoto the next page.")));
+						p.spigot().sendMessage(toSend.toArray(new BaseComponent[0]));
+					}
+				}).decorate((pagination, string, page, max, placement) -> {
+
+					if (pa > max) {
+						sendMessage(p, "&cThere are no more pages to view!");
+						return;
+					}
+
+					Message.form(p).send(string);
+				}).get(Math.max(pa, 1));
+				return true;
+			} catch (Exception ignored) {
+			}
+
 			lib.sendMessage(p, lib.commandUnknown(label));
 			return true;
 		}
@@ -1616,8 +1674,7 @@ public class CommandClan extends Command {
 								return true;
 							}
 						}
-						ClanTagChangeEvent ev = new ClanTagChangeEvent(p, clan, clan.getName(), args1);
-						Bukkit.getPluginManager().callEvent(ev);
+						ClanTagChangeEvent ev = ClanVentBus.call(new ClanTagChangeEvent(p, clan, clan.getName(), args1));
 						if (!ev.isCancelled()) {
 							clan.setName(ev.getToName());
 						}

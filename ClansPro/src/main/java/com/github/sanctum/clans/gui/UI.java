@@ -5,6 +5,7 @@ import com.github.sanctum.clans.construct.ClanAssociate;
 import com.github.sanctum.clans.construct.DefaultClan;
 import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClansAPI;
+import com.github.sanctum.clans.util.data.DataManager;
 import com.github.sanctum.labyrinth.data.AdvancedHook;
 import com.github.sanctum.labyrinth.data.FileManager;
 import com.github.sanctum.labyrinth.data.VaultHook;
@@ -283,7 +284,7 @@ public class UI {
 								UI.view(c).open(player);
 								return;
 							} else {
-								DefaultClan.action.sendMessage(player, "&cThis clan name is available.");
+								DefaultClan.action.sendMessage(player, "&3This clan name is available.");
 							}
 							return;
 						}
@@ -294,7 +295,7 @@ public class UI {
 								UI.view(c).open(player);
 								return;
 							} else {
-								DefaultClan.action.sendMessage(player, "&cThis clan name is available.");
+								DefaultClan.action.sendMessage(player, "&3Clan name '" + arg + "' is available.");
 							}
 						}
 					});
@@ -564,7 +565,7 @@ public class UI {
 							Bukkit.dispatchCommand(p, "c info " + c.getName());
 						})
 						.assignToSlots(13)
-						.addElement(SkullItem.Head.search(associate.getPlayer()) != null ? new Item.Edit(SkullItem.Head.search(associate.getPlayer())).setFlags(ItemFlag.HIDE_ENCHANTS).addEnchantment(Enchantment.LOYALTY, 69).build() : new ItemStack(Material.PLAYER_HEAD))
+						.addElement(SkullItem.Head.search(associate.getPlayer()) != null ? new Item.Edit(SkullItem.Head.search(associate.getPlayer())).setFlags(ItemFlag.HIDE_ENCHANTS).addEnchantment(Enchantment.LOYALTY, 69).build() : new ItemStack(ClansAPI.getData().getItem("menu-items.player")))
 						.setLore(StringUtils.use(bio + " &f-" + associate.getNickname()).translate())
 						.setText(StringUtils.use(" ").translate())
 						.setAction(click -> {
@@ -864,6 +865,15 @@ public class UI {
 							Player p = click.getPlayer();
 							FileManager config = ClansAPI.getInstance().getFileList().find("Config", "Configuration");
 							FileManager message = ClansAPI.getInstance().getFileList().find("Messages", "Configuration");
+
+							List<String> format = message.getConfig().getStringList("menu-format.clan");
+
+							DataManager dataManager = ClansAPI.getData();
+
+							dataManager.CLAN_FORMAT.clear();
+
+							dataManager.CLAN_FORMAT.addAll(format);
+
 							FileManager regions = ClansAPI.getInstance().getFileList().find("Regions", "Configuration");
 							config.reload();
 							message.reload();
@@ -1072,13 +1082,8 @@ public class UI {
 							close.clear();
 						})
 						.setupProcess(e -> {
-							Material mat = ClansAPI.getData().getMaterial("clan");
-							if (mat == null) {
-								mat = Material.PAPER;
-							}
-							Material finalMat = mat;
 							e.setItem(() -> {
-								ItemStack i = new ItemStack(finalMat);
+								ItemStack i = new ItemStack(ClansAPI.getData().getItem("clan"));
 								Clan c = e.getContext();
 								int a1 = 0;
 								int a2 = 0;
@@ -1164,126 +1169,16 @@ public class UI {
 								final String memEdit = "&3Members: " + color + memlist.replace("&b&o", color).replace("&f, &b...", color + "...");
 								final String allEdit = "&3Allies: " + color + allylist.replace("&b&o", color).replace("&f, &b...", color + "...");
 								final String enemEdit = "&3Enemies: " + color + enemylist.replace("&b&o", color).replace("&f, &b...", color + "...");
-								if (par.length == 1) {
-									meta.setLore(color("&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬",
-											"&3Color: " + color.replace("&", "&f»" + color),
-											"&3Description: " + color + par[0] + ".",
-											"&3Power: " + color + c.format(String.valueOf(power)),
-											"&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬",
-											"&3Has base: " + color + baseSet,
-											"&3Land Owned: &f(" + color + ownedLand + "&f)",
-											"&3Mode: " + pvp,
-											"&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬",
-											memEdit,
-											allEdit,
-											enemEdit,
-											"&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬",
-											"&b&oClick to reveal clan members."));
+								List<String> result = new LinkedList<>();
+								for (String s : ClansAPI.getData().CLAN_FORMAT) {
+									result.add(MessageFormat.format(s, color.replace("&", "&f»" + color), color + par[0], color + c.format(String.valueOf(power)), baseSet, color + ownedLand, pvp, memEdit, allEdit, enemEdit));
 								}
-
-								if (par.length == 2) {
-									meta.setLore(color("&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬",
-											"&3Color: " + color.replace("&", "&f»" + color),
-											"&3Description: " + color + par[0] + ", ",
-											color + par[1] + ".",
-											"&3Power: " + color + c.format(String.valueOf(power)),
-											"&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬",
-											"&3Has base: " + color + baseSet,
-											"&3Land Owned: &f(" + color + ownedLand + "&f)",
-											"&3Mode: " + pvp,
-											"&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬",
-											memEdit,
-											allEdit,
-											enemEdit,
-											"&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬",
-											"&b&oClick to reveal clan members."));
-								}
-
-								if (par.length == 3) {
-									meta.setLore(color("&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬",
-											"&3Color: " + color.replace("&", "&f»" + color),
-											"&3Description: " + color + par[0] + ", ",
-											color + par[1] + ", ",
-											color + par[2] + ".",
-											"&3Power: " + color + c.format(String.valueOf(power)),
-											"&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬",
-											"&3Has base: " + color + baseSet,
-											"&3Land Owned: &f(" + color + ownedLand + "&f)",
-											"&3Mode: " + pvp,
-											"&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬",
-											memEdit,
-											allEdit,
-											enemEdit,
-											"&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬",
-											"&b&oClick to reveal clan members."));
-								}
-
-								if (par.length == 4) {
-									meta.setLore(color("&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬",
-											"&3Color: " + color.replace("&", "&f»" + color),
-											"&3Description: " + color + par[0] + ", ",
-											color + par[1] + ", ",
-											color + par[2] + ", ",
-											color + par[3] + ".",
-											"&3Power: " + color + c.format(String.valueOf(power)),
-											"&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬",
-											"&3Has base: " + color + baseSet,
-											"&3Land Owned: &f(" + color + ownedLand + "&f)",
-											"&3Mode: " + pvp,
-											"&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬",
-											memEdit,
-											allEdit,
-											enemEdit,
-											"&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬",
-											"&b&oClick to reveal clan members."));
-								}
-
-								if (par.length == 5) {
-									meta.setLore(color("&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬",
-											"&3Color: " + color.replace("&", "&f»" + color),
-											"&3Description: " + color + par[0] + ", ",
-											color + par[1] + ", ",
-											color + par[2] + ", ",
-											color + par[3] + ", ",
-											color + par[4] + ".",
-											"&3Power: " + color + c.format(String.valueOf(power)),
-											"&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬",
-											"&3Has base: " + color + baseSet,
-											"&3Land Owned: &f(" + color + ownedLand + "&f)",
-											"&3Mode: " + pvp,
-											"&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬",
-											memEdit,
-											allEdit,
-											enemEdit,
-											"&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬",
-											"&b&oClick to reveal clan members."));
-								}
-
-								if (par.length >= 6) {
-									meta.setLore(color("&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬",
-											"&3Color: " + color.replace("&", "&f»" + color),
-											"&3Description: " + color + par[0] + ", ",
-											color + par[1] + ", ",
-											color + par[2] + ", ",
-											color + par[3] + ", ",
-											color + par[4] + ", ",
-											color + par[5] + ".",
-											"&3Power: " + color + c.format(String.valueOf(power)),
-											"&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬",
-											"&3Has base: " + color + baseSet,
-											"&3Land Owned: &f(" + color + ownedLand + "&f)",
-											"&3Mode: " + pvp,
-											"&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬",
-											memEdit,
-											allEdit,
-											enemEdit,
-											"&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬",
-											"&b&oClick to reveal clan members."));
-								}
-
+								meta.setLore(color(result.toArray(new String[0])));
 								meta.getPersistentDataContainer().set(clanKey, PersistentDataType.STRING, e.getContext().getId().toString());
 
-								meta.setDisplayName(StringUtils.use("&6&lTag: " + c.getColor() + c.getName() + "&r &f(" + "&3#" + color + id + "&f)").translate());
+								String title = MessageFormat.format(ClansAPI.getData().getCategory("clan"), c.getColor(), c.getName(), id);
+
+								meta.setDisplayName(StringUtils.use(title).translate());
 
 								i.setItemMeta(meta);
 
@@ -1316,13 +1211,8 @@ public class UI {
 							close.clear();
 						})
 						.setupProcess(e -> {
-							Material mat = ClansAPI.getData().getMaterial("clan");
-							if (mat == null) {
-								mat = Material.PAPER;
-							}
-							Material finalMat = mat;
 							e.setItem(() -> {
-								ItemStack i = new ItemStack(finalMat);
+								ItemStack i = new ItemStack(ClansAPI.getData().getItem("clan"));
 								Clan c = e.getContext();
 								int a1 = 0;
 								int a2 = 0;
@@ -1404,24 +1294,17 @@ public class UI {
 
 								String[] par = new Paragraph(desc).setRegex(Paragraph.COMMA_AND_PERIOD).get();
 
-								meta.setLore(color("&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬",
-										"&3Color: " + color.replace("&", "&f»" + color),
-										"&3Description: " + color + par[0] + "...",
-										"&3Power: " + color + c.format(String.valueOf(power)),
-										"&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬",
-										"&3Has base: " + color + baseSet,
-										"&3Land Owned: &f(" + color + ownedLand + "&f)",
-										"&3Mode: " + pvp,
-										"&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬",
-										"&3Members: " + color + memlist.replace("&b&o", color).replace("&f, &b...", color + "..."),
-										"&3Allies: " + color + allylist.replace("&b&o", color).replace("&f, &b...", color + "..."),
-										"&3Enemies: " + color + enemylist.replace("&b&o", color).replace("&f, &b...", color + "..."),
-										"&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬",
-										"&b&oClick to reveal clan members."));
+								List<String> result = new LinkedList<>();
+								for (String s : ClansAPI.getData().CLAN_FORMAT) {
+									result.add(MessageFormat.format(s, color.replace("&", "&f»" + color), color + par[0], color + c.format(String.valueOf(power)), baseSet, color + ownedLand, pvp, memlist, allylist, enemylist));
+								}
+								meta.setLore(color(result.toArray(new String[0])));
 
 								meta.getPersistentDataContainer().set(clanKey, PersistentDataType.STRING, e.getContext().getId().toString());
 
-								meta.setDisplayName(StringUtils.use("&6&lTag: " + c.getColor() + c.getName() + "&r &f(" + "&3#" + color + id + "&f)").translate());
+								String title = MessageFormat.format(ClansAPI.getData().getCategory("clan"), c.getColor(), c.getName(), id);
+
+								meta.setDisplayName(StringUtils.use(title).translate());
 
 								i.setItemMeta(meta);
 
@@ -1459,7 +1342,7 @@ public class UI {
 					e.setItem(() -> {
 						ItemStack copy = SkullItem.Head.search(e.getContext().getPlayer());
 						if (copy == null)
-							copy = new ItemStack(Material.PLAYER_HEAD);
+							copy = new ItemStack(ClansAPI.getData().getItem("menu-items.player"));
 						ItemStack i = new ItemStack(copy);
 						ClanAssociate associate = e.getContext();
 						ItemMeta meta = Objects.requireNonNull(i.getItemMeta());

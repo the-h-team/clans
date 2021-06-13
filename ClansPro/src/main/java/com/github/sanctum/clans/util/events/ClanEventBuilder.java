@@ -1,14 +1,19 @@
 package com.github.sanctum.clans.util.events;
 
+import com.github.sanctum.clans.construct.DefaultClan;
 import com.github.sanctum.clans.construct.actions.ClanAction;
 import com.github.sanctum.clans.util.StringLibrary;
-import org.bukkit.event.Event;
+import com.github.sanctum.labyrinth.event.custom.Vent;
 
-public abstract class ClanEventBuilder extends Event {
+public abstract class ClanEventBuilder extends Vent {
 
-    public abstract ClanAction getUtil();
+    public ClanAction getUtil() {
+        return DefaultClan.action;
+    }
 
-    public abstract StringLibrary stringLibrary();
+    public StringLibrary stringLibrary() {
+        return getUtil();
+    }
 
 
 }

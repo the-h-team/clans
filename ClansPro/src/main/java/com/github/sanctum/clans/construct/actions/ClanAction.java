@@ -21,6 +21,7 @@ import com.github.sanctum.labyrinth.library.HUID;
 import com.github.sanctum.labyrinth.library.Message;
 import com.github.sanctum.labyrinth.library.TextLib;
 import com.github.sanctum.labyrinth.task.Schedule;
+import com.github.sanctum.link.ClanVentBus;
 import java.io.File;
 import java.math.BigDecimal;
 import java.text.MessageFormat;
@@ -55,8 +56,7 @@ public class ClanAction extends StringLibrary {
 				}
 				return;
 			}
-			ClanCreateEvent e = new ClanCreateEvent(owner, clanName, password);
-			Bukkit.getPluginManager().callEvent(e);
+			ClanCreateEvent e = ClanVentBus.call(new ClanCreateEvent(owner, clanName, password));
 			if (!e.isCancelled()) {
 				FileConfiguration local = user.getConfig();
 				String newID = clanCode();
@@ -87,8 +87,7 @@ public class ClanAction extends StringLibrary {
 				if (ClansPro.getInstance().dataManager.prefixedTagsAllowed()) {
 					ScoreTag.set(Bukkit.getPlayer(owner), ClansAPI.getData().prefixedTag(getClan(getClanID(clanName)).getColor(), clanName));
 				}
-				ClanCreatedEvent event = new ClanCreatedEvent(owner, clanName);
-				Bukkit.getPluginManager().callEvent(event);
+				ClanVentBus.call(new ClanCreatedEvent(owner, clanName));
 			}
 		} else {
 			if (Bukkit.getPlayer(owner) != null) {
@@ -103,8 +102,7 @@ public class ClanAction extends StringLibrary {
 			if (clanName.length() > ClansAPI.getData().getMain().getConfig().getInt("Formatting.tag-size")) {
 				ClansPro.getInstance().getLogger().warning("- Clan tag is too long, API usage detected. Bypassing...");
 			}
-			ClanCreateEvent e = new ClanCreateEvent(owner, clanName, password);
-			Bukkit.getPluginManager().callEvent(e);
+			ClanCreateEvent e = ClanVentBus.call(new ClanCreateEvent(owner, clanName, password));
 			if (!e.isCancelled()) {
 				FileConfiguration local = user.getConfig();
 				String newID = clanCode();
@@ -134,8 +132,7 @@ public class ClanAction extends StringLibrary {
 					DefaultClan instance = new DefaultClan(clanID);
 					ClansAPI.getData().CLANS.add(instance);
 				}
-				ClanCreatedEvent event = new ClanCreatedEvent(owner, clanName);
-				Bukkit.getPluginManager().callEvent(event);
+				ClanVentBus.call(new ClanCreatedEvent(owner, clanName));
 			}
 		} else {
 			if (Bukkit.getPlayer(owner) != null) {
@@ -765,8 +762,7 @@ public class ClanAction extends StringLibrary {
 			array.add("&6Enemies [" + c + 0 + "&6]");
 		array.add("&f&m---------------------------");
 		array.add("&n" + getRankTag("Member") + "s&r [" + c + members.size() + "&r]");
-		ClanInformationAdaptEvent event = new ClanInformationAdaptEvent(array, clanID);
-		Bukkit.getPluginManager().callEvent(event);
+		ClanInformationAdaptEvent event = ClanVentBus.call(new ClanInformationAdaptEvent(array, clanID));
 		printArray(target, event.getInsertions());
 		paginatedMemberList(target, members, page);
 		target.sendMessage(" ");

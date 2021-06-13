@@ -7,9 +7,11 @@ import com.github.sanctum.clans.construct.api.ClansAPI;
 import com.github.sanctum.clans.util.events.command.CommandHelpInsertEvent;
 import com.github.sanctum.clans.util.events.command.CommandInsertEvent;
 import com.github.sanctum.clans.util.events.command.TabInsertEvent;
+import com.github.sanctum.labyrinth.event.custom.Vent;
 import com.github.sanctum.labyrinth.formatting.string.ColoredString;
 import com.github.sanctum.labyrinth.library.DirectivePoint;
 import com.github.sanctum.labyrinth.library.TextLib;
+import com.github.sanctum.link.ClanVentBus;
 import com.github.sanctum.map.structure.ChunkPosition;
 import com.github.sanctum.map.structure.MapPoint;
 import java.util.ArrayList;
@@ -38,6 +40,57 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 
 public class MapCommand implements Listener {
+
+    public MapCommand() {
+
+        ClanVentBus.subscribe(CommandHelpInsertEvent.class, Vent.Priority.HIGH, (e, subscription) -> e.insert("&7|&e) &6/clan &fmap"));
+
+        ClanVentBus.subscribe(TabInsertEvent.class, Vent.Priority.HIGH, (e, subscription) -> {
+
+            if (!e.getArgs(1).contains("map")) {
+                e.add(1, "map");
+            }
+            final String[] commandArgs = e.getCommandArgs();
+            if (commandArgs.length > 0 && commandArgs[0].equalsIgnoreCase("map")) {
+                if (!e.getArgs(2).contains("on")) {
+                    e.add(2, "on");
+                }
+                if (!e.getArgs(2).contains("off")) {
+                    e.add(2, "off");
+                }
+            }
+
+        });
+
+        ClanVentBus.subscribe(CommandInsertEvent.class, Vent.Priority.HIGH, (e, subscription) -> {
+
+            final Player p = e.getSender();
+            final String[] args = e.getArgs();
+            final int length = args.length;
+            if (length > 0 && args[0].equalsIgnoreCase("map")) {
+                if (length == 1) {
+                    e.setReturn(true);
+                    sendMapCurrentLoc(p);
+                } else {
+                    if (args[1].equalsIgnoreCase("on")) {
+                        // on logic
+                        sendMapCurrentLoc(p);
+                        players.add(p);
+                    } else if (args[1].equalsIgnoreCase("off")) {
+                        // off logic
+                        players.remove(p);
+                    } else {
+                        // send usage
+                        return;
+                    }
+                    e.setReturn(true);
+                }
+            }
+
+        });
+
+    }
+
     static class Rose {
         private static final String[][] NORTH = new String[][]{{"N"}, {"W", "E"}, {"S"}};
         private static final String[][] EAST = new String[][]{{"E"}, {"N", "S"}, {"W"}};
@@ -92,56 +145,6 @@ public class MapCommand implements Listener {
             final float yaw = e.player.getLocation().getYaw();
             final Optional<BlockFace> optional = CompletableFuture.supplyAsync(() -> chooseDirection(yaw)).join();
             if (optional.isPresent()) sendMapCurrentLoc(e.player);
-        }
-    }
-
-    // Add /clan map to help commands list
-    @EventHandler
-    public void onCommandHelp(CommandHelpInsertEvent e) {
-        e.insert("&7|&e) &6/clan &fmap");
-    }
-
-    // Add "map" to suggests for first parameter (/clan X)
-    @EventHandler
-    public void onMapTab(TabInsertEvent e) {
-        if (!e.getArgs(1).contains("map")) {
-            e.add(1, "map");
-        }
-        final String[] commandArgs = e.getCommandArgs();
-        if (commandArgs.length > 0 && commandArgs[0].equalsIgnoreCase("map")) {
-            if (!e.getArgs(2).contains("on")) {
-                e.add(2, "on");
-            }
-            if (!e.getArgs(2).contains("off")) {
-                e.add(2, "off");
-            }
-        }
-    }
-
-    // Handle "/clan 'map'..." commands
-    @EventHandler(priority = EventPriority.HIGH)
-    public void onMaps(CommandInsertEvent e) {
-        final Player p = e.getSender();
-        final String[] args = e.getArgs();
-        final int length = args.length;
-        if (length > 0 && args[0].equalsIgnoreCase("map")) {
-            if (length == 1) {
-                e.setReturn(true);
-                sendMapCurrentLoc(p);
-            } else {
-                if (args[1].equalsIgnoreCase("on")) {
-                    // on logic
-                    sendMapCurrentLoc(p);
-                    players.add(p);
-                } else if (args[1].equalsIgnoreCase("off")) {
-                    // off logic
-                    players.remove(p);
-                } else {
-                    // send usage
-                    return;
-                }
-                e.setReturn(true);
-            }
         }
     }
 

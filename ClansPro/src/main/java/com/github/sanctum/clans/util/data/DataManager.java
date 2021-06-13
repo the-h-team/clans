@@ -33,6 +33,8 @@ public class DataManager {
 
 	public HashMap<Player, String> CHAT_MODE = new HashMap<>();
 
+	public List<String> CLAN_FORMAT = new LinkedList<>();
+
 	public HashMap<String, List<String>> CLAN_ENEMY_MAP = new HashMap<>();
 
 	public HashMap<String, List<String>> CLAN_ALLY_MAP = new HashMap<>();

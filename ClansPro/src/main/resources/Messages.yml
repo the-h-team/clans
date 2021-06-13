@@ -312,9 +312,36 @@ Response:
 #==================================#
 # MENU-SIZES: ONE, TWO, THREE, FOUR, FIVE, SIX
 pagination-size: THREE
+
+menu-format:
+  # {0} = Clan Color
+  # {1} = Clan Description
+  # {2} = Clan Power
+  # {3} = Clan Base Validation
+  # {4} = Clan Land Owned
+  # {5} = Clan PVP Mode
+  # {6} = Clan Members (Partial)
+  # {7} = Clan Allies (Partial)
+  # {8} = Clan Enemies (Partial)
+  clan:
+    - '&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬'
+    - '&3Color: {0}'
+    - '&3Description: {1}'
+    - '&3Power: {2}'
+    - '&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬'
+    - '&3Has base: {3}'
+    - '&3Land Owned: &f({4}&f)'
+    - '&3Mode: {5}'
+    - '&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬'
+    - '&7Members: {6}'
+    - '&7Allies: {7}'
+    - '&7Enemies: {8}'
+    - '&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬'
+    - '&b&oClick to reveal clan members.'
+
 menu-items:
-  navigate_left: DARK_OAK_BUTTON
-  navigate_right: DARK_OAK_BUTTON
+  navigate_left: 'eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMzdhZWU5YTc1YmYwZGY3ODk3MTgzMDE1Y2NhMGIyYTdkNzU1YzYzMzg4ZmYwMTc1MmQ1ZjQ0MTlmYzY0NSJ9fX0'
+  navigate_right: 'eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNjgyYWQxYjljYjRkZDIxMjU5YzBkNzVhYTMxNWZmMzg5YzNjZWY3NTJiZTM5NDkzMzgxNjRiYWM4NGE5NmUifX19'
   back: BARRIER
   top-list: GOLD_BLOCK
   roster-list: PAPER
@@ -325,12 +352,17 @@ menu-titles:
   top-list: '&3&oClan Leaderboard &0&l»'
   roster-list: '&3&oComplete Server Roster &0&l»'
   member-list: 'Members &0&l»'
+  # {0} = Clan Associate
   member-information: '{0}''s &3&oclan information &0&l»'
   list-types: '&3&oView &0&l»'
 
 menu-categories:
   top-list: '&7[&6Leaderboard&7]'
   roster-list: '&7[&bRoster&7]'
+  # {0} = Clan Color
+  # {1} = Clan Name
+  # {2} = Clan ID Short
+  clan: '&6&lTag: {0}{1} {0}(&3#{0}{2})'
 
 gui-navigation:
   back: '&eClick to: &cgo back.'

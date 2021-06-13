@@ -4,12 +4,8 @@ import com.github.sanctum.borders.BorderListener;
 import com.github.sanctum.borders.BorderRegion;
 import com.github.sanctum.clans.construct.Claim;
 import com.github.sanctum.clans.construct.ClanAssociate;
-import com.github.sanctum.clans.construct.DefaultClan;
-import com.github.sanctum.clans.construct.actions.ClanAction;
 import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClansAPI;
-import com.github.sanctum.clans.util.StringLibrary;
-import com.github.sanctum.clans.util.events.ClanEventBuilder;
 import com.github.sanctum.labyrinth.data.Region;
 import com.github.sanctum.labyrinth.library.Cuboid;
 import com.github.sanctum.labyrinth.library.HUID;
@@ -18,10 +14,11 @@ import org.bukkit.Particle;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Cancellable;
+import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 import org.jetbrains.annotations.NotNull;
 
-public class BorderTaskEvent extends ClanEventBuilder implements Cancellable {
+public class BorderTaskEvent extends Event implements Cancellable {
 
 	private static final HandlerList handlers = new HandlerList();
 	private boolean cancelled;
@@ -34,16 +31,6 @@ public class BorderTaskEvent extends ClanEventBuilder implements Cancellable {
 	@Override
 	public @NotNull HandlerList getHandlers() {
 		return handlers;
-	}
-
-	@Override
-	public ClanAction getUtil() {
-		return DefaultClan.action;
-	}
-
-	@Override
-	public StringLibrary stringLibrary() {
-		return DefaultClan.action;
 	}
 
 	public static HandlerList getHandlerList() {

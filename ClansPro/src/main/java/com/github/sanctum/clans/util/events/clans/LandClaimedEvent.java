@@ -1,17 +1,10 @@
 package com.github.sanctum.clans.util.events.clans;
 
 import com.github.sanctum.clans.construct.Claim;
-import com.github.sanctum.clans.construct.DefaultClan;
-import com.github.sanctum.clans.construct.actions.ClanAction;
-import com.github.sanctum.clans.util.StringLibrary;
 import com.github.sanctum.clans.util.events.ClanEventBuilder;
 import org.bukkit.entity.Player;
-import org.bukkit.event.HandlerList;
-import org.jetbrains.annotations.NotNull;
 
 public class LandClaimedEvent extends ClanEventBuilder {
-
-	private static final HandlerList handlers = new HandlerList();
 
 	private final Player claimer;
 
@@ -23,22 +16,8 @@ public class LandClaimedEvent extends ClanEventBuilder {
 	}
 
 	@Override
-	public @NotNull HandlerList getHandlers() {
-		return handlers;
-	}
-
-	public static HandlerList getHandlerList() {
-		return handlers;
-	}
-
-	@Override
-	public ClanAction getUtil() {
-		return DefaultClan.action;
-	}
-
-	@Override
-	public StringLibrary stringLibrary() {
-		return DefaultClan.action;
+	public String getName() {
+		return getClass().getSimpleName();
 	}
 
 	public Claim getLand() {

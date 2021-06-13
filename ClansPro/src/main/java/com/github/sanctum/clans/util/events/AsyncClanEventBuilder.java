@@ -1,10 +1,11 @@
 package com.github.sanctum.clans.util.events;
 
+import com.github.sanctum.clans.construct.DefaultClan;
 import com.github.sanctum.clans.construct.actions.ClanAction;
 import com.github.sanctum.clans.util.StringLibrary;
-import org.bukkit.event.Event;
+import com.github.sanctum.labyrinth.event.custom.Vent;
 
-public abstract class AsyncClanEventBuilder extends Event {
+public abstract class AsyncClanEventBuilder extends Vent {
 
 
     protected AsyncClanEventBuilder() {
@@ -15,9 +16,13 @@ public abstract class AsyncClanEventBuilder extends Event {
         super(isAsync);
     }
 
-    public abstract ClanAction getUtil();
+    public ClanAction getUtil() {
+        return DefaultClan.action;
+    }
 
-    public abstract StringLibrary stringLibrary();
+    public StringLibrary stringLibrary() {
+        return getUtil();
+    }
 
 
 }

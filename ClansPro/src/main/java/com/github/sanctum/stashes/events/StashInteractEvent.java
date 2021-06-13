@@ -1,20 +1,17 @@
 package com.github.sanctum.stashes.events;
 
-import com.github.sanctum.clans.construct.DefaultClan;
-import com.github.sanctum.clans.construct.actions.ClanAction;
 import com.github.sanctum.clans.construct.api.Clan;
-import com.github.sanctum.clans.util.StringLibrary;
-import com.github.sanctum.clans.util.events.ClanEventBuilder;
 import java.util.List;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Cancellable;
+import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 import org.bukkit.inventory.InventoryView;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
-public class StashInteractEvent extends ClanEventBuilder implements Cancellable {
+public class StashInteractEvent extends Event implements Cancellable {
 
 	private static final HandlerList handlers = new HandlerList();
 
@@ -45,16 +42,6 @@ public class StashInteractEvent extends ClanEventBuilder implements Cancellable 
 
 	public static HandlerList getHandlerList() {
 		return handlers;
-	}
-
-	@Override
-	public ClanAction getUtil() {
-		return DefaultClan.action;
-	}
-
-	@Override
-	public StringLibrary stringLibrary() {
-		return DefaultClan.action;
 	}
 
 	public Clan getOwner() {

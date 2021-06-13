@@ -3,7 +3,7 @@ package com.github.sanctum.stashes;
 import com.github.sanctum.clans.ClansPro;
 import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClansAPI;
-import com.github.sanctum.vaults.events.VaultInteractEvent;
+import com.github.sanctum.stashes.events.StashInteractEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -25,7 +25,7 @@ public class StashListener implements Listener {
 				(new BukkitRunnable() {
 					public void run() {
 						// do stuff
-						VaultInteractEvent event = new VaultInteractEvent(c, p, e.getCurrentItem(), e.getView(), e.getViewers());
+						StashInteractEvent event = new StashInteractEvent(c, p, e.getCurrentItem(), e.getView(), e.getViewers());
 						Bukkit.getPluginManager().callEvent(event);
 						if (event.isCancelled()) {
 							e.setCancelled(true);

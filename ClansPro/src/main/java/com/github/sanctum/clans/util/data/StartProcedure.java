@@ -10,17 +10,15 @@ import com.github.sanctum.clans.construct.bank.BankListener;
 import com.github.sanctum.clans.construct.bank.BankPermissions;
 import com.github.sanctum.clans.util.Placeholders;
 import com.github.sanctum.clans.util.events.clans.RaidShieldEvent;
-import com.github.sanctum.labyrinth.command.CommandBuilder;
+import com.github.sanctum.labyrinth.command.CommandRegistration;
 import com.github.sanctum.labyrinth.data.FileManager;
 import com.github.sanctum.labyrinth.data.Registry;
 import com.github.sanctum.labyrinth.data.RegistryData;
-import com.github.sanctum.labyrinth.event.EventBuilder;
+import com.github.sanctum.labyrinth.event.custom.Vent;
 import com.github.sanctum.labyrinth.task.Schedule;
 import com.github.sanctum.link.CycleList;
 import com.github.sanctum.link.EventCycle;
 import com.github.sanctum.link.dynmap.DynmapCycle;
-import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -68,33 +66,29 @@ public class StartProcedure {
 		instance.getLogger().info("▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬");
 	}
 
-	public void registerDefaults(ClassLoader loader) {
+	public void registerDefaults() {
 		instance.getLogger().info("- Registering defaults.");
 		instance.dataManager.copyDefaults();
 		Bukkit.getServicesManager().register(ClansAPI.class, instance, instance, ServicePriority.Normal);
-		try {
-			new Registry<>(Listener.class).source(ClansPro.getInstance()).pick("com.github.sanctum.clans.util.listener").operate(EventBuilder::register);
-			new Registry<>(Command.class).source(ClansPro.getInstance()).pick("com.github.sanctum.clans.commands").operate(CommandBuilder::register);
-			RegistryData<EventCycle> data = new Registry.File<>(EventCycle.class)
-					.from("Addons")
-					.provide(loader)
-					.use(instance)
-					.operate(cycle -> {
-						cycle.onLoad();
-						cycle.register();
-					});
 
-			instance.getLogger().info("- (" + data.getData().size() + ") EvenCycle(s) were injected into cache.");
+		new Registry<>(Listener.class).source(ClansPro.getInstance()).pick("com.github.sanctum.clans.util.listener").operate(listener -> Bukkit.getPluginManager().registerEvents(listener, instance));
+		new Registry<>(Command.class).source(ClansPro.getInstance()).pick("com.github.sanctum.clans.commands").operate(CommandRegistration::use);
 
-			for (EventCycle e : data.getData()) {
-				sendBorder();
-				instance.getLogger().info("- Loaded: " + e.getName() + " v" + e.getVersion());
-				sendBorder();
-			}
+		RegistryData<EventCycle> data = new Registry.Loader<>(EventCycle.class)
+				.source(instance)
+				.from("Addons")
+				.operate(e -> {
+					e.onLoad();
+					e.register();
+				});
 
-		} catch (IOException | NoSuchMethodException | IllegalAccessException | InvocationTargetException var3) {
-			var3.printStackTrace();
+		for (EventCycle e : data.getData()) {
+			sendBorder();
+			instance.getLogger().info("- Loaded: " + e.getName() + " v" + e.getVersion());
+			sendBorder();
 		}
+
+		instance.getLogger().info("- (" + data.getData().size() + ") EvenCycle(s) were injected into cache.");
 
 	}
 
@@ -132,8 +126,7 @@ public class StartProcedure {
 		if (configAllow) {
 			Schedule.sync(() -> {
 				if (Bukkit.getOnlinePlayers().size() > 0) {
-					RaidShieldEvent e = new RaidShieldEvent();
-					Bukkit.getPluginManager().callEvent(e);
+					new Vent.Call<>(Vent.Runtime.Synchronous, new RaidShieldEvent()).run();
 				}
 			}).repeatReal(1, 40);
 			instance.getLogger().info("- Running raid shield timer.");

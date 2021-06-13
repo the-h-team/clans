@@ -16,7 +16,7 @@ import com.github.sanctum.clans.util.events.clans.LandClaimedEvent;
 import com.github.sanctum.clans.util.events.command.OtherInformationAdaptEvent;
 import com.github.sanctum.labyrinth.Labyrinth;
 import com.github.sanctum.labyrinth.data.FileManager;
-import com.github.sanctum.labyrinth.data.container.DataComponent;
+import com.github.sanctum.labyrinth.event.custom.Vent;
 import com.github.sanctum.labyrinth.formatting.UniformedComponents;
 import com.github.sanctum.labyrinth.formatting.string.RandomID;
 import com.github.sanctum.labyrinth.library.HUID;
@@ -44,7 +44,7 @@ public class DefaultClan implements Clan {
 	private static final long serialVersionUID = 427254537180595211L;
 
 	private final String clanID;
-	private final NamespacedKey key;
+	transient NamespacedKey key;
 	private final List<Clan> warInvites = new ArrayList<>();
 	private ClanWar clanWar = null;
 	private final MemberWrapper memberList;
@@ -550,7 +550,7 @@ public class DefaultClan implements Clan {
 	 */
 	@Override
 	public @NotNull List<String> getDataKeys() {
-		return Labyrinth.getPersistentData(this.key).persistentKeySet();
+		return Labyrinth.getContainer(this.key).persistentKeySet();
 	}
 
 	/**
@@ -563,29 +563,31 @@ public class DefaultClan implements Clan {
 	 */
 	@Override
 	public <R> R getValue(Class<R> type, String key) {
-		DataComponent component = Labyrinth.getPersistentData(this.key);
-		component.isLoaded(type, key);
-		return component.get(type, key);
+		return Labyrinth.getContainer(this.key).get(type, key);
 	}
 
 	/**
-	 * @param key
-	 * @param value
-	 * @param <R>
-	 * @return
+	 * Store a custom serializable object to this clans data container.
+	 *
+	 * @param key   The key delimiter for the value.
+	 * @param value The desired serializable object to be stored.
+	 * @param <R>   The type of the value.
+	 * @return The same value passed through the parameters.
 	 */
 	@Override
 	public <R> R setValue(String key, R value) {
-		return Labyrinth.getPersistentData(this.key).attach(key, value);
+		return Labyrinth.getContainer(this.key).attach(key, value);
 	}
 
 	/**
-	 * @param key
-	 * @return
+	 * Remove a persistent value from this clans data container.
+	 *
+	 * @param key The values key delimiter.
+	 * @return true if successfully removed.
 	 */
 	@Override
 	public boolean removeValue(String key) {
-		return Labyrinth.getPersistentData(this.key).delete(key);
+		return Labyrinth.getContainer(this.key).delete(key);
 	}
 
 	/**
@@ -696,8 +698,7 @@ public class DefaultClan implements Clan {
 		}
 		array.add("&n" + action.getRankTag("Member") + "s&r [&7" + members.size() + "&r] - " + names.toString());
 		array.add(" ");
-		OtherInformationAdaptEvent event = new OtherInformationAdaptEvent(array, clanID);
-		Bukkit.getPluginManager().callEvent(event);
+		OtherInformationAdaptEvent event = new Vent.Call<>(Vent.Runtime.Synchronous, new OtherInformationAdaptEvent(array, clanID)).run();
 		return event.getInsertions().toArray(new String[0]);
 	}
 
@@ -838,8 +839,7 @@ public class DefaultClan implements Clan {
 			ClansAPI.getInstance().getClaimManager().refresh();
 			broadcast(Claim.action.claimed(x, z, world));
 			claim = ClansAPI.getInstance().getClaimManager().getClaim(claimID);
-			LandClaimedEvent event2 = new LandClaimedEvent(null, claim);
-			Bukkit.getPluginManager().callEvent(event2);
+			new Vent.Call<>(Vent.Runtime.Synchronous, new LandClaimedEvent(null, claim)).run();
 		}
 		return claim;
 	}

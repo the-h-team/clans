@@ -22,7 +22,6 @@ import com.github.sanctum.labyrinth.library.HUID;
 import com.github.sanctum.labyrinth.library.StringUtils;
 import com.github.sanctum.link.CycleList;
 import com.github.sanctum.link.EventCycle;
-import java.io.IOException;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -95,6 +94,8 @@ public class ClansPro extends JavaPlugin implements ClansAPI {
 		} else {
 			System.setProperty("OLD", "FALSE");
 		}
+
+
 		dataManager.assertDefaults();
 		StartProcedure primary;
 		try {
@@ -104,7 +105,7 @@ public class ClansPro extends JavaPlugin implements ClansAPI {
 			throw new IllegalStateException("Unable to properly initialize the plugin!", e);
 		}
 		primary.printLogo();
-		primary.registerDefaults(getClassLoader());
+		primary.registerDefaults();
 		primary.sendBorder();
 		primary.runDataCleaner();
 		primary.sendBorder();
@@ -154,6 +155,13 @@ public class ClansPro extends JavaPlugin implements ClansAPI {
 			metrics.addCustomChart(new Metrics.SingleLineChart("total_clans_registered", () -> DefaultClan.action.getAllClanIDs().size()));
 		});
 		dataManager.runCleaner();
+
+		FileManager config = DataManager.FileType.MISC_FILE.get("Messages", "Configuration");
+
+		List<String> format = config.getConfig().getStringList("menu-format.clan");
+
+		dataManager.CLAN_FORMAT.addAll(format);
+
 	}
 
 	public void onDisable() {
@@ -322,57 +330,53 @@ public class ClansPro extends JavaPlugin implements ClansAPI {
 
 	@Override
 	public void searchNewAddons(Plugin plugin, String packageName) {
-		try {
-			RegistryData<EventCycle> data = new Registry<>(EventCycle.class)
-					.source(plugin)
-					.pick(packageName)
-					.operate(cycle -> {
-						cycle.onLoad();
-						cycle.register();
-						cycle.onEnable();
-					});
+		RegistryData<EventCycle> data = new Registry<>(EventCycle.class)
+				.source(plugin)
+				.pick(packageName)
+				.operate(cycle -> {
+					cycle.onLoad();
+					cycle.register();
+					cycle.onEnable();
+				});
 
-			ClansPro.getInstance().getLogger().info("- Found (" + data.getData().size() + ") event cycle(s)");
+		ClansPro.getInstance().getLogger().info("- Found (" + data.getData().size() + ") event cycle(s)");
 
-			for (EventCycle e : data.getData()) {
-				if (e.persist()) {
+		for (EventCycle e : data.getData()) {
+			if (e.persist()) {
 
-					ClansPro.getInstance().getLogger().info(" ");
-					ClansPro.getInstance().getLogger().info("▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬");
-					ClansPro.getInstance().getLogger().info("- Addon: " + e.getName());
-					ClansPro.getInstance().getLogger().info("- Version: " + e.getVersion());
-					ClansPro.getInstance().getLogger().info("- Author(s): " + Arrays.toString(e.getAuthors()));
-					ClansPro.getInstance().getLogger().info("- Description: " + e.getDescription());
-					ClansPro.getInstance().getLogger().info("- Persistent: (" + e.persist() + ")");
-					ClansPro.getInstance().getLogger().info("▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬");
-					ClansPro.getInstance().getLogger().info(" ");
-					ClansPro.getInstance().getLogger().info("- Listeners: (" + e.getAdditions().size() + ")");
-					for (Listener addition : e.getAdditions()) {
-						boolean registered = HandlerList.getRegisteredListeners(PRO).stream().anyMatch(r -> r.getListener().equals(addition));
-						if (!registered) {
-							ClansPro.getInstance().getLogger().info("- [" + e.getName() + "] (+1) Class " + addition.getClass().getSimpleName() + " loaded");
-							Bukkit.getPluginManager().registerEvents(addition, PRO);
-						} else {
-							ClansPro.getInstance().getLogger().info("- [" + e.getName() + "] (-1) Class " + addition.getClass().getSimpleName() + " already loaded. Skipping.");
-						}
-					}
-				} else {
-					ClansPro.getInstance().getLogger().info(" ");
-					ClansPro.getInstance().getLogger().info("- Addon: " + e.getName());
-					ClansPro.getInstance().getLogger().info("- Description: " + e.getDescription());
-					ClansPro.getInstance().getLogger().info("- Persistent: (" + e.persist() + ")");
-					e.remove();
-					ClansPro.getInstance().getLogger().info(" ");
-					ClansPro.getInstance().getLogger().info("- Listeners: (" + e.getAdditions().size() + ")");
-					for (Listener addition : e.getAdditions()) {
-						ClansPro.getInstance().getLogger().info("- [" + e.getName() + "] (+1) Cycle failed to load due to no persistence.");
+				ClansPro.getInstance().getLogger().info(" ");
+				ClansPro.getInstance().getLogger().info("▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬");
+				ClansPro.getInstance().getLogger().info("- Addon: " + e.getName());
+				ClansPro.getInstance().getLogger().info("- Version: " + e.getVersion());
+				ClansPro.getInstance().getLogger().info("- Author(s): " + Arrays.toString(e.getAuthors()));
+				ClansPro.getInstance().getLogger().info("- Description: " + e.getDescription());
+				ClansPro.getInstance().getLogger().info("- Persistent: (" + e.persist() + ")");
+				ClansPro.getInstance().getLogger().info("▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬");
+				ClansPro.getInstance().getLogger().info(" ");
+				ClansPro.getInstance().getLogger().info("- Listeners: (" + e.getAdditions().size() + ")");
+				for (Listener addition : e.getAdditions()) {
+					boolean registered = HandlerList.getRegisteredListeners(PRO).stream().anyMatch(r -> r.getListener().equals(addition));
+					if (!registered) {
+						ClansPro.getInstance().getLogger().info("- [" + e.getName() + "] (+1) Class " + addition.getClass().getSimpleName() + " loaded");
+						Bukkit.getPluginManager().registerEvents(addition, PRO);
+					} else {
+						ClansPro.getInstance().getLogger().info("- [" + e.getName() + "] (-1) Class " + addition.getClass().getSimpleName() + " already loaded. Skipping.");
 					}
 				}
+			} else {
+				ClansPro.getInstance().getLogger().info(" ");
+				ClansPro.getInstance().getLogger().info("- Addon: " + e.getName());
+				ClansPro.getInstance().getLogger().info("- Description: " + e.getDescription());
+				ClansPro.getInstance().getLogger().info("- Persistent: (" + e.persist() + ")");
+				e.remove();
+				ClansPro.getInstance().getLogger().info(" ");
+				ClansPro.getInstance().getLogger().info("- Listeners: (" + e.getAdditions().size() + ")");
+				for (Listener addition : e.getAdditions()) {
+					ClansPro.getInstance().getLogger().info("- [" + e.getName() + "] (+1) Cycle failed to load due to no persistence.");
+				}
 			}
-
-		} catch (IOException e) {
-			e.printStackTrace();
 		}
+
 	}
 
 	@Override

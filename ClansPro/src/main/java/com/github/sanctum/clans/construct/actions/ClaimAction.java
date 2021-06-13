@@ -14,13 +14,13 @@ import com.github.sanctum.clans.util.events.clans.LandPreClaimEvent;
 import com.github.sanctum.clans.util.events.clans.LandUnClaimEvent;
 import com.github.sanctum.labyrinth.data.FileManager;
 import com.github.sanctum.labyrinth.formatting.string.RandomID;
+import com.github.sanctum.link.ClanVentBus;
 import java.text.MessageFormat;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.stream.Collectors;
-import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -32,8 +32,7 @@ import org.bukkit.entity.Player;
 public class ClaimAction extends StringLibrary {
 
 	public void claim(Player p) {
-		LandPreClaimEvent event1 = new LandPreClaimEvent(p);
-		Bukkit.getPluginManager().callEvent(event1);
+		LandPreClaimEvent event1 = ClanVentBus.call(new LandPreClaimEvent(p));
 		if (event1.isCancelled()) {
 			return;
 		}
@@ -88,8 +87,7 @@ public class ClaimAction extends StringLibrary {
 			d.saveConfig();
 			clan.broadcast(claimed(x, z, world));
 			chunkBorderHint(p);
-			LandClaimedEvent event2 = new LandClaimedEvent(p, ClansAPI.getInstance().getClaimManager().getClaim(claimID));
-			Bukkit.getPluginManager().callEvent(event2);
+			ClanVentBus.call(new LandClaimedEvent(p, ClansAPI.getInstance().getClaimManager().getClaim(claimID)));
 		} else {
 			if (claim.isActive()) {
 				if (claim.getOwner().equals(associate.getClan().getId().toString())) {
@@ -110,9 +108,8 @@ public class ClaimAction extends StringLibrary {
 			if (!claim.isActive()) {
 				return;
 			}
-			LandUnClaimEvent event = new LandUnClaimEvent(p, claim);
+			LandUnClaimEvent event = ClanVentBus.call(new LandUnClaimEvent(p, claim));
 			if (Arrays.stream(Claim.from(p.getLocation()).getClan().getMembersList()).anyMatch(s -> s.equals(p.getUniqueId().toString()))) {
-				Bukkit.getPluginManager().callEvent(event);
 				if (!event.isCancelled()) {
 					d.getConfig().set(clan.getId().toString() + ".Claims." + getClaimID(p.getLocation()), null);
 					d.saveConfig();
@@ -134,8 +131,6 @@ public class ClaimAction extends StringLibrary {
 								sendMessage(p, peacefulDenyOther(owner.getName()));
 								return;
 							}
-
-							Bukkit.getPluginManager().callEvent(event);
 							if (!event.isCancelled()) {
 								if (ClansAPI.getData().getMain().getConfig().getBoolean("Clans.raid-shield.claiming-only-enemy")) {
 									if (!clan.getEnemyList().contains(owner.getId().toString())) {
@@ -193,7 +188,6 @@ public class ClaimAction extends StringLibrary {
 							sendMessage(p, peacefulDenyOther(owner.getName()));
 							return;
 						}
-						Bukkit.getPluginManager().callEvent(event);
 						if (!event.isCancelled()) {
 							if (ClansAPI.getData().getMain().getConfig().getBoolean("Clans.raid-shield.claiming-only-enemy")) {
 								if (!clan.getEnemyList().contains(owner.getId().toString())) {

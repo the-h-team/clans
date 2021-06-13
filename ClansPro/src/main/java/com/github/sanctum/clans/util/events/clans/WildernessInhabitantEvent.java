@@ -1,12 +1,9 @@
 package com.github.sanctum.clans.util.events.clans;
 
 import com.github.sanctum.clans.construct.Claim;
-import com.github.sanctum.clans.construct.DefaultClan;
 import com.github.sanctum.clans.construct.actions.ClaimAction;
-import com.github.sanctum.clans.construct.actions.ClanAction;
 import com.github.sanctum.clans.construct.api.ClansAPI;
 import com.github.sanctum.clans.construct.extra.Resident;
-import com.github.sanctum.clans.util.StringLibrary;
 import com.github.sanctum.clans.util.data.DataManager;
 import com.github.sanctum.clans.util.events.ClanEventBuilder;
 import java.text.MessageFormat;
@@ -15,21 +12,14 @@ import java.util.HashMap;
 import java.util.List;
 import org.bukkit.Chunk;
 import org.bukkit.entity.Player;
-import org.bukkit.event.Cancellable;
-import org.bukkit.event.HandlerList;
-import org.jetbrains.annotations.NotNull;
 
-public class WildernessInhabitantEvent extends ClanEventBuilder implements Cancellable {
-
-	private static final HandlerList handlers = new HandlerList();
+public class WildernessInhabitantEvent extends ClanEventBuilder {
 
 	private final HashMap<String, String> titleContext = new HashMap<>();
 
 	private final Player p;
 
 	private boolean titlesAllowed = DataManager.titlesAllowed();
-
-	private boolean cancelled;
 
 	public WildernessInhabitantEvent(Player p) {
 		this.p = p;
@@ -70,16 +60,6 @@ public class WildernessInhabitantEvent extends ClanEventBuilder implements Cance
 		}
 	}
 
-	@Override
-	public boolean isCancelled() {
-		return cancelled;
-	}
-
-	@Override
-	public void setCancelled(boolean b) {
-		this.cancelled = b;
-	}
-
 	public void setTitlesAllowed(boolean b) {
 		this.titlesAllowed = b;
 	}
@@ -97,35 +77,17 @@ public class WildernessInhabitantEvent extends ClanEventBuilder implements Cance
 		return titleContext.get("W-SUB-TITLE");
 	}
 
-	// TODO: if this is always null why need method?
-	public Claim getClaim() {
-		return null;
-	}
-
-	@Override
-	public @NotNull HandlerList getHandlers() {
-		return handlers;
-	}
-
-	public static HandlerList getHandlerList() {
-		return handlers;
-	}
-
 	public Player getPlayer() {
 		return p;
 	}
 
+	@Override
+	public String getName() {
+		return getClass().getSimpleName();
+	}
+
 	public boolean isTitlesAllowed() {
 		return titlesAllowed;
-	}
-
-	public ClanAction getUtil() {
-		return DefaultClan.action;
-	}
-
-	@Override
-	public StringLibrary stringLibrary() {
-		return new StringLibrary();
 	}
 
 	public List<Chunk> getSurroundingChunks(Chunk centerChunk, int radius) {

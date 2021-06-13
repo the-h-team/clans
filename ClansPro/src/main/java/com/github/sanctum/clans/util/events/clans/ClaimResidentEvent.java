@@ -16,13 +16,8 @@ import java.util.HashSet;
 import org.bukkit.Chunk;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
-import org.bukkit.event.Cancellable;
-import org.bukkit.event.HandlerList;
-import org.jetbrains.annotations.NotNull;
 
-public class ClaimResidentEvent extends ClanEventBuilder implements Cancellable {
-
-	private static final HandlerList handlers = new HandlerList();
+public class ClaimResidentEvent extends ClanEventBuilder {
 
 	private final HashMap<String, String> titleContext = new HashMap<>();
 
@@ -104,15 +99,6 @@ public class ClaimResidentEvent extends ClanEventBuilder implements Cancellable 
 		return chunksAroundPlayer;
 	}
 
-	@Override
-	public @NotNull HandlerList getHandlers() {
-		return handlers;
-	}
-
-	public static HandlerList getHandlerList() {
-		return handlers;
-	}
-
 	public boolean isTitleAllowed() {
 		return titlesAllowed;
 	}
@@ -150,6 +136,11 @@ public class ClaimResidentEvent extends ClanEventBuilder implements Cancellable 
 		if (ClansAPI.getData().getEnabled("Clans.land-claiming.send-messages")) {
 			getClaimUtil().sendMessage(p, MessageFormat.format(ClansAPI.getData().getMain().getConfig().getString("Clans.land-claiming.in-land.message"), clanName));
 		}
+	}
+
+	@Override
+	public String getName() {
+		return getClass().getSimpleName();
 	}
 
 }
