@@ -45,12 +45,12 @@ public class BankLog implements Serializable {
     private final List<Transaction> transactions = new ArrayList<>();
 
     public void addTransaction(BankTransactionEvent e) {
-        transactions.add(new Transaction(e.getPlayer().getDisplayName(), e.getType(), e.getAmount()));
+        transactions.add(new Transaction(e.getPlayer().getDisplayName(), e.getTransactionType(), e.getAmount()));
         saveForClan(e.getClan());
     }
 
     public void addTransaction(BankTransactionEvent e, LocalDateTime localDateTime) {
-        transactions.add(new Transaction(e.getPlayer().getDisplayName(), e.getType(), e.getAmount(), localDateTime));
+        transactions.add(new Transaction(e.getPlayer().getDisplayName(), e.getTransactionType(), e.getAmount(), localDateTime));
         saveForClan(e.getClan());
     }
 

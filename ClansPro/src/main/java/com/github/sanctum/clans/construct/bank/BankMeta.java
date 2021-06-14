@@ -3,6 +3,7 @@ package com.github.sanctum.clans.construct.bank;
 import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClansAPI;
 import com.github.sanctum.clans.util.events.clans.bank.AsyncNewBankEvent;
+import com.github.sanctum.labyrinth.event.custom.Vent;
 import com.github.sanctum.labyrinth.library.HFEncoded;
 import java.io.IOException;
 import java.io.Serializable;
@@ -10,9 +11,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.scheduler.BukkitRunnable;
 
 public class BankMeta implements Serializable {
 	private static final long serialVersionUID = 4445662686153606368L;
@@ -67,12 +66,7 @@ public class BankMeta implements Serializable {
 	public Optional<Bank> getBank() {
 		if (bank.isEmpty()) {
 			final Bank bank = new Bank(clanId);
-			new BukkitRunnable() {
-				@Override
-				public void run() {
-					Bukkit.getPluginManager().callEvent(new AsyncNewBankEvent(getClan(), bank));
-				}
-			}.runTaskAsynchronously(providingPlugin);
+			new Vent.Call<>(Vent.Runtime.Asynchronous, new AsyncNewBankEvent(getClan(), bank)).run();
 			return Optional.of(bank);
 		}
 		try {

@@ -1,9 +1,9 @@
 package com.github.sanctum.clans.util.events.clans.bank;
 
 import com.github.sanctum.clans.construct.api.ClanBank;
-import org.bukkit.event.Event;
+import com.github.sanctum.labyrinth.event.custom.Vent;
 
-public abstract class BankEvent extends Event {
+public abstract class BankEvent extends Vent {
 
     protected final ClanBank clanBank;
 
@@ -19,5 +19,10 @@ public abstract class BankEvent extends Event {
      */
     public ClanBank getClanBank() {
         return clanBank;
+    }
+
+    @Override
+    public String getName() {
+        return getClass().getName();
     }
 }

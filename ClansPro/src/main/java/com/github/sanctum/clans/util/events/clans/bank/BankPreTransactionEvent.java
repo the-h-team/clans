@@ -5,8 +5,6 @@ import com.github.sanctum.clans.util.events.clans.bank.messaging.Messages;
 import java.math.BigDecimal;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Cancellable;
-import org.bukkit.event.HandlerList;
-import org.jetbrains.annotations.NotNull;
 
 public class BankPreTransactionEvent extends BankTransactionEvent implements Cancellable {
 
@@ -16,17 +14,6 @@ public class BankPreTransactionEvent extends BankTransactionEvent implements Can
     public BankPreTransactionEvent(Player player, ClanBank clanBank, BigDecimal amount, String clanId, boolean success, Type type) {
         super(player, clanBank, amount, clanId, success, type);
         this.success = success;
-    }
-
-    private static final HandlerList HANDLERS = new HandlerList();
-
-    @Override
-    public @NotNull HandlerList getHandlers() {
-        return HANDLERS;
-    }
-
-    public static HandlerList getHandlerList() {
-        return HANDLERS;
     }
 
     @Override

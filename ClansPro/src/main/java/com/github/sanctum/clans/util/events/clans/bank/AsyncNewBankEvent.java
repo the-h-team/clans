@@ -3,11 +3,8 @@ package com.github.sanctum.clans.util.events.clans.bank;
 import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClanBank;
 import java.math.BigDecimal;
-import org.bukkit.event.HandlerList;
-import org.jetbrains.annotations.NotNull;
 
 public class AsyncNewBankEvent extends BankEvent {
-	private static final HandlerList HANDLERS = new HandlerList();
 
 	private final Clan clan;
 	private final BigDecimal startingBalance;
@@ -34,14 +31,5 @@ public class AsyncNewBankEvent extends BankEvent {
 	 */
 	public BigDecimal getStartingBalance() {
 		return startingBalance;
-	}
-
-	@Override
-	public @NotNull HandlerList getHandlers() {
-		return HANDLERS;
-	}
-
-	public static HandlerList getHandlerList() {
-		return HANDLERS;
 	}
 }

@@ -10,14 +10,13 @@ import com.github.sanctum.labyrinth.data.VaultHook;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.Optional;
-import org.bukkit.Bukkit;
+
+import com.github.sanctum.labyrinth.event.custom.Vent;
 import org.bukkit.entity.Player;
-import org.bukkit.plugin.PluginManager;
 import org.jetbrains.annotations.NotNull;
 
 public final class Bank implements ClanBank, Serializable {
     private static final long serialVersionUID = -153639291829056195L;
-    protected static final PluginManager PM = Bukkit.getServer().getPluginManager();
     protected BigDecimal balance;
     protected boolean enabled;
     protected final String clanId;
@@ -38,8 +37,7 @@ public final class Bank implements ClanBank, Serializable {
         has = opt.orElse(false);
         final BankPreTransactionEvent preTransactionEvent =
                 new BankPreTransactionEvent(player, this, amount, clanId, has, BankTransactionEvent.Type.DEPOSIT);
-        PM.callEvent(preTransactionEvent);
-        return preTransactionEvent.isSuccess();
+        return new Vent.Call<>(Vent.Runtime.Synchronous, preTransactionEvent).run().isSuccess();
     }
 
     @Override
@@ -59,8 +57,7 @@ public final class Bank implements ClanBank, Serializable {
 
         preTransactionEvent = new BankPreTransactionEvent(player, this, amount, clanId, has(amount) && hasWalletAccount,
                 BankTransactionEvent.Type.WITHDRAWAL);
-        PM.callEvent(preTransactionEvent);
-        return preTransactionEvent.isSuccess();
+        return new Vent.Call<>(Vent.Runtime.Synchronous, preTransactionEvent).run().isSuccess();
     }
 
     @Override
@@ -82,8 +79,7 @@ public final class Bank implements ClanBank, Serializable {
     public boolean setBalance(BigDecimal newBalance) {
         ClanBank.super.setBalance(newBalance);
         final BankSetBalanceEvent event = new BankSetBalanceEvent(this, clanId, newBalance);
-        PM.callEvent(event);
-        return !event.isCancelled();
+        return !(new Vent.Call<>(Vent.Runtime.Synchronous, event).run()).isCancelled();
     }
 
     public void setEnabled(boolean enabled) {

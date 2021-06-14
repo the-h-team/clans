@@ -3,12 +3,8 @@ package com.github.sanctum.clans.util.events.clans.bank;
 import com.github.sanctum.clans.construct.api.ClanBank;
 import java.math.BigDecimal;
 import org.bukkit.event.Cancellable;
-import org.bukkit.event.HandlerList;
-import org.jetbrains.annotations.NotNull;
 
 public class BankSetBalanceEvent extends BankActionEvent implements Cancellable {
-
-    private static final HandlerList HANDLERS = new HandlerList();
 
     private final BigDecimal newBalance;
     private boolean cancelled = false;
@@ -34,15 +30,6 @@ public class BankSetBalanceEvent extends BankActionEvent implements Cancellable 
      */
     public double getNewBalanceAsDouble() {
         return newBalance.doubleValue();
-    }
-
-    @Override
-    public @NotNull HandlerList getHandlers() {
-        return HANDLERS;
-    }
-
-    public static HandlerList getHandlerList() {
-        return HANDLERS;
     }
 
     @Override

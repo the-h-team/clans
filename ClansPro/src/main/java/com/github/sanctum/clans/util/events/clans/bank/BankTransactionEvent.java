@@ -4,8 +4,6 @@ import com.github.sanctum.clans.construct.api.ClanBank;
 import com.github.sanctum.clans.util.events.clans.bank.messaging.Messages;
 import java.math.BigDecimal;
 import org.bukkit.entity.Player;
-import org.bukkit.event.HandlerList;
-import org.jetbrains.annotations.NotNull;
 
 public class BankTransactionEvent extends BankActionEvent {
 
@@ -75,9 +73,9 @@ public class BankTransactionEvent extends BankActionEvent {
     /**
      * A transaction may constitute a deposit or withdrawal
      *
-     * @return {@link Type} representing this transaction
+     * @return transaction type
      */
-    public Type getType() {
+    public Type getTransactionType() {
         return type;
     }
 
@@ -99,16 +97,5 @@ public class BankTransactionEvent extends BankActionEvent {
             default:
                 throw new IllegalStateException("Unexpected value: " + type);
         }
-    }
-
-    private static final HandlerList HANDLERS = new HandlerList();
-
-    @Override
-    public @NotNull HandlerList getHandlers() {
-        return HANDLERS;
-    }
-
-    public static HandlerList getHandlerList() {
-        return HANDLERS;
     }
 }
