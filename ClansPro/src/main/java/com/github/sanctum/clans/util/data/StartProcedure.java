@@ -353,7 +353,7 @@ public class StartProcedure {
 		if (ClansAPI.getData().getEnabled("Formatting.console-debug")) {
 			sync.debug();
 		}
-		sync.repeatReal(5, 15);
+		sync.repeatReal(2, 18);
 
 	}
 

@@ -1369,9 +1369,17 @@ public class UI {
 				.setCloseAction(PaginatedCloseAction::clear)
 				.setupProcess(e -> {
 					e.setItem(() -> {
-						ItemStack copy = SkullItem.Head.search(e.getContext().getPlayer());
-						if (copy == null)
-							copy = new ItemStack(ClansAPI.getData().getItem("player"));
+						ItemStack copy = e.getContext().getHead();
+						if (copy == null) {
+
+							ItemStack backup = SkullItem.Head.search(e.getContext().getPlayer());
+
+							if (backup != null) {
+								copy = backup;
+							} else {
+								copy = new ItemStack(ClansAPI.getData().getItem("player"));
+							}
+						}
 						ItemStack i = new ItemStack(copy);
 						ClanAssociate associate = e.getContext();
 						ItemMeta meta = Objects.requireNonNull(i.getItemMeta());
