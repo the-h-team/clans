@@ -1194,9 +1194,9 @@ public class UI {
 
 								String[] par = new Paragraph(desc).setRegex(Paragraph.COMMA_AND_PERIOD).get();
 
-								final String memEdit = "&3Members: " + color + memlist.replace("&b&o", color).replace("&f, &b...", color + "...");
-								final String allEdit = "&3Allies: " + color + allylist.replace("&b&o", color).replace("&f, &b...", color + "...");
-								final String enemEdit = "&3Enemies: " + color + enemylist.replace("&b&o", color).replace("&f, &b...", color + "...");
+								final String memEdit = color + memlist.replace("&b&o", color).replace("&f, &b...", color + "...");
+								final String allEdit = color + allylist.replace("&b&o", color).replace("&f, &b...", color + "...");
+								final String enemEdit = color + enemylist.replace("&b&o", color).replace("&f, &b...", color + "...");
 								List<String> result = new LinkedList<>();
 								for (String a : ClansAPI.getData().CLAN_FORMAT) {
 									result.add(MessageFormat.format(a, color.replace("&", "&f»" + color), color + par[0], color + c.format(String.valueOf(power)), baseSet, color + ownedLand, pvp, memEdit, allEdit, enemEdit));

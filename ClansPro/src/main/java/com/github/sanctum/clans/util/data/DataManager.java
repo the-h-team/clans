@@ -184,7 +184,7 @@ public class DataManager {
 
 	public static boolean titlesAllowed() {
 		FileManager main = ClansAPI.getInstance().getFileList().find("Config", "Configuration");
-		return main.getConfig().getBoolean("Clans.land-claiming.receive-titles");
+		return main.getConfig().getBoolean("Clans.land-claiming.send-titles");
 	}
 
 	public String prefixedTag(String color, String name) {

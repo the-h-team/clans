@@ -311,7 +311,7 @@ public class StartProcedure {
 							Resident r = event.getResident();
 							Claim current = event.getClaim();
 							if (current.isActive()) {
-								if (DefaultClan.action.getClanTag(current.getOwner()) == null) {
+								if (ClansAPI.getInstance().getClanName(current.getOwner()) == null) {
 									current.remove();
 									return;
 								}
