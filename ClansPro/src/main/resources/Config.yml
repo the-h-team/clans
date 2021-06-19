@@ -424,7 +424,6 @@ Addon:
       clearance: 0
     gift:
       clearance: 0
-    # Allows for interactive chunk symbols (Clicking a wilderness block claims etc).
     enabled: true
   Borders:
     ##################################################################
