@@ -44,6 +44,14 @@ public class DefaultClan implements Clan {
 	private static final long serialVersionUID = 427254537180595211L;
 
 	private final String clanID;
+	private boolean peaceful;
+	private boolean friendlyfire;
+	private double powerBonus;
+	private double power;
+	private String name;
+	private String description;
+	private Location base;
+	private String color;
 	transient NamespacedKey key;
 	private final List<Clan> warInvites = new ArrayList<>();
 	private ClanWar clanWar = null;
@@ -67,6 +75,40 @@ public class DefaultClan implements Clan {
 		this.memberList = new MemberWrapper(this);
 		this.allyList = new ClanWrapper(this, ClanWrapper.RelationType.Ally);
 		this.enemyList = new ClanWrapper(this, ClanWrapper.RelationType.Enemy);
+
+		FileManager c = DataManager.FileType.CLAN_FILE.get(clanID);
+
+		this.name = c.getConfig().getString("name");
+
+		if (c.getConfig().isString("description")) {
+			this.description = c.getConfig().getString("description");
+		}
+
+		if (c.getConfig().isString("name-color")) {
+			this.color = c.getConfig().getString("name-color");
+		}
+
+		try {
+			double x = c.getConfig().getDouble("base.x");
+			double y = c.getConfig().getDouble("base.y");
+			double z = c.getConfig().getDouble("base.z");
+			float yaw = c.getConfig().getFloatList("base.float").get(0);
+			float pitch = c.getConfig().getFloatList("base.float").get(1);
+			World w = Bukkit.getWorld(Objects.requireNonNull(c.getConfig().getString("base.world")));
+			if (w == null) {
+				w = Bukkit.getWorld(Objects.requireNonNull(ClansAPI.getData().getMain().getConfig().getString("Clans.raid-shield.main-world")));
+			}
+			this.base = new Location(w, x, y, z, yaw, pitch);
+		} catch (IndexOutOfBoundsException e) {
+			this.base = null;
+		}
+
+		this.powerBonus = c.getConfig().getDouble("bonus");
+
+		this.peaceful = c.getConfig().getBoolean("peaceful");
+
+		this.friendlyfire = c.getConfig().getBoolean("friendly-fire");
+
 	}
 
 	/**
@@ -113,8 +155,7 @@ public class DefaultClan implements Clan {
 	 */
 	@Override
 	public boolean isPeaceful() {
-		FileManager clan = DataManager.FileType.CLAN_FILE.get(clanID);
-		return clan.getConfig().getBoolean("peaceful");
+		return this.peaceful;
 	}
 
 	/**
@@ -124,8 +165,7 @@ public class DefaultClan implements Clan {
 	 */
 	@Override
 	public boolean isFriendlyFire() {
-		FileManager clan = DataManager.FileType.CLAN_FILE.get(clanID);
-		return clan.getConfig().getBoolean("friendly-fire");
+		return this.friendlyfire;
 	}
 
 	/**
@@ -201,6 +241,7 @@ public class DefaultClan implements Clan {
 	 */
 	@Override
 	public void setName(String newTag) {
+		this.name = newTag;
 		FileManager c = DataManager.FileType.CLAN_FILE.get(clanID);
 		c.getConfig().set("name", newTag);
 		c.saveConfig();
@@ -213,6 +254,7 @@ public class DefaultClan implements Clan {
 	 */
 	@Override
 	public void setDescription(String description) {
+		this.description = description;
 		FileManager clan = DataManager.FileType.CLAN_FILE.get(clanID);
 		clan.getConfig().set("description", description);
 		clan.saveConfig();
@@ -245,6 +287,7 @@ public class DefaultClan implements Clan {
 	 */
 	@Override
 	public void setColor(String newColor) {
+		this.color = newColor;
 		FileManager c = DataManager.FileType.CLAN_FILE.get(clanID);
 		c.getConfig().set("name-color", newColor);
 		c.saveConfig();
@@ -258,6 +301,7 @@ public class DefaultClan implements Clan {
 	 */
 	@Override
 	public void setPeaceful(boolean peaceful) {
+		this.peaceful = peaceful;
 		FileManager clan = DataManager.FileType.CLAN_FILE.get(clanID);
 		clan.getConfig().set("peaceful", peaceful);
 		clan.saveConfig();
@@ -270,6 +314,7 @@ public class DefaultClan implements Clan {
 	 */
 	@Override
 	public void setFriendlyFire(boolean friendlyFire) {
+		this.friendlyfire = friendlyFire;
 		FileManager clan = DataManager.FileType.CLAN_FILE.get(clanID);
 		clan.getConfig().set("friendly-fire", friendlyFire);
 		clan.saveConfig();
@@ -286,6 +331,7 @@ public class DefaultClan implements Clan {
 	 */
 	@Override
 	public void setBase(@NotNull Location loc) {
+		this.base = loc;
 		FileManager clan = DataManager.FileType.CLAN_FILE.get(clanID);
 		double x = loc.getX();
 		double y = loc.getY();
@@ -333,8 +379,7 @@ public class DefaultClan implements Clan {
 	 */
 	@Override
 	public synchronized @NotNull String getName() {
-		FileManager c = DataManager.FileType.CLAN_FILE.get(clanID);
-		return c.getConfig().getString("name");
+		return this.name;
 	}
 
 	/**
@@ -344,8 +389,7 @@ public class DefaultClan implements Clan {
 	 */
 	@Override
 	public synchronized @NotNull String getDescription() {
-		FileManager clan = DataManager.FileType.CLAN_FILE.get(clanID);
-		return clan.getConfig().getString("description") != null ? clan.getConfig().getString("description") : "I have no description.";
+		return this.description != null ? this.description : "I have no description.";
 	}
 
 	/**
@@ -377,11 +421,7 @@ public class DefaultClan implements Clan {
 	 */
 	@Override
 	public synchronized @NotNull String getColor() {
-		FileManager c = DataManager.FileType.CLAN_FILE.get(clanID);
-		if (c.getConfig().getString("name-color") == null) {
-			return "&f";
-		}
-		return c.getConfig().getString("name-color");
+		return this.color != null ? this.color : "&f";
 	}
 
 	/**
@@ -413,21 +453,10 @@ public class DefaultClan implements Clan {
 	 */
 	@Override
 	public synchronized @Nullable Location getBase() {
-		FileManager clan = DataManager.FileType.CLAN_FILE.get(clanID);
-		try {
-			double x = clan.getConfig().getDouble("base.x");
-			double y = clan.getConfig().getDouble("base.y");
-			double z = clan.getConfig().getDouble("base.z");
-			float yaw = clan.getConfig().getFloatList("base.float").get(0);
-			float pitch = clan.getConfig().getFloatList("base.float").get(1);
-			World w = Bukkit.getWorld(Objects.requireNonNull(clan.getConfig().getString("base.world")));
-			if (w == null) {
-				w = Bukkit.getWorld(Objects.requireNonNull(ClansAPI.getData().getMain().getConfig().getString("Clans.raid-shield.main-world")));
-			}
-			return new Location(w, x, y, z, yaw, pitch);
-		} catch (IndexOutOfBoundsException e) {
+		if (this.base == null) {
 			return null;
 		}
+		return this.base;
 	}
 
 	/**
@@ -437,13 +466,12 @@ public class DefaultClan implements Clan {
 	 */
 	@Override
 	public synchronized double getPower() {
-		FileManager c = DataManager.FileType.CLAN_FILE.get(clanID);
 		double result = 0.0;
 		double multiplier = 1.4;
 		double add = getMembersList().length + 0.56;
-		int claimAmount = getOwnedClaimsList().length;
+		int claimAmount = getOwnedClaims().length;
 		result = result + add + (claimAmount * multiplier);
-		double bonus = c.getConfig().getDouble("bonus");
+		double bonus = this.powerBonus;
 		if (ClansAPI.getData().getEnabled("Clans.banks.influence")) {
 			if (Bukkit.getPluginManager().isPluginEnabled("Vault") || Bukkit.getPluginManager().isPluginEnabled("Enterprise")) {
 				double bal = getBalance().doubleValue();
@@ -466,14 +494,10 @@ public class DefaultClan implements Clan {
 	 */
 	@Override
 	public synchronized String[] getOwnedClaimsList() {
-		FileManager regions = DataManager.FileType.MISC_FILE.get("Regions", "Configuration");
 		List<String> array = new ArrayList<>();
-		for (String clan : action.getAllClanIDs()) {
-			if (regions.getConfig().getConfigurationSection(clan + ".Claims") != null) {
-				for (String claim : regions.getConfig().getConfigurationSection(clan + ".Claims").getKeys(false)) {
-					if (clan.equals(clanID))
-						array.add(claim);
-				}
+		for (Claim claim : ClansAPI.getInstance().getClaimManager().getClaims()) {
+			if (claim.getOwner().equalsIgnoreCase(getId().toString())) {
+				array.add(claim.getId());
 			}
 		}
 		return array.toArray(new String[0]);
@@ -487,8 +511,10 @@ public class DefaultClan implements Clan {
 	@Override
 	public synchronized Claim[] getOwnedClaims() {
 		List<Claim> result = new ArrayList<>();
-		for (String id : getOwnedClaimsList()) {
-			result.add(ClansAPI.getInstance().getClaimManager().getClaim(id));
+		for (Claim claim : ClansAPI.getInstance().getClaimManager().getClaims()) {
+			if (claim.getOwner().equalsIgnoreCase(getId().toString())) {
+				result.add(claim);
+			}
 		}
 		return result.toArray(new Claim[0]);
 	}
@@ -856,8 +882,9 @@ public class DefaultClan implements Clan {
 			c.getConfig().set("bonus", 0.0);
 			c.refreshConfig();
 		}
-		double current = c.getConfig().getDouble("bonus");
-		c.getConfig().set("bonus", (current + amount));
+		double current = c.getConfig().getDouble("bonus") + amount;
+		this.powerBonus = current;
+		c.getConfig().set("bonus", current);
 		c.refreshConfig();
 		broadcast("&a&oNew power was gained. The clan grows stronger..");
 		System.out.println(String.format("[%s] - Gave " + '"' + amount + '"' + " power to clan " + '"' + clanID + '"', ClansPro.getInstance().getDescription().getName()));
@@ -875,8 +902,9 @@ public class DefaultClan implements Clan {
 			c.getConfig().set("bonus", 0.0);
 			c.refreshConfig();
 		}
-		double current = c.getConfig().getDouble("bonus");
-		c.getConfig().set("bonus", (current - amount));
+		double current = c.getConfig().getDouble("bonus") - amount;
+		this.powerBonus = current;
+		c.getConfig().set("bonus", current);
 		c.refreshConfig();
 		broadcast("&c&oPower was stolen from us.. we need to earn it back");
 		System.out.println(String.format("[%s] - Took " + '"' + amount + '"' + " power from clan " + '"' + clanID + '"', ClansPro.getInstance().getDescription().getName()));
