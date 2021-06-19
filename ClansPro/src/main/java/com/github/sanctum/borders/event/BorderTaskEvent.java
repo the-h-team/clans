@@ -50,7 +50,7 @@ public class BorderTaskEvent extends Event implements Cancellable {
 	}
 
 	public void perform() {
-		// send borders
+		// receive borders
 		ClanAssociate associate = ClansAPI.getInstance().getAssociate(p).orElse(null);
 		if (ClansAPI.getInstance().getClaimManager().isInClaim(p.getLocation())) {
 			Claim claim = getClaim();

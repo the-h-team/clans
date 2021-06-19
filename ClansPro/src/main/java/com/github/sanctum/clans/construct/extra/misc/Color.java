@@ -1,4 +1,4 @@
-package com.github.sanctum.clans.construct;
+package com.github.sanctum.clans.construct.extra.misc;
 
 public enum Color {
 

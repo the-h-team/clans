@@ -10,6 +10,7 @@ import com.github.sanctum.clans.construct.actions.ClanCooldown;
 import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClansAPI;
 import com.github.sanctum.clans.construct.bank.BankMeta;
+import com.github.sanctum.clans.construct.extra.misc.ClanPrefix;
 import com.github.sanctum.clans.util.RankPriority;
 import com.github.sanctum.clans.util.data.DataManager;
 import com.github.sanctum.clans.util.data.Metrics;
@@ -18,6 +19,7 @@ import com.github.sanctum.labyrinth.data.FileList;
 import com.github.sanctum.labyrinth.data.FileManager;
 import com.github.sanctum.labyrinth.data.Registry;
 import com.github.sanctum.labyrinth.data.RegistryData;
+import com.github.sanctum.labyrinth.data.container.KeyedServiceManager;
 import com.github.sanctum.labyrinth.library.HUID;
 import com.github.sanctum.labyrinth.library.StringUtils;
 import com.github.sanctum.link.CycleList;
@@ -41,17 +43,48 @@ import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 
 
+/**
+ * MIT License
+ * <p>
+ * Copyright (c) 2021 Sanctum
+ * <p>
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * <p>You will be <strong>required</strong> to publicly display credit to the original authors in any postings regarding both "remastering" or
+ * forking of this project. While not enforced what so ever, if you decide on forking + re-selling under
+ * modified circumstances that you pay us a royalty fee of $4.50 USD to respect our side of the work involved.</p>
+ * <p>
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ * <p>
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
 public class ClansPro extends JavaPlugin implements ClansAPI {
 
 	private static ClansPro PRO;
 
 	private static FileList origin;
 
+	private ClanPrefix prefix;
+
 	private ClaimManager claimManager;
 
 	private ShieldManager shieldManager;
 
 	private ClanManager clanManager;
+
+	private KeyedServiceManager<EventCycle> serviceManager;
 
 	public DataManager dataManager = new DataManager();
 
@@ -62,6 +95,7 @@ public class ClansPro extends JavaPlugin implements ClansAPI {
 	public void onEnable() {
 		setInstance(this);
 		origin = FileList.search(this);
+		serviceManager = new KeyedServiceManager<>();
 		clanManager = new ClanManager();
 		claimManager = new ClaimManager();
 		shieldManager = new ShieldManager();
@@ -106,6 +140,11 @@ public class ClansPro extends JavaPlugin implements ClansAPI {
 		}
 		primary.printLogo();
 		primary.registerDefaults();
+
+		FileManager main = ClansAPI.getData().getMain();
+
+		this.prefix = new ClanPrefix(main.getConfig().getString("Formatting.prefix.prefix"), main.getConfig().getString("Formatting.prefix.text"), main.getConfig().getString("Formatting.prefix.suffix"));
+
 		primary.sendBorder();
 		primary.runDataCleaner();
 		primary.sendBorder();
@@ -167,7 +206,7 @@ public class ClansPro extends JavaPlugin implements ClansAPI {
 	public void onDisable() {
 		try {
 
-			for (EventCycle cycle : CycleList.getRegisteredCycles()) {
+			for (EventCycle cycle : CycleList.getCycles()) {
 				cycle.remove();
 			}
 
@@ -196,6 +235,10 @@ public class ClansPro extends JavaPlugin implements ClansAPI {
 		if (System.getProperty("OLD").equals("FALSE")) {
 			System.setProperty("OLD", "TRUE");
 		}
+	}
+
+	public KeyedServiceManager<EventCycle> getServiceManager() {
+		return this.serviceManager;
 	}
 
 	@Override
@@ -295,7 +338,12 @@ public class ClansPro extends JavaPlugin implements ClansAPI {
 	}
 
 	@Override
-	public void setRank(HUID clanID, UUID target, RankPriority priority) {
+	public void setRank(ClanAssociate associate, RankPriority priority) {
+
+		if (associate == null) return;
+
+		if (associate.getClanID() == null) return;
+
 		String rank = "";
 		switch (priority) {
 			case NORMAL:
@@ -308,21 +356,21 @@ public class ClansPro extends JavaPlugin implements ClansAPI {
 				rank = "admins";
 				break;
 		}
-		FileManager clan = DataManager.FileType.CLAN_FILE.get(clanID.toString());
-		if (clan.getConfig().getStringList("members").contains(target.toString())) {
+		FileManager clan = DataManager.FileType.CLAN_FILE.get(associate.getClanID().toString());
+		if (clan.getConfig().getStringList("members").contains(associate.getPlayer().getUniqueId().toString())) {
 			if (priority != RankPriority.HIGHEST) {
-				String currentRank = DefaultClan.action.getPriorityKey(DefaultClan.action.getRankPower(target));
+				String currentRank = DefaultClan.action.getPriorityKey(DefaultClan.action.getRankPower(associate.getPlayer().getUniqueId()));
 				List<String> array = clan.getConfig().getStringList(rank);
 				List<String> array2 = clan.getConfig().getStringList(currentRank);
 				if (!currentRank.equals("members")) {
-					array2.remove(target.toString());
+					array2.remove(associate.getPlayer().getUniqueId().toString());
 				}
-				array.add(target.toString());
-				clan.getConfig().set(DefaultClan.action.getPriorityUpgradeKey(DefaultClan.action.getRankPower(target)), array);
+				array.add(associate.getPlayer().getUniqueId().toString());
+				clan.getConfig().set(DefaultClan.action.getPriorityUpgradeKey(DefaultClan.action.getRankPower(associate.getPlayer().getUniqueId())), array);
 				clan.getConfig().set(currentRank, array2);
 				clan.saveConfig();
-				Clan clanIndex = getClan(clanID.toString());
-				String format = String.format(ClansAPI.getData().getMessage("promotion"), Bukkit.getOfflinePlayer(target).getName(), DefaultClan.action.getRankTag(DefaultClan.action.getRank(target)));
+				Clan clanIndex = associate.getClan();
+				String format = String.format(ClansAPI.getData().getMessage("promotion"), Bukkit.getOfflinePlayer(associate.getPlayer().getUniqueId()).getName(), DefaultClan.action.getRankTag(DefaultClan.action.getRank(associate.getPlayer().getUniqueId())));
 				clanIndex.broadcast(format);
 			}
 		}
@@ -463,6 +511,11 @@ public class ClansPro extends JavaPlugin implements ClansAPI {
 
 	public static ClansPro getInstance() {
 		return PRO;
+	}
+
+	@Override
+	public ClanPrefix getPrefix() {
+		return this.prefix;
 	}
 
 	private void setInstance(ClansPro instance) {

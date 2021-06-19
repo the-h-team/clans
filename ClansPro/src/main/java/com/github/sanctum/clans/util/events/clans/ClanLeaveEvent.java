@@ -1,31 +1,23 @@
 package com.github.sanctum.clans.util.events.clans;
 
-import com.github.sanctum.clans.construct.DefaultClan;
+import com.github.sanctum.clans.construct.ClanAssociate;
 import com.github.sanctum.clans.util.events.ClanEventBuilder;
-import org.bukkit.entity.Player;
 
 public class ClanLeaveEvent extends ClanEventBuilder {
 
-	private final Player leaving;
+	private final ClanAssociate associate;
 
-	private final DefaultClan clan;
+	public ClanLeaveEvent(ClanAssociate associate) {
+		this.associate = associate;
+	}
 
-	public ClanLeaveEvent(Player leaving, DefaultClan clan) {
-		this.leaving = leaving;
-		this.clan = clan;
+	public ClanAssociate getAssociate() {
+		return associate;
 	}
 
 	@Override
 	public String getName() {
 		return getClass().getSimpleName();
-	}
-
-	public Player getJoining() {
-		return leaving;
-	}
-
-	public DefaultClan getClan() {
-		return clan;
 	}
 
 }

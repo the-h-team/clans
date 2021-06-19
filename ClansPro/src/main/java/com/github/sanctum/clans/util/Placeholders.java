@@ -1,6 +1,7 @@
 package com.github.sanctum.clans.util;
 
 import com.github.sanctum.clans.ClansPro;
+import com.github.sanctum.clans.construct.Claim;
 import com.github.sanctum.clans.construct.ClanAssociate;
 import com.github.sanctum.clans.construct.DefaultClan;
 import com.github.sanctum.clans.construct.api.Clan;
@@ -146,6 +147,22 @@ public class Placeholders extends PlaceholderExpansion {
 
 		if (identifier.equals("clan_description")) {
 			return c.getDescription();
+		}
+
+		if (identifier.equals("land_status")) {
+			Claim claim = Claim.from(player.getLocation());
+			if (claim != null) {
+				if (claim.getClan().getId().equals(c.getId())) {
+					return "Owned";
+				}
+				if (claim.getClan().getAllies().list().contains(c)) {
+					return "Allied";
+				}
+				if (claim.getClan().getEnemies().list().contains(c)) {
+					return "Rivaled";
+				}
+			}
+			return "Neutral";
 		}
 
 		if (identifier.equals("clan_pvp_mode")) {

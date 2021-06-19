@@ -3,18 +3,19 @@ package com.github.sanctum.clans.commands;
 import com.github.sanctum.clans.ClansPro;
 import com.github.sanctum.clans.construct.Claim;
 import com.github.sanctum.clans.construct.ClanAssociate;
-import com.github.sanctum.clans.construct.Color;
 import com.github.sanctum.clans.construct.DefaultClan;
 import com.github.sanctum.clans.construct.actions.ClanAction;
 import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClanBank;
 import com.github.sanctum.clans.construct.api.ClanSubCommand;
 import com.github.sanctum.clans.construct.api.ClansAPI;
+import com.github.sanctum.clans.construct.api.Insignia;
 import com.github.sanctum.clans.construct.bank.BankAction;
 import com.github.sanctum.clans.construct.bank.BankLog;
 import com.github.sanctum.clans.construct.bank.BankPermissions;
 import com.github.sanctum.clans.construct.extra.ScoreTag;
 import com.github.sanctum.clans.construct.extra.misc.ClanWar;
+import com.github.sanctum.clans.construct.extra.misc.Color;
 import com.github.sanctum.clans.gui.UI;
 import com.github.sanctum.clans.util.StringLibrary;
 import com.github.sanctum.clans.util.data.DataManager;
@@ -29,6 +30,8 @@ import com.github.sanctum.labyrinth.data.VaultHook;
 import com.github.sanctum.labyrinth.formatting.PaginatedList;
 import com.github.sanctum.labyrinth.formatting.component.OldComponent;
 import com.github.sanctum.labyrinth.formatting.string.ColoredString;
+import com.github.sanctum.labyrinth.library.HUID;
+import com.github.sanctum.labyrinth.library.Item;
 import com.github.sanctum.labyrinth.library.Message;
 import com.github.sanctum.labyrinth.library.StringUtils;
 import com.github.sanctum.labyrinth.library.TextLib;
@@ -50,6 +53,7 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.ComponentBuilder;
@@ -57,11 +61,13 @@ import net.md_5.bungee.api.chat.HoverEvent;
 import net.md_5.bungee.api.chat.TextComponent;
 import net.milkbowl.vault.economy.EconomyResponse;
 import org.bukkit.Bukkit;
+import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
 public class CommandClan extends Command {
@@ -74,7 +80,7 @@ public class CommandClan extends Command {
 	public CommandClan() {
 		super("clan");
 		setDescription("Base command for clans.");
-		List<String> array = ClansAPI.getData().getMain().getConfig().getStringList("Formatting.Aliase");
+		List<String> array = ClansAPI.getData().getMain().getConfig().getStringList("Formatting.aliase");
 		array.addAll(Arrays.asList("clans", "cl", "c"));
 		setAliases(array);
 		setPermission("clanspro");
@@ -124,7 +130,7 @@ public class CommandClan extends Command {
 
 		if (args.length == 1) {
 			arguments.clear();
-			List<String> add = Arrays.asList("create", "war", "invite", "block", "peace", "forfeit", "mode", "bio", "players", "description", "friendlyfire", "color", "password", "kick", "leave", "message", "chat", "info", "promote", "demote", "tag", "nickname", "list", "base", "setbase", "top", "claim", "unclaim", "passowner", "ally", "enemy", "bank");
+			List<String> add = Arrays.asList("create", "war", "logo", "invite", "block", "peace", "forfeit", "mode", "bio", "players", "description", "friendlyfire", "color", "password", "kick", "leave", "message", "chat", "info", "promote", "demote", "tag", "nickname", "list", "base", "setbase", "top", "claim", "unclaim", "passowner", "ally", "enemy", "bank");
 			for (String a : add) {
 				if (p.hasPermission(this.getPermission() + "." + DataManager.Security.getPermission(a))) {
 					arguments.add(a);
@@ -146,6 +152,8 @@ public class CommandClan extends Command {
 				if (t.toLowerCase().startsWith(args[1].toLowerCase()))
 					result.add(t);
 			}
+
+
 			if (args[0].equalsIgnoreCase("unclaim")) {
 				if (!p.hasPermission(this.getPermission() + "." + DataManager.Security.getPermission("unclaim"))) {
 					return result;
@@ -176,6 +184,18 @@ public class CommandClan extends Command {
 				}
 				arguments.clear();
 				arguments.addAll(Arrays.asList("wins", "money", "power", "kd"));
+				for (String a : arguments) {
+					if (a.toLowerCase().startsWith(args[1].toLowerCase()))
+						result.add(a);
+				}
+				return result;
+			}
+			if (args[0].equalsIgnoreCase("logo")) {
+				if (!p.hasPermission(this.getPermission() + "." + DataManager.Security.getPermission("logo"))) {
+					return result;
+				}
+				arguments.clear();
+				arguments.addAll(Arrays.asList("edit", "apply", "upload", "color", "redraw"));
 				for (String a : arguments) {
 					if (a.toLowerCase().startsWith(args[1].toLowerCase()))
 						result.add(a);
@@ -934,11 +954,33 @@ public class CommandClan extends Command {
 				}
 				if (associate != null) {
 					DefaultClan.action.teleportBase(p);
-					lib.sendMessage(p, lib.commandBase());
 				} else {
 					lib.sendMessage(p, lib.notInClan());
 					return true;
 				}
+				return true;
+			}
+			if (args0.equalsIgnoreCase("logo")) {
+
+				if (associate == null) {
+					lib.sendMessage(p, lib.notInClan());
+					return true;
+				}
+
+				Clan c = associate.getClan();
+
+				List<String> s = c.getValue(List.class, "logo");
+
+				if (s != null) {
+					lib.sendMessage(p, "&f&l&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬");
+					for (String line : s) {
+						lib.sendMessage(p, line);
+					}
+					lib.sendMessage(p, "&f&l&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬");
+				} else {
+					lib.sendMessage(p, "&cOur clan doesn't have an official insignia");
+				}
+
 				return true;
 			}
 			if (args0.equalsIgnoreCase("setbase")) {
@@ -1126,6 +1168,139 @@ public class CommandClan extends Command {
 		if (length == 2) {
 			String args0 = args[0];
 			String args1 = args[1];
+
+			if (args0.equalsIgnoreCase("logo")) {
+
+				if (associate == null) {
+					lib.sendMessage(p, lib.notInClan());
+					return true;
+				}
+
+				if (!p.hasPermission(this.getPermission() + "." + DataManager.Security.getPermission("logo"))) {
+					lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("logo")));
+					return true;
+				}
+
+				Clan c = associate.getClan();
+
+				if (args1.equalsIgnoreCase("edit")) {
+
+					if (associate.getPriority().toInt() < ClansAPI.getData().getInt("Clans.logo-edit-clearance")) {
+						lib.sendMessage(p, lib.noClearance());
+						return true;
+					}
+
+					new Insignia.Builder("Template:" + p.getUniqueId().toString()).setBorder("&f&l&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬").setColor("&2").setHeight(16).setWidth(16).draw(p);
+					lib.sendMessage(p, "&eLoaded personal template.");
+					return true;
+				}
+
+				if (args1.equalsIgnoreCase("redraw")) {
+					lib.sendMessage(p, "&cUsage: &f/c logo &eredraw &r[height] [width]");
+					return true;
+				}
+
+				if (args1.equalsIgnoreCase("upload")) {
+
+					if (associate.getPriority().toInt() < ClansAPI.getData().getInt("Clans.logo-upload-clearance")) {
+						lib.sendMessage(p, lib.noClearance());
+						return true;
+					}
+
+					ItemStack item = p.getInventory().getItemInMainHand();
+
+					if (item.getType() != Material.PAPER && item.getType() != Material.FILLED_MAP) {
+						lib.sendMessage(p, "&cInvalid insignia request. Not an insignia print.");
+						return true;
+					}
+
+					if (!item.hasItemMeta()) {
+						lib.sendMessage(p, "&cInvalid insignia request. No lore to process.");
+						return true;
+					}
+
+					if (item.getItemMeta().getLore() != null) {
+
+						for (String lore : item.getItemMeta().getLore()) {
+							if (isAlphaNumeric(ChatColor.stripColor(lore))) {
+								lib.sendMessage(p, "&cInvalid insignia request. Error 420");
+								return true;
+							}
+						}
+
+						c.setValue("logo", new ArrayList<>(item.getItemMeta().getLore()));
+
+						lib.sendMessage(p, "&aPrinted insignia applied to clan container.");
+
+					} else {
+
+
+						return true;
+					}
+
+					return true;
+				}
+
+				if (args1.equalsIgnoreCase("apply")) {
+
+					if (associate.getPriority().toInt() < ClansAPI.getData().getInt("Clans.logo-apply-clearance")) {
+						lib.sendMessage(p, lib.noClearance());
+						return true;
+					}
+
+					Insignia i = Insignia.get("Template:" + p.getUniqueId().toString());
+					Insignia.copy(c.getId().toString(), i);
+					if (i != null) {
+
+						c.setValue("logo", i.getLines().stream().map(Insignia.Line::toString).collect(Collectors.toList()));
+
+						lib.sendMessage(p, "&aCustom insignia applied to clan container.");
+
+					}
+
+					return true;
+				}
+/*
+				if (args1.equalsIgnoreCase("saveProgress")) {
+					Insignia i = Insignia.get("Template:" + p.getUniqueId().toString());
+
+					if (i != null) {
+
+						lib.sendMessage(p, "&aChanges have been saved as a template.");
+						c.setValue("logo_template_" + p.getUniqueId().toString(), i);
+
+					} else {
+						lib.sendMessage(p, "&cNo drawing was found.");
+					}
+					return true;
+				}
+
+ */
+
+				if (args1.equalsIgnoreCase("print")) {
+
+					if (associate.getPriority().toInt() < ClansAPI.getData().getInt("Clans.logo-print-clearance")) {
+						lib.sendMessage(p, lib.noClearance());
+						return true;
+					}
+
+					Insignia i = Insignia.get("Template:" + p.getUniqueId().toString());
+
+					if (i != null) {
+						p.getWorld().dropItem(p.getEyeLocation(), new Item.Edit(Material.PAPER).setTitle("(#" + HUID.randomID().toString().substring(0, 4) + ")").setLore(i.getLines().stream().map(Insignia.Line::toString).toArray(String[]::new)).build());
+
+						lib.sendMessage(p, "&aInsignia template printed.");
+
+					}
+
+					return true;
+				}
+
+				new Insignia.Builder(c.getId().toString()).setHeight(16).setWidth(16).setColor(args1).draw(p);
+
+				return true;
+			}
+
 			if (args0.equalsIgnoreCase("peace")) {
 				if (!p.hasPermission(this.getPermission() + "." + DataManager.Security.getPermission("peace"))) {
 					lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("peace")));
@@ -1388,11 +1563,17 @@ public class CommandClan extends Command {
 						lib.sendMessage(p, "&c&oThis user is already in a clan.");
 						return true;
 					}
+
+					if (associate == null) {
+						lib.sendMessage(p, lib.notInClan());
+						return true;
+					}
+
 					if (associate.getPriority().toInt() >= DefaultClan.action.invitationClearance()) {
 						if (blockedUsers.containsKey(target)) {
 							List<UUID> users = blockedUsers.get(target);
 							if (users.contains(p.getUniqueId())) {
-								lib.sendMessage(p, "&c&oThis person has you blocked. Unable to send invitation.");
+								lib.sendMessage(p, "&c&oThis person has you blocked. Unable to receive invitation.");
 								return true;
 							}
 						}
@@ -1956,7 +2137,7 @@ public class CommandClan extends Command {
 				}
 				Clan clan = ClansAPI.getInstance().getClan(p.getUniqueId());
 				if (associate != null)
-					clan.broadcast(MessageFormat.format(ClansAPI.getData().getMain().getConfig().getString("Formatting.Clan-broadcast-prefix"), p.getName()) + " " + args1);
+					clan.broadcast(MessageFormat.format(ClansAPI.getData().getMain().getConfig().getString("Formatting.chat-message-format"), p.getName()) + " " + args1);
 				return true;
 			}
 			if (args0.equalsIgnoreCase("bio")) {
@@ -2012,6 +2193,55 @@ public class CommandClan extends Command {
 			String args0 = args[0];
 			String args1 = args[1];
 			String args2 = args[2];
+
+			if (args0.equalsIgnoreCase("logo")) {
+
+				if (!p.hasPermission(this.getPermission() + "." + DataManager.Security.getPermission("logo"))) {
+					lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("logo")));
+					return true;
+				}
+
+				if (args1.equalsIgnoreCase("redraw")) {
+					lib.sendMessage(p, "&cUsage: &f/c logo &eredraw &r[height] [width]");
+					return true;
+				}
+
+				if (args1.equalsIgnoreCase("color")) {
+
+					if (associate.getPriority().toInt() < ClansAPI.getData().getInt("Clans.logo-color-clearance")) {
+						lib.sendMessage(p, lib.noClearance());
+						return true;
+					}
+
+					if (!args2.matches("(&#[a-zA-Z0-9]{6})+(&[a-zA-Z0-9])+") && !args2.matches("(&#[a-zA-Z0-9]{6})+|(&[a-zA-Z0-9])+")) {
+						lib.sendMessage(p, "&c&oInvalid color format.");
+						return true;
+					}
+
+					Insignia i = Insignia.get("Template:" + p.getUniqueId().toString());
+
+					if (i != null) {
+
+						Message msg = Message.form(p);
+
+						i.setSelection(args2);
+
+						msg.send("&f&l&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬");
+						for (BaseComponent[] components : i.get()) {
+							p.spigot().sendMessage(components);
+						}
+						msg.send("&f&l&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬");
+
+						lib.sendMessage(p, "&aColor pallet updated to " + args2 + "TEST");
+					} else {
+						lib.sendMessage(p, "&cNo drawing was found.");
+					}
+
+					return true;
+				}
+				return true;
+			}
+
 			if (args0.equalsIgnoreCase("create")) {
 				if (!p.hasPermission(this.getPermission() + "." + DataManager.Security.getPermission("create"))) {
 					lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("create")));
@@ -2043,7 +2273,7 @@ public class CommandClan extends Command {
 				}
 				if (associate != null) {
 					Clan clan = associate.getClan();
-					clan.broadcast(MessageFormat.format(ClansAPI.getData().getMain().getConfig().getString("Formatting.Clan-broadcast-prefix"), p.getName()) + " " + args1 + " " + args2);
+					clan.broadcast(MessageFormat.format(ClansAPI.getData().getMain().getConfig().getString("Formatting.chat-message-format"), p.getName()) + " " + args1 + " " + args2);
 				}
 				return true;
 			}
@@ -2241,7 +2471,7 @@ public class CommandClan extends Command {
 								}
 						}
 						return true;
-					default: // send subcommand usage message
+					default: // receive subcommand usage message
 						sendMessage(p, Messages.BANK_INVALID_SUBCOMMAND.toString());
 						return true;
 				}
@@ -2302,9 +2532,11 @@ public class CommandClan extends Command {
 								online.add(op.getName());
 							}
 						}
-						if (online.isEmpty()) {
-							lib.sendMessage(p, "&c&oThis clan has no members online, unable to mark as enemy.");
-							return true;
+						if (ClansAPI.getData().getEnabled("Clans.relations.enemy.cancel-if-empty")) {
+							if (online.isEmpty()) {
+								lib.sendMessage(p, "&c&oThis clan has no members online, unable to mark as enemy.");
+								return true;
+							}
 						}
 						if (c.isNeutral(t.getId().toString())) {
 							if (c.isPeaceful()) {
@@ -2351,17 +2583,6 @@ public class CommandClan extends Command {
 						}
 						if (t.getEnemyList().contains(c.getId().toString())) {
 							lib.sendMessage(p, lib.noRemoval(args2));
-							return true;
-						}
-						List<String> online = new ArrayList<>();
-						for (String mem : t.getMembersList()) {
-							OfflinePlayer op = Bukkit.getOfflinePlayer(UUID.fromString(mem));
-							if (op.isOnline()) {
-								online.add(op.getName());
-							}
-						}
-						if (online.isEmpty()) {
-							lib.sendMessage(p, "&c&oThis clan has no members online, unable to mark as enemy.");
 							return true;
 						}
 						if (!c.getEnemyList().contains(t.getId().toString())) {
@@ -2453,6 +2674,21 @@ public class CommandClan extends Command {
 							lib.sendMessage(p, lib.allianceDenial());
 							return true;
 						}
+
+						List<String> online = new ArrayList<>();
+						for (String mem : t.getMembersList()) {
+							OfflinePlayer op = Bukkit.getOfflinePlayer(UUID.fromString(mem));
+							if (op.isOnline()) {
+								online.add(op.getName());
+							}
+						}
+						if (ClansAPI.getData().getEnabled("Clans.relations.ally.cancel-if-empty")) {
+							if (online.isEmpty()) {
+								lib.sendMessage(p, "&c&oThis clan has no members online, unable to mark as enemy.");
+								return true;
+							}
+						}
+
 						if (c.isNeutral(t.getId().toString())) {
 							lib.sendMessage(p, lib.alreadyNeutral(args2));
 							return true;
@@ -2485,6 +2721,44 @@ public class CommandClan extends Command {
 				return true;
 			}
 			final Clan clan = associate.getClan();
+
+			if (args[0].equalsIgnoreCase("logo")) {
+
+				if (!p.hasPermission(this.getPermission() + "." + DataManager.Security.getPermission("logo"))) {
+					lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("logo")));
+					return true;
+				}
+
+				if (args[1].equalsIgnoreCase("redraw")) {
+
+					if (associate.getPriority().toInt() < ClansAPI.getData().getInt("Clans.logo-edit-clearance")) {
+						lib.sendMessage(p, lib.noClearance());
+						return true;
+					}
+
+					try {
+
+						int height = Integer.parseInt(args[2]);
+
+						int width = Integer.parseInt(args[3]);
+
+						Insignia i = Insignia.get("Template:" + p.getUniqueId().toString());
+						if (i != null) {
+							i.remove();
+							new Insignia.Builder("Template:" + p.getUniqueId().toString()).setHeight(Math.min(Math.max(height, 6), 16)).setWidth(Math.min(Math.max(width, 3), 22)).draw(p);
+							lib.sendMessage(p, "&cYou have reset your current insignia work space.");
+						} else {
+							lib.sendMessage(p, "&cYou have no insignia to reset.");
+						}
+					} catch (NumberFormatException e) {
+						lib.sendMessage(p, "&cYou entered an invalid amount.");
+					}
+					return true;
+				}
+
+				return true;
+			}
+
 			if (args[0].equalsIgnoreCase("bank")) {
 				if (!Bukkit.getPluginManager().isPluginEnabled("Vault") && !Bukkit.getPluginManager().isPluginEnabled("Enterprise")) {
 					lib.sendMessage(p, "&c&oNo economy interface found. Bank feature disabled.");
@@ -2548,7 +2822,7 @@ public class CommandClan extends Command {
 		int stop = rsn.length() - 1;
 		if (args0.equalsIgnoreCase("message")) {
 			Clan clan = ClansAPI.getInstance().getClan(p.getUniqueId());
-			clan.broadcast(MessageFormat.format(ClansAPI.getData().getMain().getConfig().getString("Formatting.Clan-broadcast-prefix"), p.getName()) + " " + rsn.substring(0, stop));
+			clan.broadcast(MessageFormat.format(ClansAPI.getData().getMain().getConfig().getString("Formatting.chat-message-format"), p.getName()) + " " + rsn.substring(0, stop));
 			return true;
 		}
 		if (args0.equalsIgnoreCase("bio")) {

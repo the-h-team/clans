@@ -34,10 +34,10 @@ public class ChatEventListener implements Listener {
 		ClanVentBus.subscribeAsync(ChatChannelAllyEvent.class, Vent.Priority.MEDIUM, (e, subscription) -> {
 			ClanAssociate associate = ClansAPI.getInstance().getAssociate(e.getChatting()).orElse(null);
 			if (associate != null) {
-				e.setPrefix(StringUtils.use(ClansAPI.getData().getMain().getConfig().getString("Formatting.Chat.ally.prefix")).replaceIgnoreCase("{PLAYER}", associate.getNickname()));
-				e.setDivider(ClansAPI.getData().getMain().getConfig().getString("Formatting.Chat.ally.divider"));
-				e.setHighlight(StringUtils.use(ClansAPI.getData().getMain().getConfig().getString("Formatting.Chat.ally.highlight")).replaceIgnoreCase("{CLAN}", e.getClan().getName()));
-				e.setHoverMeta(StringUtils.use(ClansAPI.getData().getMain().getConfig().getString("Formatting.Chat.ally.hover")).replaceIgnoreCase("{RANK}", associate.getRankTag()));
+				e.setPrefix(StringUtils.use(ClansAPI.getData().getMain().getConfig().getString("Formatting.Chat.Channel.ally.prefix")).replaceIgnoreCase("{PLAYER}", associate.getNickname()));
+				e.setDivider(ClansAPI.getData().getMain().getConfig().getString("Formatting.Chat.Channel.ally.divider"));
+				e.setHighlight(StringUtils.use(ClansAPI.getData().getMain().getConfig().getString("Formatting.Chat.Channel.ally.highlight")).replaceIgnoreCase("{CLAN}", e.getClan().getName()));
+				e.setHoverMeta(StringUtils.use(ClansAPI.getData().getMain().getConfig().getString("Formatting.Chat.Channel.ally.hover")).replaceIgnoreCase("{RANK}", associate.getRankTag()));
 				e.setPingSound(Sound.ENTITY_VILLAGER_YES);
 			}
 
@@ -46,10 +46,10 @@ public class ChatEventListener implements Listener {
 		ClanVentBus.subscribeAsync(ChatChannelClanEvent.class, Vent.Priority.MEDIUM, (e, subscription) -> {
 			ClanAssociate associate = ClansAPI.getInstance().getAssociate(e.getChatting()).orElse(null);
 			if (associate != null) {
-				e.setPrefix(StringUtils.use(ClansAPI.getData().getMain().getConfig().getString("Formatting.Chat.clan.prefix")).replaceIgnoreCase("{PLAYER}", associate.getNickname()));
-				e.setDivider(ClansAPI.getData().getMain().getConfig().getString("Formatting.Chat.clan.divider"));
-				e.setHighlight(StringUtils.use(ClansAPI.getData().getMain().getConfig().getString("Formatting.Chat.clan.highlight")).replaceIgnoreCase("{CLAN}", e.getClan().getName()));
-				e.setHoverMeta(StringUtils.use(ClansAPI.getData().getMain().getConfig().getString("Formatting.Chat.clan.hover")).replaceIgnoreCase("{RANK}", associate.getRankTag()));
+				e.setPrefix(StringUtils.use(ClansAPI.getData().getMain().getConfig().getString("Formatting.Chat.Channel.clan.prefix")).replaceIgnoreCase("{PLAYER}", associate.getNickname()));
+				e.setDivider(ClansAPI.getData().getMain().getConfig().getString("Formatting.Chat.Channel.clan.divider"));
+				e.setHighlight(StringUtils.use(ClansAPI.getData().getMain().getConfig().getString("Formatting.Chat.Channel.clan.highlight")).replaceIgnoreCase("{CLAN}", e.getClan().getName()));
+				e.setHoverMeta(StringUtils.use(ClansAPI.getData().getMain().getConfig().getString("Formatting.Chat.Channel.clan.hover")).replaceIgnoreCase("{RANK}", associate.getRankTag()));
 			}
 		});
 
@@ -67,7 +67,7 @@ public class ChatEventListener implements Listener {
 					StringLibrary lib = new StringLibrary();
 					String rank;
 					clanName = clan.getColor() + clanName;
-					switch (lib.getRankStyle()) {
+					switch (lib.getRankStyle().toUpperCase()) {
 						case "WORDLESS":
 							rank = lib.getWordlessStyle(associate.getRank());
 
@@ -93,7 +93,7 @@ public class ChatEventListener implements Listener {
 					ClansPro.getInstance().getLogger().info("- [CLAN] " + e.getChatting().getName() + " : " + e.getMessage());
 				}
 				for (Player toGet : e.getReceivers()) {
-					e.getUtil().sendComponent(toGet, TextLib.getInstance().textHoverable(MessageFormat.format(e.getPrefix(), associate.getNickname()), StringUtils.use(MessageFormat.format(e.getHighlight(), associate.getClan().getColor(), associate.getClan().getName())).papi(e.getChatting()), e.getDivider() + e.getMessage(), StringUtils.use(MessageFormat.format(e.getHoverMeta(), associate.getRankTag(), associate.getNickname(), p.getName())).papi(e.getChatting())));
+					e.getUtil().sendComponent(toGet, TextLib.getInstance().textHoverable(MessageFormat.format(e.getPrefix(), e.getChatting().getName(), associate.getClan().getName(), associate.getClan().getColor(), associate.getRankTag()), StringUtils.use(MessageFormat.format(e.getHighlight(), e.getChatting().getName(), associate.getClan().getName(), associate.getClan().getColor(), associate.getRankTag())).papi(e.getChatting()), e.getDivider() + e.getMessage(), StringUtils.use(MessageFormat.format(e.getHoverMeta(), e.getChatting().getName(), associate.getClan().getName(), associate.getClan().getColor(), associate.getRankTag())).papi(e.getChatting())));
 					toGet.playSound(toGet.getLocation(), e.getPingSound(), 10, 1);
 				}
 			}
@@ -111,7 +111,7 @@ public class ChatEventListener implements Listener {
 					ClansPro.getInstance().getLogger().info("- [ALLY] " + e.getChatting().getName() + " : " + e.getMessage());
 				}
 				for (Player toGet : e.getReceivers()) {
-					e.getUtil().sendComponent(toGet, TextLib.getInstance().textHoverable(MessageFormat.format(e.getPrefix(), associate.getNickname()), StringUtils.use(MessageFormat.format(e.getHighlight(), associate.getClan().getColor(), associate.getClan().getName())).papi(e.getChatting()), e.getDivider() + e.getMessage(), StringUtils.use(MessageFormat.format(e.getHoverMeta(), associate.getRankTag(), associate.getNickname(), p.getName())).papi(e.getChatting())));
+					e.getUtil().sendComponent(toGet, TextLib.getInstance().textHoverable(MessageFormat.format(e.getPrefix(), e.getChatting().getName(), associate.getClan().getName(), associate.getClan().getColor(), associate.getRankTag()), StringUtils.use(MessageFormat.format(e.getHighlight(), e.getChatting().getName(), associate.getClan().getName(), associate.getClan().getColor(), associate.getRankTag())).papi(e.getChatting()), e.getDivider() + e.getMessage(), StringUtils.use(MessageFormat.format(e.getHoverMeta(), e.getChatting().getName(), associate.getClan().getName(), associate.getClan().getColor(), associate.getRankTag())).papi(e.getChatting())));
 					toGet.playSound(toGet.getLocation(), e.getPingSound(), 10, 1);
 				}
 			}

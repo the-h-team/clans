@@ -4,6 +4,7 @@ import com.github.sanctum.clans.ClansPro;
 import com.github.sanctum.clans.construct.DefaultClan;
 import com.github.sanctum.clans.construct.actions.ClanAction;
 import com.github.sanctum.clans.construct.api.Clan;
+import com.github.sanctum.clans.construct.api.ClanBlueprint;
 import com.github.sanctum.clans.construct.api.ClansAPI;
 import com.github.sanctum.clans.gui.UI;
 import com.github.sanctum.clans.util.StringLibrary;
@@ -19,15 +20,17 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import net.md_5.bungee.api.ChatColor;
 import org.bukkit.Bukkit;
+import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
 public class CommandClanAdmin extends Command {
@@ -73,7 +76,7 @@ public class CommandClanAdmin extends Command {
 		List<String> result = new ArrayList<>();
 		if (args.length == 1) {
 			arguments.clear();
-			arguments.addAll(Arrays.asList("reload", "kick", "tphere", "put", "settings", "setspawn", "update", "getid", "idmode", "give", "take", "spy", "view", "purge", "tphere"));
+			arguments.addAll(Arrays.asList("reload", "kick", "tphere", "set", "put", "settings", "setspawn", "update", "getid", "idmode", "give", "take", "spy", "view", "purge", "tphere"));
 			for (String a : arguments) {
 				if (a.toLowerCase().startsWith(args[0].toLowerCase()))
 					result.add(a);
@@ -153,7 +156,7 @@ public class CommandClanAdmin extends Command {
 				}
 				return result;
 			}
-			if (args[0].equalsIgnoreCase("close")) {
+			if (args[0].equalsIgnoreCase("close") || args[0].equalsIgnoreCase("set")) {
 				arguments.clear();
 				arguments.addAll(DefaultClan.action.getAllClanNames());
 				for (String a : arguments) {
@@ -193,7 +196,7 @@ public class CommandClanAdmin extends Command {
 			}
 			if (args[0].equalsIgnoreCase("set")) {
 				arguments.clear();
-				arguments.addAll(Collections.singletonList("money"));
+				arguments.addAll(Arrays.asList("money", "logo"));
 				for (String a : arguments) {
 					if (a.toLowerCase().startsWith(args[2].toLowerCase()))
 						result.add(a);
@@ -288,7 +291,7 @@ public class CommandClanAdmin extends Command {
 				return true;
 			}
 			if (args0.equalsIgnoreCase("put")) {
-				lib.sendMessage(p, "&7|&e) &fInvalid usage : /" + commandLabel + " put <playerName> <clanName>");
+				lib.sendMessage(p, "&7|&e) &fInvalid usage : /" + commandLabel + " put <playerName> <clanName> | [password]");
 				return true;
 			}
 			if (args0.equalsIgnoreCase("spy")) {
@@ -601,6 +604,50 @@ public class CommandClanAdmin extends Command {
 				}
 				return true;
 			}
+			if (args0.equalsIgnoreCase("set")) {
+				String id = DefaultClan.action.getClanID(args1);
+				switch (args2.toLowerCase()) {
+					case "logo":
+						ItemStack item = p.getInventory().getItemInMainHand();
+
+						if (item.getType() != Material.PAPER) {
+							lib.sendMessage(p, "&cInvalid insignia request. Not an insignia print.");
+							return true;
+						}
+
+						if (!item.hasItemMeta()) {
+							lib.sendMessage(p, "&cInvalid insignia request. No lore to process.");
+							return true;
+						}
+
+						if (item.getItemMeta().getLore() != null) {
+
+							for (String lore : item.getItemMeta().getLore()) {
+								if (ChatColor.stripColor(lore).matches("^[a-zA-Z0-9]*$")) {
+									lib.sendMessage(p, "&cInvalid insignia request. Error 420");
+									return true;
+								}
+							}
+
+							if (id != null) {
+								Clan target = ClansAPI.getInstance().getClan(id);
+								target.setValue("logo", new ArrayList<>(item.getItemMeta().getLore()));
+							} else {
+								lib.sendMessage(p, lib.clanUnknown(args1));
+								return true;
+							}
+
+							lib.sendMessage(p, "&aPrinted insignia applied to clan " + args1 + " container.");
+
+						} else {
+
+							lib.sendMessage(p, "&cInvalid insignia request. No lore to process.");
+
+							return true;
+						}
+						break;
+				}
+			}
 			if (args0.equalsIgnoreCase("view")) {
 				String id = DefaultClan.action.getClanID(args1);
 				switch (args2.toLowerCase()) {
@@ -687,9 +734,74 @@ public class CommandClanAdmin extends Command {
 			String args1 = args[1];
 			String args2 = args[2];
 			String amountPre = args[3];
+			if (args0.equalsIgnoreCase("put")) {
+				if (DefaultClan.action.getUserID(args1) == null) {
+					lib.sendMessage(p, lib.playerUnknown(args1));
+					return true;
+				}
+				UUID target = DefaultClan.action.getUserID(args1);
+
+				if (ClansAPI.getInstance().isInClan(target)) {
+					lib.sendMessage(p, "&c&oPlayer " + args1 + " is already in a clan.");
+					return true;
+				}
+
+				if (ClansAPI.getInstance().getClanID(args2) != null) {
+					lib.sendMessage(p, "&c&oClan " + args2 + " already exists.");
+				} else {
+					lib.sendMessage(p, "&3&oPlayer " + args1 + " was placed into clan " + args2);
+					new ClanBlueprint(args2, true).setLeader(Bukkit.getOfflinePlayer(target))
+							.setPassword(amountPre)
+							.toBuilder().supply().givePower(1.0).getClan();
+					if (Bukkit.getOfflinePlayer(target).isOnline()) {
+						lib.sendMessage(Bukkit.getPlayer(target), "&5&oA staff member has placed you into clan " + args2);
+					}
+					return true;
+				}
+				return true;
+			}
 			if (args0.equalsIgnoreCase("set")) {
 				String id = DefaultClan.action.getClanID(args1);
 				switch (args2.toLowerCase()) {
+					case "logo":
+						ItemStack item = p.getInventory().getItemInMainHand();
+
+						if (item.getType() != Material.PAPER) {
+							lib.sendMessage(p, "&cInvalid insignia request. Not an insignia print.");
+							return true;
+						}
+
+						if (!item.hasItemMeta()) {
+							lib.sendMessage(p, "&cInvalid insignia request. No lore to process.");
+							return true;
+						}
+
+						if (item.getItemMeta().getLore() != null) {
+
+							for (String lore : item.getItemMeta().getLore()) {
+								if (lore.matches("^[a-zA-Z0-9]*$")) {
+									lib.sendMessage(p, "&cInvalid insignia request. Error 420");
+									return true;
+								}
+							}
+
+							if (id != null) {
+								Clan target = ClansAPI.getInstance().getClan(id);
+								target.setValue("logo", new ArrayList<>(item.getItemMeta().getLore()));
+							} else {
+								lib.sendMessage(p, lib.clanUnknown(args1));
+								return true;
+							}
+
+							lib.sendMessage(p, "&aPrinted insignia applied to clan " + args1 + " container.");
+
+						} else {
+
+							lib.sendMessage(p, "&cInvalid insignia request. No lore to process.");
+
+							return true;
+						}
+						break;
 					case "power":
 						break;
 					case "money":

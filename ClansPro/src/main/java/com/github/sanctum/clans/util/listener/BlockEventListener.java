@@ -27,7 +27,7 @@ public class BlockEventListener implements Listener {
 
 		Vent.subscribe(new Vent.Subscription<>(DefaultEvent.BlockBreak.class, ClansPro.getInstance(), Vent.Priority.HIGH, (event, subscription) -> {
 
-			ClaimInteractEvent e = ClanVentBus.call(new ClaimInteractEvent(event.getPlayer(), event.getBlock().getLocation(), InteractionType.BREAK));
+			ClaimInteractEvent e = ClanVentBus.call(new ClaimInteractEvent(event.getPlayer(), event.getBlock(), event.getBlock().getLocation(), InteractionType.BREAK));
 			if (e.isCancelled()) {
 				e.stringLibrary().sendMessage(e.getPlayer(), MessageFormat.format(e.stringLibrary().notClaimOwner(e.getClaim().getClan().getName()), e.getClaim().getClan().getName()));
 				event.setCancelled(e.isCancelled());
@@ -41,7 +41,7 @@ public class BlockEventListener implements Listener {
 
 		Vent.subscribe(new Vent.Subscription<>(DefaultEvent.BlockPlace.class, ClansPro.getInstance(), Vent.Priority.HIGH, (event, subscription) -> {
 
-			ClaimInteractEvent e = ClanVentBus.call(new ClaimInteractEvent(event.getPlayer(), event.getBlock().getLocation(), InteractionType.BUILD));
+			ClaimInteractEvent e = ClanVentBus.call(new ClaimInteractEvent(event.getPlayer(), event.getBlock(), event.getBlock().getLocation(), InteractionType.BUILD));
 			if (e.isCancelled()) {
 				e.stringLibrary().sendMessage(e.getPlayer(), MessageFormat.format(e.stringLibrary().notClaimOwner(e.getClaim().getClan().getName()), e.getClaim().getClan().getName()));
 				event.setCancelled(e.isCancelled());
@@ -67,7 +67,7 @@ public class BlockEventListener implements Listener {
 						if (e.getShieldOn().equals("{0} &a&lRAID SHIELD ENABLED")) {
 							e.setShieldOff(ClansAPI.getData().getMain().getConfig().getString("Clans.raid-shield.messages.disabled"));
 						}
-						if (ClansAPI.getData().getEnabled("Clans.raid-shield.send-messages")) {
+						if (ClansAPI.getData().getEnabled("Clans.raid-shield.receive-messages")) {
 							Bukkit.broadcastMessage(DefaultClan.action.color(MessageFormat.format(e.getShieldOff(), DefaultClan.action.getPrefix())));
 						}
 					}
@@ -78,7 +78,7 @@ public class BlockEventListener implements Listener {
 						if (e.getShieldOn().equals("{0} &a&lRAID SHIELD ENABLED")) {
 							e.setShieldOn(ClansAPI.getData().getMain().getConfig().getString("Clans.raid-shield.messages.enabled"));
 						}
-						if (ClansAPI.getData().getEnabled("Clans.raid-shield.send-messages")) {
+						if (ClansAPI.getData().getEnabled("Clans.raid-shield.receive-messages")) {
 							Bukkit.broadcastMessage(DefaultClan.action.color(MessageFormat.format(e.getShieldOn(), DefaultClan.action.getPrefix())));
 						}
 					}

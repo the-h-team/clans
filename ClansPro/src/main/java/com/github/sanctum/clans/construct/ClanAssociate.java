@@ -36,8 +36,7 @@ public class ClanAssociate {
 	}
 
 	public ClanAssociate(OfflinePlayer player) {
-		this.player = player.getUniqueId();
-		this.killMap = new HashMap<>();
+		this(player.getUniqueId());
 	}
 
 	/**
@@ -96,10 +95,10 @@ public class ClanAssociate {
 	public synchronized String getRankTag() {
 		String result = "";
 		FileManager main = ClansAPI.getData().getMain();
-		String member = main.getConfig().getString("Formatting.Styles.Full.Member");
-		String mod = main.getConfig().getString("Formatting.Styles.Full.Moderator");
-		String admin = main.getConfig().getString("Formatting.Styles.Full.Admin");
-		String owner = main.getConfig().getString("Formatting.Styles.Full.Owner");
+		String member = main.getConfig().getString("Formatting.Chat.Styles.Full.Member");
+		String mod = main.getConfig().getString("Formatting.Chat.Styles.Full.Moderator");
+		String admin = main.getConfig().getString("Formatting.Chat.Styles.Full.Admin");
+		String owner = main.getConfig().getString("Formatting.Chat.Styles.Full.Owner");
 		switch (getRank()) {
 			case "Member":
 				result = member;
@@ -123,10 +122,10 @@ public class ClanAssociate {
 	public synchronized String getRankShort() {
 		String result = "";
 		FileManager main = ClansAPI.getData().getMain();
-		String member = main.getConfig().getString("Formatting.Styles.Wordless.Member");
-		String mod = main.getConfig().getString("Formatting.Styles.Wordless.Moderator");
-		String admin = main.getConfig().getString("Formatting.Styles.Wordless.Admin");
-		String owner = main.getConfig().getString("Formatting.Styles.Wordless.Owner");
+		String member = main.getConfig().getString("Formatting.Chat.Styles.Wordless.Member");
+		String mod = main.getConfig().getString("Formatting.Chat.Styles.Wordless.Moderator");
+		String admin = main.getConfig().getString("Formatting.Chat.Styles.Wordless.Admin");
+		String owner = main.getConfig().getString("Formatting.Chat.Styles.Wordless.Owner");
 		switch (getRank()) {
 			case "Member":
 				result = member;
@@ -206,7 +205,7 @@ public class ClanAssociate {
 	}
 
 	/**
-	 * Calling this method invokes +1 kill added to this users cache (Resets after 7 & penalizes)
+	 * Calling this method invokes +1 kill added to this users cache (Resets after the configured amount & penalizes)
 	 */
 	public void killed() {
 		long time = System.currentTimeMillis();
@@ -230,7 +229,7 @@ public class ClanAssociate {
 	 * @param priority The rank priority to update the associate with.
 	 */
 	public void setPriority(RankPriority priority) {
-		ClansAPI.getInstance().setRank(getClan().getId(), player, priority);
+		ClansAPI.getInstance().setRank(this, priority);
 	}
 
 	/**

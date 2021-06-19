@@ -1,6 +1,6 @@
 package com.github.sanctum.link.dynmap;
 
-import com.github.sanctum.dynmap.DynmapListener;
+import com.github.sanctum.dynmap.DynmapSubscription;
 import com.github.sanctum.labyrinth.library.HUID;
 import com.github.sanctum.link.EventCycle;
 import java.util.Collection;
@@ -49,7 +49,7 @@ public class DynmapCycle extends EventCycle {
 
 	@Override
 	public void onLoad() {
-		additions.add(new DynmapListener());
+		additions.add(new DynmapSubscription());
 	}
 
 	@Override

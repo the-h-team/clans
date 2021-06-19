@@ -178,6 +178,31 @@ public class UI {
 		return amnt;
 	}
 
+	public static int getMiscSlot() {
+		int amnt = 0;
+		switch (getRows().getSlotCount()) {
+			case 9:
+				amnt = 4;
+				break;
+			case 18:
+				amnt = 13;
+				break;
+			case 27:
+				amnt = 19;
+				break;
+			case 36:
+				amnt = 28;
+				break;
+			case 45:
+				amnt = 37;
+				break;
+			case 54:
+				amnt = 46;
+				break;
+		}
+		return amnt;
+	}
+
 	public static int getLeftSlot() {
 		int amnt = 0;
 		switch (getRows().getSlotCount()) {
@@ -482,7 +507,7 @@ public class UI {
 	}
 
 	public static Menu select(Singular type, UUID... uuids) {
-		MenuBuilder builder = null;
+		MenuBuilder builder;
 		List<UUID> ids = new ArrayList<>(Arrays.asList(uuids));
 		UUID uuid = null;
 		if (!ids.isEmpty()) {
@@ -565,7 +590,7 @@ public class UI {
 							Bukkit.dispatchCommand(p, "c info " + c.getName());
 						})
 						.assignToSlots(13)
-						.addElement(SkullItem.Head.search(associate.getPlayer()) != null ? new Item.Edit(SkullItem.Head.search(associate.getPlayer())).setFlags(ItemFlag.HIDE_ENCHANTS).addEnchantment(Enchantment.LOYALTY, 69).build() : new ItemStack(ClansAPI.getData().getItem("menu-items.player")))
+						.addElement(SkullItem.Head.search(associate.getPlayer()) != null ? new Item.Edit(SkullItem.Head.search(associate.getPlayer())).setFlags(ItemFlag.HIDE_ENCHANTS).addEnchantment(Enchantment.LOYALTY, 69).build() : new ItemStack(ClansAPI.getData().getItem("player")))
 						.setLore(StringUtils.use(bio + " &f-" + associate.getNickname()).translate())
 						.setText(StringUtils.use(" ").translate())
 						.setAction(click -> {
@@ -879,6 +904,9 @@ public class UI {
 							message.reload();
 							regions.reload();
 							UI.select(Singular.SETTINGS_WINDOW).open(p);
+
+							ClansAPI.getInstance().getClanManager().refresh();
+
 							DefaultClan.action.sendMessage(p, "&b&oAll configuration files reloaded.");
 						})
 						.assignToSlots(31)
@@ -1170,8 +1198,8 @@ public class UI {
 								final String allEdit = "&3Allies: " + color + allylist.replace("&b&o", color).replace("&f, &b...", color + "...");
 								final String enemEdit = "&3Enemies: " + color + enemylist.replace("&b&o", color).replace("&f, &b...", color + "...");
 								List<String> result = new LinkedList<>();
-								for (String s : ClansAPI.getData().CLAN_FORMAT) {
-									result.add(MessageFormat.format(s, color.replace("&", "&f»" + color), color + par[0], color + c.format(String.valueOf(power)), baseSet, color + ownedLand, pvp, memEdit, allEdit, enemEdit));
+								for (String a : ClansAPI.getData().CLAN_FORMAT) {
+									result.add(MessageFormat.format(a, color.replace("&", "&f»" + color), color + par[0], color + c.format(String.valueOf(power)), baseSet, color + ownedLand, pvp, memEdit, allEdit, enemEdit));
 								}
 								meta.setLore(color(result.toArray(new String[0])));
 								meta.getPersistentDataContainer().set(clanKey, PersistentDataType.STRING, e.getContext().getId().toString());
@@ -1295,8 +1323,8 @@ public class UI {
 								String[] par = new Paragraph(desc).setRegex(Paragraph.COMMA_AND_PERIOD).get();
 
 								List<String> result = new LinkedList<>();
-								for (String s : ClansAPI.getData().CLAN_FORMAT) {
-									result.add(MessageFormat.format(s, color.replace("&", "&f»" + color), color + par[0], color + c.format(String.valueOf(power)), baseSet, color + ownedLand, pvp, memlist, allylist, enemylist));
+								for (String a : ClansAPI.getData().CLAN_FORMAT) {
+									result.add(MessageFormat.format(a, color.replace("&", "&f»" + color), color + par[0], color + c.format(String.valueOf(power)), baseSet, color + ownedLand, pvp, memlist, allylist, enemylist));
 								}
 								meta.setLore(color(result.toArray(new String[0])));
 
@@ -1328,6 +1356,7 @@ public class UI {
 	}
 
 	public static Menu.Paginated<ClanAssociate> view(Clan c) {
+		List<String> s = c.getValue(List.class, "logo");
 		return new PaginatedBuilder<>(c.getMembers().list())
 				.forPlugin(ClansPro.getInstance())
 				.setTitle(DefaultClan.action.color(ClansAPI.getData().getTitle("member-list")))
@@ -1342,7 +1371,7 @@ public class UI {
 					e.setItem(() -> {
 						ItemStack copy = SkullItem.Head.search(e.getContext().getPlayer());
 						if (copy == null)
-							copy = new ItemStack(ClansAPI.getData().getItem("menu-items.player"));
+							copy = new ItemStack(ClansAPI.getData().getItem("player"));
 						ItemStack i = new ItemStack(copy);
 						ClanAssociate associate = e.getContext();
 						ItemMeta meta = Objects.requireNonNull(i.getItemMeta());
@@ -1365,6 +1394,25 @@ public class UI {
 						UI.select(Singular.MEMBER_INFO, UUID.fromString(id)).open(p);
 					});
 				})
+				.extraElements()
+				.invoke(() -> {
+					Item.Edit edit = new Item.Edit(Material.WHITE_BANNER).setTitle("&7Logo &3►");
+
+					List<String> result = new LinkedList<>();
+
+					if (s != null) {
+						result.add(" ");
+						result.addAll(s);
+						result.add(" ");
+						edit.setLore(result.toArray(new String[0]));
+					}
+
+					return edit.build();
+
+				}, getMiscSlot(), paginatedClick -> {
+
+				})
+				.add()
 				.setupBorder()
 				.setBorderType(Material.GRAY_STAINED_GLASS_PANE)
 				.setFillType(Material.LIGHT_GRAY_STAINED_GLASS_PANE)

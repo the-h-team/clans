@@ -1,9 +1,6 @@
 package com.github.sanctum.borders;
 
-import com.github.sanctum.clans.util.events.command.CommandHelpInsertEvent;
-import com.github.sanctum.labyrinth.event.custom.Vent;
 import com.github.sanctum.labyrinth.library.TextLib;
-import com.github.sanctum.link.ClanVentBus;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -24,15 +21,6 @@ public final class BorderListener implements Listener {
 	public static final List<UUID> playerLocate = new ArrayList<>();
 
 	public static final List<UUID> spawnLocate = new ArrayList<>();
-
-	public BorderListener() {
-		ClanVentBus.subscribe(CommandHelpInsertEvent.class, Vent.Priority.HIGH, (e, subscription) -> {
-
-			e.insert("&7|&e) &6/clan &fterritory &7| &8optional:&f-f &7<&8flag&7>");
-			e.insert("&7|&e) &6/clan &fflags");
-
-		});
-	}
 
 	@EventHandler
 	public void onLeave(PlayerQuitEvent e) {

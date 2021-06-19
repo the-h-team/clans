@@ -3,8 +3,11 @@
 ##  ██║  ██║██╔════╝██║     ██╔══██╗
 ##  ███████║█████╗  ██║     ██████╔╝  v[1.2.8]
 ##  ██╔══██║██╔══╝  ██║     ██╔═══╝
-##  ██║  ██║███████╗███████╗██║  Turn in files :)
+##  ██║  ██║███████╗███████╗██║
 ##  ╚═╝  ╚═╝╚══════╝╚══════╝╚═╝
+# Auto-translation can only happen with the help of you guys!
+# If you want the ability to simply type a command to translate to your
+# desired language each update, turn in your already translated language files!
 #==================================================#
 Title: '&r- Command help. (&7/clan #page&r)'
 Border: '&7&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬'
@@ -80,6 +83,9 @@ Commands:
   tag:
     text: '&7|&e) &6/clan &ftag <&7newTag&f>'
     permission: 'tag'
+  logo:
+    text: '&7|&e) &6/clan &flogo &7| &f[&eedit, apply, save, color, print, redraw&r]'
+    permission: 'logo'
   friendlyfire:
     text: '&7|&e) &6/clan &ffriendlyfire'
     permission: 'friendlyfire'

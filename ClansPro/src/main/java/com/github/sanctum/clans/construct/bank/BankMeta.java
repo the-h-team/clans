@@ -66,7 +66,7 @@ public class BankMeta implements Serializable {
 	public Optional<Bank> getBank() {
 		if (bank.isEmpty()) {
 			final Bank bank = new Bank(clanId);
-			new Vent.Call<>(Vent.Runtime.Asynchronous, new AsyncNewBankEvent(getClan(), bank)).run();
+			new Vent.Call<>(Vent.Runtime.Asynchronous, new AsyncNewBankEvent(getClan(), bank)).complete().join();
 			return Optional.of(bank);
 		}
 		try {

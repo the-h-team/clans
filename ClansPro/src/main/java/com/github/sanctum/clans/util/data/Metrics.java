@@ -336,7 +336,7 @@ public class Metrics {
      * Sends the data to the bStats server.
      *
      * @param plugin Any plugin. It's just used to get a logger instance.
-     * @param data   The data to send.
+     * @param data   The data to receive.
      * @throws Exception If the request failed.
      */
     private static void sendData(Plugin plugin, JsonObject data) throws Exception {
@@ -351,7 +351,7 @@ public class Metrics {
         }
         HttpsURLConnection connection = (HttpsURLConnection) new URL(URL).openConnection();
 
-        // Compress the data to save bandwidth
+        // Compress the data to saveProgress bandwidth
         byte[] compressedData = compress(data.toString());
 
         // Add headers
@@ -360,7 +360,7 @@ public class Metrics {
         connection.addRequestProperty("Connection", "close");
         connection.addRequestProperty("Content-Encoding", "gzip"); // We gzip our request
         connection.addRequestProperty("Content-Length", String.valueOf(compressedData.length));
-        connection.setRequestProperty("Content-Type", "application/json"); // We send our data in JSON format
+        connection.setRequestProperty("Content-Type", "application/json"); // We receive our data in JSON format
         connection.setRequestProperty("User-Agent", "MC-Server/" + B_STATS_VERSION);
 
         // Send data
@@ -426,7 +426,7 @@ public class Metrics {
             try {
                 JsonObject data = getChartData();
                 if (data == null) {
-                    // If the data is null we don't send the chart.
+                    // If the data is null we don't receive the chart.
                     return null;
                 }
                 chart.add("data", data);

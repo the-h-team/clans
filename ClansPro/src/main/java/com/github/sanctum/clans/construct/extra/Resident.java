@@ -2,7 +2,9 @@ package com.github.sanctum.clans.construct.extra;
 
 import com.github.sanctum.clans.construct.Claim;
 import com.google.common.collect.MapMaker;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentMap;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
@@ -13,9 +15,7 @@ public class Resident {
 
 	private long joinTime;
 
-	private boolean notificationSent;
-
-	private boolean traversedDifferent;
+	private final Set<Property> properties;
 
 	private Claim claim;
 
@@ -30,6 +30,7 @@ public class Resident {
 			makeMap();
 
 	public Resident(Player inhabitant) {
+		this.properties = new HashSet<>();
 		this.inhabitant = inhabitant;
 		this.joinTime = System.currentTimeMillis();
 	}
@@ -54,20 +55,20 @@ public class Resident {
 		return Claim.from(inhabitant.getLocation());
 	}
 
-	public boolean isNotificationSent() {
-		return notificationSent;
+	public boolean hasProperty(Property property) {
+		return this.properties.contains(property);
 	}
 
-	public void setNotificationSent(boolean sent) {
-		this.notificationSent = sent;
-	}
-
-	public boolean hasTraversedDifferent() {
-		return traversedDifferent;
-	}
-
-	public void setTraversedDifferent(boolean traversed) {
-		this.traversedDifferent = traversed;
+	public void setProperty(Property property, boolean state) {
+		if (hasProperty(property)) {
+			if (!state) {
+				this.properties.remove(property);
+			}
+		} else {
+			if (state) {
+				this.properties.add(property);
+			}
+		}
 	}
 
 	/**
@@ -103,6 +104,10 @@ public class Resident {
 
 	public Map<Block, Long> getBrokenHistory() {
 		return lastBroken;
+	}
+
+	public enum Property {
+		TRAVERSED, NOTIFIED,
 	}
 
 }

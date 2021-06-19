@@ -4,7 +4,11 @@ import com.github.sanctum.borders.BorderListener;
 import com.github.sanctum.borders.FlagsCommand;
 import com.github.sanctum.borders.TerritoryCommand;
 import com.github.sanctum.clans.construct.api.ClansAPI;
+import com.github.sanctum.clans.util.events.command.CommandHelpInsertEvent;
+import com.github.sanctum.labyrinth.event.custom.Vent;
 import com.github.sanctum.labyrinth.library.HUID;
+import com.github.sanctum.link.ClanVentBus;
+import com.github.sanctum.link.CycleList;
 import com.github.sanctum.link.EventCycle;
 
 public class BorderCycle extends EventCycle {
@@ -48,6 +52,20 @@ public class BorderCycle extends EventCycle {
 
 	@Override
 	public void onEnable() {
+
+		ClanVentBus.subscribe(CommandHelpInsertEvent.class, Vent.Priority.HIGH, (e, subscription) -> {
+
+			EventCycle cycle = CycleList.getAddon("Borders");
+
+			if (cycle != null && !cycle.isActive()) {
+				subscription.remove();
+				return;
+			}
+
+			e.insert("&7|&e) &6/clan &fterritory &7| &8optional:&f-f &7<&8flag&7>");
+			e.insert("&7|&e) &6/clan &fflags");
+
+		});
 
 	}
 

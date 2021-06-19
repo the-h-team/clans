@@ -4,12 +4,12 @@ import com.github.sanctum.clans.ClansPro;
 import com.github.sanctum.clans.construct.api.ClanSubCommand;
 import com.github.sanctum.clans.construct.api.ClansAPI;
 import com.github.sanctum.labyrinth.data.FileManager;
+import com.github.sanctum.labyrinth.data.container.KeyedServiceManager;
 import com.github.sanctum.labyrinth.library.HUID;
 import com.github.sanctum.labyrinth.library.Message;
 import com.github.sanctum.labyrinth.task.Schedule;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.logging.Logger;
 import org.bukkit.entity.Player;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
@@ -19,12 +19,14 @@ import org.bukkit.plugin.RegisteredListener;
 public abstract class EventCycle {
 
 	private boolean ACTIVE;
+	private final EventLogger LOGGER;
 	private final Collection<Listener> LISTENERS;
 	private final Collection<ClanSubCommand> COMMANDS;
 
 	public EventCycle() {
 		this.LISTENERS = new HashSet<>();
 		this.COMMANDS = new HashSet<>();
+		this.LOGGER = new EventLogger(getName());
 		this.ACTIVE = true;
 	}
 
@@ -74,10 +76,14 @@ public abstract class EventCycle {
 
 	public final FileManager getFile(String name, String... directory) {
 		String dir = null;
+		StringBuilder builder = new StringBuilder();
 		if (directory.length > 0) {
-			dir = directory[0];
+			for (String d : directory) {
+				builder.append(d).append("/");
+			}
 		}
-		return getApi().getFileList().find(name, "Addons/" + dir + "/");
+		dir = builder.toString().trim().substring(0, builder.length() - 1);
+		return getApi().getFileList().find(name, "Addons/" + getName() + "/" + dir + "/");
 	}
 
 	public final Message getMessenger() {
@@ -88,8 +94,12 @@ public abstract class EventCycle {
 		return ClansAPI.getInstance();
 	}
 
-	protected final Logger getLogger() {
-		return getPlugin().getLogger();
+	public final KeyedServiceManager<EventCycle> getServiceManager() {
+		return ClansPro.getInstance().getServiceManager();
+	}
+
+	public final EventLogger getLogger() {
+		return this.LOGGER;
 	}
 
 	protected final void register(Listener listener) {
@@ -121,7 +131,7 @@ public abstract class EventCycle {
 	}
 
 	public final void remove() {
-		ClansPro.getInstance().getLogger().info("- Scheduling addon " + '"' + getName() + '"' + " for removal.");
+		ClansPro.getInstance().getLogger().info("- Disabling addon " + '"' + getName() + '"' + " v" + getVersion());
 		for (RegisteredListener l : HandlerList.getRegisteredListeners(ClansPro.getInstance())) {
 			if (getAdditions().contains(l.getListener())) {
 				HandlerList.unregisterAll(l.getListener());

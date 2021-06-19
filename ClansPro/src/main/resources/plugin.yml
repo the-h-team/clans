@@ -4,6 +4,6 @@ authors: [ Hempfest, ms5984 ]
 api-version: 1.13
 depend: [ Labyrinth ]
 softdepend: [ Enterprise, Vault ]
-description: Official Clans [Pro] release.
+description: A premium & unique alternative to Factions.
 website: https://github.com/the-h-team/ClansPro/wiki
 main: com.github.sanctum.clans.ClansPro

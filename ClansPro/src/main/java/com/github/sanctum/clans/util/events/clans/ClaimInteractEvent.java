@@ -10,37 +10,46 @@ import org.bukkit.inventory.ItemStack;
 
 public class ClaimInteractEvent extends ClanEventBuilder {
 
-    private final Player p;
+	private Block b;
 
-    private final InteractionType type;
+	private final Player p;
 
-    private final Location location;
+	private final InteractionType type;
 
-    public ClaimInteractEvent(Player p, Location location, InteractionType type) {
-        this.p = p;
-        this.location = location;
-        this.type = type;
-    }
+	private final Location location;
 
-    public Location getLocation() {
-        return location;
-    }
+	public ClaimInteractEvent(Player p, Location location, InteractionType type) {
+		this.p = p;
+		this.location = location;
+		this.type = type;
+	}
 
-    public InteractionType getInteraction() {
-        return type;
-    }
+	public ClaimInteractEvent(Player p, Block block, Location location, InteractionType type) {
+		this.p = p;
+		this.b = block;
+		this.location = location;
+		this.type = type;
+	}
 
-    public Player getPlayer() {
-        return p;
-    }
+	public Location getLocation() {
+		return location;
+	}
 
-    public Claim getClaim() {
-        return Claim.from(location);
-    }
+	public InteractionType getInteraction() {
+		return type;
+	}
 
-    public Block getBlock() {
-        return location.getBlock();
-    }
+	public Player getPlayer() {
+		return p;
+	}
+
+	public Claim getClaim() {
+		return Claim.from(location);
+	}
+
+	public Block getBlock() {
+		return this.b != null ? this.b : location.getBlock();
+	}
 
     public ItemStack getItemInMainHand() {
         return p.getInventory().getItemInMainHand();

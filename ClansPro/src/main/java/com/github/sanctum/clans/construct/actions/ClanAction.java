@@ -12,6 +12,7 @@ import com.github.sanctum.clans.util.StringLibrary;
 import com.github.sanctum.clans.util.data.DataManager;
 import com.github.sanctum.clans.util.events.clans.ClanCreateEvent;
 import com.github.sanctum.clans.util.events.clans.ClanCreatedEvent;
+import com.github.sanctum.clans.util.events.clans.ClanLeaveEvent;
 import com.github.sanctum.clans.util.events.command.ClanInformationAdaptEvent;
 import com.github.sanctum.labyrinth.data.EconomyProvision;
 import com.github.sanctum.labyrinth.data.FileManager;
@@ -37,6 +38,7 @@ import java.util.Optional;
 import java.util.UUID;
 import net.md_5.bungee.api.chat.BaseComponent;
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.Server;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -62,7 +64,7 @@ public class ClanAction extends StringLibrary {
 				String newID = clanCode();
 				local.set("Clan.id", newID);
 				local.set("Clan.join-date", new Date().getTime());
-				ClansAPI.getData().ASSOCIATES.add(new ClanAssociate(owner));
+				Schedule.sync(() -> ClansAPI.getData().ASSOCIATES.add(new ClanAssociate(owner))).run();
 				user.saveConfig();
 				String status = "OPEN";
 				if (password == null) {
@@ -145,12 +147,20 @@ public class ClanAction extends StringLibrary {
 		ClanAssociate associate = ClansAPI.getInstance().getAssociate(target).orElse(null);
 		if (associate != null) {
 			if (associate.getClanID() == null) {
-				ClansPro.getInstance().dataManager.ASSOCIATES.remove(associate);
+				Schedule.sync(() -> ClansAPI.getData().ASSOCIATES.removeIf(a -> a.getPlayer().getUniqueId().equals(target))).run();
 				return;
 			}
 			if (!(associate.getClan() instanceof DefaultClan))
 				return;
+
 			DefaultClan clanIndex = (DefaultClan) associate.getClan();
+
+			ClanLeaveEvent ev = ClanVentBus.call(new ClanLeaveEvent(associate));
+
+			if (ev.isCancelled()) {
+				return;
+			}
+
 			FileManager clan = ClansAPI.getData().getClanFile(clanIndex);
 			FileManager user = ClansAPI.getData().get(target);
 			List<String> members = clan.getConfig().getStringList("members");
@@ -190,13 +200,12 @@ public class ClanAction extends StringLibrary {
 					}
 					ClansPro.getInstance().dataManager.CLAN_ENEMY_MAP.remove(clanIndex.getId().toString());
 					ClansPro.getInstance().dataManager.CLAN_ALLY_MAP.remove(clanIndex.getId().toString());
-					ClansPro.getInstance().dataManager.CLANS.remove(clanIndex);
+					ClansPro.getInstance().getClanManager().delete(clanIndex);
 					user.getConfig().set("Clan", null);
 					user.saveConfig();
 					String format = MessageFormat.format(ClansAPI.getData().getMessage("deletion"), clanName);
 					Bukkit.broadcastMessage(color(getPrefix() + " " + format));
-					ClansAPI.getData().ASSOCIATES.removeIf(a -> a.getPlayer().getUniqueId().equals(target));
-					clan.delete();
+					Schedule.sync(() -> ClansAPI.getData().ASSOCIATES.removeIf(a -> a.getPlayer().getUniqueId().equals(target))).run();
 					ClansAPI.getInstance().getClaimManager().refresh();
 					break;
 				case "Admin":
@@ -209,7 +218,7 @@ public class ClanAction extends StringLibrary {
 					user.getConfig().set("Clan", null);
 					clan.saveConfig();
 					user.saveConfig();
-					ClansAPI.getData().ASSOCIATES.removeIf(a -> a.getPlayer().getUniqueId().equals(target));
+					Schedule.sync(() -> ClansAPI.getData().ASSOCIATES.removeIf(a -> a.getPlayer().getUniqueId().equals(target))).run();
 					break;
 				case "Moderator":
 					clanIndex.broadcast(MessageFormat.format(ClansAPI.getData().getMessage("member-leave"), Bukkit.getOfflinePlayer(target).getName()));
@@ -221,7 +230,7 @@ public class ClanAction extends StringLibrary {
 					user.getConfig().set("Clan", null);
 					clan.saveConfig();
 					user.saveConfig();
-					ClansAPI.getData().ASSOCIATES.removeIf(a -> a.getPlayer().getUniqueId().equals(target));
+					Schedule.sync(() -> ClansAPI.getData().ASSOCIATES.removeIf(a -> a.getPlayer().getUniqueId().equals(target))).run();
 					break;
 				case "Member":
 					clanIndex.broadcast(MessageFormat.format(ClansAPI.getData().getMessage("member-leave"), Bukkit.getOfflinePlayer(target).getName()));
@@ -230,7 +239,7 @@ public class ClanAction extends StringLibrary {
 					members.remove(target.toString());
 					clan.getConfig().set("members", members);
 					clan.saveConfig();
-					ClansAPI.getData().ASSOCIATES.removeIf(a -> a.getPlayer().getUniqueId().equals(target));
+					Schedule.sync(() -> ClansAPI.getData().ASSOCIATES.removeIf(a -> a.getPlayer().getUniqueId().equals(target))).run();
 					break;
 			}
 		} else {
@@ -501,21 +510,27 @@ public class ClanAction extends StringLibrary {
 
 	public void teleportBase(Player p) {
 		Clan clan = ClansAPI.getInstance().getClan(p.getUniqueId());
-		if (clan.getBase() != null) {
-			boolean waiting = false;
-			for (Entity e : p.getNearbyEntities(30, 30, 30)) {
-				if (e instanceof Player) {
-					if (!Arrays.asList(clan.getMembersList()).contains(e.getUniqueId().toString())) {
-						waiting = true;
-						break;
+		if (clan != null) {
+			Location base = clan.getBase();
+			if (base != null) {
+				boolean waiting = false;
+				for (Entity e : p.getNearbyEntities(30, 30, 30)) {
+					if (e instanceof Player) {
+						if (!Arrays.asList(clan.getMembersList()).contains(e.getUniqueId().toString())) {
+							waiting = true;
+							break;
+						}
 					}
 				}
-			}
-			if (!waiting) {
-				p.teleport(clan.getBase());
+				if (!waiting) {
+					sendMessage(p, commandBase());
+					p.teleport(base);
+				} else {
+					sendMessage(p, "&cSomeone is nearby. Teleporting in 10 seconds.");
+					Schedule.sync(() -> p.teleport(base)).wait(20 * 10);
+				}
 			} else {
-				sendMessage(p, "&cSomeone is nearby. Teleporting in 10 seconds.");
-				Schedule.sync(() -> p.teleport(clan.getBase())).wait(20 * 10);
+				sendMessage(p, "&cOur clan has no base set.");
 			}
 		}
 	}
@@ -544,22 +559,8 @@ public class ClanAction extends StringLibrary {
 	 */
 	@Deprecated
 	public String getClanID(UUID owner) {
-		FileManager user = ClansAPI.getData().get(owner);
-		if (user.exists()) {
-			if (user.getConfig().getString("Clan.id") != null) {
-				if (user.getConfig().getString("Clan.id").length() != 14) {
-					throw new UnsupportedOperationException("[ClansPro] - Clan ID " + user.getConfig().getString("Clan.id") + " invalid, expected format ####-####-####", new Throwable(user.getConfig().getString("Clan.id")));
-				}
-				FileManager clan = DataManager.FileType.CLAN_FILE.get(user.getConfig().getString("Clan.id"));
-				if (!clan.exists()) {
-					user.getConfig().set("Clan", null);
-					user.saveConfig();
-					return null;
-				}
-				return user.getConfig().getString("Clan.id");
-			}
-		}
-		return null;
+		ClanAssociate associate = ClansAPI.getInstance().getAssociate(owner).orElse(null);
+		return associate != null && associate.getClanID() != null ? associate.getClanID().toString() : null;
 	}
 
 	/**
@@ -593,10 +594,10 @@ public class ClanAction extends StringLibrary {
 	public String getRankTag(String rank) {
 		String result = "";
 		FileManager main = ClansAPI.getData().getMain();
-		String member = main.getConfig().getString("Formatting.Styles.Full.Member");
-		String mod = main.getConfig().getString("Formatting.Styles.Full.Moderator");
-		String admin = main.getConfig().getString("Formatting.Styles.Full.Admin");
-		String owner = main.getConfig().getString("Formatting.Styles.Full.Owner");
+		String member = main.getConfig().getString("Formatting.Chat.Styles.Full.Member");
+		String mod = main.getConfig().getString("Formatting.Chat.Styles.Full.Moderator");
+		String admin = main.getConfig().getString("Formatting.Chat.Styles.Full.Admin");
+		String owner = main.getConfig().getString("Formatting.Chat.Styles.Full.Owner");
 		switch (rank) {
 			case "Member":
 				result = member;
@@ -913,13 +914,11 @@ public class ClanAction extends StringLibrary {
 	public int kickClearance() {
 		FileManager main = ClansAPI.getData().getMain();
 		return main.getConfig().getInt("Clans.kick-clearance");
-
 	}
 
 	public int passwordClearance() {
 		FileManager main = ClansAPI.getData().getMain();
 		return main.getConfig().getInt("Clans.password-clearance");
-
 	}
 
 	private String clanCode() {

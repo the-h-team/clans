@@ -4,6 +4,7 @@ import com.github.sanctum.clans.construct.ClanAssociate;
 import com.github.sanctum.clans.construct.DefaultClan;
 import com.github.sanctum.clans.construct.actions.ClanAction;
 import com.github.sanctum.clans.construct.api.ClansAPI;
+import com.github.sanctum.clans.construct.extra.misc.ClanPrefix;
 import com.github.sanctum.labyrinth.data.FileManager;
 import com.github.sanctum.labyrinth.library.StringUtils;
 import com.github.sanctum.labyrinth.library.TextLib;
@@ -44,8 +45,9 @@ public class StringLibrary {
 	}
 
 	public String getPrefix() {
-		FileManager main = ClansAPI.getData().getMain();
-		return main.getConfig().getString("Formatting.Prefix");
+		ClansAPI API = ClansAPI.getInstance();
+		ClanPrefix prefix = API.getPrefix();
+		return prefix.getPrefix() + prefix.getText() + prefix.getSuffix();
 	}
 
 	public String alreadyInClan() {
@@ -360,9 +362,9 @@ public class StringLibrary {
 
 	public String getRankStyle() {
 		FileManager main = ClansAPI.getData().getMain();
-		String type = main.getConfig().getString("Formatting.Rank-Style");
+		String type = main.getConfig().getString("Formatting.Chat.rank-style");
 		String result;
-		if (type.equals("WORDLESS")) {
+		if (type.equalsIgnoreCase("WORDLESS")) {
 			result = "WORDLESS";
 		} else {
 			result = "FULL";
@@ -372,17 +374,17 @@ public class StringLibrary {
 
 	public String getWordlessStyle(String rank) {
 		FileManager main = ClansAPI.getData().getMain();
-		return main.getConfig().getString("Formatting.Styles.Wordless." + rank);
+		return main.getConfig().getString("Formatting.Chat.Styles.Wordless." + rank);
 	}
 
 	public String getFullStyle(String rank) {
 		FileManager main = ClansAPI.getData().getMain();
-		return main.getConfig().getString("Formatting.Styles.Full." + rank);
+		return main.getConfig().getString("Formatting.Chat.Styles.Full." + rank);
 	}
 
 	public String getChatFormat() {
 		FileManager main = ClansAPI.getData().getMain();
-		return main.getConfig().getString("Formatting.Chat.global");
+		return main.getConfig().getString("Formatting.Chat.Channel.global");
 	}
 
 	public void paginatedClanList(Player p, List<String> listToPaginate, String command, int page, int contentLinesPerPage) {

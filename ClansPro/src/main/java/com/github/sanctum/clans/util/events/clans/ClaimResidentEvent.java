@@ -29,8 +29,6 @@ public class ClaimResidentEvent extends ClanEventBuilder {
 
 	private boolean titlesAllowed = DataManager.titlesAllowed();
 
-	private boolean cancelled;
-
 	public ClaimResidentEvent(Player p) {
 		this.p = p;
 		this.claim = Claim.from(p.getLocation());
@@ -49,16 +47,6 @@ public class ClaimResidentEvent extends ClanEventBuilder {
 			titleContext.put("TITLE", "&3&oClaimed land");
 			titleContext.put("SUB-TITLE", "&7Owned by: &b%s");
 		}
-	}
-
-	@Override
-	public boolean isCancelled() {
-		return cancelled;
-	}
-
-	@Override
-	public void setCancelled(boolean b) {
-		this.cancelled = b;
 	}
 
 	public void setTitlesAllowed(boolean b) {
@@ -120,7 +108,7 @@ public class ClaimResidentEvent extends ClanEventBuilder {
 		return Claim.action;
 	}
 
-	public void playTitle() {
+	public void sendNotification() {
 		String clanName = getUtil().getClanTag(getClaim().getOwner());
 		String color;
 		if (getUtil().getClanID(p.getUniqueId()) != null) {
@@ -133,7 +121,7 @@ public class ClaimResidentEvent extends ClanEventBuilder {
 			titleContext.put("SUB-TITLE", MessageFormat.format(ClansAPI.getData().getMain().getConfig().getString("Clans.land-claiming.in-land.sub-title"), clanName));
 			p.sendTitle(getClaimUtil().color(titleContext.get("TITLE")), getClaimUtil().color(titleContext.get("SUB-TITLE")), 10, 25, 10);
 		}
-		if (ClansAPI.getData().getEnabled("Clans.land-claiming.send-messages")) {
+		if (ClansAPI.getData().getEnabled("Clans.land-claiming.receive-messages")) {
 			getClaimUtil().sendMessage(p, MessageFormat.format(ClansAPI.getData().getMain().getConfig().getString("Clans.land-claiming.in-land.message"), clanName));
 		}
 	}

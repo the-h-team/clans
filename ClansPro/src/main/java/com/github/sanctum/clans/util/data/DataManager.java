@@ -184,7 +184,7 @@ public class DataManager {
 
 	public static boolean titlesAllowed() {
 		FileManager main = ClansAPI.getInstance().getFileList().find("Config", "Configuration");
-		return main.getConfig().getBoolean("Clans.land-claiming.send-titles");
+		return main.getConfig().getBoolean("Clans.land-claiming.receive-titles");
 	}
 
 	public String prefixedTag(String color, String name) {
@@ -251,8 +251,8 @@ public class DataManager {
 
 	public void runCleaner() {
 		Schedule.async(() -> {
-			for (final File f : getClanFolder().listFiles()) {
-				Schedule.sync(() -> {
+			Schedule.sync(() -> {
+				for (final File f : getClanFolder().listFiles()) {
 					FileManager c = ClansAPI.getInstance().getFileList().find(f.getName().replace(".yml", ""), "Clans");
 					c.reload();
 					if (c.getConfig().getString("name") == null) {
@@ -271,8 +271,8 @@ public class DataManager {
 						c.saveConfig();
 						c.reload();
 					}
-				}).debug().wait(1);
-			}
+				}
+			}).debug().wait(1);
 		}).repeat(2, getInt("Clans.data-cleaner"));
 	}
 

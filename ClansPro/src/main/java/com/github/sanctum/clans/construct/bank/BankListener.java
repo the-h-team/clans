@@ -7,10 +7,9 @@ import com.github.sanctum.clans.util.events.clans.bank.BankSetBalanceEvent;
 import com.github.sanctum.clans.util.events.clans.bank.BankTransactionEvent;
 import com.github.sanctum.clans.util.events.clans.bank.messaging.Messages;
 import com.github.sanctum.labyrinth.data.EconomyProvision;
+import com.github.sanctum.labyrinth.event.custom.Vent;
 import java.math.BigDecimal;
 import java.util.Optional;
-
-import com.github.sanctum.labyrinth.event.custom.Vent;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -32,7 +31,7 @@ public class BankListener implements Listener {
 				}
 			}.runTask(p);
 		}));
-		// onPreTransactionMonitor -- TODO: this needs to happen last
+		// onPreTransactionMonitor
 		Vent.subscribe(new Vent.Subscription<>(BankPreTransactionEvent.class, p, Vent.Priority.HIGHEST, (event, listener) -> {
 			switch (ClanBank.API.defaultImpl.logToConsole()) {
 				case SILENT:
@@ -47,7 +46,7 @@ public class BankListener implements Listener {
 					);
 			}
 		}));
-		// onTransaction (original priority = MONITOR) TODO: this needs to happen last!!
+		// onTransaction (original priority = MONITOR), conformed to new priority ordinance
 		Vent.subscribe(new Vent.Subscription<>(BankTransactionEvent.class, p, Vent.Priority.HIGHEST, (e, listener) -> {
 			if (e instanceof BankPreTransactionEvent) return;
 			new BukkitRunnable() {

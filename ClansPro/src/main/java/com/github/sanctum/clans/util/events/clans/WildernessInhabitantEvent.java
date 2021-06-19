@@ -6,10 +6,12 @@ import com.github.sanctum.clans.construct.api.ClansAPI;
 import com.github.sanctum.clans.construct.extra.Resident;
 import com.github.sanctum.clans.util.data.DataManager;
 import com.github.sanctum.clans.util.events.ClanEventBuilder;
+import com.github.sanctum.labyrinth.library.TimeWatch;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Optional;
 import org.bukkit.Chunk;
 import org.bukkit.entity.Player;
 
@@ -19,6 +21,8 @@ public class WildernessInhabitantEvent extends ClanEventBuilder {
 
 	private final Player p;
 
+	private String lastTime = null;
+
 	private boolean titlesAllowed = DataManager.titlesAllowed();
 
 	public WildernessInhabitantEvent(Player p) {
@@ -26,7 +30,7 @@ public class WildernessInhabitantEvent extends ClanEventBuilder {
 		if (ClansAPI.getData().RESIDENTS.stream().anyMatch(r -> r.getPlayer().getName().equals(p.getName()))) {
 			for (Resident res : ClansAPI.getData().RESIDENTS) {
 				if (res.getPlayer().getName().equals(p.getName())) {
-					// send now leaving message
+					// receive now leaving message
 					if (!ClansAPI.getData().INHABITANTS.contains(p)) {
 						if (titlesAllowed) {
 							try {
@@ -37,15 +41,19 @@ public class WildernessInhabitantEvent extends ClanEventBuilder {
 								titleContext.put("W-TITLE", MessageFormat.format(ClansAPI.getData().getMain().getConfig().getString("Clans.land-claiming.wilderness.title"), "Un-claimed"));
 								titleContext.put("W-SUB-TITLE", MessageFormat.format(ClansAPI.getData().getMain().getConfig().getString("Clans.land-claiming.wilderness.sub-title"), "Un-claimed"));
 								p.sendTitle(getClaimUtil().color(titleContext.get("W-TITLE")), getClaimUtil().color(titleContext.get("W-SUB-TITLE")), 10, 25, 10);
+								TimeWatch.Recording recording = TimeWatch.Recording.from(res.timeActiveInMillis());
+								lastTime = recording.getDays() + "d" + recording.getHours() + "hr" + recording.getMinutes() + "m" + recording.getSeconds() + "s";
 								ClansAPI.getData().RESIDENTS.remove(res);
 								break;
 							}
 						}
-						if (ClansAPI.getData().getEnabled("Clans.land-claiming.send-messages")) {
+						if (ClansAPI.getData().getEnabled("Clans.land-claiming.receive-messages")) {
 							getClaimUtil().sendMessage(p, MessageFormat.format(ClansAPI.getData().getMain().getConfig().getString("Clans.land-claiming.wilderness.message"), res.getLastKnown().getClan().getName()));
 						}
 						ClansAPI.getData().INHABITANTS.add(p);
 					}
+					TimeWatch.Recording recording = TimeWatch.Recording.from(res.timeActiveInMillis());
+					lastTime = recording.getDays() + "d" + recording.getHours() + "hr" + recording.getMinutes() + "m" + recording.getSeconds() + "s";
 					ClansAPI.getData().RESIDENTS.remove(res);
 					break;
 				}
@@ -79,6 +87,10 @@ public class WildernessInhabitantEvent extends ClanEventBuilder {
 
 	public Player getPlayer() {
 		return p;
+	}
+
+	public Optional<String> getTimeActive() {
+		return Optional.ofNullable(this.lastTime);
 	}
 
 	@Override

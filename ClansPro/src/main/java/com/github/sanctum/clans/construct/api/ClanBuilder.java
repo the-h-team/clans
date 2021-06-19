@@ -1,5 +1,6 @@
 package com.github.sanctum.clans.construct.api;
 
+import com.github.sanctum.clans.construct.ClanAssociate;
 import com.github.sanctum.clans.construct.DefaultClan;
 import com.github.sanctum.clans.util.RankPriority;
 import java.util.Map;
@@ -45,7 +46,9 @@ public class ClanBuilder {
 				DefaultClan.action.removePlayer(entry.getKey());
 			}
 			DefaultClan.action.joinClan(entry.getKey(), clanName, password);
-			ClansAPI.getInstance().setRank(getClan().getId(), entry.getKey(), entry.getValue());
+
+			ClanAssociate associate = ClansAPI.getInstance().getAssociate(entry.getKey()).orElse(null);
+			ClansAPI.getInstance().setRank(associate, entry.getValue());
 		}
 		return this;
 	}

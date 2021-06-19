@@ -3,21 +3,22 @@ package com.github.sanctum.map;
 import com.github.sanctum.clans.ClansPro;
 import com.github.sanctum.clans.construct.Claim;
 import com.github.sanctum.clans.construct.DefaultClan;
+import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClansAPI;
-import com.github.sanctum.clans.util.events.command.CommandHelpInsertEvent;
-import com.github.sanctum.clans.util.events.command.CommandInsertEvent;
-import com.github.sanctum.clans.util.events.command.TabInsertEvent;
-import com.github.sanctum.labyrinth.event.custom.Vent;
+import com.github.sanctum.labyrinth.data.Region;
 import com.github.sanctum.labyrinth.formatting.string.ColoredString;
 import com.github.sanctum.labyrinth.library.DirectivePoint;
+import com.github.sanctum.labyrinth.library.StringUtils;
 import com.github.sanctum.labyrinth.library.TextLib;
-import com.github.sanctum.link.ClanVentBus;
+import com.github.sanctum.link.CycleList;
+import com.github.sanctum.link.EventCycle;
 import com.github.sanctum.map.structure.ChunkPosition;
 import com.github.sanctum.map.structure.MapPoint;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -26,6 +27,7 @@ import java.util.concurrent.CompletableFuture;
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.api.chat.TextComponent;
+import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
 import org.bukkit.Location;
 import org.bukkit.World;
@@ -40,56 +42,6 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 
 public class MapCommand implements Listener {
-
-    public MapCommand() {
-
-        ClanVentBus.subscribe(CommandHelpInsertEvent.class, Vent.Priority.HIGH, (e, subscription) -> e.insert("&7|&e) &6/clan &fmap"));
-
-        ClanVentBus.subscribe(TabInsertEvent.class, Vent.Priority.HIGH, (e, subscription) -> {
-
-            if (!e.getArgs(1).contains("map")) {
-                e.add(1, "map");
-            }
-            final String[] commandArgs = e.getCommandArgs();
-            if (commandArgs.length > 0 && commandArgs[0].equalsIgnoreCase("map")) {
-                if (!e.getArgs(2).contains("on")) {
-                    e.add(2, "on");
-                }
-                if (!e.getArgs(2).contains("off")) {
-                    e.add(2, "off");
-                }
-            }
-
-        });
-
-        ClanVentBus.subscribe(CommandInsertEvent.class, Vent.Priority.HIGH, (e, subscription) -> {
-
-            final Player p = e.getSender();
-            final String[] args = e.getArgs();
-            final int length = args.length;
-            if (length > 0 && args[0].equalsIgnoreCase("map")) {
-                if (length == 1) {
-                    e.setReturn(true);
-                    sendMapCurrentLoc(p);
-                } else {
-                    if (args[1].equalsIgnoreCase("on")) {
-                        // on logic
-                        sendMapCurrentLoc(p);
-                        players.add(p);
-                    } else if (args[1].equalsIgnoreCase("off")) {
-                        // off logic
-                        players.remove(p);
-                    } else {
-                        // send usage
-                        return;
-                    }
-                    e.setReturn(true);
-                }
-            }
-
-        });
-
-    }
 
     static class Rose {
         private static final String[][] NORTH = new String[][]{{"N"}, {"W", "E"}, {"S"}};
@@ -119,7 +71,7 @@ public class MapCommand implements Listener {
     private final Plugin PLUGIN = JavaPlugin.getProvidingPlugin(MapCommand.class);
     protected final boolean on1_16 = PLUGIN.getServer().getVersion().contains("1.16");
     private final TextLib textLib = TextLib.getInstance();
-    private final Set<Player> players = new HashSet<>();
+    private static final Set<Player> players = new HashSet<>();
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
     public void onPlayerChangeChunk(PlayerMoveEvent e) {
@@ -356,7 +308,131 @@ public class MapCommand implements Listener {
         }
     }
 
-    private void sendMapCurrentLoc(final Player player) {
+    @EventHandler(priority = EventPriority.HIGH)
+    public void onFormat(AsyncMapFormatEvent e) {
+
+        EventCycle ec = CycleList.getRegisteredCycles().stream().filter(c -> c.getName().equals("Map")).findFirst().orElse(null);
+
+        if (ec != null) {
+
+            boolean enhanced = ec.getServiceManager().getRegistration(Boolean.class, ec).getService();
+
+            if (enhanced) {
+
+                List<String> top_new = new LinkedList<>();
+                top_new.add(" ");
+                e.setAddedLinesTop(top_new);
+
+                List<String> clans = new LinkedList<>();
+
+                for (MapPoint[] point : e.getMapPoints()) {
+                    for (MapPoint p : point) {
+                        if (!p.isCenter()) {
+                            if (p.getClan() == null) {
+
+                                Location location = (new Location(e.getPlayer().getWorld(), (p.chunkPosition.x << 4), 110, (p.chunkPosition.z << 4))).add(7.0D, 0.0D, 7.0D);
+
+                                Optional<Region.Spawn> rg = Region.spawn();
+
+                                if (rg.isPresent()) {
+                                    if (rg.get().contains(location, 5)) {
+                                        Region r = rg.get();
+                                        if (!r.isPassthrough()) {
+                                            p.setHover(StringUtils.use("&4Spawn").translate());
+                                            p.setColor("&c");
+                                            p.setRepresentation('⬛');
+                                        }
+                                    } else {
+                                        Optional<Region> reg = Region.match(location).filter(r -> !(r instanceof Region.Spawn));
+                                        if (reg.isPresent()) {
+                                            Region r = reg.get();
+                                            if (!r.isPassthrough()) {
+                                                p.setHover(StringUtils.use("&2Region: &7" + r.getName()).translate());
+                                                p.setColor("&2");
+                                                p.setRepresentation('⬛');
+                                            } else {
+                                                if (e.getPlayer().isOp()) {
+                                                    if (!p.getColor().equals("&c")) {
+                                                        p.setColor("#d4d2cd");
+                                                        p.setRepresentation('⬜');
+                                                    }
+                                                }
+                                            }
+                                        } else {
+                                            if (!p.getColor().equals("&c") || !p.getColor().equals("&2")) {
+                                                p.setHover(StringUtils.use("&4Wilderness").translate());
+                                                if (Claim.action.getChunksAroundLocation(location, -1, 0, 1).stream().anyMatch(c -> ClansAPI.getInstance().getClaimManager().isInClaim(c))) {
+                                                    p.setAppliance(() -> {
+                                                        Clan c = ClansAPI.getInstance().getClan(e.getPlayer().getUniqueId());
+                                                        if (c != null) {
+                                                            Claim claim = c.obtain(e.getPlayer().getWorld().getChunkAt(p.chunkPosition.x, p.chunkPosition.z));
+                                                            if (claim != null) {
+                                                                e.getPlayer().performCommand("c map");
+                                                                DefaultClan.action.sendMessage(e.getPlayer(), "&aChunk &6&7(&3X: &f" + claim.getChunk().getX() + " &3Z: &f" + claim.getChunk().getZ() + "&7) &ais now owned by our clan.");
+                                                            }
+                                                        }
+                                                    });
+                                                }
+                                                p.setColor("&8");
+                                                p.setRepresentation('⬜');
+                                            }
+                                        }
+                                    }
+                                } else {
+                                    Optional<Region> reg = Region.match(location).filter(r -> !(r instanceof Region.Spawn));
+                                    if (reg.isPresent()) {
+                                        Region r = reg.get();
+                                        if (!r.isPassthrough()) {
+                                            p.setHover(StringUtils.use("&2Region: &7" + r.getName()).translate());
+                                            p.setColor("&2");
+                                            p.setRepresentation('⬛');
+                                        }
+                                    } else {
+                                        if (!p.getColor().equals("&c") || !p.getColor().equals("&2")) {
+                                            p.setHover(StringUtils.use("&4Wilderness").translate());
+                                            p.setColor("&8");
+                                            p.setRepresentation('⬜');
+                                            if (Claim.action.getChunksAroundLocation(location, -1, 0, 1).stream().anyMatch(c -> ClansAPI.getInstance().getClaimManager().isInClaim(c))) {
+                                                p.setAppliance(() -> {
+                                                    Clan c = ClansAPI.getInstance().getClan(e.getPlayer().getUniqueId());
+                                                    if (c != null) {
+                                                        Claim claim = c.obtain(e.getPlayer().getWorld().getChunkAt(p.chunkPosition.x, p.chunkPosition.z));
+                                                        if (claim != null) {
+                                                            e.getPlayer().performCommand("c map");
+                                                            DefaultClan.action.sendMessage(e.getPlayer(), "&aChunk &6&7(&3X: &f" + claim.getChunk().getX() + " &3Z: &f" + claim.getChunk().getZ() + "&7) &ais now owned by our clan.");
+                                                        }
+                                                    }
+                                                });
+                                            }
+                                        }
+                                    }
+                                }
+                            } else {
+                                Clan c = p.getClan();
+                                if (!clans.contains(StringUtils.use(c.getColor() + c.getName()).translate())) {
+                                    clans.add(StringUtils.use(c.getColor() + c.getName()).translate());
+                                }
+                                p.setRepresentation('⬛');
+                                p.setColor(c.getColor().replace("&l", ""));
+                            }
+                        } else {
+                            p.setRepresentation('❤');
+                        }
+                    }
+                }
+
+                List<String> bottom_new = new LinkedList<>();
+                bottom_new.add(" ");
+                if (clans.size() > 0) {
+                    bottom_new.add(StringUtils.use("&eNear by clans: &f{ " + String.join("&r, ", clans) + " &f}").translate());
+                }
+                e.setAddedLinesBottom(bottom_new);
+
+            }
+        }
+    }
+
+    public static void sendMapCurrentLoc(final Player player) {
         // TODO: Use the rotation to draw a compass rose
         // negative Z = NORTH
         final float yaw = player.getLocation().getYaw();
@@ -371,7 +447,7 @@ public class MapCommand implements Listener {
         final int playerChunkZ = chunk.getZ();
         // strings[0] = clanId, strings[1] = claimId, strings[2] = worldName
         final List<Claim> chunkMap = new ArrayList<>(ClansAPI.getInstance().getClaimManager().getClaims());
-        new BukkitRunnable() { // Process claim chunk data and send off to DrawEvent
+        new BukkitRunnable() { // Process claim chunk data and receive off to DrawEvent
             @Override
             public void run() {
                 final Map<ChunkPosition, String> clanChunks = new HashMap<>(); // key = chunk, value = clanId
@@ -388,9 +464,21 @@ public class MapCommand implements Listener {
                 }
                 final Set<String> clanIdStrings = new HashSet<>(clanChunks.values());
                 final ChunkPosition playerChunk = new ChunkPosition(playerChunkX, playerChunkZ);
-                PLUGIN.getServer().getPluginManager().callEvent(new AsyncMapDrawEvent(player, playerChunk, compassDirection, clanChunks, clanIdStrings));
+                Bukkit.getPluginManager().callEvent(new AsyncMapDrawEvent(player, playerChunk, compassDirection, clanChunks, clanIdStrings));
             }
-        }.runTaskAsynchronously(PLUGIN);
+        }.runTaskAsynchronously(ClansPro.getInstance());
+    }
+
+    public static boolean isToggled(Player p) {
+        return players.contains(p);
+    }
+
+    public static void toggle(Player p) {
+        if (isToggled(p)) {
+            players.remove(p);
+        } else {
+            players.add(p);
+        }
     }
 
     /**

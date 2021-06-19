@@ -6,6 +6,7 @@ import com.github.sanctum.clans.construct.ClanAssociate;
 import com.github.sanctum.clans.construct.ClanManager;
 import com.github.sanctum.clans.construct.ShieldManager;
 import com.github.sanctum.clans.construct.actions.ClanCooldown;
+import com.github.sanctum.clans.construct.extra.misc.ClanPrefix;
 import com.github.sanctum.clans.util.RankPriority;
 import com.github.sanctum.clans.util.data.DataManager;
 import com.github.sanctum.labyrinth.data.FileList;
@@ -30,6 +31,11 @@ public interface ClansAPI {
 	static DataManager getData() {
 		return ClansPro.getInstance().dataManager;
 	}
+
+	/**
+	 * @return Gets the prefix object for the plugin.
+	 */
+	ClanPrefix getPrefix();
 
 	/**
 	 * @param target The target to look for
@@ -157,11 +163,10 @@ public interface ClansAPI {
 	/**
 	 * Set a player's rank priority disregarding all factors. (Besides ownership)
 	 *
-	 * @param clanID   The clan to use
-	 * @param uuid     The player of specification
-	 * @param priority The rank to give
+	 * @param associate The clan associate to promote/demote.
+	 * @param priority  The rank to give
 	 */
-	void setRank(HUID clanID, UUID uuid, RankPriority priority);
+	void setRank(ClanAssociate associate, RankPriority priority);
 
 	/**
 	 * Search and automatically register all found pro addons in a given package location

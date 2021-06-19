@@ -1,12 +1,14 @@
 #
 # --------------------------------------------------------------------------------------- #
-#   ██████╗██╗      █████╗ ███╗   ██╗███████╗    ██████╗ ██████╗  ██████╗
-#  ██╔════╝██║     ██╔══██╗████╗  ██║██╔════╝    ██╔══██╗██╔══██╗██╔═══██╗
-#  ██║     ██║     ███████║██╔██╗ ██║███████╗    ██████╔╝██████╔╝██║   ██║
-#  ██║     ██║     ██╔══██║██║╚██╗██║╚════██║    ██╔═══╝ ██╔══██╗██║   ██║
-#  ╚██████╗███████╗██║  ██║██║ ╚████║███████║    ██║     ██║  ██║╚██████╔╝
-#   ╚═════╝╚══════╝╚═╝  ╚═╝╚═╝  ╚═══╝╚══════╝    ╚═╝     ╚═╝  ╚═╝ ╚═════╝
-# --------------------------------------------------------------------------------------- #
+#   ▄████████  ▄█          ▄████████ ███▄▄▄▄      ▄████████         ▄███████▄    ▄████████  ▄██████▄
+#  ███    ███ ███         ███    ███ ███▀▀▀██▄   ███    ███        ███    ███   ███    ███ ███    ███
+#  ███    █▀  ███         ███    ███ ███   ███   ███    █▀         ███    ███   ███    ███ ███    ███
+#  ███        ███         ███    ███ ███   ███   ███               ███    ███  ▄███▄▄▄▄██▀ ███    ███
+#  ███        ███       ▀███████████ ███   ███ ▀███████████      ▀█████████▀  ▀▀███▀▀▀▀▀   ███    ███
+#  ███    █▄  ███         ███    ███ ███   ███          ███        ███        ▀███████████ ███    ███
+#  ███    ███ ███▌    ▄   ███    ███ ███   ███    ▄█    ███        ███          ███    ███ ███    ███
+#  ████████▀  █████▄▄██   ███    █▀   ▀█   █▀   ▄████████▀        ▄████▀        ███    ███  ▀██████▀
+# ------------------------------------------------------------------------------███----███#
 #
 Clans:
   #################################
@@ -47,6 +49,19 @@ Clans:
     # Charge for pvp mode change? If so how much.
     charge: false
     amount: 420.0
+
+  #################################
+  ##                             ##
+  ##      Relation Settings      ##
+  ##                             ##
+  #################################
+  relations:
+    enemy:
+      # Allow players to modify enemy relations with a fully offline clan?
+      cancel-if-empty: true
+    ally:
+      # Allow players to modify alliance relations with a fully offline clan?
+      cancel-if-empty: true
 
   ######################################
   ##                                  ##
@@ -98,7 +113,7 @@ Clans:
   ## Clan NAME blacklist. ##
   ##                      ##
   ##########################
-  # Any words here found within a clans name will NOT be allowed.
+  # Any words here found within a clans name will NOT be tolerated and an optional action will be enforced upon use.
   name-blacklist:
     faggot:
       action: 'kick {PLAYER} This type of name use is not allowed!'
@@ -121,7 +136,7 @@ Clans:
   #########################
   land-claiming:
     allow: true
-    # Change the minimum clearance level needed to claim/unclaim land.
+    # Change the minimum clearance level needed to claim/un-claim land.
     clearance: 2
     # Change the minimum clearance level needed to un-claim all owned land.
     unclaim-all-clearance: 2
@@ -152,6 +167,7 @@ Clans:
         after-uses: 4
     # Change the information displayed to the player
     in-land:
+      # {0} = Claim owner
       title: '&3&oOwned land &6{0}'
       sub-title: 'This land is owned by &b{0}'
       message: '&7You are now entering {0}''s land'
@@ -180,6 +196,7 @@ Clans:
   raid-shield:
     # Allow the raid-shield to run, enabling claim raiding?
     allow: true
+    # This section is crucial. It tells the shield events what world to base the time off of.
     main-world: 'world'
     # Default: 0 for dawn
     up-time: 0
@@ -187,11 +204,11 @@ Clans:
     down-time: 13000
     # Allow land over-powering while the shield is up.
     claiming: false
-    # Clans will only be able to overclaim enemy clans with this option turned on.
+    # Clans will only be able to over-claim enemy clans with this option turned on.
     claiming-only-enemy: true
-    # Allow chat messages to send
+    # Allow chat messages to receive
     send-messages: true
-    # Change the messages for the raid-shield announcements [%s gets the configured prefix.]
+    # Change the messages for the raid-shield announcements, {0} = Configured prefix
     messages:
       enabled: '{0} &8» &aRaid shield enabled.'
       disabled: '{0} &8» &cRaid shield lifted.'
@@ -218,6 +235,21 @@ Clans:
 
   # Change the minimum clearance needed to promote/demote clan members.
   position-clearance: 2
+
+  # Change the minimum clearance needed to effectively use /c logo apply
+  logo-apply-clearance: 2
+
+  # Change the minimum clearance needed to apply printed logos
+  logo-upload-clearance: 2
+
+  # Change the minimum clearance needed to edit/create new drawing templates.
+  logo-edit-clearance: 1
+
+  # Change the minimum clearance needed to select custom colors for the insignia color pallet.
+  logo-color-clearance: 1
+
+  # Change the minimum clearance needed to print out drawings for public use.
+  logo-print-clearance: 1
 
   # Change the minimum clearance needed to update the clan description.
   description-clearance: 3
@@ -273,25 +305,28 @@ Clans:
 #-------------------------------------------------------------------
 #
 #-------------------------------------------------------------
-#  ███████╗ ██████╗ ██████╗ ███╗   ███╗ █████╗ ████████╗
-#  ██╔════╝██╔═══██╗██╔══██╗████╗ ████║██╔══██╗╚══██╔══╝
-#  █████╗  ██║   ██║██████╔╝██╔████╔██║███████║   ██║
-#  ██╔══╝  ██║   ██║██╔══██╗██║╚██╔╝██║██╔══██║   ██║
-#  ██║     ╚██████╔╝██║  ██║██║ ╚═╝ ██║██║  ██║   ██║
-#  ╚═╝      ╚═════╝ ╚═╝  ╚═╝╚═╝     ╚═╝╚═╝  ╚═╝   ╚═╝
-#-------------------------------------------------------------
+#     ▄████████  ▄██████▄     ▄████████   ▄▄▄▄███▄▄▄▄      ▄████████     ███
+#    ███    ███ ███    ███   ███    ███ ▄██▀▀▀███▀▀▀██▄   ███    ███ ▀█████████▄
+#    ███    █▀  ███    ███   ███    ███ ███   ███   ███   ███    ███    ▀███▀▀██
+#   ▄███▄▄▄     ███    ███  ▄███▄▄▄▄██▀ ███   ███   ███   ███    ███     ███   ▀
+#  ▀▀███▀▀▀     ███    ███ ▀▀███▀▀▀▀▀   ███   ███   ███ ▀███████████     ███
+#    ███        ███    ███ ▀███████████ ███   ███   ███   ███    ███     ███
+#    ███        ███    ███   ███    ███ ███   ███   ███   ███    ███     ███
+#    ███         ▀██████▀    ███    ███  ▀█   ███   █▀    ███    █▀     ▄████▀
+#----------------------------███----███-----------------------
 #
 #-------------------------------------------------------------------
 Formatting:
-  # Let the plugin include native chat formatting?
+  # Let the plugin include native chat formatting? If your chat plugin uses BaseComponents for formatting this will not work by default,
+  # and you'll need to use the placeholders from the wiki within your chat management plugin.
   allow: true
   # Allow clans to put prefixes before player names above heads.
   nametag-prefix:
     use: true
-    show-health: true
+    # {0} = Clan color, {1} = Clan name
     text: '&7[{0}{1}&7] '
   # Change number formatting lang. [en = English, fr = French, de = german, nl = Dutch]
-  # Warning: REQUIRES a full server restart.
+  # NOTE: REQUIRES a full server restart.
   locale: en
   # Change the max size a clan tag can be.
   tag-size: 15
@@ -299,51 +334,67 @@ Formatting:
   console-debug: true
   # Allow console to spy on messages from clan/ally chat channels
   chat-spy-console: true
-  # Change the prefix displayed for the plugin.
-  Prefix: '&7[&6&lClans&7]'
-  # Rank presentation style: [FULL, WORDLESS]
-  Rank-Style: WORDLESS
-  # Set custom command aliases.
-  # Warning: REQUIRES a full server restart.
-  Aliase:
-    - guild
   # Change the format for the /clan message command
-  Clan-broadcast-prefix: '&7{0} say''s :'
-  Styles:
-    Full:
-      # Note: Changing these styles will have an effect regardless of rank style.
-      # They are displayed in certain areas of the plugin.
-      Member: 'Member'
-      Moderator: 'Moderator'
-      Admin: 'Admin'
-      Owner: 'Owner'
-    Wordless:
-      Member: '•'
-      Moderator: '••'
-      Admin: '•••'
-      Owner: '&4•❂•'
+  chat-message-format: '&7{0} say''s :'
+  # Change the prefix displayed for the plugin messaging.
+  prefix:
+    prefix: '&7['
+    text: '&6&lClans'
+    suffix: '&7]&r'
+  # Set custom command aliases.
+  # NOTE: REQUIRES a full server restart.
+  aliase:
+    - guild
 
   # Change the formatting for different chat channels
   Chat:
-    global: '&8(&b{0}&8)&r &8[&3{1}&8]&r'
-    clan:
-      prefix: '&8(&3&lCC&8) &b{0} '
-      divider: '&8: &r'
-      highlight: '&8({0}{1}&8)'
-      hover: 'My clan rank is: &a{0}'
-    ally:
-      prefix: '&8(&2&lAC&8) &b{0} '
-      divider: '&8: &r'
-      highlight: '&8({0}{1}&8)'
-      hover: 'My clan rank is: &d{0}'
+    # Rank presentation style
+    # Example w/ WORDLESS: (•❂•) [Test] <Hempfest> Hello world!
+    rank-style: WORDLESS
+    Styles:
+      Full:
+        # Note: Changing these styles will have an effect regardless of rank style.
+        # They are displayed in certain areas of the plugin.
+        Member: 'Member'
+        Moderator: 'Moderator'
+        Admin: 'Admin'
+        Owner: 'Owner'
+      Wordless:
+        Member: '•'
+        Moderator: '••'
+        Admin: '•••'
+        Owner: '&4•❂•'
+    Channel:
+      # {0} = Clan rank formatting, {1} = Clan name w/ color
+      # Example w/ WORDLESS: (•❂•) [Test] <Hempfest> Hello world!
+      global: '&8(&b{0}&8)&r &8[&3{1}&8]&r'
+
+      clan:
+        # {0} = Player name, {1} = Clan name, {2} = Clan color, {3} = Player rank
+        prefix: '&8(&3&lCC&8) &b{0} '
+        divider: '&8: &r'
+        highlight: '&8({2}{1}&8)'
+        hover: 'My clan rank is: &a{3}'
+      ally:
+        # {0} = Player name, {1} = Clan name, {2} = Clan color, {3} = Player rank
+        prefix: '&8(&2&lAC&8) &b{0} '
+        divider: '&8: &r'
+        highlight: '&8({2}{1}&8)'
+        hover: 'My clan rank is: &d{3}'
+#-------------------------------------------------------------------
+#
 #----------------------------------------------------------------
-#   █████╗ ██████╗ ██████╗  ██████╗ ███╗   ██╗███████╗
-#  ██╔══██╗██╔══██╗██╔══██╗██╔═══██╗████╗  ██║██╔════╝
-#  ███████║██║  ██║██║  ██║██║   ██║██╔██╗ ██║███████╗
-#  ██╔══██║██║  ██║██║  ██║██║   ██║██║╚██╗██║╚════██║
-#  ██║  ██║██████╔╝██████╔╝╚██████╔╝██║ ╚████║███████║
-#  ╚═╝  ╚═╝╚═════╝ ╚═════╝  ╚═════╝ ╚═╝  ╚═══╝╚══════╝
+#     ▄████████ ████████▄  ████████▄   ▄██████▄  ███▄▄▄▄      ▄████████
+#    ███    ███ ███   ▀███ ███   ▀███ ███    ███ ███▀▀▀██▄   ███    ███
+#    ███    ███ ███    ███ ███    ███ ███    ███ ███   ███   ███    █▀
+#    ███    ███ ███    ███ ███    ███ ███    ███ ███   ███   ███
+#  ▀███████████ ███    ███ ███    ███ ███    ███ ███   ███ ▀███████████
+#    ███    ███ ███    ███ ███    ███ ███    ███ ███   ███          ███
+#    ███    ███ ███   ▄███ ███   ▄███ ███    ███ ███   ███    ▄█    ███
+#    ███    █▀  ████████▀  ████████▀   ▀██████▀   ▀█   █▀   ▄████████▀
 #----------------------------------------------------------------
+#
+#-------------------------------------------------------------------
 Addon:
   Stashes:
     ################################################
@@ -363,6 +414,18 @@ Addon:
     #######################################################
     enabled: true
     clearance: 1
+  Mail:
+    ####################################################
+    ##                                                ##
+    ## Allows clan's to send each-other gift's & mail ##
+    ##                                                ##
+    ####################################################
+    mail:
+      clearance: 0
+    gift:
+      clearance: 0
+    # Allows for interactive chunk symbols (Clicking a wilderness block claims etc).
+    enabled: true
   Borders:
     ##################################################################
     ##                                                              ##
@@ -373,10 +436,29 @@ Addon:
   Kingdoms:
     ###########################################################################
     ##                                                                       ##
-    ## Enabling this at the moment will do nothing. Feature not yet-started. ##
+    ## Enabling this at the moment will do nothing. Feature not yet-finished ##
     ##                                                                       ##
     ###########################################################################
     enabled: false
+    required-creation-power: 180.00
+    # These permission settings utilize clan permission levels from the clearance section above.
+    perms:
+      start: 2
+    roundtable:
+      # The consistent name of the hierarchy of clan users.
+      name: 'Roundtable'
+      # Kingdoms has a stacked permissions system for the roundtable only.
+      # Kingdoms by themselves simply follow normal clan permissions.
+      perms:
+        # 4 = HIGHEST
+        # 3 = HIGHER
+        # 2 = HIGH
+        # 1 = LOW
+        name-change: 2
+        invite: 3
+        promote: 4
+        demote: 4
+        kick: 4
   Map:
     #####################################################
     ##                                                 ##
@@ -385,6 +467,8 @@ Addon:
     ##          information for them in chat.          ##
     ##                                                 ##
     #####################################################
+    # NEW feature by Hempfest, enhances interaction with map symbols.
+    enhanced: true
     enabled: true
   Bounty:
     ##############################################################
@@ -406,65 +490,6 @@ Addon:
       called-message: '&6{PLAYER} &7from clan {CLAN} put a bounty on {TARGET} for &6&l$&e{BOUNTY}'
       # The message broadcast when a players bounty gets collected.
       defeat-message: '&c&o{KILLER} from clan {KILLER_CLAN} collected the &6${BOUNTY} &c&obounty for killing {PLAYER}'
-  ##---------------------------( Clans [Misc] required for below addons )---------------------------##
-  ExpBottle:
-    ###############################################################
-    ##                                                           ##
-    ##       Allow players in clans to bottle experience.        ##
-    ##         Crafting recipe for xp containers here:           ##
-    ##  https://i.gyazo.com/9ab12102580335d588f635a9af10b350.png ##
-    ##                                                           ##
-    ###############################################################
-    clearance: 0
-    enabled: true
-  InstaSoup:
-    ###############################################################
-    ##                                                           ##
-    ##           When player's consume mushroom stew             ##
-    ## their health and food levels will heal by a small margin. ##
-    ##                                                           ##
-    ###############################################################
-    enabled: false
-  HardcapOptimizer:
-    ##################################################################
-    ##                                                              ##
-    ##       If a clan has more claimed land than max claims        ##
-    ## this addon will unclaim their claims to attempt rebalancing. ##
-    ##                                                              ##
-    ##################################################################
-    enabled: false
-  ClanMail:
-    ####################################################
-    ##                                                ##
-    ## Allows clan's to send each-other gift's & mail ##
-    ##                                                ##
-    ####################################################
-    mail:
-      clearance: 0
-    gift:
-      clearance: 0
-    enabled: true
-  CombatTag:
-    ######################################################################
-    ##                                                                  ##
-    ##         Add's combat cooldowns to prevent broken pvp.            ##
-    ## If a combat tagged player leaves the server they will be killed. ##
-    ##         If a combat tagged player attempts teleporting           ##
-    ##                     they will be denied.                         ##
-    ##                                                                  ##
-    ######################################################################
-    pvp-timer: 90
-    enabled: false
-  AntiAFK:
-    ################################################
-    ##                                            ##
-    ## Adds simple optimized anti-afk to the game ##
-    ##                                            ##
-    ################################################
-    afk-announce-min: 5
-    afk-kick-min: 15
-    enabled: false
-  ##---------------------------( Clans [Misc] required for above addons )---------------------------##
 ##------------------------
 ## -- DO NOT EDIT BELOW --
 # Authors: Hempfest, ms5984

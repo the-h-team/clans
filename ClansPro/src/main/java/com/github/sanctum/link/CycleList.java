@@ -28,6 +28,10 @@ public class CycleList {
 
 	private static final List<String> dataLog = new ArrayList<>();
 
+	public static Collection<EventCycle> getCycles() {
+		return registeredCycles;
+	}
+
 	public static Collection<EventCycle> getRegisteredCycles() {
 		return CompletableFuture.supplyAsync(() -> registeredCycles).join();
 	}
@@ -80,7 +84,7 @@ public class CycleList {
 	}
 
 	public static EventCycle getAddon(String name) {
-		return getRegisteredCycles().stream().filter(c -> c.getName().equals(name)).findFirst().orElse(null);
+		return getCycles().stream().filter(c -> c.getName().equals(name)).findFirst().orElse(null);
 	}
 
 	public static List<String> getUnusedAddons() {
@@ -113,7 +117,6 @@ public class CycleList {
 			try {
 				c.onLoad();
 				c.register();
-				c.onEnable();
 			} catch (NoClassDefFoundError e) {
 				Labyrinth.getInstance().getLogger().warning("- Your Labyrinth core is out-dated. Additions for addon " + c.getName() + " will not work.");
 				Labyrinth.getInstance().getLogger().warning("- It's possible this has no effect to you as of this moment so you may be safe to ignore this message.");
@@ -153,7 +156,6 @@ public class CycleList {
 				try {
 					cycle.onLoad();
 					cycle.register();
-					cycle.onEnable();
 				} catch (NoClassDefFoundError e) {
 					Labyrinth.getInstance().getLogger().warning("- Your Labyrinth core is out-dated. Additions for addon " + cycle.getName() + " will not work.");
 					Labyrinth.getInstance().getLogger().warning("- It's possible this has no effect to you as of this moment so you may be safe to ignore this message.");

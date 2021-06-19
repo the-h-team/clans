@@ -19,6 +19,7 @@ public class FlagsCommand extends ClanSubCommand {
 		String prefix = "&f[&6&lX&f]&r";
 		Message msg = Message.form(p).setPrefix(prefix);
 		msg.send("&f&oCurrent flags: [ &6base&f, &6player&f, &6spawn &f]");
+
 		return true;
 	}
 
