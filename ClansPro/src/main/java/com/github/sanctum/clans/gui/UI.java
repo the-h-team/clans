@@ -22,7 +22,6 @@ import com.github.sanctum.labyrinth.gui.printer.AnvilMenu;
 import com.github.sanctum.labyrinth.library.Entities;
 import com.github.sanctum.labyrinth.library.HUID;
 import com.github.sanctum.labyrinth.library.Item;
-import com.github.sanctum.labyrinth.library.SkullItem;
 import com.github.sanctum.labyrinth.library.StringUtils;
 import com.github.sanctum.link.CycleList;
 import com.github.sanctum.link.EventCycle;
@@ -38,6 +37,8 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
+
+import com.github.sanctum.skulls.CustomHead;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
@@ -590,7 +591,7 @@ public class UI {
 							Bukkit.dispatchCommand(p, "c info " + c.getName());
 						})
 						.assignToSlots(13)
-						.addElement(SkullItem.Head.search(associate.getPlayer()) != null ? new Item.Edit(SkullItem.Head.search(associate.getPlayer())).setFlags(ItemFlag.HIDE_ENCHANTS).addEnchantment(Enchantment.LOYALTY, 69).build() : new ItemStack(ClansAPI.getData().getItem("player")))
+						.addElement(CustomHead.Manager.get(associate.getPlayer()) != null ? new Item.Edit(CustomHead.Manager.get(associate.getPlayer())).setFlags(ItemFlag.HIDE_ENCHANTS).addEnchantment(Enchantment.LOYALTY, 69).build() : new ItemStack(ClansAPI.getData().getItem("player")))
 						.setLore(StringUtils.use(bio + " &f-" + associate.getNickname()).translate())
 						.setText(StringUtils.use(" ").translate())
 						.setAction(click -> {
@@ -653,7 +654,7 @@ public class UI {
 				OfflinePlayer player = Bukkit.getOfflinePlayer(uuid);
 				builder = new MenuBuilder(InventoryRows.THREE, StringUtils.use("&0&l» " + cl.getColor() + player.getName() + " settings").translate())
 						.cancelLowerInventoryClicks(false)
-						.addElement(new Item.Edit(SkullItem.Head.search(player)).setFlags(ItemFlag.HIDE_ENCHANTS).addEnchantment(Enchantment.LOYALTY, 69).build())
+						.addElement(new Item.Edit(CustomHead.Manager.get(player)).setFlags(ItemFlag.HIDE_ENCHANTS).addEnchantment(Enchantment.LOYALTY, 69).build())
 						.setText(StringUtils.use(ClansAPI.getData().getNavigate("back")).translate())
 						.setAction(click -> {
 							Player p = click.getPlayer();
@@ -1372,7 +1373,7 @@ public class UI {
 						ItemStack copy = e.getContext().getHead();
 						if (copy == null) {
 
-							ItemStack backup = SkullItem.Head.search(e.getContext().getPlayer());
+							ItemStack backup = CustomHead.Manager.get(e.getContext().getPlayer());
 
 							if (backup != null) {
 								copy = backup;
@@ -1543,7 +1544,7 @@ public class UI {
 				.setCloseAction(PaginatedCloseAction::clear)
 				.setupProcess(e -> {
 					e.setItem(() -> {
-						ItemStack copy = SkullItem.Head.search(e.getContext().getPlayer());
+						ItemStack copy = CustomHead.Manager.get(e.getContext().getPlayer());
 						if (copy == null)
 							copy = new ItemStack(Material.PLAYER_HEAD);
 						ItemStack i = new ItemStack(copy);

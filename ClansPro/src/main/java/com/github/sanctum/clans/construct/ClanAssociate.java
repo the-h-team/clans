@@ -7,7 +7,6 @@ import com.github.sanctum.clans.util.RankPriority;
 import com.github.sanctum.clans.util.data.DataManager;
 import com.github.sanctum.labyrinth.data.FileManager;
 import com.github.sanctum.labyrinth.library.HUID;
-import com.github.sanctum.labyrinth.library.SkullItem;
 import com.github.sanctum.labyrinth.library.TimeWatch;
 import java.text.MessageFormat;
 import java.util.Date;
@@ -17,6 +16,8 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
+
+import com.github.sanctum.skulls.CustomHead;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.Statistic;
@@ -36,7 +37,7 @@ public class ClanAssociate {
 
 	public ClanAssociate(UUID uuid) {
 		this.player = uuid;
-		this.head = SkullItem.Head.search(uuid);
+		this.head = CustomHead.Manager.get(uuid);
 		this.killMap = new HashMap<>();
 	}
 

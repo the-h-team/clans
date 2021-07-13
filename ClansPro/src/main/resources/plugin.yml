@@ -1,5 +1,5 @@
 name: ClansPro
-version: 1.2.8
+version: 1.2.8_R2
 authors: [ Hempfest, ms5984 ]
 api-version: 1.13
 depend: [ Labyrinth ]
