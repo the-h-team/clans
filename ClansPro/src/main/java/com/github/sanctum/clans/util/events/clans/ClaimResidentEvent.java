@@ -121,7 +121,7 @@ public class ClaimResidentEvent extends ClanEventBuilder {
 			titleContext.put("SUB-TITLE", MessageFormat.format(ClansAPI.getData().getMain().getConfig().getString("Clans.land-claiming.in-land.sub-title"), clanName));
 			p.sendTitle(getClaimUtil().color(titleContext.get("TITLE")), getClaimUtil().color(titleContext.get("SUB-TITLE")), 10, 25, 10);
 		}
-		if (ClansAPI.getData().getEnabled("Clans.land-claiming.receive-messages")) {
+		if (ClansAPI.getData().getEnabled("Clans.land-claiming.send-messages")) {
 			getClaimUtil().sendMessage(p, MessageFormat.format(ClansAPI.getData().getMain().getConfig().getString("Clans.land-claiming.in-land.message"), clanName));
 		}
 	}

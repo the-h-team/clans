@@ -503,49 +503,12 @@ public class CommandClan extends Command {
 		if (length == 0) {
 			String ping = ClansAPI.getData().getMessage("Commands.create");
 			List<String> list = new LinkedList<>(helpMenu(label));
-			PaginatedList<String> help = new PaginatedList<>(list)
+			new PaginatedList<>(list)
 					.limit(lib.menuSize())
 					.start((pagination, page, max) -> {
 						lib.sendMessage(p, lib.menuTitle());
 						Message.form(p).send(lib.menuBorder());
-					});
-
-			help.finish((pagination, page, max) -> {
-				Message.form(p).send(lib.menuBorder());
-				TextLib component = TextLib.getInstance();
-				int next = page + 1;
-				int last = Math.max(page - 1, 1);
-				List<BaseComponent> toSend = new LinkedList<>();
-				if (page == 1) {
-					if (page == max) {
-						toSend.add(component.textHoverable("", "&8« ", "&cYou are on the first page already."));
-						toSend.add(component.textHoverable("&f<&7" + page + "&f/&7" + max + "&f>", "", ""));
-						toSend.add(component.textHoverable("", " &8»", "&cYou are already on the last page."));
-						p.spigot().sendMessage(toSend.toArray(new BaseComponent[0]));
-						return;
-					}
-					toSend.add(component.textHoverable("", "&8« ", "&cYou are on the first page already."));
-					toSend.add(component.textHoverable("&f<&7" + page + "&f/&7" + max + "&f>", "", ""));
-					toSend.add(component.execute(() -> help.get(next), component.textHoverable("", " &3»", "&aGoto the next page.")));
-					p.spigot().sendMessage(toSend.toArray(new BaseComponent[0]));
-					return;
-				}
-				if (page == max) {
-					toSend.add(component.execute(() -> help.get(last), component.textHoverable("", "&3« ", "&aGoto the previous page.")));
-					toSend.add(component.textHoverable("&f<&7" + page + "&f/&7" + max + "&f>", "", ""));
-					toSend.add(component.textHoverable("", " &8»", "&cYou are already on the last page."));
-					p.spigot().sendMessage(toSend.toArray(new BaseComponent[0]));
-					return;
-				}
-				if (next <= max) {
-					toSend.add(component.execute(() -> help.get(last), component.textHoverable("", "&3« ", "&aGoto the previous page.")));
-					toSend.add(component.textHoverable("&f<&7" + page + "&f/&7" + max + "&f>", "", ""));
-					toSend.add(component.execute(() -> help.get(next), component.textHoverable("", " &3»", "&aGoto the next page.")));
-					p.spigot().sendMessage(toSend.toArray(new BaseComponent[0]));
-				}
-			}).decorate((pagination, string, page, max, placement) -> {
-				Message.form(p).send(string);
-			}).get(1);
+					}).finish(builder -> builder.setPlayer(p).setPrefix(lib.menuBorder())).decorate((pagination, string, page, max, placement) -> Message.form(p).send(string)).get(1);
 
 			return true;
 		}
@@ -1106,57 +1069,12 @@ public class CommandClan extends Command {
 				int pa = Integer.parseInt(args0);
 
 				List<String> list = new LinkedList<>(helpMenu(label));
-
-				PaginatedList<String> help = new PaginatedList<>(list)
+				new PaginatedList<>(list)
 						.limit(lib.menuSize())
 						.start((pagination, page, max) -> {
 							lib.sendMessage(p, lib.menuTitle());
 							Message.form(p).send(lib.menuBorder());
-						});
-
-				help.finish((pagination, page, max) -> {
-
-					Message.form(p).send(lib.menuBorder());
-					TextLib component = TextLib.getInstance();
-					int next = page + 1;
-					int last = Math.max(page - 1, 1);
-					List<BaseComponent> toSend = new LinkedList<>();
-					if (page == 1) {
-						if (page == max) {
-							toSend.add(component.textHoverable("", "&8« ", "&cYou are on the first page already."));
-							toSend.add(component.textHoverable("&f<&7" + page + "&f/&7" + max + "&f>", "", ""));
-							toSend.add(component.textHoverable("", " &8»", "&cYou are already on the last page."));
-							p.spigot().sendMessage(toSend.toArray(new BaseComponent[0]));
-							return;
-						}
-						toSend.add(component.textHoverable("", "&8« ", "&cYou are on the first page already."));
-						toSend.add(component.textHoverable("&f<&7" + page + "&f/&7" + max + "&f>", "", ""));
-						toSend.add(component.execute(() -> help.get(next), component.textHoverable("", " &3»", "&aGoto the next page.")));
-						p.spigot().sendMessage(toSend.toArray(new BaseComponent[0]));
-						return;
-					}
-					if (page == max) {
-						toSend.add(component.execute(() -> help.get(last), component.textHoverable("", "&3« ", "&aGoto the previous page.")));
-						toSend.add(component.textHoverable("&f<&7" + page + "&f/&7" + max + "&f>", "", ""));
-						toSend.add(component.textHoverable("", " &8»", "&cYou are already on the last page."));
-						p.spigot().sendMessage(toSend.toArray(new BaseComponent[0]));
-						return;
-					}
-					if (next <= max) {
-						toSend.add(component.execute(() -> help.get(last), component.textHoverable("", "&3« ", "&aGoto the previous page.")));
-						toSend.add(component.textHoverable("&f<&7" + page + "&f/&7" + max + "&f>", "", ""));
-						toSend.add(component.execute(() -> help.get(next), component.textHoverable("", " &3»", "&aGoto the next page.")));
-						p.spigot().sendMessage(toSend.toArray(new BaseComponent[0]));
-					}
-				}).decorate((pagination, string, page, max, placement) -> {
-
-					if (pa > max) {
-						sendMessage(p, "&cThere are no more pages to view!");
-						return;
-					}
-
-					Message.form(p).send(string);
-				}).get(Math.max(pa, 1));
+						}).finish(builder -> builder.setPlayer(p).setPrefix(lib.menuBorder())).decorate((pagination, string, page, max, placement) -> Message.form(p).send(string)).get(Math.max(pa, 1));
 				return true;
 			} catch (Exception ignored) {
 			}

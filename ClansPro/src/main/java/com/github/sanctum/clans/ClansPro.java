@@ -24,6 +24,7 @@ import com.github.sanctum.labyrinth.library.HUID;
 import com.github.sanctum.labyrinth.library.StringUtils;
 import com.github.sanctum.link.CycleList;
 import com.github.sanctum.link.EventCycle;
+import com.github.sanctum.skulls.CustomHead;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -200,6 +201,15 @@ public class ClansPro extends JavaPlugin implements ClansAPI {
 		List<String> format = config.getConfig().getStringList("menu-format.clan");
 
 		dataManager.CLAN_FORMAT.addAll(format);
+
+		FileManager man = getFileList().find("Heads", "Configuration");
+
+		if (!man.exists()) {
+			FileManager.copy(getResource("Heads.yml"), man);
+			man.reload();
+		}
+
+		CustomHead.Manager.newLoader(man.getConfig()).look("My_heads").complete();
 
 	}
 

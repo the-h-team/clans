@@ -1,6 +1,7 @@
 package com.github.sanctum.clans.util.listener;
 
 import com.github.sanctum.clans.ClansPro;
+import com.github.sanctum.clans.construct.Claim;
 import com.github.sanctum.clans.construct.ClanAssociate;
 import com.github.sanctum.clans.construct.DefaultClan;
 import com.github.sanctum.clans.construct.actions.ClanAction;
@@ -47,6 +48,8 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.player.PlayerAnimationEvent;
+import org.bukkit.event.player.PlayerAnimationType;
 import org.bukkit.event.player.PlayerBucketEmptyEvent;
 import org.bukkit.event.player.PlayerBucketFillEvent;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
@@ -253,6 +256,28 @@ public class PlayerEventListener implements Listener {
 		}
 	}
 
+	@EventHandler
+	public void onAnimation(PlayerAnimationEvent e) {
+		if (e.getAnimationType() == PlayerAnimationType.ARM_SWING) {
+			Player p = e.getPlayer();
+
+			ClansAPI API = ClansAPI.getInstance();
+
+			if (API.getClaimManager().isInClaim(p.getLocation())) {
+
+				Claim claim = Claim.from(p.getLocation());
+
+				if (claim.getClan().getPlayers().list().stream().noneMatch(pl -> p.getUniqueId().equals(pl.getUniqueId()))) {
+
+					e.setCancelled(true);
+
+				}
+
+			}
+
+		}
+	}
+
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
 	public void onPlayerJoin(PlayerJoinEvent e) {
 
@@ -262,13 +287,17 @@ public class PlayerEventListener implements Listener {
 
 		final ClanAssociate associate = API.getAssociate(p).orElse(null);
 
-		ScoreTag.remove(p);
+		if (Bukkit.getVersion().contains("1.14") || Bukkit.getVersion().contains("1.15") || Bukkit.getVersion().contains("1.16") || Bukkit.getVersion().contains("1.17")) {
+			ScoreTag.remove(p);
+		}
 
 		if (associate != null) {
 			FileManager clan = DataManager.FileType.CLAN_FILE.get(associate.getClan().getId().toString());
 			if (associate.isValid()) {
 				if (ClansAPI.getData().prefixedTagsAllowed()) {
-					ScoreTag.set(p, ClansAPI.getData().prefixedTag(API.getClan(p.getUniqueId()).getColor(), API.getClan(p.getUniqueId()).getName()));
+					if (Bukkit.getVersion().contains("1.14") || Bukkit.getVersion().contains("1.15") || Bukkit.getVersion().contains("1.16") || Bukkit.getVersion().contains("1.17")) {
+						ScoreTag.set(p, ClansAPI.getData().prefixedTag(API.getClan(p.getUniqueId()).getColor(), API.getClan(p.getUniqueId()).getName()));
+					}
 				}
 				ClansAPI.getData().CLAN_ENEMY_MAP.put(associate.getClan().getId().toString(), new ArrayList<>(clan.getConfig().getStringList("enemies")));
 				ClansAPI.getData().CLAN_ALLY_MAP.put(associate.getClan().getId().toString(), new ArrayList<>(clan.getConfig().getStringList("allies")));

@@ -329,6 +329,7 @@ menu-format:
   # {6} = Clan Members (Partial)
   # {7} = Clan Allies (Partial)
   # {8} = Clan Enemies (Partial)
+  # {9} = Clan Color (Normal)
   clan:
     - '&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬'
     - '&3Color: {0}'
@@ -346,12 +347,13 @@ menu-format:
     - '&b&oClick to reveal clan members.'
 
 menu-items:
-  navigate_left: 'eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMzdhZWU5YTc1YmYwZGY3ODk3MTgzMDE1Y2NhMGIyYTdkNzU1YzYzMzg4ZmYwMTc1MmQ1ZjQ0MTlmYzY0NSJ9fX0'
-  navigate_right: 'eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNjgyYWQxYjljYjRkZDIxMjU5YzBkNzVhYTMxNWZmMzg5YzNjZWY3NTJiZTM5NDkzMzgxNjRiYWM4NGE5NmUifX19'
+  # Setup custom heads from the "Heads.yml" file.
+  navigate_left: Left_Button
+  navigate_right: Right_Button
   back: BARRIER
   top-list: GOLD_BLOCK
   roster-list: PAPER
-  clan: PAPER
+  clan: Clan
   player: PLAYER_HEAD
 
 menu-titles:

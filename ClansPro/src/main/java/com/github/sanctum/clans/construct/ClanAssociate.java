@@ -8,6 +8,7 @@ import com.github.sanctum.clans.util.data.DataManager;
 import com.github.sanctum.labyrinth.data.FileManager;
 import com.github.sanctum.labyrinth.library.HUID;
 import com.github.sanctum.labyrinth.library.TimeWatch;
+import com.github.sanctum.skulls.CustomHead;
 import java.text.MessageFormat;
 import java.util.Date;
 import java.util.HashMap;
@@ -16,8 +17,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
-
-import com.github.sanctum.skulls.CustomHead;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.Statistic;
@@ -274,8 +273,8 @@ public class ClanAssociate {
 	 */
 	public synchronized double getKD() {
 		OfflinePlayer player = Bukkit.getOfflinePlayer(this.player);
-		if (Bukkit.getVersion().contains("1.12") || Bukkit.getVersion().contains("1.13")
-				|| Bukkit.getVersion().contains("1.14")) {
+		if (!Bukkit.getVersion().contains("1.14") || !Bukkit.getVersion().contains("1.15") || !Bukkit.getVersion().contains("1.16")
+				|| !Bukkit.getVersion().contains("1.17")) {
 			return 0.0;
 		}
 		int kills = player.getStatistic(Statistic.PLAYER_KILLS);

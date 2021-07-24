@@ -10,7 +10,10 @@ import com.github.sanctum.clans.construct.extra.Resident;
 import com.github.sanctum.clans.construct.extra.misc.ShieldTamper;
 import com.github.sanctum.labyrinth.data.FileManager;
 import com.github.sanctum.labyrinth.library.Items;
+import com.github.sanctum.labyrinth.library.StringUtils;
 import com.github.sanctum.labyrinth.task.Schedule;
+import com.github.sanctum.skulls.CustomHead;
+import com.github.sanctum.skulls.CustomHeadLoader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -138,6 +141,19 @@ public class DataManager {
 		return main.getConfig().getString("gui-navigation." + object);
 	}
 
+	private ItemStack improvise(String value) {
+		Material mat = Material.getMaterial(value);
+		if (mat != null) {
+			return new ItemStack(mat);
+		} else {
+			if (value.length() < 16) {
+				return CustomHead.Manager.getHeads().stream().filter(h -> StringUtils.use(h.name()).containsIgnoreCase(value)).map(CustomHead::get).findFirst().orElse(null);
+			} else {
+				return CustomHeadLoader.provide(value);
+			}
+		}
+	}
+
 	public ItemStack getItem(String object) {
 		FileManager main = FileType.MISC_FILE.get("Messages", "Configuration");
 		if (!main.exists()) {
@@ -145,7 +161,7 @@ public class DataManager {
 			if (is == null) throw new IllegalStateException("Unable to load Messages.yml from the jar!");
 			FileManager.copy(is, main.getFile());
 		}
-		return Items.improvise(Objects.requireNonNull(main.getConfig().getString("menu-items." + object)));
+		return improvise(Objects.requireNonNull(main.getConfig().getString("menu-items." + object)));
 	}
 
 	public Material getMaterial(String object) {

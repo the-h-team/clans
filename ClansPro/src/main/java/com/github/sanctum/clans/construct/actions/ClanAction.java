@@ -31,12 +31,10 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
-import net.md_5.bungee.api.chat.BaseComponent;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
@@ -786,7 +784,7 @@ public class ClanAction extends StringLibrary {
 	}
 
 	public void forfeitWar(Player p, String clanID) {
-		DefaultClan c = (DefaultClan) DefaultClan.action.getClan(clanID);
+		DefaultClan c = ClansAPI.getInstance().getClanManager().cast(DefaultClan.class, DefaultClan.action.getClan(clanID));
 		if (c.getCurrentWar() != null) {
 			DefaultClan winner = (DefaultClan) c.getCurrentWar().getTargeted();
 			Bukkit.broadcastMessage(DefaultClan.action.color("&c&o" + c.getName() + " &f&lFORFEIT &c&ofrom member &4" + p.getName()));
@@ -1001,40 +999,8 @@ public class ClanAction extends StringLibrary {
 							}
 						});
 
-				help.finish((pagination, page, max) -> {
-					Message.form(p).send("&7&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬");
-					TextLib component = TextLib.getInstance();
-					int next = page + 1;
-					int last = Math.max(page - 1, 1);
-					List<BaseComponent> toSend = new LinkedList<>();
-					if (page == 1) {
-						if (page == max) {
-							toSend.add(component.textHoverable("", "&8« ", "&cYou are on the first page already."));
-							toSend.add(component.textHoverable("&f<&7" + page + "&f/&7" + max + "&f>", "", ""));
-							toSend.add(component.textHoverable("", " &8»", "&cYou are already on the last page."));
-							p.spigot().sendMessage(toSend.toArray(new BaseComponent[0]));
-							return;
-						}
-						toSend.add(component.textHoverable("", "&8« ", "&cYou are on the first page already."));
-						toSend.add(component.textHoverable("&f<&7" + page + "&f/&7" + max + "&f>", "", ""));
-						toSend.add(component.execute(() -> help.get(next), component.textHoverable("", " &3»", "&aGoto the next page.")));
-						p.spigot().sendMessage(toSend.toArray(new BaseComponent[0]));
-						return;
-					}
-					if (page == max) {
-						toSend.add(component.execute(() -> help.get(last), component.textHoverable("", "&3« ", "&aGoto the previous page.")));
-						toSend.add(component.textHoverable("&f<&7" + page + "&f/&7" + max + "&f>", "", ""));
-						toSend.add(component.textHoverable("", " &8»", "&cYou are already on the last page."));
-						p.spigot().sendMessage(toSend.toArray(new BaseComponent[0]));
-						return;
-					}
-					if (next <= max) {
-						toSend.add(component.execute(() -> help.get(last), component.textHoverable("", "&3« ", "&aGoto the previous page.")));
-						toSend.add(component.textHoverable("&f<&7" + page + "&f/&7" + max + "&f>", "", ""));
-						toSend.add(component.execute(() -> help.get(next), component.textHoverable("", " &3»", "&aGoto the next page.")));
-						p.spigot().sendMessage(toSend.toArray(new BaseComponent[0]));
-					}
-				}).decorate((pagination, clan, page, max, placement) -> {
+				help.finish(builder -> builder.setPlayer(p)
+						.setPrefix("&7&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬")).decorate((pagination, clan, page, max, placement) -> {
 					if (Bukkit.getVersion().contains("1.17") || Bukkit.getVersion().contains("1.16")) {
 						Message.form(p).build(TextLib.getInstance().textRunnable("", " #787674# #0eaccc&l" + placement + " #00fffb&o" + clan.getName() + " #787674: #ff7700&l" + clan.format(String.valueOf(pagination.format(clan.getBalanceDouble(), 2))), "&6Click to view &3&l" + clan.getName() + "'s &6info.", "c info " + clan.getName()));
 					} else {
@@ -1055,40 +1021,8 @@ public class ClanAction extends StringLibrary {
 							}
 						});
 
-				help2.finish((pagination, page, max) -> {
-					Message.form(p).send("&7&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬");
-					TextLib component = TextLib.getInstance();
-					int next = page + 1;
-					int last = Math.max(page - 1, 1);
-					List<BaseComponent> toSend = new LinkedList<>();
-					if (page == 1) {
-						if (page == max) {
-							toSend.add(component.textHoverable("", "&8« ", "&cYou are on the first page already."));
-							toSend.add(component.textHoverable("&f<&7" + page + "&f/&7" + max + "&f>", "", ""));
-							toSend.add(component.textHoverable("", " &8»", "&cYou are already on the last page."));
-							p.spigot().sendMessage(toSend.toArray(new BaseComponent[0]));
-							return;
-						}
-						toSend.add(component.textHoverable("", "&8« ", "&cYou are on the first page already."));
-						toSend.add(component.textHoverable("&f<&7" + page + "&f/&7" + max + "&f>", "", ""));
-						toSend.add(component.execute(() -> help2.get(next), component.textHoverable("", " &3»", "&aGoto the next page.")));
-						p.spigot().sendMessage(toSend.toArray(new BaseComponent[0]));
-						return;
-					}
-					if (page == max) {
-						toSend.add(component.execute(() -> help2.get(last), component.textHoverable("", "&3« ", "&aGoto the previous page.")));
-						toSend.add(component.textHoverable("&f<&7" + page + "&f/&7" + max + "&f>", "", ""));
-						toSend.add(component.textHoverable("", " &8»", "&cYou are already on the last page."));
-						p.spigot().sendMessage(toSend.toArray(new BaseComponent[0]));
-						return;
-					}
-					if (next <= max) {
-						toSend.add(component.execute(() -> help2.get(last), component.textHoverable("", "&3« ", "&aGoto the previous page.")));
-						toSend.add(component.textHoverable("&f<&7" + page + "&f/&7" + max + "&f>", "", ""));
-						toSend.add(component.execute(() -> help2.get(next), component.textHoverable("", " &3»", "&aGoto the next page.")));
-						p.spigot().sendMessage(toSend.toArray(new BaseComponent[0]));
-					}
-				}).decorate((pagination, clan, page, max, placement) -> {
+				help2.finish((builder -> builder.setPlayer(p)
+						.setPrefix("&7&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬"))).decorate((pagination, clan, page, max, placement) -> {
 					if (Bukkit.getVersion().contains("1.17") || Bukkit.getVersion().contains("1.16")) {
 						Message.form(p).build(TextLib.getInstance().textRunnable("", " #787674# #0eaccc&l" + placement + " #00fffb&o" + clan.getName() + " #787674: #ff7700&l" + clan.getWins(), "&6Click to view &3&l" + clan.getName() + "'s &6info.", "c info " + clan.getName()));
 					} else {
@@ -1108,40 +1042,8 @@ public class ClanAction extends StringLibrary {
 							}
 						});
 
-				help4.finish((pagination, page, max) -> {
-					Message.form(p).send("&7&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬");
-					TextLib component = TextLib.getInstance();
-					int next = page + 1;
-					int last = Math.max(page - 1, 1);
-					List<BaseComponent> toSend = new LinkedList<>();
-					if (page == 1) {
-						if (page == max) {
-							toSend.add(component.textHoverable("", "&8« ", "&cYou are on the first page already."));
-							toSend.add(component.textHoverable("&f<&7" + page + "&f/&7" + max + "&f>", "", ""));
-							toSend.add(component.textHoverable("", " &8»", "&cYou are already on the last page."));
-							p.spigot().sendMessage(toSend.toArray(new BaseComponent[0]));
-							return;
-						}
-						toSend.add(component.textHoverable("", "&8« ", "&cYou are on the first page already."));
-						toSend.add(component.textHoverable("&f<&7" + page + "&f/&7" + max + "&f>", "", ""));
-						toSend.add(component.execute(() -> help4.get(next), component.textHoverable("", " &3»", "&aGoto the next page.")));
-						p.spigot().sendMessage(toSend.toArray(new BaseComponent[0]));
-						return;
-					}
-					if (page == max) {
-						toSend.add(component.execute(() -> help4.get(last), component.textHoverable("", "&3« ", "&aGoto the previous page.")));
-						toSend.add(component.textHoverable("&f<&7" + page + "&f/&7" + max + "&f>", "", ""));
-						toSend.add(component.textHoverable("", " &8»", "&cYou are already on the last page."));
-						p.spigot().sendMessage(toSend.toArray(new BaseComponent[0]));
-						return;
-					}
-					if (next <= max) {
-						toSend.add(component.execute(() -> help4.get(last), component.textHoverable("", "&3« ", "&aGoto the previous page.")));
-						toSend.add(component.textHoverable("&f<&7" + page + "&f/&7" + max + "&f>", "", ""));
-						toSend.add(component.execute(() -> help4.get(next), component.textHoverable("", " &3»", "&aGoto the next page.")));
-						p.spigot().sendMessage(toSend.toArray(new BaseComponent[0]));
-					}
-				}).decorate((pagination, clan, page, max, placement) -> {
+				help4.finish((builder -> builder.setPlayer(p)
+						.setPrefix("&7&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬"))).decorate((pagination, clan, page, max, placement) -> {
 					if (Bukkit.getVersion().contains("1.17") || Bukkit.getVersion().contains("1.16")) {
 						Message.form(p).build(TextLib.getInstance().textRunnable("", " #787674# #0eaccc&l" + placement + " #00fffb&o" + clan.getName() + " #787674: #ff7700&l" + clan.format(String.valueOf(pagination.format(clan.getPower(), 2))), "&6Click to view &3&l" + clan.getName() + "'s &6info.", "c info " + clan.getName()));
 					} else {
@@ -1171,40 +1073,8 @@ public class ClanAction extends StringLibrary {
 							}
 						});
 
-				help3.finish((pagination, page, max) -> {
-					Message.form(p).send("&7&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬");
-					TextLib component = TextLib.getInstance();
-					int next = page + 1;
-					int last = Math.max(page - 1, 1);
-					List<BaseComponent> toSend = new LinkedList<>();
-					if (page == 1) {
-						if (page == max) {
-							toSend.add(component.textHoverable("", "&8« ", "&cYou are on the first page already."));
-							toSend.add(component.textHoverable("&f<&7" + page + "&f/&7" + max + "&f>", "", ""));
-							toSend.add(component.textHoverable("", " &8»", "&cYou are already on the last page."));
-							p.spigot().sendMessage(toSend.toArray(new BaseComponent[0]));
-							return;
-						}
-						toSend.add(component.textHoverable("", "&8« ", "&cYou are on the first page already."));
-						toSend.add(component.textHoverable("&f<&7" + page + "&f/&7" + max + "&f>", "", ""));
-						toSend.add(component.execute(() -> help3.get(next), component.textHoverable("", " &3»", "&aGoto the next page.")));
-						p.spigot().sendMessage(toSend.toArray(new BaseComponent[0]));
-						return;
-					}
-					if (page == max) {
-						toSend.add(component.execute(() -> help3.get(last), component.textHoverable("", "&3« ", "&aGoto the previous page.")));
-						toSend.add(component.textHoverable("&f<&7" + page + "&f/&7" + max + "&f>", "", ""));
-						toSend.add(component.textHoverable("", " &8»", "&cYou are already on the last page."));
-						p.spigot().sendMessage(toSend.toArray(new BaseComponent[0]));
-						return;
-					}
-					if (next <= max) {
-						toSend.add(component.execute(() -> help3.get(last), component.textHoverable("", "&3« ", "&aGoto the previous page.")));
-						toSend.add(component.textHoverable("&f<&7" + page + "&f/&7" + max + "&f>", "", ""));
-						toSend.add(component.execute(() -> help3.get(next), component.textHoverable("", " &3»", "&aGoto the next page.")));
-						p.spigot().sendMessage(toSend.toArray(new BaseComponent[0]));
-					}
-				}).decorate((pagination, clan, page, max, placement) -> {
+				help3.finish((builder -> builder.setPlayer(p)
+						.setPrefix("&7&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬"))).decorate((pagination, clan, page, max, placement) -> {
 					double kd = 0;
 					for (ClanAssociate associate : clan.getMembers().list()) {
 						kd += associate.getKD();

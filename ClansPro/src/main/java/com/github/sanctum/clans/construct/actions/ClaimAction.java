@@ -105,6 +105,7 @@ public class ClaimAction extends StringLibrary {
 		Clan clan = ClansAPI.getInstance().getClan(p.getUniqueId());
 		if (ClansAPI.getInstance().getClaimManager().isInClaim(p.getLocation())) {
 			Claim claim = Claim.from(p.getLocation());
+			assert claim != null;
 			if (!claim.isActive()) {
 				return;
 			}

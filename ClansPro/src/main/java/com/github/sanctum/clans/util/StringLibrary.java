@@ -41,7 +41,9 @@ public class StringLibrary {
 	}
 
 	public void sendComponent(CommandSender s, TextComponent text) {
-		s.spigot().sendMessage(text);
+		if (s instanceof Player) {
+			((Player) s).spigot().sendMessage(text);
+		}
 	}
 
 	public String getPrefix() {

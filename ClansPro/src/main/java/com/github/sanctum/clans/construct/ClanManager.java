@@ -34,6 +34,13 @@ public class ClanManager {
 		return false;
 	}
 
+	public <T extends Clan> T cast(Class<T> clanImpl, Clan clan) {
+		if (clanImpl.isAssignableFrom(clan.getClass())) {
+			return (T) clan;
+		}
+		return null;
+	}
+
 	/**
 	 * Delete a clan from cache.
 	 * <p>

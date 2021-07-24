@@ -264,7 +264,7 @@ Clans:
   invite-clearance: 1
 
   # Change the minimum rank clearance needed to change the clans pvp mode.
-  mode-clearanmce: 2
+  mode-clearance: 2
   ##----------------------------( Clearance end )----------------------------##
 
   ###################################
