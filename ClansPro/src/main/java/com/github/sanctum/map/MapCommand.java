@@ -5,6 +5,7 @@ import com.github.sanctum.clans.construct.Claim;
 import com.github.sanctum.clans.construct.DefaultClan;
 import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClansAPI;
+import com.github.sanctum.labyrinth.Labyrinth;
 import com.github.sanctum.labyrinth.data.Region;
 import com.github.sanctum.labyrinth.formatting.string.ColoredString;
 import com.github.sanctum.labyrinth.library.DirectivePoint;
@@ -38,6 +39,7 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.plugin.Plugin;
+import org.bukkit.plugin.ServicePriority;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 
@@ -319,6 +321,14 @@ public class MapCommand implements Listener {
 
             if (enhanced) {
 
+                if (Labyrinth.isLegacy()) {
+                    DefaultClan.action.sendMessage(e.getPlayer(), "&cLegacy detected! Enhanced map view requires 1.14+");
+                    ClansPro.getInstance().getLogger().warning("- Legacy detected enhanced map view not available until 1.14+");
+                    ec.getServiceManager().unregisterAll(ec);
+                    ec.getServiceManager().register(false, ec, ServicePriority.Highest);
+                    return;
+                }
+
                 List<String> top_new = new LinkedList<>();
                 top_new.add(" ");
                 e.setAddedLinesTop(top_new);
@@ -392,18 +402,23 @@ public class MapCommand implements Listener {
                                             p.setHover(StringUtils.use("&4Wilderness").translate());
                                             p.setColor("&8");
                                             p.setRepresentation('⬜');
-                                            if (Claim.action.getChunksAroundLocation(location, -1, 0, 1).stream().anyMatch(c -> ClansAPI.getInstance().getClaimManager().isInClaim(c))) {
-                                                p.setAppliance(() -> {
-                                                    Clan c = ClansAPI.getInstance().getClan(e.getPlayer().getUniqueId());
-                                                    if (c != null) {
-                                                        Claim claim = c.obtain(e.getPlayer().getWorld().getChunkAt(p.chunkPosition.x, p.chunkPosition.z));
-                                                        if (claim != null) {
-                                                            e.getPlayer().performCommand("c map");
-                                                            DefaultClan.action.sendMessage(e.getPlayer(), "&aChunk &6&7(&3X: &f" + claim.getChunk().getX() + " &3Z: &f" + claim.getChunk().getZ() + "&7) &ais now owned by our clan.");
+                                            try {
+                                                if (Claim.action.getChunksAroundLocation(location, -1, 0, 1).stream().anyMatch(c -> ClansAPI.getInstance().getClaimManager().isInClaim(c))) {
+                                                    p.setAppliance(() -> {
+                                                        Clan c = ClansAPI.getInstance().getClan(e.getPlayer().getUniqueId());
+                                                        if (c != null) {
+                                                            Claim claim = c.obtain(e.getPlayer().getWorld().getChunkAt(p.chunkPosition.x, p.chunkPosition.z));
+                                                            if (claim != null) {
+                                                                e.getPlayer().performCommand("c map");
+                                                                DefaultClan.action.sendMessage(e.getPlayer(), "&aChunk &6&7(&3X: &f" + claim.getChunk().getX() + " &3Z: &f" + claim.getChunk().getZ() + "&7) &ais now owned by our clan.");
+                                                            }
                                                         }
-                                                    }
-                                                });
+                                                    });
+                                                }
+                                            } catch (Exception ignored) {
+
                                             }
+
                                         }
                                     }
                                 }

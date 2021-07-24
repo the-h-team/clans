@@ -25,6 +25,7 @@ import com.github.sanctum.clans.util.events.command.CommandHelpInsertEvent;
 import com.github.sanctum.clans.util.events.command.CommandInsertEvent;
 import com.github.sanctum.clans.util.events.command.ServerCommandInsertEvent;
 import com.github.sanctum.clans.util.events.command.TabInsertEvent;
+import com.github.sanctum.labyrinth.Labyrinth;
 import com.github.sanctum.labyrinth.data.FileManager;
 import com.github.sanctum.labyrinth.data.VaultHook;
 import com.github.sanctum.labyrinth.formatting.PaginatedList;
@@ -1091,6 +1092,11 @@ public class CommandClan extends Command {
 
 				if (associate == null) {
 					lib.sendMessage(p, lib.notInClan());
+					return true;
+				}
+
+				if (Labyrinth.isLegacy()) {
+					lib.sendMessage(p, "&cLegacy detected! This feature only works for MC 1.16 or higher.");
 					return true;
 				}
 

@@ -18,6 +18,7 @@ import com.github.sanctum.link.ClanVentBus;
 import java.text.MessageFormat;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -258,10 +259,11 @@ public class ClaimAction extends StringLibrary {
 		}
 	}
 
-	public Collection<Chunk> getChunksAroundLocation(Location location, int xoff, int yoff, int zoff) {
+	public synchronized Collection<Chunk> getChunksAroundLocation(Location location, int xoff, int yoff, int zoff) {
 		int[] offset = {xoff, yoff, zoff};
 
 		World world = location.getWorld();
+		if (world == null) return Collections.emptyList();
 		int baseX = location.getChunk().getX();
 		int baseZ = location.getChunk().getZ();
 
@@ -269,6 +271,9 @@ public class ClaimAction extends StringLibrary {
 		for (int x : offset) {
 			for (int z : offset) {
 				Chunk chunk = world.getChunkAt(baseX + x, baseZ + z);
+				if (!chunk.isLoaded()) {
+					chunk.load();
+				}
 				chunksAroundPlayer.add(chunk);
 			}
 		}
