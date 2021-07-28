@@ -25,9 +25,9 @@ import com.github.sanctum.clans.util.events.command.CommandHelpInsertEvent;
 import com.github.sanctum.clans.util.events.command.CommandInsertEvent;
 import com.github.sanctum.clans.util.events.command.ServerCommandInsertEvent;
 import com.github.sanctum.clans.util.events.command.TabInsertEvent;
-import com.github.sanctum.labyrinth.Labyrinth;
+import com.github.sanctum.labyrinth.LabyrinthProvider;
+import com.github.sanctum.labyrinth.data.EconomyProvision;
 import com.github.sanctum.labyrinth.data.FileManager;
-import com.github.sanctum.labyrinth.data.VaultHook;
 import com.github.sanctum.labyrinth.formatting.PaginatedList;
 import com.github.sanctum.labyrinth.formatting.component.OldComponent;
 import com.github.sanctum.labyrinth.formatting.string.ColoredString;
@@ -60,7 +60,6 @@ import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.ComponentBuilder;
 import net.md_5.bungee.api.chat.HoverEvent;
 import net.md_5.bungee.api.chat.TextComponent;
-import net.milkbowl.vault.economy.EconomyResponse;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
@@ -619,13 +618,14 @@ public class CommandClan extends Command {
 						if (c.isPeaceful()) {
 							if (ClansAPI.getData().getEnabled("Clans.mode-change.charge")) {
 								double amount = ClansAPI.getData().getMain().getConfig().getDouble("Clans.mode-change.amount");
-								EconomyResponse response = VaultHook.getEconomy().withdrawPlayer(p, amount);
-								double balance = VaultHook.getEconomy().getBalance(p);
+								double balance = EconomyProvision.getInstance().balance(p).orElse(0.0);
 								double needed = amount - balance;
-								if (!response.transactionSuccess()) {
-									lib.sendMessage(p, lib.notEnough(needed));
-									return true;
-								}
+								EconomyProvision.getInstance().withdraw(BigDecimal.valueOf(amount), p, p.getWorld().getName()).ifPresent(b -> {
+									if (!b) {
+										lib.sendMessage(p, lib.notEnough(needed));
+									}
+								});
+
 							}
 							if (ClansAPI.getData().getEnabled("Clans.mode-change.timer.use")) {
 								if (c.getModeCooldown().isComplete()) {
@@ -645,13 +645,13 @@ public class CommandClan extends Command {
 						} else {
 							if (ClansAPI.getData().getEnabled("Clans.mode-change.charge")) {
 								double amount = ClansAPI.getData().getMain().getConfig().getDouble("Clans.mode-change.amount");
-								EconomyResponse response = VaultHook.getEconomy().withdrawPlayer(p, amount);
-								double balance = VaultHook.getEconomy().getBalance(p);
+								double balance = EconomyProvision.getInstance().balance(p).orElse(0.0);
 								double needed = amount - balance;
-								if (!response.transactionSuccess()) {
-									lib.sendMessage(p, lib.notEnough(needed));
-									return true;
-								}
+								EconomyProvision.getInstance().withdraw(BigDecimal.valueOf(amount), p).ifPresent(b -> {
+									if (!b) {
+										lib.sendMessage(p, lib.notEnough(needed));
+									}
+								});
 							}
 							if (ClansAPI.getData().getEnabled("Clans.mode-change.timer.use")) {
 								if (c.getModeCooldown().isComplete()) {
@@ -1095,7 +1095,7 @@ public class CommandClan extends Command {
 					return true;
 				}
 
-				if (Labyrinth.isLegacy()) {
+				if (LabyrinthProvider.getInstance().isLegacy()) {
 					lib.sendMessage(p, "&cLegacy detected! This feature only works for MC 1.16 or higher.");
 					return true;
 				}
@@ -1580,13 +1580,15 @@ public class CommandClan extends Command {
 								if (c.isPeaceful()) {
 									if (ClansAPI.getData().getEnabled("Clans.mode-change.charge")) {
 										double amount = ClansAPI.getData().getMain().getConfig().getDouble("Clans.mode-change.amount");
-										EconomyResponse response = VaultHook.getEconomy().withdrawPlayer(p, amount);
-										double balance = VaultHook.getEconomy().getBalance(p);
+										double balance = EconomyProvision.getInstance().balance(p).orElse(0.0);
 										double needed = amount - balance;
-										if (!response.transactionSuccess()) {
-											lib.sendMessage(p, lib.notEnough(needed));
-											return true;
-										}
+										EconomyProvision.getInstance().withdraw(BigDecimal.valueOf(amount), p).ifPresent(b -> {
+
+											if (!b) {
+												lib.sendMessage(p, lib.notEnough(needed));
+											}
+
+										});
 									}
 									if (ClansAPI.getData().getEnabled("Clans.mode-change.timer.use")) {
 										if (c.getModeCooldown().isComplete()) {
@@ -1615,13 +1617,15 @@ public class CommandClan extends Command {
 								} else {
 									if (ClansAPI.getData().getEnabled("Clans.mode-change.charge")) {
 										double amount = ClansAPI.getData().getMain().getConfig().getDouble("Clans.mode-change.amount");
-										EconomyResponse response = VaultHook.getEconomy().withdrawPlayer(p, amount);
-										double balance = VaultHook.getEconomy().getBalance(p);
+										double balance = EconomyProvision.getInstance().balance(p).orElse(0.0);
 										double needed = amount - balance;
-										if (!response.transactionSuccess()) {
-											lib.sendMessage(p, lib.notEnough(needed));
-											return true;
-										}
+										EconomyProvision.getInstance().withdraw(BigDecimal.valueOf(amount), p).ifPresent(b -> {
+
+											if (!b) {
+												lib.sendMessage(p, lib.notEnough(needed));
+											}
+
+										});
 									}
 									if (ClansAPI.getData().getEnabled("Clans.mode-change.timer.use")) {
 										if (c.getModeCooldown().isComplete()) {
@@ -1850,8 +1854,8 @@ public class CommandClan extends Command {
 					return true;
 				}
 				FileManager main = ClansAPI.getData().getMain();
-				String adminRank = main.getConfig().getString("Formatting.Styles.Full.Admin");
-				String ownerRank = main.getConfig().getString("Formatting.Styles.Full.Owner");
+				String adminRank = main.getConfig().getString("Formatting.Chat.Styles.Full.Admin");
+				String ownerRank = main.getConfig().getString("Formatting.Chat.Styles.Full.Owner");
 				if (associate != null) {
 					if (associate.getPriority().toInt() >= DefaultClan.action.positionClearance()) {
 						UUID tid = DefaultClan.action.getUserID(args1);

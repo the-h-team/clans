@@ -4,14 +4,11 @@ import com.github.sanctum.clans.construct.api.ClanBank;
 import com.github.sanctum.clans.util.events.clans.bank.BankPreTransactionEvent;
 import com.github.sanctum.clans.util.events.clans.bank.BankSetBalanceEvent;
 import com.github.sanctum.clans.util.events.clans.bank.BankTransactionEvent;
-import com.github.sanctum.labyrinth.data.AdvancedHook;
 import com.github.sanctum.labyrinth.data.EconomyProvision;
-import com.github.sanctum.labyrinth.data.VaultHook;
+import com.github.sanctum.labyrinth.event.custom.Vent;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.Optional;
-
-import com.github.sanctum.labyrinth.event.custom.Vent;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
@@ -47,12 +44,8 @@ public final class Bank implements ClanBank, Serializable {
         final BankPreTransactionEvent preTransactionEvent;
         boolean hasWalletAccount = false;
 
-        if (VaultHook.getEconomy() != null) {
-            hasWalletAccount = VaultHook.getEconomy().hasAccount(player);
-        } else {
-            if (AdvancedHook.getEconomy() != null) {
-                hasWalletAccount = AdvancedHook.getEconomy().hasWalletAccount(player);
-            }
+        if (EconomyProvision.getInstance().isValid()) {
+            hasWalletAccount = true;
         }
 
         preTransactionEvent = new BankPreTransactionEvent(player, this, amount, clanId, has(amount) && hasWalletAccount,

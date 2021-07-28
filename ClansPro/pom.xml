@@ -91,6 +91,14 @@
             <name>jcenter-bintray</name>
             <url>https://jcenter.bintray.com</url>
         </repository>
+        <repository>
+            <id>s01-sonatype-snapshots</id>
+            <url>https://s01.oss.sonatype.org/content/repositories/snapshots/</url>
+        </repository>
+        <repository>
+            <id>sonatype-snapshots</id>
+            <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
+        </repository>
     </repositories>
 
     <dependencies>
@@ -104,12 +112,6 @@
             <groupId>me.clip</groupId>
             <artifactId>placeholderapi</artifactId>
             <version>2.10.9</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.github.the-h-team</groupId>
-            <artifactId>Labyrinth</artifactId>
-            <version>1.6.1</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -143,6 +145,31 @@
             <version>1.16-R0.4</version>
             <type>javadoc</type>
             <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.github.the-h-team</groupId>
+            <artifactId>labyrinth-gui</artifactId>
+            <version>1.7.0-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>com.github.the-h-team</groupId>
+            <artifactId>labyrinth-common</artifactId>
+            <version>1.7.0-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>com.github.the-h-team</groupId>
+            <artifactId>labyrinth-skulls</artifactId>
+            <version>1.7.0-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>com.github.the-h-team</groupId>
+            <artifactId>labyrinth-plugin</artifactId>
+            <version>1.7.0-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>com.github.the-h-team</groupId>
+            <artifactId>labyrinth</artifactId>
+            <version>1.7.0-SNAPSHOT</version>
         </dependency>
     </dependencies>
 

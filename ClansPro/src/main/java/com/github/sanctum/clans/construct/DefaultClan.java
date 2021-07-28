@@ -14,7 +14,7 @@ import com.github.sanctum.clans.construct.extra.uniform.MemberWrapper;
 import com.github.sanctum.clans.util.data.DataManager;
 import com.github.sanctum.clans.util.events.clans.LandClaimedEvent;
 import com.github.sanctum.clans.util.events.command.OtherInformationAdaptEvent;
-import com.github.sanctum.labyrinth.Labyrinth;
+import com.github.sanctum.labyrinth.LabyrinthProvider;
 import com.github.sanctum.labyrinth.data.FileManager;
 import com.github.sanctum.labyrinth.event.custom.Vent;
 import com.github.sanctum.labyrinth.formatting.UniformedComponents;
@@ -576,7 +576,7 @@ public class DefaultClan implements Clan {
 	 */
 	@Override
 	public @NotNull List<String> getDataKeys() {
-		return Labyrinth.getContainer(this.key).persistentKeySet();
+		return LabyrinthProvider.getInstance().getContainer(this.key).persistentKeySet();
 	}
 
 	/**
@@ -589,7 +589,7 @@ public class DefaultClan implements Clan {
 	 */
 	@Override
 	public <R> R getValue(Class<R> type, String key) {
-		return Labyrinth.getContainer(this.key).get(type, key);
+		return LabyrinthProvider.getInstance().getContainer(this.key).get(type, key);
 	}
 
 	/**
@@ -602,7 +602,7 @@ public class DefaultClan implements Clan {
 	 */
 	@Override
 	public <R> R setValue(String key, R value) {
-		return Labyrinth.getContainer(this.key).attach(key, value);
+		return LabyrinthProvider.getInstance().getContainer(this.key).attach(key, value);
 	}
 
 	/**
@@ -613,7 +613,7 @@ public class DefaultClan implements Clan {
 	 */
 	@Override
 	public boolean removeValue(String key) {
-		return Labyrinth.getContainer(this.key).delete(key);
+		return LabyrinthProvider.getInstance().getContainer(this.key).delete(key);
 	}
 
 	/**

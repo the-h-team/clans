@@ -7,9 +7,8 @@ import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClansAPI;
 import com.github.sanctum.clans.util.RankPriority;
 import com.github.sanctum.clans.util.data.DataManager;
-import com.github.sanctum.labyrinth.data.AdvancedHook;
+import com.github.sanctum.labyrinth.data.EconomyProvision;
 import com.github.sanctum.labyrinth.data.FileManager;
-import com.github.sanctum.labyrinth.data.VaultHook;
 import com.github.sanctum.labyrinth.formatting.string.ColoredString;
 import com.github.sanctum.labyrinth.formatting.string.Paragraph;
 import com.github.sanctum.labyrinth.gui.InventoryRows;
@@ -560,7 +559,7 @@ public class UI {
 				String o = c.getColor();
 				String balance;
 				try {
-					balance = c.format(String.valueOf(AdvancedHook.getEconomy() != null ? AdvancedHook.getEconomy().getWallet(Bukkit.getOfflinePlayer(uuid)).getBalance().doubleValue() : VaultHook.getEconomy().getBalance(Bukkit.getOfflinePlayer(uuid))));
+					balance = c.format(String.valueOf(EconomyProvision.getInstance().balance(Bukkit.getOfflinePlayer(uuid)).orElse(0.0)));
 				} catch (NoClassDefFoundError | NullPointerException e) {
 					balance = "Un-Known";
 				}

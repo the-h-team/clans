@@ -5,7 +5,7 @@ import com.github.sanctum.clans.construct.Claim;
 import com.github.sanctum.clans.construct.DefaultClan;
 import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClansAPI;
-import com.github.sanctum.labyrinth.Labyrinth;
+import com.github.sanctum.labyrinth.LabyrinthProvider;
 import com.github.sanctum.labyrinth.data.Region;
 import com.github.sanctum.labyrinth.formatting.string.ColoredString;
 import com.github.sanctum.labyrinth.library.DirectivePoint;
@@ -321,7 +321,7 @@ public class MapCommand implements Listener {
 
             if (enhanced) {
 
-                if (Labyrinth.isLegacy()) {
+                if (LabyrinthProvider.getInstance().isLegacy()) {
                     DefaultClan.action.sendMessage(e.getPlayer(), "&cLegacy detected! Enhanced map view requires 1.14+");
                     ClansPro.getInstance().getLogger().warning("- Legacy detected enhanced map view not available until 1.14+");
                     ec.getServiceManager().unregisterAll(ec);

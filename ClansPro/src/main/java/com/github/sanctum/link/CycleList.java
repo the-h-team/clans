@@ -1,7 +1,7 @@
 package com.github.sanctum.link;
 
 import com.github.sanctum.clans.ClansPro;
-import com.github.sanctum.labyrinth.Labyrinth;
+import com.github.sanctum.labyrinth.LabyrinthProvider;
 import com.google.common.collect.Sets;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
@@ -118,8 +118,8 @@ public class CycleList {
 				c.onLoad();
 				c.register();
 			} catch (NoClassDefFoundError e) {
-				Labyrinth.getInstance().getLogger().warning("- Your Labyrinth core is out-dated. Additions for addon " + c.getName() + " will not work.");
-				Labyrinth.getInstance().getLogger().warning("- It's possible this has no effect to you as of this moment so you may be safe to ignore this message.");
+				LabyrinthProvider.getInstance().getLogger().warning("- Your Labyrinth core is out-dated. Additions for addon " + c.getName() + " will not work.");
+				LabyrinthProvider.getInstance().getLogger().warning("- It's possible this has no effect to you as of this moment so you may be safe to ignore this message.");
 			}
 		} catch (InstantiationException | IllegalAccessException e) {
 			ClansPro.getInstance().getLogger().severe("- Unable to cast EventCycle to the class " + cycle.getName() + ". This likely means you are not implementing the EventCycle interface for your event class properly.");
@@ -157,8 +157,8 @@ public class CycleList {
 					cycle.onLoad();
 					cycle.register();
 				} catch (NoClassDefFoundError e) {
-					Labyrinth.getInstance().getLogger().warning("- Your Labyrinth core is out-dated. Additions for addon " + cycle.getName() + " will not work.");
-					Labyrinth.getInstance().getLogger().warning("- It's possible this has no effect to you as of this moment so you may be safe to ignore this message.");
+					LabyrinthProvider.getInstance().getLogger().warning("- Your Labyrinth core is out-dated. Additions for addon " + cycle.getName() + " will not work.");
+					LabyrinthProvider.getInstance().getLogger().warning("- It's possible this has no effect to you as of this moment so you may be safe to ignore this message.");
 				}
 			} catch (InstantiationException | IllegalAccessException | NoSuchMethodException | InvocationTargetException e) {
 				ClansPro.getInstance().getLogger().severe("- Unable to cast EventCycle to the class " + aClass.getName() + ". This likely means you are not implementing the EventCycle interface for your event class properly.");
