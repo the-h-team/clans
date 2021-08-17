@@ -1,6 +1,6 @@
 package com.github.sanctum.link.cycles;
 
-import com.github.sanctum.clans.construct.DefaultClan;
+import com.github.sanctum.clans.construct.ClanAssociate;
 import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClansAPI;
 import com.github.sanctum.clans.util.events.command.CommandHelpInsertEvent;
@@ -101,9 +101,10 @@ public class VaultsCycle extends EventCycle {
 			if (length == 1) {
 				if (args[0].equalsIgnoreCase("vault")) {
 
-					if (DefaultClan.action.getClanID(p.getUniqueId()) != null) {
-						if (DefaultClan.action.getRankPower(p.getUniqueId()) < ClansAPI.getData().getMain().getConfig().getInt("Addon.Vaults.clearance")) {
-							DefaultClan.action.sendMessage(p, "&c&oYou do not have clan clearance.");
+					if (ClansAPI.getInstance().getClanID(p.getUniqueId()) != null) {
+						ClanAssociate associate = ClansAPI.getInstance().getAssociate(p).orElse(null);
+						if (associate.getPriority().toInt() < ClansAPI.getData().getMain().getConfig().getInt("Addon.Vaults.clearance")) {
+							Clan.ACTION.sendMessage(p, "&c&oYou do not have clan clearance.");
 							e.setReturn(true);
 							return;
 						}

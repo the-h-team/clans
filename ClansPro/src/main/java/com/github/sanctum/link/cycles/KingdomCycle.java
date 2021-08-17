@@ -1,11 +1,9 @@
 package com.github.sanctum.link.cycles;
 
 import com.github.sanctum.clans.construct.ClanAssociate;
-import com.github.sanctum.clans.construct.DefaultClan;
+import com.github.sanctum.clans.construct.RankPriority;
 import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClansAPI;
-import com.github.sanctum.clans.util.InteractionType;
-import com.github.sanctum.clans.util.RankPriority;
 import com.github.sanctum.clans.util.events.clans.ClaimInteractEvent;
 import com.github.sanctum.clans.util.events.clans.ClanLeaveEvent;
 import com.github.sanctum.clans.util.events.command.CommandInsertEvent;
@@ -110,7 +108,7 @@ public class KingdomCycle extends EventCycle {
 
 			ClansAPI API = ClansAPI.getInstance();
 
-			if (e.getInteraction() == InteractionType.BUILD) {
+			if (e.getInteraction() == ClaimInteractEvent.InteractionType.BUILD) {
 
 				if (API.isInClan(p.getUniqueId())) {
 
@@ -158,7 +156,7 @@ public class KingdomCycle extends EventCycle {
 
 			}
 
-			if (e.getInteraction() == InteractionType.BREAK) {
+			if (e.getInteraction() == ClaimInteractEvent.InteractionType.BREAK) {
 
 				if (API.isInClan(p.getUniqueId())) {
 
@@ -428,7 +426,7 @@ public class KingdomCycle extends EventCycle {
 
 								create.getMembers().add(c);
 
-								getMessenger().setPrefix(DefaultClan.action.getPrefix()).broadcast(p.getName() + " started a new kingdom called &6" + name);
+								getMessenger().setPrefix(Clan.ACTION.getPrefix()).broadcast(p.getName() + " started a new kingdom called &6" + name);
 
 							} else {
 
@@ -511,7 +509,7 @@ public class KingdomCycle extends EventCycle {
 							if (table.getUsers().isEmpty()) {
 
 								table.take(p.getUniqueId(), RoundTable.Rank.HIGHEST);
-								getMessenger().setPrefix(DefaultClan.action.getPrefix()).broadcast(p.getName() + " is now among the most powerful on the server.");
+								getMessenger().setPrefix(Clan.ACTION.getPrefix()).broadcast(p.getName() + " is now among the most powerful on the server.");
 
 							} else {
 
@@ -725,7 +723,7 @@ public class KingdomCycle extends EventCycle {
 
 					if (k.getMembers().size() == 1) {
 
-						getMessenger().setPrefix(DefaultClan.action.getPrefix()).broadcast("&rKingdom &6" + k.getName() + " &rhas fallen");
+						getMessenger().setPrefix(Clan.ACTION.getPrefix()).broadcast("&rKingdom &6" + k.getName() + " &rhas fallen");
 
 						k.remove(this);
 

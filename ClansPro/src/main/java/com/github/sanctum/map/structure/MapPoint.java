@@ -1,7 +1,7 @@
 package com.github.sanctum.map.structure;
 
-import com.github.sanctum.clans.ClansPro;
 import com.github.sanctum.clans.construct.api.Clan;
+import com.github.sanctum.clans.construct.api.ClansAPI;
 import com.github.sanctum.labyrinth.library.Applicable;
 import net.md_5.bungee.api.ChatColor;
 import org.jetbrains.annotations.Nullable;
@@ -38,7 +38,7 @@ public class MapPoint {
      */
     public Clan getClan() {
         if (clanId == null) return null;
-        return ClansPro.getInstance().getClan(clanId);
+	    return ClansAPI.getInstance().getClan(clanId);
     }
 
     /**
@@ -48,7 +48,7 @@ public class MapPoint {
      */
     public String getClanName() {
         if (clanId == null) return null;
-        return ClansPro.getInstance().getClanName(clanId);
+	    return ClansAPI.getInstance().getClanName(clanId);
     }
 
     /**

@@ -1,20 +1,18 @@
 package com.github.sanctum.clans.construct;
 
-import com.github.sanctum.clans.ClansPro;
 import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClansAPI;
-import com.github.sanctum.clans.util.data.DataManager;
-import com.github.sanctum.labyrinth.data.FileManager;
-import com.github.sanctum.labyrinth.library.HUID;
+import com.github.sanctum.clans.construct.impl.DefaultClan;
+import com.github.sanctum.labyrinth.formatting.UniformedComponents;
 import java.util.LinkedList;
-import java.util.Objects;
-import org.bukkit.Bukkit;
-import org.bukkit.OfflinePlayer;
+import java.util.List;
 
 public class ClanManager {
 
-	public LinkedList<Clan> getClans() {
-		return ClansAPI.getData().CLANS;
+	private final List<Clan> CLANS = new LinkedList<>();
+
+	public UniformedComponents<Clan> getClans() {
+		return UniformedComponents.accept(CLANS);
 	}
 
 	/**
@@ -26,8 +24,8 @@ public class ClanManager {
 	public boolean load(Clan c) {
 		if (c == null) throw new IllegalArgumentException("The provided clan cannot be null!");
 
-		if (ClansAPI.getData().CLANS.stream().noneMatch(cl -> cl.getName().equals(c.getName()))) {
-			ClansAPI.getData().CLANS.add(c);
+		if (CLANS.stream().noneMatch(cl -> cl.getName().equals(c.getName()))) {
+			CLANS.add(c);
 			return true;
 		}
 
@@ -51,18 +49,15 @@ public class ClanManager {
 	 */
 	public synchronized boolean delete(Clan c) {
 		try {
-			for (ClanAssociate associate : c.getMembers().list()) {
-				if (!associate.getPlayer().getUniqueId().equals(c.getOwner())) {
+			for (ClanAssociate associate : c.getMembers()) {
+				if (!associate.getPlayer().getUniqueId().equals(c.getOwner().getPlayer().getUniqueId())) {
 					associate.kick();
 				}
 			}
-			ClansAPI.getData().get(c.getOwner()).getConfig().set("Clan.id", null);
-			ClansAPI.getData().get(c.getOwner()).saveConfig();
-
 			if (ClansAPI.getData().getClanFile(c).exists()) {
 				ClansAPI.getData().getClanFile(c).delete();
 			}
-			return ClansAPI.getData().CLANS.remove(c);
+			return CLANS.remove(c);
 		} catch (Exception e) {
 			return false;
 		}
@@ -72,40 +67,16 @@ public class ClanManager {
 	 * Clears the clan and associate cache base and reloads from file.
 	 */
 	public synchronized void refresh() {
-
-		ClansAPI.getData().CLANS.clear();
-		ClansAPI.getData().ASSOCIATES.clear();
-
-		for (String clanID : DefaultClan.action.getAllClanIDs()) {
+		for (Clan c : CLANS) {
+			try {
+				c.save();
+			} catch (Exception ignored) {
+			}
+		}
+		CLANS.clear();
+		for (String clanID : Clan.ACTION.getAllClanIDs()) {
 			DefaultClan instance = new DefaultClan(clanID);
 			ClansAPI.getInstance().getClanManager().load(instance);
-		}
-
-		ClansPro.getInstance().getLogger().info("- Reacquiring user data.");
-		for (OfflinePlayer pl : Bukkit.getOfflinePlayers()) {
-
-			HUID id = null;
-
-			FileManager user = ClansAPI.getData().get(pl.getUniqueId());
-			if (user.exists()) {
-				if (user.getConfig().getString("Clan.id") != null) {
-					if (Objects.requireNonNull(user.getConfig().getString("Clan.id")).length() != 14) {
-						throw new UnsupportedOperationException("[ClansPro] - Clan ID " + user.getConfig().getString("Clan.id") + " invalid, expected format ####-####-####", new Throwable(user.getConfig().getString("Clan.id")));
-					}
-					FileManager clan = DataManager.FileType.CLAN_FILE.get(user.getConfig().getString("Clan.id"));
-					if (!clan.exists()) {
-						user.getConfig().set("Clan", null);
-						user.saveConfig();
-					}
-					id = HUID.fromString(Objects.requireNonNull(user.getConfig().getString("Clan.id")));
-				}
-			}
-
-			if (id != null) {
-				if (!ClansPro.getInstance().getAssociate(pl).isPresent()) {
-					ClansAPI.getData().ASSOCIATES.add(new ClanAssociate(pl));
-				}
-			}
 		}
 
 	}

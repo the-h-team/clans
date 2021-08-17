@@ -1,8 +1,9 @@
 package com.github.sanctum.clans.construct.bank;
 
-import com.github.sanctum.clans.construct.DefaultClan;
+import com.github.sanctum.clans.construct.ClanAssociate;
 import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClansAPI;
+import com.github.sanctum.clans.construct.impl.DefaultClan;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
@@ -55,7 +56,8 @@ public enum BankAction {
     }
 
     public boolean testForPlayer(Clan clan, Player player) {
-        return DefaultClan.action.getRankPower(player.getUniqueId()) >= AccessMap.getForClan(clan).acl.get(this);
+        ClanAssociate associate = ClansAPI.getInstance().getAssociate(player).orElse(null);
+        return associate != null && associate.getPriority().toInt() >= AccessMap.getForClan(clan).acl.get(this);
     }
 
     public void setRankForActionInClan(Clan clan, int rank) {

@@ -1,6 +1,5 @@
 package com.github.sanctum.link;
 
-import com.github.sanctum.clans.ClansPro;
 import com.github.sanctum.clans.construct.api.ClanSubCommand;
 import com.github.sanctum.clans.construct.api.ClansAPI;
 import com.github.sanctum.labyrinth.data.FileManager;
@@ -71,7 +70,7 @@ public abstract class EventCycle {
 	public abstract void onDisable();
 
 	public final Plugin getPlugin() {
-		return ClansPro.getInstance();
+		return getApi().getPlugin();
 	}
 
 	public final FileManager getFile(String name, String... directory) {
@@ -95,7 +94,7 @@ public abstract class EventCycle {
 	}
 
 	public final KeyedServiceManager<EventCycle> getServiceManager() {
-		return ClansPro.getInstance().getServiceManager();
+		return ClansAPI.getInstance().getServiceManager();
 	}
 
 	public final EventLogger getLogger() {
@@ -131,8 +130,8 @@ public abstract class EventCycle {
 	}
 
 	public final void remove() {
-		ClansPro.getInstance().getLogger().info("- Disabling addon " + '"' + getName() + '"' + " v" + getVersion());
-		for (RegisteredListener l : HandlerList.getRegisteredListeners(ClansPro.getInstance())) {
+		ClansAPI.getInstance().getPlugin().getLogger().info("- Disabling addon " + '"' + getName() + '"' + " v" + getVersion());
+		for (RegisteredListener l : HandlerList.getRegisteredListeners(ClansAPI.getInstance().getPlugin())) {
 			if (getAdditions().contains(l.getListener())) {
 				HandlerList.unregisterAll(l.getListener());
 			}

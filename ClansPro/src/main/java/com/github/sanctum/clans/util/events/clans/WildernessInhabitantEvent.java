@@ -1,10 +1,10 @@
 package com.github.sanctum.clans.util.events.clans;
 
 import com.github.sanctum.clans.construct.Claim;
+import com.github.sanctum.clans.construct.DataManager;
 import com.github.sanctum.clans.construct.actions.ClaimAction;
 import com.github.sanctum.clans.construct.api.ClansAPI;
-import com.github.sanctum.clans.construct.extra.Resident;
-import com.github.sanctum.clans.util.data.DataManager;
+import com.github.sanctum.clans.construct.impl.Resident;
 import com.github.sanctum.clans.util.events.ClanEventBuilder;
 import com.github.sanctum.labyrinth.library.TimeWatch;
 import java.text.MessageFormat;
@@ -47,7 +47,7 @@ public class WildernessInhabitantEvent extends ClanEventBuilder {
 								break;
 							}
 						}
-						if (ClansAPI.getData().getEnabled("Clans.land-claiming.receive-messages")) {
+						if (ClansAPI.getData().getEnabled("Clans.land-claiming.send-messages")) {
 							getClaimUtil().sendMessage(p, MessageFormat.format(ClansAPI.getData().getMain().getConfig().getString("Clans.land-claiming.wilderness.message"), res.getLastKnown().getClan().getName()));
 						}
 						ClansAPI.getData().INHABITANTS.add(p);
@@ -114,7 +114,7 @@ public class WildernessInhabitantEvent extends ClanEventBuilder {
 	}
 
 	public ClaimAction getClaimUtil() {
-		return Claim.action;
+		return Claim.ACTION;
 	}
 
 }

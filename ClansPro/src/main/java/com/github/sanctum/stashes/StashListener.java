@@ -1,6 +1,5 @@
 package com.github.sanctum.stashes;
 
-import com.github.sanctum.clans.ClansPro;
 import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClansAPI;
 import com.github.sanctum.stashes.events.StashInteractEvent;
@@ -19,7 +18,7 @@ public class StashListener implements Listener {
 	@EventHandler
 	public void onManagedInventoryClick(final InventoryClickEvent e) {
 		Player p = (Player) e.getWhoClicked();
-		for (Clan c : ClansAPI.getData().CLANS) {
+		for (Clan c : ClansAPI.getInstance().getClanManager().getClans().list()) {
 			Inventory i = StashContainer.getStash(c.getName());
 			if (i.equals(e.getClickedInventory())) {
 				(new BukkitRunnable() {
@@ -31,7 +30,7 @@ public class StashListener implements Listener {
 							e.setCancelled(true);
 						}
 					}
-				}).runTask(ClansPro.getInstance());
+				}).runTask(ClansAPI.getInstance().getPlugin());
 				break;
 			}
 		}
@@ -39,7 +38,7 @@ public class StashListener implements Listener {
 
 	@EventHandler
 	public void onManagedInventoryClose(InventoryCloseEvent e) {
-		for (Clan c : ClansAPI.getData().CLANS) {
+		for (Clan c : ClansAPI.getInstance().getClanManager().getClans().list()) {
 			Inventory i = StashContainer.getStash(c.getName());
 			if (i.equals(e.getInventory())) {
 				saveInventory(c.getId().toString(), i);
@@ -50,7 +49,7 @@ public class StashListener implements Listener {
 
 	private void saveInventory(String clanID, Inventory inv) {
 		Clan c = ClansAPI.getInstance().getClan(clanID);
-		int size = c.setValue("stash", inv.getContents()).length;
+		c.setValue("stash", inv.getContents());
 	}
 
 	public static ItemStack[] getInventoryContents(String clanID) {

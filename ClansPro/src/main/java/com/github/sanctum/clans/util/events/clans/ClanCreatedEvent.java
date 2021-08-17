@@ -1,7 +1,7 @@
 package com.github.sanctum.clans.util.events.clans;
 
-import com.github.sanctum.clans.construct.DefaultClan;
 import com.github.sanctum.clans.construct.api.ClansAPI;
+import com.github.sanctum.clans.construct.impl.DefaultClan;
 import com.github.sanctum.clans.util.events.ClanEventBuilder;
 import java.util.UUID;
 import org.bukkit.Bukkit;
@@ -28,7 +28,7 @@ public class ClanCreatedEvent extends ClanEventBuilder {
 	}
 
 	public DefaultClan getClan() {
-		return (DefaultClan) DefaultClan.action.getClan(ClansAPI.getInstance().getClanID(name));
+		return (DefaultClan) ClansAPI.getInstance().getClan(ClansAPI.getInstance().getClanID(name));
 	}
 
 }

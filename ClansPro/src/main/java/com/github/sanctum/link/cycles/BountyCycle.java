@@ -2,7 +2,6 @@ package com.github.sanctum.link.cycles;
 
 import com.github.sanctum.bounty.Bounty;
 import com.github.sanctum.bounty.BountyList;
-import com.github.sanctum.clans.construct.DefaultClan;
 import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClansAPI;
 import com.github.sanctum.clans.util.events.command.CommandHelpInsertEvent;
@@ -99,7 +98,7 @@ public class BountyCycle extends EventCycle {
 								if (ClansAPI.getData().getMain().getConfig().getString("Addon.Bounty.settings.deposit-type").equals("PLAYER")) {
 									boolean deposit = EconomyProvision.getInstance().deposit(b.getAmount(), p, p.getWorld().getName()).orElse(false);
 									if (!deposit) {
-										DefaultClan.action.sendMessage(p, "&c&oSomething went wrong with paying you.. This is awkward.");
+										Clan.ACTION.sendMessage(p, "&c&oSomething went wrong with paying you.. This is awkward.");
 									}
 								} else if (ClansAPI.getData().getMain().getConfig().getString("Addon.Bounty.settings.deposit-type").equals("CLAN")) {
 									newBal = c.getBalance().add(b.getAmount());
@@ -113,13 +112,13 @@ public class BountyCycle extends EventCycle {
 								if (has) {
 									boolean withdraw = EconomyProvision.getInstance().withdraw(b.getAmount(), e.getVictim(), e.getVictim().getWorld().getName()).orElse(false);
 									if (!withdraw) {
-										DefaultClan.action.sendMessage(p, "&c&oSomething went wrong.. unable to withdraw money.");
+										Clan.ACTION.sendMessage(p, "&c&oSomething went wrong.. unable to withdraw money.");
 									}
 								}
 								if (ClansAPI.getData().getMain().getConfig().getString("Addon.Bounty.settings.deposit-type").equals("PLAYER")) {
 									boolean deposit = EconomyProvision.getInstance().deposit(b.getAmount(), p, p.getWorld().getName()).orElse(false);
 									if (!deposit) {
-										DefaultClan.action.sendMessage(p, "&c&oSomething went wrong with paying you.. This is awkward.");
+										Clan.ACTION.sendMessage(p, "&c&oSomething went wrong with paying you.. This is awkward.");
 									}
 								} else if (ClansAPI.getData().getMain().getConfig().getString("Addon.Bounty.settings.deposit-type").equals("CLAN")) {
 									BigDecimal newBal = c.getBalance().add(b.getAmount());
@@ -141,13 +140,13 @@ public class BountyCycle extends EventCycle {
 							if (has) {
 								boolean withdraw = EconomyProvision.getInstance().withdraw(b.getAmount(), e.getVictim(), e.getVictim().getWorld().getName()).orElse(false);
 								if (!withdraw) {
-									DefaultClan.action.sendMessage(p, "&c&oSomething went wrong.. unable to withdraw money.");
+									Clan.ACTION.sendMessage(p, "&c&oSomething went wrong.. unable to withdraw money.");
 								}
 							}
 							if (ClansAPI.getData().getMain().getConfig().getString("Addon.Bounty.settings.deposit-type").equals("PLAYER")) {
 								boolean deposit = EconomyProvision.getInstance().deposit(b.getAmount(), p, p.getWorld().getName()).orElse(false);
 								if (!deposit) {
-									DefaultClan.action.sendMessage(p, "&c&oSomething went wrong with paying you.. This is awkward.");
+									Clan.ACTION.sendMessage(p, "&c&oSomething went wrong with paying you.. This is awkward.");
 								}
 							} else if (ClansAPI.getData().getMain().getConfig().getString("Addon.Bounty.settings.deposit-type").equals("CLAN")) {
 								BigDecimal newBal = c.getBalance().add(b.getAmount());
@@ -163,7 +162,7 @@ public class BountyCycle extends EventCycle {
 						if (ClansAPI.getData().getMain().getConfig().getString("Addon.Bounty.settings.deposit-type").equals("PLAYER")) {
 							boolean deposit = EconomyProvision.getInstance().deposit(b.getAmount(), p, p.getWorld().getName()).orElse(false);
 							if (!deposit) {
-								DefaultClan.action.sendMessage(p, "&c&oSomething went wrong with paying you.. This is awkward.");
+								Clan.ACTION.sendMessage(p, "&c&oSomething went wrong with paying you.. This is awkward.");
 							}
 						} else if (ClansAPI.getData().getMain().getConfig().getString("Addon.Bounty.settings.deposit-type").equals("CLAN")) {
 							BigDecimal newBal = c.getBalance().add(b.getAmount());
@@ -212,9 +211,9 @@ public class BountyCycle extends EventCycle {
 				if (e.getArgs()[0].equalsIgnoreCase("bounty")) {
 					if (ClansAPI.getInstance().isInClan(p.getUniqueId())) {
 						Clan c = ClansAPI.getInstance().getClan(p.getUniqueId());
-						UUID id = DefaultClan.action.getUserID(e.getArgs()[1]);
+						UUID id = Clan.ACTION.getUserID(e.getArgs()[1]);
 						if (id != null) {
-							if (Arrays.asList(c.getMembersList()).contains(id.toString())) {
+							if (Arrays.asList(c.getMemberIds()).contains(id.toString())) {
 								e.getUtil().sendMessage(p, "&c&oYou cannot put bounties on clan members.");
 								e.setReturn(true);
 								return;
@@ -223,7 +222,7 @@ public class BountyCycle extends EventCycle {
 								try {
 									Double.parseDouble(e.getArgs()[2]);
 								} catch (NumberFormatException ex) {
-									DefaultClan.action.sendMessage(p, "&cInvalid amount chosen must be ##.## format.");
+									Clan.ACTION.sendMessage(p, "&cInvalid amount chosen must be ##.## format.");
 								}
 								double amount = Double.parseDouble(e.getArgs()[2]);
 								boolean has = EconomyProvision.getInstance().has(BigDecimal.valueOf(amount), p, p.getWorld().getName()).orElse(false);
@@ -236,19 +235,19 @@ public class BountyCycle extends EventCycle {
 											.replace("{BOUNTY}", e.getArgs()[2]);
 									Bukkit.broadcastMessage(StringUtils.use(format).translate());
 									FileManager clanFile = ClansAPI.getData().getClanFile(c);
-									clanFile.getConfig().set("bounties." + DefaultClan.action.getUserID(e.getArgs()[1]).toString(), amount);
+									clanFile.getConfig().set("bounties." + Clan.ACTION.getUserID(e.getArgs()[1]).toString(), amount);
 									clanFile.refreshConfig();
 								} else {
-									DefaultClan.action.sendMessage(p, "&c&oYou don't have enough money for a bounty this big!");
+									Clan.ACTION.sendMessage(p, "&c&oYou don't have enough money for a bounty this big!");
 								}
 							} else {
-								DefaultClan.action.sendMessage(p, "&c&oYour clan has already called a bounty on this target.");
+								Clan.ACTION.sendMessage(p, "&c&oYour clan has already called a bounty on this target.");
 							}
 						} else {
-							DefaultClan.action.sendMessage(p, DefaultClan.action.playerUnknown(e.getArgs()[1]));
+							Clan.ACTION.sendMessage(p, Clan.ACTION.playerUnknown(e.getArgs()[1]));
 						}
 					} else {
-						DefaultClan.action.sendMessage(p, DefaultClan.action.notInClan());
+						Clan.ACTION.sendMessage(p, Clan.ACTION.notInClan());
 					}
 					e.setReturn(true);
 					return;

@@ -1,6 +1,6 @@
 package com.github.sanctum.clans.util.events.clans;
 
-import com.github.sanctum.clans.construct.DefaultClan;
+import com.github.sanctum.clans.construct.impl.DefaultClan;
 import com.github.sanctum.clans.util.events.ClanEventBuilder;
 import org.bukkit.entity.Player;
 

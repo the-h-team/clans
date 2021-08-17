@@ -1,6 +1,6 @@
 package com.github.sanctum.link;
 
-import com.github.sanctum.clans.ClansPro;
+import com.github.sanctum.clans.construct.api.ClansAPI;
 import com.github.sanctum.clans.util.events.AsyncClanEventBuilder;
 import com.github.sanctum.clans.util.events.ClanEventBuilder;
 import com.github.sanctum.labyrinth.event.custom.SubscriberCall;
@@ -26,7 +26,7 @@ public class ClanVentBus {
 	 */
 	@Deprecated
 	public static <T extends ClanEventBuilder> void subscribe(Class<T> event, Vent.Priority priority, SubscriberCall<T> callable) {
-		Vent.subscribe(new Vent.Subscription<>(event, ClansPro.getInstance(), priority, callable));
+		Vent.subscribe(new Vent.Subscription<>(event, ClansAPI.getInstance().getPlugin(), priority, callable));
 	}
 
 	/**
@@ -34,7 +34,7 @@ public class ClanVentBus {
 	 */
 	@Deprecated
 	public static <T extends AsyncClanEventBuilder> void subscribeAsync(Class<T> event, Vent.Priority priority, SubscriberCall<T> callable) {
-		Vent.subscribe(new Vent.Subscription<>(event, ClansPro.getInstance(), priority, callable));
+		Vent.subscribe(new Vent.Subscription<>(event, ClansAPI.getInstance().getPlugin(), priority, callable));
 	}
 
 	public static <T extends ClanEventBuilder> T call(T event) {

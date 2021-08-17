@@ -1,13 +1,13 @@
 package com.github.sanctum.clans.util.events.clans;
 
 import com.github.sanctum.clans.construct.Claim;
-import com.github.sanctum.clans.construct.DefaultClan;
+import com.github.sanctum.clans.construct.DataManager;
 import com.github.sanctum.clans.construct.actions.ClaimAction;
 import com.github.sanctum.clans.construct.actions.ClanAction;
+import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClansAPI;
-import com.github.sanctum.clans.construct.extra.Resident;
+import com.github.sanctum.clans.construct.impl.Resident;
 import com.github.sanctum.clans.util.StringLibrary;
-import com.github.sanctum.clans.util.data.DataManager;
 import com.github.sanctum.clans.util.events.ClanEventBuilder;
 import java.text.MessageFormat;
 import java.util.Collection;
@@ -96,33 +96,33 @@ public class ClaimResidentEvent extends ClanEventBuilder {
 	}
 
 	public ClanAction getUtil() {
-		return DefaultClan.action;
+		return Clan.ACTION;
 	}
 
 	@Override
 	public StringLibrary stringLibrary() {
-		return DefaultClan.action;
+		return Clan.ACTION;
 	}
 
 	public ClaimAction getClaimUtil() {
-		return Claim.action;
+		return Claim.ACTION;
 	}
 
 	public void sendNotification() {
-		String clanName = getUtil().getClanTag(getClaim().getOwner());
+		String clanName = ClansAPI.getInstance().getClanName(getClaim().getOwner());
 		String color;
-		if (getUtil().getClanID(p.getUniqueId()) != null) {
-			color = getUtil().clanRelationColor(getUtil().getClanID(p.getUniqueId()), getClaim().getOwner());
+		if (ClansAPI.getInstance().getClanID(p.getUniqueId()) != null) {
+			color = getUtil().getRelationColor(ClansAPI.getInstance().getClan(p.getUniqueId()), getClaim().getClan());
 		} else {
 			color = "&f&o";
 		}
 		if (titlesAllowed) {
-			titleContext.put("TITLE", MessageFormat.format(ClansAPI.getData().getMain().getConfig().getString("Clans.land-claiming.in-land.title"), clanName));
-			titleContext.put("SUB-TITLE", MessageFormat.format(ClansAPI.getData().getMain().getConfig().getString("Clans.land-claiming.in-land.sub-title"), clanName));
+			titleContext.put("TITLE", MessageFormat.format(ClansAPI.getData().getMain().getConfig().getString("Clans.land-claiming.in-land.title"), clanName, color));
+			titleContext.put("SUB-TITLE", MessageFormat.format(ClansAPI.getData().getMain().getConfig().getString("Clans.land-claiming.in-land.sub-title"), clanName, color));
 			p.sendTitle(getClaimUtil().color(titleContext.get("TITLE")), getClaimUtil().color(titleContext.get("SUB-TITLE")), 10, 25, 10);
 		}
 		if (ClansAPI.getData().getEnabled("Clans.land-claiming.send-messages")) {
-			getClaimUtil().sendMessage(p, MessageFormat.format(ClansAPI.getData().getMain().getConfig().getString("Clans.land-claiming.in-land.message"), clanName));
+			getClaimUtil().sendMessage(p, MessageFormat.format(ClansAPI.getData().getMain().getConfig().getString("Clans.land-claiming.in-land.message"), clanName, color));
 		}
 	}
 

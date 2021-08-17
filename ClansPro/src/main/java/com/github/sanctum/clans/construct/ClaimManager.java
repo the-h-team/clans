@@ -1,7 +1,5 @@
 package com.github.sanctum.clans.construct;
 
-import com.github.sanctum.clans.construct.api.ClansAPI;
-import com.github.sanctum.clans.util.data.DataManager;
 import com.github.sanctum.labyrinth.data.FileManager;
 import java.util.Collections;
 import java.util.LinkedList;
@@ -68,9 +66,9 @@ public class ClaimManager {
 				int[] pos = {x, z};
 				Claim c = new Claim(ID, pos, true);
 				claims.add(c);
-				if (!ClansAPI.getInstance().getClaimManager().getFile().getConfig().isBoolean(clan + ".Claims." + claimID + ".active")) {
-					ClansAPI.getInstance().getClaimManager().getFile().getConfig().set(clan + ".Claims." + claimID + ".active", true);
-					ClansAPI.getInstance().getClaimManager().getFile().saveConfig();
+				if (!getFile().getConfig().isBoolean(clan + ".Claims." + claimID + ".active")) {
+					getFile().getConfig().set(clan + ".Claims." + claimID + ".active", true);
+					getFile().saveConfig();
 				}
 			}
 		}

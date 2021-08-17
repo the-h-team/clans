@@ -1,12 +1,12 @@
 package com.github.sanctum.clans.util;
 
-import com.github.sanctum.clans.ClansPro;
+import com.github.sanctum.clans.ClansJavaPlugin;
 import com.github.sanctum.clans.construct.Claim;
 import com.github.sanctum.clans.construct.ClanAssociate;
-import com.github.sanctum.clans.construct.DefaultClan;
 import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClansAPI;
-import com.github.sanctum.clans.construct.extra.cooldown.CooldownArena;
+import com.github.sanctum.clans.construct.impl.CooldownArena;
+import com.github.sanctum.clans.construct.impl.DefaultClan;
 import com.github.sanctum.link.CycleList;
 import com.github.sanctum.link.EventCycle;
 import java.util.UUID;
@@ -17,9 +17,9 @@ import org.jetbrains.annotations.NotNull;
 
 public class Placeholders extends PlaceholderExpansion {
 
-	public ClansPro plugin;
+	public ClansJavaPlugin plugin;
 
-	public Placeholders(ClansPro plugin) {
+	public Placeholders(ClansJavaPlugin plugin) {
 		this.plugin = plugin;
 	}
 
@@ -118,24 +118,24 @@ public class Placeholders extends PlaceholderExpansion {
 
 		for (int i = 0; i < 101; i++) {
 			if (identifier.equals("clan_top_slot_" + i)) {
-				if (i > DefaultClan.action.getTop().size()) {
+				if (i > Clan.ACTION.getMostPowerful().size()) {
 					return "Empty";
 				}
-				Clan target = DefaultClan.action.getTop().get(i - 1);
+				Clan target = Clan.ACTION.getMostPowerful().get(i - 1);
 				return target != null ? target.getName() : "Empty";
 			}
 			if (identifier.equals("clan_top_slot_" + i + "_power")) {
-				if (i > DefaultClan.action.getTop().size()) {
+				if (i > Clan.ACTION.getMostPowerful().size()) {
 					return "Empty";
 				}
-				Clan target = DefaultClan.action.getTop().get(i - 1);
+				Clan target = Clan.ACTION.getMostPowerful().get(i - 1);
 				return target != null ? target.format(String.valueOf(target.getPower())) + "" : "Empty";
 			}
 			if (identifier.equals("clan_top_slot_" + i + "_color")) {
-				if (i > DefaultClan.action.getTop().size()) {
+				if (i > Clan.ACTION.getMostPowerful().size()) {
 					return "&r";
 				}
-				Clan target = DefaultClan.action.getTop().get(i - 1);
+				Clan target = Clan.ACTION.getMostPowerful().get(i - 1);
 				return target != null ? target.getColor() + "" : "&r";
 			}
 		}
@@ -176,7 +176,7 @@ public class Placeholders extends PlaceholderExpansion {
 		if (identifier.equals("clan_members_online")) {
 			String result;
 			int count = 0;
-			for (String member : c.getMembersList()) {
+			for (String member : c.getMemberIds()) {
 				if (Bukkit.getOfflinePlayer(UUID.fromString(member)).isOnline()) {
 					count++;
 				}
@@ -205,7 +205,7 @@ public class Placeholders extends PlaceholderExpansion {
 		if (identifier.equals("clan_war_hours")) {
 			String result = "";
 			if (ClansAPI.getData().arenaFile().exists()) {
-				CooldownArena arena = DefaultClan.action.arena;
+				CooldownArena arena = Clan.ACTION.ARENA;
 				if (!arena.isComplete()) {
 					result = String.valueOf(arena.getHoursLeft());
 				}
@@ -217,7 +217,7 @@ public class Placeholders extends PlaceholderExpansion {
 		if (identifier.equals("clan_war_minutes")) {
 			String result = "";
 			if (ClansAPI.getData().arenaFile().exists()) {
-				CooldownArena arena = DefaultClan.action.arena;
+				CooldownArena arena = Clan.ACTION.ARENA;
 				if (!arena.isComplete()) {
 					result = String.valueOf(arena.getMinutesLeft());
 				}
@@ -229,7 +229,7 @@ public class Placeholders extends PlaceholderExpansion {
 		if (identifier.equals("clan_war_seconds")) {
 			String result = "";
 			if (ClansAPI.getData().arenaFile().exists()) {
-				CooldownArena arena = DefaultClan.action.arena;
+				CooldownArena arena = Clan.ACTION.ARENA;
 				if (!arena.isComplete()) {
 					result = String.valueOf(arena.getSecondsLeft());
 				}

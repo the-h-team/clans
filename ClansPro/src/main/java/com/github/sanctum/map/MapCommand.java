@@ -1,8 +1,6 @@
 package com.github.sanctum.map;
 
-import com.github.sanctum.clans.ClansPro;
 import com.github.sanctum.clans.construct.Claim;
-import com.github.sanctum.clans.construct.DefaultClan;
 import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClansAPI;
 import com.github.sanctum.labyrinth.LabyrinthProvider;
@@ -167,12 +165,12 @@ public class MapCommand implements Listener {
                 }
                 code -= 10;
                 return ChatColor.getByChar((char)('A' + code));*/
-                String dummyId = "dummy";
-                if (DefaultClan.action.getClanID(e.getPlayer().getUniqueId()) != null) {
-                    dummyId = DefaultClan.action.getClanID(e.getPlayer().getUniqueId());
-                }
-                String finalDummyId = dummyId;
-                return CompletableFuture.supplyAsync(() -> DefaultClan.action.clanRelationColor(clanId, finalDummyId)).join();
+	            String dummyId = "dummy";
+	            if (ClansAPI.getInstance().getClanID(e.getPlayer().getUniqueId()) != null) {
+		            dummyId = ClansAPI.getInstance().getClanID(e.getPlayer().getUniqueId()).toString();
+	            }
+	            String finalDummyId = dummyId;
+	            return CompletableFuture.supplyAsync(() -> Clan.ACTION.getRelationColor(clanId, finalDummyId)).join();
             });
             representations.computeIfAbsent(clanId, id -> (char) ('A' + temp));
             ++rep;
@@ -207,9 +205,9 @@ public class MapCommand implements Listener {
             if (clanIds.isEmpty()) return "";
             final StringBuilder sb = new StringBuilder();
             for (String clanId : clanIds) {
-                sb.append(", ").append(colors.get(clanId)).append(representations.get(clanId)).append(" = ")
-                        .append(ClansPro.getInstance().getClan(clanId).getColor())
-                        .append(ClansPro.getInstance().getClanName(clanId)).append(ChatColor.RESET);
+	            sb.append(", ").append(colors.get(clanId)).append(representations.get(clanId)).append(" = ")
+			            .append(ClansAPI.getInstance().getClan(clanId).getColor())
+			            .append(ClansAPI.getInstance().getClanName(clanId)).append(ChatColor.RESET);
             }
             return sb.toString();
         }).join();
@@ -229,15 +227,15 @@ public class MapCommand implements Listener {
                             (on1_16) ? ColoredString.ColorType.HEX : ColoredString.ColorType.MC).toComponent();
                 } else {
                     if (tempPoint.appliance != null) {
-                        line[i] = textLib.execute(tempPoint.appliance, textLib.textHoverable(
-                                "",
-                                tempPoint.getColor() + tempPoint.getRepresentation(),
-                                DefaultClan.action.color(tempPoint.getHover())));
+	                    line[i] = textLib.execute(tempPoint.appliance, textLib.textHoverable(
+			                    "",
+			                    tempPoint.getColor() + tempPoint.getRepresentation(),
+			                    Clan.ACTION.color(tempPoint.getHover())));
                     } else {
-                        line[i] = textLib.textHoverable(
-                                "",
-                                tempPoint.getColor() + tempPoint.getRepresentation(),
-                                DefaultClan.action.color(tempPoint.getHover()));
+	                    line[i] = textLib.textHoverable(
+			                    "",
+			                    tempPoint.getColor() + tempPoint.getRepresentation(),
+			                    Clan.ACTION.color(tempPoint.getHover()));
                     }
                 }
                 if (i < mapPoint.length - 1) line[i].addExtra(" ");
@@ -305,7 +303,7 @@ public class MapCommand implements Listener {
         }
         if (footer != null) {
             for (String extra : e.getAddedLinesBottom()) {
-                player.sendMessage(DefaultClan.action.color(extra));
+	            player.sendMessage(Clan.ACTION.color(extra));
             }
         }
     }
@@ -322,11 +320,11 @@ public class MapCommand implements Listener {
             if (enhanced) {
 
                 if (LabyrinthProvider.getInstance().isLegacy()) {
-                    DefaultClan.action.sendMessage(e.getPlayer(), "&cLegacy detected! Enhanced map view requires 1.14+");
-                    ClansPro.getInstance().getLogger().warning("- Legacy detected enhanced map view not available until 1.14+");
-                    ec.getServiceManager().unregisterAll(ec);
-                    ec.getServiceManager().register(false, ec, ServicePriority.Highest);
-                    return;
+	                Clan.ACTION.sendMessage(e.getPlayer(), "&cLegacy detected! Enhanced map view requires 1.14+");
+	                ClansAPI.getInstance().getPlugin().getLogger().warning("- Legacy detected enhanced map view not available until 1.14+");
+	                ec.getServiceManager().unregisterAll(ec);
+	                ec.getServiceManager().register(false, ec, ServicePriority.Highest);
+	                return;
                 }
 
                 List<String> top_new = new LinkedList<>();
@@ -371,17 +369,17 @@ public class MapCommand implements Listener {
                                         } else {
                                             if (!p.getColor().equals("&c") || !p.getColor().equals("&2")) {
                                                 p.setHover(StringUtils.use("&4Wilderness").translate());
-                                                if (Claim.action.getChunksAroundLocation(location, -1, 0, 1).stream().anyMatch(c -> ClansAPI.getInstance().getClaimManager().isInClaim(c))) {
-                                                    p.setAppliance(() -> {
-                                                        Clan c = ClansAPI.getInstance().getClan(e.getPlayer().getUniqueId());
-                                                        if (c != null) {
-                                                            Claim claim = c.obtain(e.getPlayer().getWorld().getChunkAt(p.chunkPosition.x, p.chunkPosition.z));
-                                                            if (claim != null) {
-                                                                e.getPlayer().performCommand("c map");
-                                                                DefaultClan.action.sendMessage(e.getPlayer(), "&aChunk &6&7(&3X: &f" + claim.getChunk().getX() + " &3Z: &f" + claim.getChunk().getZ() + "&7) &ais now owned by our clan.");
-                                                            }
-                                                        }
-                                                    });
+	                                            if (Claim.ACTION.getChunksAroundLocation(location, -1, 0, 1).stream().anyMatch(c -> ClansAPI.getInstance().getClaimManager().isInClaim(c))) {
+		                                            p.setAppliance(() -> {
+			                                            Clan c = ClansAPI.getInstance().getClan(e.getPlayer().getUniqueId());
+			                                            if (c != null) {
+				                                            Claim claim = c.obtain(e.getPlayer().getWorld().getChunkAt(p.chunkPosition.x, p.chunkPosition.z));
+				                                            if (claim != null) {
+					                                            e.getPlayer().performCommand("c map");
+					                                            Clan.ACTION.sendMessage(e.getPlayer(), "&aChunk &6&7(&3X: &f" + claim.getChunk().getX() + " &3Z: &f" + claim.getChunk().getZ() + "&7) &ais now owned by our clan.");
+				                                            }
+			                                            }
+		                                            });
                                                 }
                                                 p.setColor("&8");
                                                 p.setRepresentation('⬜');
@@ -403,17 +401,17 @@ public class MapCommand implements Listener {
                                             p.setColor("&8");
                                             p.setRepresentation('⬜');
                                             try {
-                                                if (Claim.action.getChunksAroundLocation(location, -1, 0, 1).stream().anyMatch(c -> ClansAPI.getInstance().getClaimManager().isInClaim(c))) {
-                                                    p.setAppliance(() -> {
-                                                        Clan c = ClansAPI.getInstance().getClan(e.getPlayer().getUniqueId());
-                                                        if (c != null) {
-                                                            Claim claim = c.obtain(e.getPlayer().getWorld().getChunkAt(p.chunkPosition.x, p.chunkPosition.z));
-                                                            if (claim != null) {
-                                                                e.getPlayer().performCommand("c map");
-                                                                DefaultClan.action.sendMessage(e.getPlayer(), "&aChunk &6&7(&3X: &f" + claim.getChunk().getX() + " &3Z: &f" + claim.getChunk().getZ() + "&7) &ais now owned by our clan.");
-                                                            }
-                                                        }
-                                                    });
+	                                            if (Claim.ACTION.getChunksAroundLocation(location, -1, 0, 1).stream().anyMatch(c -> ClansAPI.getInstance().getClaimManager().isInClaim(c))) {
+		                                            p.setAppliance(() -> {
+			                                            Clan c = ClansAPI.getInstance().getClan(e.getPlayer().getUniqueId());
+			                                            if (c != null) {
+				                                            Claim claim = c.obtain(e.getPlayer().getWorld().getChunkAt(p.chunkPosition.x, p.chunkPosition.z));
+				                                            if (claim != null) {
+					                                            e.getPlayer().performCommand("c map");
+					                                            Clan.ACTION.sendMessage(e.getPlayer(), "&aChunk &6&7(&3X: &f" + claim.getChunk().getX() + " &3Z: &f" + claim.getChunk().getZ() + "&7) &ais now owned by our clan.");
+				                                            }
+			                                            }
+		                                            });
                                                 }
                                             } catch (Exception ignored) {
 
@@ -472,16 +470,16 @@ public class MapCommand implements Listener {
                     if (Math.abs(value[0] - playerChunkX) >= CHUNK_RADIUS) {
                         continue;
                     }
-                    if (Math.abs(value[1] - playerChunkZ) >= CHUNK_RADIUS) {
-                        continue;
-                    }
-                    clanChunks.put(new ChunkPosition(value), entry.getOwner());
+	                if (Math.abs(value[1] - playerChunkZ) >= CHUNK_RADIUS) {
+		                continue;
+	                }
+	                clanChunks.put(new ChunkPosition(value), entry.getOwner());
                 }
-                final Set<String> clanIdStrings = new HashSet<>(clanChunks.values());
-                final ChunkPosition playerChunk = new ChunkPosition(playerChunkX, playerChunkZ);
-                Bukkit.getPluginManager().callEvent(new AsyncMapDrawEvent(player, playerChunk, compassDirection, clanChunks, clanIdStrings));
+	            final Set<String> clanIdStrings = new HashSet<>(clanChunks.values());
+	            final ChunkPosition playerChunk = new ChunkPosition(playerChunkX, playerChunkZ);
+	            Bukkit.getPluginManager().callEvent(new AsyncMapDrawEvent(player, playerChunk, compassDirection, clanChunks, clanIdStrings));
             }
-        }.runTaskAsynchronously(ClansPro.getInstance());
+        }.runTaskAsynchronously(ClansAPI.getInstance().getPlugin());
     }
 
     public static boolean isToggled(Player p) {

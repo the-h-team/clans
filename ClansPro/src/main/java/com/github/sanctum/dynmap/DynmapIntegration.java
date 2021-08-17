@@ -45,7 +45,7 @@ public class DynmapIntegration {
 			try {
 				am.setCornerLocations(d1, d2);
 				am.setLabel(c.getId());
-				am.setDescription(c.getClan().getName() + " - " + Arrays.asList(c.getClan().getMembersList()).toString());
+				am.setDescription(c.getClan().getName() + " - " + Arrays.asList(c.getClan().getMemberIds()).toString());
 				int stroke = 1;
 				double strokeOpac = 0.0;
 				double Opac = 0.3;

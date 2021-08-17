@@ -1,7 +1,6 @@
 package com.github.sanctum.vaults;
 
-import com.github.sanctum.clans.ClansPro;
-import com.github.sanctum.clans.construct.DefaultClan;
+import com.github.sanctum.clans.construct.api.ClansAPI;
 import java.util.HashMap;
 import java.util.Map;
 import org.bukkit.Bukkit;
@@ -16,7 +15,7 @@ public class VaultContainer {
 	public static Inventory getVault(String clanName) {
 		return inventories.computeIfAbsent(clanName, name -> {
 			Inventory inventory = Bukkit.createInventory(null, 54, name);
-			inventory.setContents(VaultsListener.getInventoryContents(DefaultClan.action.getClanID(name)));
+			inventory.setContents(VaultsListener.getInventoryContents(ClansAPI.getInstance().getClanID(name)));
 			return inventory;
 		});
 	}
@@ -32,7 +31,7 @@ public class VaultContainer {
 					}
 				}
 			}
-		}).runTask(ClansPro.getInstance());
+		}).runTask(ClansAPI.getInstance().getPlugin());
 	}
 
 	public static void removeFromCache(Inventory inventory) {
@@ -44,7 +43,7 @@ public class VaultContainer {
 						.map(Map.Entry::getKey)
 						.forEach(inventories::remove);
 			}
-		}).runTask(ClansPro.getInstance());
+		}).runTask(ClansAPI.getInstance().getPlugin());
 	}
 
 }

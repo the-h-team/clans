@@ -1,7 +1,7 @@
 package com.github.sanctum.clans.util.events.command;
 
-import com.github.sanctum.clans.construct.DefaultClan;
 import com.github.sanctum.clans.construct.actions.ClanAction;
+import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.util.events.ClanEventBuilder;
 import org.bukkit.entity.Player;
 
@@ -20,7 +20,7 @@ public class CommandInsertEvent extends ClanEventBuilder {
 
 	@Override
 	public ClanAction getUtil() {
-		return DefaultClan.action;
+		return Clan.ACTION;
 	}
 
 	public void setReturn(boolean b) {

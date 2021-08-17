@@ -1,6 +1,6 @@
 package com.github.sanctum.link.cycles;
 
-import com.github.sanctum.clans.ClansPro;
+import com.github.sanctum.clans.construct.ClanAssociate;
 import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClansAPI;
 import com.github.sanctum.clans.util.StringLibrary;
@@ -8,9 +8,10 @@ import com.github.sanctum.clans.util.events.command.CommandHelpInsertEvent;
 import com.github.sanctum.clans.util.events.command.CommandInsertEvent;
 import com.github.sanctum.clans.util.events.command.TabInsertEvent;
 import com.github.sanctum.labyrinth.event.custom.Vent;
-import com.github.sanctum.labyrinth.formatting.string.PaginatedAssortment;
+import com.github.sanctum.labyrinth.formatting.PaginatedList;
 import com.github.sanctum.labyrinth.library.HUID;
 import com.github.sanctum.labyrinth.library.Items;
+import com.github.sanctum.labyrinth.library.Message;
 import com.github.sanctum.labyrinth.library.TextLib;
 import com.github.sanctum.link.ClanVentBus;
 import com.github.sanctum.link.CycleList;
@@ -120,25 +121,21 @@ public class MailCycle extends EventCycle {
 									array.add(s);
 								}
 							}
-							PaginatedAssortment assortment = new PaginatedAssortment(p, array);
 
-							if (Bukkit.getVersion().contains("1.16")) {
-								assortment.setListTitle("&7&m------------&7&l[&3&oGifts&7&l]&7&m------------");
-								assortment.setNormalText("&aGift from ");
-								assortment.setHoverText("&#787674%s");
-								assortment.setHoverTextMessage("&7Click to view gifts from &6%s");
-								assortment.setListBorder("&7&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬");
-							} else {
-								assortment.setListTitle("&7&m------------&7&l[&3&oGifts&7&l]&7&m------------");
-								assortment.setNormalText("&aGift from ");
-								assortment.setHoverText("&b%s");
-								assortment.setHoverTextMessage("&7Click to view gifts from &6%s");
-								assortment.setListBorder("&7&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬");
-							}
-							assortment.setLinesPerPage(10);
-							assortment.setNavigateCommand("c gifts");
-							assortment.setCommandToRun("c gifts %s");
-							assortment.exportFancy(1);
+							new PaginatedList<>(array)
+									.limit(e.getUtil().menuSize())
+									.start((pagination, page, max) -> {
+										e.getUtil().sendMessage(p, "&7&m------------&7&l[&3&oGift Box" + "&7&l]&7&m------------");
+										Message.form(p).send(e.getUtil().menuBorder());
+									}).finish(builder -> builder.setPlayer(p).setPrefix(e.getUtil().menuBorder())).decorate((pagination, string, page, max, placement) -> {
+
+								TextLib.consume(t -> {
+
+									Message.form(p).build(t.textRunnable("&aGift from ", "&b" + string, "&7Click to view gifts from &6" + string, "c gifts " + string));
+
+								});
+
+							}).get(1);
 						} else {
 							u.sendMessage(p, "&c&oYour clan has no gifts to collect.");
 							e.setReturn(true);
@@ -158,14 +155,20 @@ public class MailCycle extends EventCycle {
 						e.setReturn(true);
 						return;
 					}
-					PaginatedAssortment assortment = new PaginatedAssortment(p, helpMenu());
+					new PaginatedList<>(helpMenu())
+							.limit(e.getUtil().menuSize())
+							.start((pagination, page, max) -> {
+								e.getUtil().sendMessage(p, "&7&m------------&7&l[&6&oMail Help&7&l]&7&m------------");
+								Message.form(p).send(e.getUtil().menuBorder());
+							}).finish(builder -> builder.setPlayer(p).setPrefix(e.getUtil().menuBorder())).decorate((pagination, string, page, max, placement) -> {
 
-					assortment.setListTitle("&7&m------------&7&l[&6&oMail Help&7&l]&7&m------------");
-					assortment.setListBorder("&7&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬");
-					assortment.setLinesPerPage(10);
-					assortment.setNavigateCommand("c mail");
-					assortment.setCommandToRun("c mail list %s");
-					assortment.export(1);
+						TextLib.consume(t -> {
+
+							Message.form(p).build(t.textRunnable("&aGift from ", "&b" + string, "&7Click to view gifts from &6" + string, "c gifts " + string));
+
+						});
+
+					}).get(1);
 					e.setReturn(true);
 					return;
 				}
@@ -185,25 +188,20 @@ public class MailCycle extends EventCycle {
 											array.add(s);
 										}
 									}
-									PaginatedAssortment assortment = new PaginatedAssortment(p, array);
+									new PaginatedList<>(array)
+											.limit(e.getUtil().menuSize())
+											.start((pagination, page, max) -> {
+												e.getUtil().sendMessage(p, "&7&m------------&7&l[&3&oGift Box" + "&7&l]&7&m------------");
+												Message.form(p).send(e.getUtil().menuBorder());
+											}).finish(builder -> builder.setPlayer(p).setPrefix(e.getUtil().menuBorder())).decorate((pagination, string, page, max, placement) -> {
 
-									if (Bukkit.getVersion().contains("1.16")) {
-										assortment.setListTitle("&7&m------------&7&l[&3&oGifts&7&l]&7&m------------");
-										assortment.setNormalText("&aGift from ");
-										assortment.setHoverText("&#787674%s");
-										assortment.setHoverTextMessage("&7Click to view gifts from &6%s");
-										assortment.setListBorder("&7&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬");
-									} else {
-										assortment.setListTitle("&7&m------------&7&l[&3&oGifts&7&l]&7&m------------");
-										assortment.setNormalText("&aGift from ");
-										assortment.setHoverText("&b%s");
-										assortment.setHoverTextMessage("&7Click to view gifts from &6%s");
-										assortment.setListBorder("&7&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬");
-									}
-									assortment.setLinesPerPage(10);
-									assortment.setNavigateCommand("c gifts");
-									assortment.setCommandToRun("c gifts %s");
-									assortment.exportFancy(Integer.parseInt(args[1]));
+										TextLib.consume(t -> {
+
+											Message.form(p).build(t.textRunnable("&aGift from ", "&b" + string, "&7Click to view gifts from &6" + string, "c gifts " + string));
+
+										});
+
+									}).get(Integer.parseInt(args[1]));
 								} else {
 									u.sendMessage(p, "&c&oYour clan has no gifts to collect.");
 									e.setReturn(true);
@@ -220,7 +218,6 @@ public class MailCycle extends EventCycle {
 
 								GiftBox box = GiftBox.getGiftBox(ClansAPI.getInstance().getClan(p.getUniqueId()));
 								List<String> array = box.getInboxByClan(target.getName()).stream().map(GiftObject::getItem).map(ItemStack::getType).map(Material::name).collect(Collectors.toList());
-								PaginatedAssortment assortment = new PaginatedAssortment(p, array);
 
 								if (array.isEmpty()) {
 									u.sendMessage(p, "&c&oYour clan has no gifts from " + target.getName());
@@ -228,23 +225,20 @@ public class MailCycle extends EventCycle {
 									return;
 								}
 
-								if (Bukkit.getVersion().contains("1.16")) {
-									assortment.setListTitle("&7&m------------&7&l[&3&oGifts from " + target.getName() + "&7&l]&7&m------------");
-									assortment.setNormalText("&aGift: ");
-									assortment.setHoverText("&#787674%s");
-									assortment.setHoverTextMessage("&7Click to retrieve gift &6%s");
-									assortment.setListBorder("&7&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬");
-								} else {
-									assortment.setListTitle("&7&m------------&7&l[&3&oGifts from " + target.getName() + "&7&l]&7&m------------");
-									assortment.setNormalText("&aGift: ");
-									assortment.setHoverText("&b%s");
-									assortment.setHoverTextMessage("&7Click to retrieve gift &6%s");
-									assortment.setListBorder("&7&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬");
-								}
-								assortment.setLinesPerPage(10);
-								assortment.setNavigateCommand("c gifts " + target.getName());
-								assortment.setCommandToRun("c retrieve " + target.getName() + " %s");
-								assortment.exportFancy(1);
+								new PaginatedList<>(array)
+										.limit(e.getUtil().menuSize())
+										.start((pagination, page, max) -> {
+											e.getUtil().sendMessage(p, "&7&m------------&7&l[&3&oGifts from " + target.getName() + "&7&l]&7&m------------");
+											Message.form(p).send(e.getUtil().menuBorder());
+										}).finish(builder -> builder.setPlayer(p).setPrefix(e.getUtil().menuBorder())).decorate((pagination, string, page, max, placement) -> {
+
+									TextLib.consume(t -> {
+
+										Message.form(p).build(t.textRunnable("&aGift: ", "&b" + string, "&7Click to retrieve gift &6" + string, "c retrieve " + target.getName() + " " + string));
+
+									});
+
+								}).get(1);
 							}
 
 						} else {
@@ -275,6 +269,10 @@ public class MailCycle extends EventCycle {
 
 
 					if (ClansAPI.getInstance().isInClan(p.getUniqueId())) {
+						ClanAssociate associate = ClansAPI.getInstance().getAssociate(p).orElse(null);
+
+						assert associate != null;
+
 						if (GiftBox.getGiftBox(target) != null) {
 							GiftBox box = GiftBox.getGiftBox(target);
 							if (box.getInboxByClan(ClansAPI.getInstance().getClan(p.getUniqueId()).getName()).stream().map(GiftObject::getItem).map(ItemStack::getType).collect(Collectors.toList()).contains(p.getInventory().getItemInMainHand().getType())) {
@@ -287,13 +285,13 @@ public class MailCycle extends EventCycle {
 								e.setReturn(true);
 								return;
 							}
-							if (e.getUtil().getRankPower(p.getUniqueId()) < ClansAPI.getData().getInt("Addons.Mail.gift.clearance")) {
+							if (associate.getPriority().toInt() < ClansAPI.getData().getInt("Addons.Mail.gift.clearance")) {
 								e.getUtil().sendMessage(p, e.stringLibrary().noClearance());
 								return;
 							}
 							box.receive(new GiftObject(ClansAPI.getInstance().getClan(p.getUniqueId()).getName(), p.getInventory().getItemInMainHand()));
 						} else {
-							if (e.getUtil().getRankPower(p.getUniqueId()) < ClansAPI.getData().getInt("Addons.Mail.gift.clearance")) {
+							if (associate.getPriority().toInt() < ClansAPI.getData().getInt("Addons.Mail.gift.clearance")) {
 								e.getUtil().sendMessage(p, e.stringLibrary().noClearance());
 								return;
 							}
@@ -340,25 +338,20 @@ public class MailCycle extends EventCycle {
 								}
 							}
 
-							PaginatedAssortment assortment = new PaginatedAssortment(p, array);
+							new PaginatedList<>(array)
+									.limit(e.getUtil().menuSize())
+									.start((pagination, page, max) -> {
+										e.getUtil().sendMessage(p, "&7&m------------&7&l[&6&oInbox&7&l]&7&m------------");
+										Message.form(p).send(e.getUtil().menuBorder());
+									}).finish(builder -> builder.setPlayer(p).setPrefix(e.getUtil().menuBorder())).decorate((pagination, string, page, max, placement) -> {
 
-							if (Bukkit.getVersion().contains("1.16")) {
-								assortment.setListTitle("&7&m------------&7&l[&6&oInbox&7&l]&7&m------------")
-										.setNormalText("&aMessage(s) from ")
-										.setHoverText("&#787674%s")
-										.setHoverTextMessage("&7Click to view mail from &6%s")
-										.setListBorder("&7&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬");
-							} else {
-								assortment.setListTitle("&7&m------------&7&l[&6&oInbox&7&l]&7&m------------")
-										.setNormalText("&aMessage(s) from ")
-										.setHoverText("&b%s")
-										.setHoverTextMessage("&7Click to view mail from &6%s")
-										.setListBorder("&7&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬");
-							}
-							assortment.setLinesPerPage(10)
-									.setNavigateCommand("c mail view")
-									.setCommandToRun("c mail list %s")
-									.exportFancy(1);
+								TextLib.consume(t -> {
+
+									Message.form(p).build(t.textRunnable("&aMessage(s) from ", "&b" + string, "&7Click to view mail from &6" + string, "c mail list " + string));
+
+								});
+
+							}).get(1);
 						} else {
 							new MailBox(ClansAPI.getInstance().getClan(p.getUniqueId()));
 							u.sendMessage(p, "&6&oA new clan mail box was built.");
@@ -373,13 +366,20 @@ public class MailCycle extends EventCycle {
 						e.setReturn(true);
 						return;
 					}
-					new PaginatedAssortment(p, helpMenu())
-							.setListTitle("&7&m------------&7&l[&6&oMail Help&7&l]&7&m------------")
-							.setListBorder("&7&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬")
-							.setLinesPerPage(10)
-							.setNavigateCommand("c mail")
-							.setCommandToRun("c mail list %s")
-							.export(Integer.parseInt(args[1]));
+					new PaginatedList<>(helpMenu())
+							.limit(e.getUtil().menuSize())
+							.start((pagination, page, max) -> {
+								e.getUtil().sendMessage(p, "&7&m------------&7&l[&6&oMail Help&7&l]&7&m------------");
+								Message.form(p).send(e.getUtil().menuBorder());
+							}).finish(builder -> builder.setPlayer(p).setPrefix(e.getUtil().menuBorder())).decorate((pagination, string, page, max, placement) -> {
+
+						TextLib.consume(t -> {
+
+							Message.form(p).build(t.textRunnable("&aMessage(s) from ", "&b" + string, "&7Click to view mail from &6" + string, "c mail list " + string));
+
+						});
+
+					}).get(1);
 					e.setReturn(true);
 					return;
 				}
@@ -407,7 +407,6 @@ public class MailCycle extends EventCycle {
 										array.add(s);
 									}
 								}
-								PaginatedAssortment assortment = new PaginatedAssortment(p, array);
 
 								if (array.isEmpty()) {
 									u.sendMessage(p, "&c&oYour clan has no gifts from " + target.getName());
@@ -415,23 +414,20 @@ public class MailCycle extends EventCycle {
 									return;
 								}
 
-								if (Bukkit.getVersion().contains("1.16")) {
-									assortment.setListTitle("&7&m------------&7&l[&3&oGifts from " + target.getName() + "&7&l]&7&m------------");
-									assortment.setNormalText("&aGift: ");
-									assortment.setHoverText("&#787674%s");
-									assortment.setHoverTextMessage("&7Click to retrieve gift &6%s");
-									assortment.setListBorder("&7&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬");
-								} else {
-									assortment.setListTitle("&7&m------------&7&l[&3&oGifts from " + target.getName() + "&7&l]&7&m------------");
-									assortment.setNormalText("&aGift: ");
-									assortment.setHoverText("&b%s");
-									assortment.setHoverTextMessage("&7Click to retrieve gift &6%s");
-									assortment.setListBorder("&7&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬");
-								}
-								assortment.setLinesPerPage(10);
-								assortment.setNavigateCommand("c gifts " + target.getName());
-								assortment.setCommandToRun("c retrieve " + target.getName() + " %s");
-								assortment.exportFancy(Integer.parseInt(args[2]));
+								new PaginatedList<>(array)
+										.limit(e.getUtil().menuSize())
+										.start((pagination, page, max) -> {
+											e.getUtil().sendMessage(p, "&7&m------------&7&l[&3&oGifts from " + target.getName() + "&7&l]&7&m------------");
+											Message.form(p).send(e.getUtil().menuBorder());
+										}).finish(builder -> builder.setPlayer(p).setPrefix(e.getUtil().menuBorder())).decorate((pagination, string, page, max, placement) -> {
+
+									TextLib.consume(t -> {
+
+										Message.form(p).build(t.textRunnable("&aGift: ", "&b" + string, "&7Click to retrieve gift &6" + string, "c retrieve " + target.getName() + " " + string));
+
+									});
+
+								}).get(Integer.parseInt(args[2]));
 							} catch (NumberFormatException ex) {
 								u.sendMessage(p, "&c&oUnknown page number.");
 								e.setReturn(true);
@@ -476,7 +472,7 @@ public class MailCycle extends EventCycle {
 							GiftObject item = box.getGiftByMaterial(Items.getMaterial(args[2]));
 							p.getInventory().addItem(item.getItem());
 							p.sendMessage(" ");
-							Bukkit.getScheduler().scheduleSyncDelayedTask(ClansPro.getInstance(), () -> u.sendMessage(p, "&3&oYou have collected &b" + item.getItem().getType() + " &3&ofrom clan " + item.getSender()), 2);
+							Bukkit.getScheduler().scheduleSyncDelayedTask(ClansAPI.getInstance().getPlugin(), () -> u.sendMessage(p, "&3&oYou have collected &b" + item.getItem().getType() + " &3&ofrom clan " + item.getSender()), 2);
 							u.sendComponent(p, TextLib.getInstance().textRunnable("&7Reopen the clan gift box ", "&f[&bCLICK&f]", "Click to reopen the clan gift box.", "c gifts " + args[1]));
 							box.mark(item);
 							p.sendMessage(" ");
@@ -514,25 +510,20 @@ public class MailCycle extends EventCycle {
 							return;
 						}
 
-						PaginatedAssortment assortment = new PaginatedAssortment(p, array);
+						new PaginatedList<>(array)
+								.limit(e.getUtil().menuSize())
+								.start((pagination, page, max) -> {
+									e.getUtil().sendMessage(p, "&7&m------------&7&l[&3&oMail from " + args[2] + "&7&l]&7&m------------");
+									Message.form(p).send(e.getUtil().menuBorder());
+								}).finish(builder -> builder.setPlayer(p).setPrefix(e.getUtil().menuBorder())).decorate((pagination, string, page, max, placement) -> {
 
-						if (Bukkit.getVersion().contains("1.16")) {
-							assortment.setListTitle("&7&m------------&7&l[&6&oMail from " + args[2] + "&7&l]&7&m------------");
-							assortment.setNormalText("");
-							assortment.setHoverText("&#787674%s");
-							assortment.setHoverTextMessage("&7Click to read message.");
-							assortment.setListBorder("&7&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬");
-						} else {
-							assortment.setListTitle("&7&m------------&7&l[&6&oMail from " + args[2] + "&7&l]&7&m------------");
-							assortment.setNormalText("");
-							assortment.setHoverText("&b%s");
-							assortment.setHoverTextMessage("&7Click to read message.");
-							assortment.setListBorder("&7&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬");
-						}
-						assortment.setLinesPerPage(10);
-						assortment.setNavigateCommand("c mail list " + args[2]);
-						assortment.setCommandToRun("c mail read " + args[2] + " %s");
-						assortment.exportFancy(1);
+							TextLib.consume(t -> {
+
+								Message.form(p).build(t.textRunnable("", "&b" + string, "&7Click to read message &6" + string, "c mail read " + args[2] + " " + string));
+
+							});
+
+						}).get(1);
 						e.setReturn(true);
 						return;
 					}
@@ -555,25 +546,20 @@ public class MailCycle extends EventCycle {
 								}
 							}
 
-							PaginatedAssortment assortment = new PaginatedAssortment(p, array);
+							new PaginatedList<>(array)
+									.limit(e.getUtil().menuSize())
+									.start((pagination, page, max) -> {
+										e.getUtil().sendMessage(p, "&7&m------------&7&l[&6&oInbox&7&l]&7&m------------");
+										Message.form(p).send(e.getUtil().menuBorder());
+									}).finish(builder -> builder.setPlayer(p).setPrefix(e.getUtil().menuBorder())).decorate((pagination, string, page, max, placement) -> {
 
-							if (Bukkit.getVersion().contains("1.16")) {
-								assortment.setListTitle("&7&m------------&7&l[&6&oInbox&7&l]&7&m------------");
-								assortment.setNormalText("&aMessage(s) from ");
-								assortment.setHoverText("&#787674%s");
-								assortment.setHoverTextMessage("&7Click to view mail from &6%s");
-								assortment.setListBorder("&7&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬");
-							} else {
-								assortment.setListTitle("&7&m------------&7&l[&6&oInbox&7&l]&7&m------------");
-								assortment.setNormalText("&aMessage(s) from ");
-								assortment.setHoverText("&b%s");
-								assortment.setHoverTextMessage("&7Click to view mail from &6%s");
-								assortment.setListBorder("&7&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬");
-							}
-							assortment.setLinesPerPage(10);
-							assortment.setNavigateCommand("c mail view");
-							assortment.setCommandToRun("c mail list %s");
-							assortment.exportFancy(Integer.parseInt(args[2]));
+								TextLib.consume(t -> {
+
+									Message.form(p).build(t.textRunnable("&aMessage(s) from ", "&b" + string, "&7Click to view mail from &6" + string, "c mail list " + string));
+
+								});
+
+							}).get(Integer.parseInt(args[2]));
 						} else {
 							new MailBox(ClansAPI.getInstance().getClan(p.getUniqueId()));
 							u.sendMessage(p, "&6&oA new clan mail box was built.");
@@ -620,25 +606,20 @@ public class MailCycle extends EventCycle {
 							return;
 						}
 						List<String> array = MailBox.getMailBox(ClansAPI.getInstance().getClan(p.getUniqueId())).getInboxByClan(args[2]).stream().map(MailObject::getTopic).collect(Collectors.toList());
-						PaginatedAssortment assortment = new PaginatedAssortment(p, array);
+						new PaginatedList<>(array)
+								.limit(e.getUtil().menuSize())
+								.start((pagination, page, max) -> {
+									e.getUtil().sendMessage(p, "&7&m------------&7&l[&3&oMail from " + args[2] + "&7&l]&7&m------------");
+									Message.form(p).send(e.getUtil().menuBorder());
+								}).finish(builder -> builder.setPlayer(p).setPrefix(e.getUtil().menuBorder())).decorate((pagination, string, page, max, placement) -> {
 
-						if (Bukkit.getVersion().contains("1.16")) {
-							assortment.setListTitle("&7&m------------&7&l[&6&oMail from " + args[2] + "&7&l]&7&m------------");
-							assortment.setNormalText("");
-							assortment.setHoverText("&#787674%s");
-							assortment.setHoverTextMessage("&7Click to read message.");
-							assortment.setListBorder("&7&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬");
-						} else {
-							assortment.setListTitle("&7&m------------&7&l[&6&oMail from " + args[2] + "&7&l]&7&m------------");
-							assortment.setNormalText("");
-							assortment.setHoverText("&b%s");
-							assortment.setHoverTextMessage("&7Click to read message.");
-							assortment.setListBorder("&7&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬");
-						}
-						assortment.setLinesPerPage(10);
-						assortment.setNavigateCommand("c mail list " + args[2]);
-						assortment.setCommandToRun("c mail read " + args[2] + " %s");
-						assortment.exportFancy(Integer.parseInt(args[3]));
+							TextLib.consume(t -> {
+
+								Message.form(p).build(t.textRunnable("", "&b" + string, "&7Click to read message &6" + string, "c mail read " + args[2] + " " + string));
+
+							});
+
+						}).get(Integer.parseInt(args[3]));
 						e.setReturn(true);
 						return;
 					}
@@ -678,7 +659,7 @@ public class MailCycle extends EventCycle {
 					}
 					if (args[1].equalsIgnoreCase("send")) {
 						String name = args[2];
-						String clanID = e.getUtil().getClanID(name);
+						String clanID = ClansAPI.getInstance().getClanID(name);
 						if (clanID == null) {
 							u.sendMessage(p, "&c&oClan " + name + " not found.");
 							return;

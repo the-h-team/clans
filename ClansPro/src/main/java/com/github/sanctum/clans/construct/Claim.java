@@ -3,7 +3,7 @@ package com.github.sanctum.clans.construct;
 import com.github.sanctum.clans.construct.actions.ClaimAction;
 import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClansAPI;
-import com.github.sanctum.clans.construct.extra.Resident;
+import com.github.sanctum.clans.construct.impl.Resident;
 import java.util.ArrayList;
 import java.util.List;
 import org.bukkit.Bukkit;
@@ -19,7 +19,7 @@ public class Claim {
 	private final int[] pos;
 	private boolean active;
 
-	public static final ClaimAction action = new ClaimAction();
+	public static final ClaimAction ACTION = new ClaimAction();
 
 	protected Claim(String[] ID, int[] POS, boolean active) {
 		this.id = ID;
@@ -34,7 +34,7 @@ public class Claim {
 	 * @return A clan claim or null if the location has no id.
 	 */
 	public static Claim from(Location loc) {
-		return action.getClaimID(loc) != null ? ClansAPI.getInstance().getClaimManager().getClaim(action.getClaimID(loc)) : null;
+		return ACTION.getClaimID(loc) != null ? ClansAPI.getInstance().getClaimManager().getClaim(ACTION.getClaimID(loc)) : null;
 	}
 
 	/**
@@ -150,7 +150,7 @@ public class Claim {
 		Location teleportLocation = (new Location(Bukkit.getWorld(world), (x << 4), y, (z << 4))).add(7.0D, 0.0D, 7.0D);
 		if (Bukkit.getVersion().contains("1.12"))
 			return teleportLocation;
-		if (!action.hasSurface(teleportLocation))
+		if (!ACTION.hasSurface(teleportLocation))
 			teleportLocation = (new Location(Bukkit.getWorld(world), (x << 4), y, (z << 4))).add(7.0D, 10.0D, 7.0D);
 		return teleportLocation;
 	}
@@ -163,7 +163,7 @@ public class Claim {
 	public List<Resident> getResidents() {
 		List<Resident> query = new ArrayList<>();
 		for (Resident r : ClansAPI.getData().RESIDENTS) {
-			if (r.getLastKnown().getId().equals(getId())) {
+			if (r.getCurrent().getId().equals(getId())) {
 				query.add(r);
 			}
 		}

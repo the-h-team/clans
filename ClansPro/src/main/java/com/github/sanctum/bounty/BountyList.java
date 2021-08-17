@@ -1,6 +1,5 @@
 package com.github.sanctum.bounty;
 
-import com.github.sanctum.clans.ClansPro;
 import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClansAPI;
 import com.github.sanctum.labyrinth.data.FileManager;
@@ -17,7 +16,7 @@ public final class BountyList {
 
 	public static Optional<Bounty> get(UUID target) {
 		Optional<Bounty> result = Optional.empty();
-		for (Clan cache : ClansPro.getInstance().dataManager.CLANS) {
+		for (Clan cache : ClansAPI.getInstance().getClanManager().getClans().list()) {
 			if (get(cache, target) != null) {
 				result = Optional.ofNullable(get(cache, target));
 				break;

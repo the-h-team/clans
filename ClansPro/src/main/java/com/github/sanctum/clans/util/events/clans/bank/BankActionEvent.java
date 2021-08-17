@@ -1,8 +1,8 @@
 package com.github.sanctum.clans.util.events.clans.bank;
 
-import com.github.sanctum.clans.construct.DefaultClan;
 import com.github.sanctum.clans.construct.api.ClanBank;
 import com.github.sanctum.clans.construct.api.ClansAPI;
+import com.github.sanctum.clans.construct.impl.DefaultClan;
 import java.util.concurrent.CompletableFuture;
 
 public abstract class BankActionEvent extends BankEvent {

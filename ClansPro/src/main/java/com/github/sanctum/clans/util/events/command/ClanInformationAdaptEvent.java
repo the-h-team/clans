@@ -1,7 +1,7 @@
 package com.github.sanctum.clans.util.events.command;
 
-import com.github.sanctum.clans.construct.DefaultClan;
 import com.github.sanctum.clans.construct.api.Clan;
+import com.github.sanctum.clans.construct.api.ClansAPI;
 import com.github.sanctum.clans.util.events.ClanEventBuilder;
 import java.util.ArrayList;
 import java.util.List;
@@ -23,7 +23,7 @@ public class ClanInformationAdaptEvent extends ClanEventBuilder {
 	}
 
 	public Clan getClan() {
-		return DefaultClan.action.getClan(clanID);
+		return ClansAPI.getInstance().getClan(clanID);
 	}
 
 	public List<String> getInsertions() {

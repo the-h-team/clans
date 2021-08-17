@@ -1,8 +1,6 @@
 package com.github.sanctum.clans.util.listener;
 
-import com.github.sanctum.clans.gui.ClanEditOperation;
-import com.github.sanctum.clans.gui.MemberEditOperation;
-import com.github.sanctum.clans.gui.UI;
+import com.github.sanctum.clans.construct.UI;
 import com.github.sanctum.clans.util.events.command.CommandInsertEvent;
 import com.github.sanctum.labyrinth.event.custom.Vent;
 import com.github.sanctum.link.ClanVentBus;
@@ -19,8 +17,8 @@ public class MenuEventListener implements Listener {
 			if (args.length == 2) {
 				if (args[0].equalsIgnoreCase("respond")) {
 					if (UI.getClanEditOption(p.getUniqueId()) != null) {
-						ClanEditOperation.Option type = UI.getClanEditOption(p.getUniqueId());
-						ClanEditOperation gui = UI.getClanEditOperation(p.getUniqueId());
+						UI.ClanEdit.Option type = UI.getClanEditOption(p.getUniqueId());
+						UI.ClanEdit gui = UI.getClanEditOperation(p.getUniqueId());
 						switch (type) {
 							case CLOSE:
 								if (args[1].equalsIgnoreCase("confirm")) {
@@ -46,8 +44,8 @@ public class MenuEventListener implements Listener {
 						if (UI.getMemberEditOption(p.getUniqueId()) == null) {
 							e.getUtil().sendMessage(p, "&c&oYou have no known edits being processed.");
 						} else {
-							MemberEditOperation.Option type = UI.getMemberEditOption(p.getUniqueId());
-							MemberEditOperation gui = UI.getMemberEditOperation(p.getUniqueId());
+							UI.MemberEdit.Option type = UI.getMemberEditOption(p.getUniqueId());
+							UI.MemberEdit gui = UI.getMemberEditOperation(p.getUniqueId());
 							switch (type) {
 								case NICKNAME:
 								case SWITCH_CLANS:
@@ -70,9 +68,9 @@ public class MenuEventListener implements Listener {
 			if (args.length >= 2) {
 				if (args[0].equalsIgnoreCase("respond")) {
 					if (UI.getClanEditOption(p.getUniqueId()) != null) {
-						ClanEditOperation.Option type = UI.getClanEditOption(p.getUniqueId());
-						ClanEditOperation gui = UI.getClanEditOperation(p.getUniqueId());
-						if (type == ClanEditOperation.Option.DESCRIPTION) {
+						UI.ClanEdit.Option type = UI.getClanEditOption(p.getUniqueId());
+						UI.ClanEdit gui = UI.getClanEditOperation(p.getUniqueId());
+						if (type == UI.ClanEdit.Option.DESCRIPTION) {
 							StringBuilder msg = new StringBuilder();
 							for (int i = 1; i < args.length; i++)
 								msg.append(args[i]).append(" ");
@@ -84,9 +82,9 @@ public class MenuEventListener implements Listener {
 						if (UI.getMemberEditOption(p.getUniqueId()) == null) {
 							e.getUtil().sendMessage(p, "&c&oYou have no known clan edits being processed.");
 						} else {
-							MemberEditOperation.Option type = UI.getMemberEditOption(p.getUniqueId());
-							MemberEditOperation gui = UI.getMemberEditOperation(p.getUniqueId());
-							if (type == MemberEditOperation.Option.BIO) {
+							UI.MemberEdit.Option type = UI.getMemberEditOption(p.getUniqueId());
+							UI.MemberEdit gui = UI.getMemberEditOperation(p.getUniqueId());
+							if (type == UI.MemberEdit.Option.BIO) {
 								StringBuilder msg = new StringBuilder();
 								for (int i = 1; i < args.length; i++)
 									msg.append(args[i]).append(" ");

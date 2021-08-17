@@ -1,10 +1,10 @@
 package com.github.sanctum.link.cycles;
 
 import com.github.sanctum.clans.construct.Claim;
-import com.github.sanctum.clans.construct.DefaultClan;
+import com.github.sanctum.clans.construct.ClanAssociate;
 import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClansAPI;
-import com.github.sanctum.clans.construct.extra.Resident;
+import com.github.sanctum.clans.construct.impl.Resident;
 import com.github.sanctum.clans.util.events.command.CommandHelpInsertEvent;
 import com.github.sanctum.clans.util.events.command.CommandInsertEvent;
 import com.github.sanctum.clans.util.events.command.TabInsertEvent;
@@ -74,11 +74,12 @@ public class StashesCycle extends EventCycle {
 			if (length == 1) {
 				if (args[0].equalsIgnoreCase("stash")) {
 					if (ClansAPI.getInstance().isInClan(p.getUniqueId())) {
-						Clan clan = ClansAPI.getInstance().getClan(p.getUniqueId());
+						ClanAssociate associate = ClansAPI.getInstance().getAssociate(p).get();
+						Clan clan = associate.getClan();
 						if (ClansAPI.getInstance().getClaimManager().isInClaim(p.getLocation())) {
 							Resident r = Claim.getResident(p);
-							if (e.getUtil().getRankPower(p.getUniqueId()) < ClansAPI.getData().getMain().getConfig().getInt("Addon.Stashes.clearance")) {
-								e.getUtil().sendMessage(p, DefaultClan.action.noClearance());
+							if (associate.getPriority().toInt() < ClansAPI.getData().getMain().getConfig().getInt("Addon.Stashes.clearance")) {
+								e.getUtil().sendMessage(p, Clan.ACTION.noClearance());
 								e.setReturn(true);
 								return;
 							}

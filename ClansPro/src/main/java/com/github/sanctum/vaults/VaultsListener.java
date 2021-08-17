@@ -1,8 +1,6 @@
 package com.github.sanctum.vaults;
 
-import com.github.sanctum.clans.ClansPro;
 import com.github.sanctum.clans.construct.Claim;
-import com.github.sanctum.clans.construct.DefaultClan;
 import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClansAPI;
 import com.github.sanctum.vaults.events.VaultInteractEvent;
@@ -35,35 +33,36 @@ public class VaultsListener implements Listener {
 				Material mat = event.getClickedBlock().getType();
 				if (mat.name().toLowerCase().contains("sign")) {
 					Sign sign = (Sign) event.getClickedBlock().getState();
-					if (sign.getLine(1).equals(DefaultClan.action.color("&0+-&7[&3&lVault&7]&0-+"))) {
+					if (sign.getLine(1).equals(Clan.ACTION.color("&0+-&7[&3&lVault&7]&0-+"))) {
 						String clan = ChatColor.stripColor(sign.getLine(2));
-						if (DefaultClan.action.getAllClanNames().contains(clan)) {
+						if (Clan.ACTION.getAllClanNames().contains(clan)) {
 							if (ClansAPI.getInstance().getClaimManager().isInClaim(p.getLocation())) {
 								Claim claim = Claim.from(p.getLocation());
-								if (ClansAPI.getInstance().isInClan(p.getUniqueId()) && !DefaultClan.action.getClanID(p.getUniqueId()).equals(DefaultClan.action.getClanID(clan))) {
-									if (!claim.getClan().getAllyList().contains(DefaultClan.action.getClanID(p.getUniqueId()))) {
+								assert claim != null;
+								if (ClansAPI.getInstance().isInClan(p.getUniqueId()) && !ClansAPI.getInstance().getClanID(p.getUniqueId()).toString().equals(ClansAPI.getInstance().getClanID(clan))) {
+									if (!claim.getClan().getAllyList().contains(ClansAPI.getInstance().getClanID(p.getUniqueId()).toString())) {
 										return;
 									}
 								} else {
-									if (!Arrays.asList(claim.getClan().getMembersList()).contains(p.getName())) {
+									if (!Arrays.asList(claim.getClan().getMemberIds()).contains(p.getName())) {
 										return;
 									}
 								}
 							}
-							String name = DefaultClan.action.getClanTag(DefaultClan.action.getClanID(clan));
+							String name = ClansAPI.getInstance().getClanName(ClansAPI.getInstance().getClanID(clan));
 							Inventory pull = VaultContainer.getVault(name);
-							VaultOpenEvent e = new VaultOpenEvent(DefaultClan.action.getClan(clan), p, pull, pull.getViewers());
+							VaultOpenEvent e = new VaultOpenEvent(ClansAPI.getInstance().getClan(clan), p, pull, pull.getViewers());
 							Bukkit.getPluginManager().callEvent(e);
 							if (!e.isCancelled()) {
 								e.open();
 							}
 						} else {
-							DefaultClan.action.sendMessage(p, "&c&oThis vault has since been abandoned...");
+							Clan.ACTION.sendMessage(p, "&c&oThis vault has since been abandoned...");
 						}
 					}
 				}
 			} catch (NullPointerException e) {
-				ClansPro.getInstance().getLogger().severe(String.format("[%s] - There was a problem while using a vault sign.", ClansPro.getInstance().getDescription().getName()));
+				ClansAPI.getInstance().getPlugin().getLogger().severe(String.format("[%s] - There was a problem while using a vault sign.", ClansAPI.getInstance().getPlugin().getDescription().getName()));
 				e.printStackTrace();
 			}
 		}
@@ -73,7 +72,7 @@ public class VaultsListener implements Listener {
 	@EventHandler
 	public void onManagedInventoryClick(final InventoryClickEvent e) {
 		Player p = (Player) e.getWhoClicked();
-		for (Clan c : ClansAPI.getData().CLANS) {
+		for (Clan c : ClansAPI.getInstance().getClanManager().getClans().list()) {
 			Inventory i = VaultContainer.getVault(c.getName());
 			if (i.equals(e.getClickedInventory())) {
 				(new BukkitRunnable() {
@@ -85,7 +84,7 @@ public class VaultsListener implements Listener {
 							e.setCancelled(true);
 						}
 					}
-				}).runTask(ClansPro.getInstance());
+				}).runTask(ClansAPI.getInstance().getPlugin());
 				break;
 			}
 		}
@@ -93,7 +92,7 @@ public class VaultsListener implements Listener {
 
 	@EventHandler
 	public void onManagedInventoryClose(InventoryCloseEvent e) {
-		for (Clan c : ClansAPI.getData().CLANS) {
+		for (Clan c : ClansAPI.getInstance().getClanManager().getClans().list()) {
 			Inventory i = VaultContainer.getVault(c.getName());
 			if (i.equals(e.getInventory())) {
 				saveInventory(c.getId().toString(), i);

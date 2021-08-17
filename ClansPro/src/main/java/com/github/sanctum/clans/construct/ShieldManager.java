@@ -1,7 +1,10 @@
 package com.github.sanctum.clans.construct;
 
-import com.github.sanctum.clans.construct.extra.misc.ShieldTamper;
+import com.github.sanctum.clans.construct.extra.ShieldTamper;
 
+/**
+ * The manager for the state of the raid-shield.
+ */
 public class ShieldManager {
 
 	private final ShieldTamper TAMPER;

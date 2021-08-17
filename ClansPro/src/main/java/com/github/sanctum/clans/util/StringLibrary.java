@@ -1,10 +1,8 @@
 package com.github.sanctum.clans.util;
 
 import com.github.sanctum.clans.construct.ClanAssociate;
-import com.github.sanctum.clans.construct.DefaultClan;
-import com.github.sanctum.clans.construct.actions.ClanAction;
 import com.github.sanctum.clans.construct.api.ClansAPI;
-import com.github.sanctum.clans.construct.extra.misc.ClanPrefix;
+import com.github.sanctum.clans.construct.extra.ClanPrefix;
 import com.github.sanctum.labyrinth.data.FileManager;
 import com.github.sanctum.labyrinth.library.StringUtils;
 import com.github.sanctum.labyrinth.library.TextLib;
@@ -389,81 +387,24 @@ public class StringLibrary {
 		return main.getConfig().getString("Formatting.Chat.Channel.global");
 	}
 
-	public void paginatedClanList(Player p, List<String> listToPaginate, String command, int page, int contentLinesPerPage) {
+	public void getMemberboard(Player p, List<String> memberids, int page) {
 		int totalPageCount = 1;
-		if ((listToPaginate.size() % contentLinesPerPage) == 0) {
-			if (listToPaginate.size() > 0) {
-				totalPageCount = listToPaginate.size() / contentLinesPerPage;
+		if ((memberids.size() % 6) == 0) {
+			if (memberids.size() > 0) {
+				totalPageCount = memberids.size() / 6;
 			}
 		} else {
-			totalPageCount = (listToPaginate.size() / contentLinesPerPage) + 1;
+			totalPageCount = (memberids.size() / 6) + 1;
 		}
 
 		if (page <= totalPageCount) {
 
-			if (listToPaginate.isEmpty()) {
+			if (memberids.isEmpty()) {
 				sendMessage(p, color("&fThe list is empty!"));
 			} else {
 				int i = 0, k = 0;
 				page--;
-				p.sendMessage(color("&7&o&m============================"));
-				for (String entry : listToPaginate) {
-					k++;
-					if ((((page * contentLinesPerPage) + i + 1) == k) && (k != ((page * contentLinesPerPage) + contentLinesPerPage + 1))) {
-						i++;
-						String c = "";
-						ClanAction clanAction = DefaultClan.action;
-						if (clanAction.getClanID(p.getUniqueId()) != null) {
-							c = clanAction.clanRelationColor(clanAction.getClanID(p.getUniqueId()), clanAction.getClanID(entry)) + entry;
-						} else {
-							c = "&f" + entry;
-						}
-						p.sendMessage(color(c));
-					}
-				}
-				int point;
-				point = page + 1;
-				if (page >= 1) {
-					int last;
-					last = point - 1;
-					point = point + 1;
-					p.sendMessage(color("&7&o&m============================"));
-					if (page < (totalPageCount - 1)) {
-						sendComponent(p, TextLib.getInstance().textRunnable("&7Navigate &b&o&m--&b> &7[", "&c&oBACK&7]", "&7 : [", "&b&oNEXT&7]", "&b&oClick to go &d&oback a page", "&b&oClick to goto the &5&onext page", command + " " + last, command + " " + point));
-					}
-					if (page == (totalPageCount - 1)) {
-						sendComponent(p, TextLib.getInstance().textRunnable("&7Navigate &b&o&m--&b> &7[", "&c&oBACK", "&7]", "&b&oClick to go &d&oback a page", command + " " + last));
-					}
-				}
-				if (page == 0) {
-					point = page + 1 + 1;
-					p.sendMessage(color("&7&o&m============================"));
-					sendComponent(p, TextLib.getInstance().textRunnable("&7Navigate &b&o&m--&b> &7[", "&b&oNEXT", "&7]", "&b&oClick to goto the &5&onext page", command + " " + point));
-				}
-			}
-		} else {
-			sendMessage(p, color("&eThere are only &f" + totalPageCount + " &epages!"));
-		}
-	}
-
-	public void paginatedMemberList(Player p, List<String> listToPaginate, int page) {
-		int totalPageCount = 1;
-		if ((listToPaginate.size() % 6) == 0) {
-			if (listToPaginate.size() > 0) {
-				totalPageCount = listToPaginate.size() / 6;
-			}
-		} else {
-			totalPageCount = (listToPaginate.size() / 6) + 1;
-		}
-
-		if (page <= totalPageCount) {
-
-			if (listToPaginate.isEmpty()) {
-				sendMessage(p, color("&fThe list is empty!"));
-			} else {
-				int i = 0, k = 0;
-				page--;
-				for (String entry : listToPaginate) {
+				for (String entry : memberids) {
 					k++;
 					if ((((page * 6) + i + 1) == k) && (k != ((page * 6) + 6 + 1))) {
 						i++;
@@ -482,13 +423,13 @@ public class StringLibrary {
 					point = point + 1;
 					sendComponent(p, TextLib.getInstance().textRunnable("&7Navigate &b&o&m--&b> &7[", "&c&oBACK&7]", "&7 : [", "&b&oNEXT&7]", "&b&oClick to go &d&oback a page", "&b&oClick to goto the &5&onext page", "c members" + " " + last, "c members" + " " + point));
 				}
-				if (listToPaginate.size() > 6 && page == 0) {
+				if (memberids.size() > 6 && page == 0) {
 					point = page + 1 + 1;
 					sendComponent(p, TextLib.getInstance().textRunnable("&7Navigate &b&o&m--&b> &7[", "&b&oNEXT", "&7]", "&b&oClick to goto the &5&onext page", "c members" + " " + point));
 				}
 			}
 		} else {
-			sendMessage(p, color("&eThere are only &f" + totalPageCount + " &epages!"));
+			sendMessage(p, color("&eThere are only &f" + totalPageCount + " &epages of members."));
 		}
 	}
 

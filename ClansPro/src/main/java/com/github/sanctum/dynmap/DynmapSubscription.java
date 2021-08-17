@@ -1,8 +1,7 @@
 package com.github.sanctum.dynmap;
 
-import com.github.sanctum.clans.ClansPro;
 import com.github.sanctum.clans.construct.Claim;
-import com.github.sanctum.clans.construct.DefaultClan;
+import com.github.sanctum.clans.construct.ClanAssociate;
 import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClansAPI;
 import com.github.sanctum.clans.util.StringLibrary;
@@ -77,8 +76,9 @@ public final class DynmapSubscription implements Listener {
 			StringLibrary lib = new StringLibrary();
 			if (length == 1) {
 				if (args[0].equalsIgnoreCase("showclaims")) {
-					if (DefaultClan.action.getClanID(p.getUniqueId()) != null) {
-						Clan clan = ClansAPI.getInstance().getClan(p.getUniqueId());
+					if (ClansAPI.getInstance().getClanID(p.getUniqueId()) != null) {
+						ClanAssociate associate = ClansAPI.getInstance().getAssociate(p).orElse(null);
+						Clan clan = associate.getClan();
 						lib.sendMessage(p, "&e&oUpdating dynmap with claim information..");
 						if (Arrays.asList(clan.getOwnedClaimsList()).size() == 0) {
 							lib.sendMessage(p, "&c&oClaim mapping task failed. No claims to map.");
@@ -87,13 +87,13 @@ public final class DynmapSubscription implements Listener {
 						if (integration.getFailedAttempt() != null) {
 							lib.sendMessage(p, integration.getFailedAttempt());
 						}
-						if (e.getUtil().getRankPower(p.getUniqueId()) >= 2) {
+						if (associate.getPriority().toInt() >= 2) {
 							long time = System.currentTimeMillis();
 							integration.fillMap(clan.getOwnedClaimsList());
 							long complete = (System.currentTimeMillis() - time) / 1000;
 							int second = Integer.parseInt(String.valueOf(complete));
 							lib.sendMessage(p, "&a&oClaim mapping task completed in &f" + second + "&a&os");
-							ClansPro.getInstance().getLogger().info("- (" + clan.getName() + ") Marker sets successfully updated in accordance to claims.");
+							ClansAPI.getInstance().getPlugin().getLogger().info("- (" + clan.getName() + ") Marker sets successfully updated in accordance to claims.");
 						} else {
 							lib.sendMessage(p, "&c&oYou do not have clan clearance.");
 							e.setReturn(true);
@@ -102,13 +102,14 @@ public final class DynmapSubscription implements Listener {
 					e.setReturn(true);
 				}
 				if (args[0].equalsIgnoreCase("hideclaim")) {
-					if (DefaultClan.action.getClanID(p.getUniqueId()) != null) {
-						Clan clan = ClansAPI.getInstance().getClan(p.getUniqueId());
+					if (ClansAPI.getInstance().getClanID(p.getUniqueId()) != null) {
+						ClanAssociate associate = ClansAPI.getInstance().getAssociate(p).orElse(null);
+						Clan clan = associate.getClan();
 						if (ClansAPI.getInstance().getClaimManager().isInClaim(p.getLocation())) {
 							Claim claim = Claim.from(p.getLocation());
 							if (Arrays.asList(clan.getOwnedClaimsList()).contains(claim.getId())) {
 								Set<AreaMarker> markers = integration.markerset.getAreaMarkers();
-								if (e.getUtil().getRankPower(p.getUniqueId()) >= 2) {
+								if (associate.getPriority().toInt() >= 2) {
 									for (AreaMarker am : markers) {
 										if (am.getMarkerID().equals(claim.getId())) {
 											am.deleteMarker();
@@ -133,13 +134,14 @@ public final class DynmapSubscription implements Listener {
 					}
 				}
 				if (args[0].equalsIgnoreCase("unclaim")) {
-					if (DefaultClan.action.getClanID(p.getUniqueId()) != null) {
-						if (e.getUtil().getRankPower(p.getUniqueId()) >= e.getUtil().claimingClearance()) {
-							Clan clan = ClansAPI.getInstance().getClan(p.getUniqueId());
+					if (ClansAPI.getInstance().getClanID(p.getUniqueId()) != null) {
+						ClanAssociate associate = ClansAPI.getInstance().getAssociate(p).orElse(null);
+						if (associate.getPriority().toInt() >= e.getUtil().claimingClearance()) {
+							Clan clan = associate.getClan();
 							Claim claim = Claim.from(p.getLocation());
 							if (claim != null) {
-								if (Arrays.asList(clan.getOwnedClaimsList()).contains(Claim.action.getClaimID(p.getLocation()))) {
-									integration.removeMarker(Claim.action.getClaimID(p.getLocation()));
+								if (Arrays.asList(clan.getOwnedClaimsList()).contains(Claim.ACTION.getClaimID(p.getLocation()))) {
+									integration.removeMarker(Claim.ACTION.getClaimID(p.getLocation()));
 								} else {
 									if (ClansAPI.getInstance().getShieldManager().isEnabled()) {
 										if (e.getUtil().overPowerBypass()) {
@@ -166,13 +168,14 @@ public final class DynmapSubscription implements Listener {
 					if (args[1].equalsIgnoreCase("all")) {
 						FileManager regions = ClansAPI.getInstance().getClaimManager().getFile();
 						FileConfiguration d = regions.getConfig();
-						if (DefaultClan.action.getClanID(p.getUniqueId()) != null) {
-							if (e.getUtil().getRankPower(p.getUniqueId()) >= e.getUtil().unclaimAllClearance()) {
-								if (!d.isConfigurationSection(e.getUtil().getClanID(p.getUniqueId()) + ".Claims")) {
+						if (ClansAPI.getInstance().getClanID(p.getUniqueId()) != null) {
+							ClanAssociate associate = ClansAPI.getInstance().getAssociate(p).orElse(null);
+							if (associate.getPriority().toInt() >= e.getUtil().unclaimAllClearance()) {
+								if (!d.isConfigurationSection(ClansAPI.getInstance().getClanID(p.getUniqueId()).toString() + ".Claims")) {
 									e.setReturn(false);
 								}
-								if (!Objects.requireNonNull(d.getConfigurationSection(e.getUtil().getClanID(p.getUniqueId()) + ".Claims")).getKeys(false).isEmpty()) {
-									for (String claimID : d.getConfigurationSection(e.getUtil().getClanID(p.getUniqueId()) + ".Claims").getKeys(false)) {
+								if (!Objects.requireNonNull(d.getConfigurationSection(ClansAPI.getInstance().getClanID(p.getUniqueId()).toString() + ".Claims")).getKeys(false).isEmpty()) {
+									for (String claimID : d.getConfigurationSection(ClansAPI.getInstance().getClanID(p.getUniqueId()).toString() + ".Claims").getKeys(false)) {
 										integration.removeMarker(claimID);
 									}
 								}

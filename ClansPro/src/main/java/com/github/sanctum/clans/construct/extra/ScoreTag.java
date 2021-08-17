@@ -1,7 +1,7 @@
 package com.github.sanctum.clans.construct.extra;
 
 import com.github.sanctum.clans.construct.ClanAssociate;
-import com.github.sanctum.clans.construct.DefaultClan;
+import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClansAPI;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
@@ -36,7 +36,7 @@ public class ScoreTag {
 			set(player, prefix);
 		} else {
 			Team team = getTeam(player);
-			team.setPrefix(DefaultClan.action.color(prefix));
+			team.setPrefix(Clan.ACTION.color(prefix));
 			team.setDisplayName(associate.getClan().getName());
 			team.setOption(Team.Option.NAME_TAG_VISIBILITY, Team.OptionStatus.ALWAYS);
 			team.addEntry(player.getName());
@@ -57,7 +57,7 @@ public class ScoreTag {
 		}
 		if (getTeam(player) != null) {
 			Team team = getTeam(player);
-			team.setPrefix(DefaultClan.action.color(prefix));
+			team.setPrefix(Clan.ACTION.color(prefix));
 			team.setDisplayName(associate.getClan().getName());
 			team.setOption(Team.Option.NAME_TAG_VISIBILITY, Team.OptionStatus.ALWAYS);
 		}

@@ -1,15 +1,15 @@
 package com.github.sanctum.clans.construct.api;
 
-import com.github.sanctum.clans.ClansPro;
+import com.github.sanctum.clans.ClansJavaPlugin;
 import com.github.sanctum.clans.construct.ClaimManager;
 import com.github.sanctum.clans.construct.ClanAssociate;
 import com.github.sanctum.clans.construct.ClanManager;
+import com.github.sanctum.clans.construct.DataManager;
+import com.github.sanctum.clans.construct.RankPriority;
 import com.github.sanctum.clans.construct.ShieldManager;
-import com.github.sanctum.clans.construct.actions.ClanCooldown;
-import com.github.sanctum.clans.construct.extra.misc.ClanPrefix;
-import com.github.sanctum.clans.util.RankPriority;
-import com.github.sanctum.clans.util.data.DataManager;
+import com.github.sanctum.clans.construct.extra.ClanPrefix;
 import com.github.sanctum.labyrinth.data.FileList;
+import com.github.sanctum.labyrinth.data.container.KeyedServiceManager;
 import com.github.sanctum.labyrinth.library.HUID;
 import com.github.sanctum.link.EventCycle;
 import java.util.Optional;
@@ -17,25 +17,29 @@ import java.util.UUID;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.plugin.Plugin;
+import org.bukkit.plugin.java.JavaPlugin;
 
 public interface ClansAPI {
 
 	static ClansAPI getInstance() {
-		ClansAPI reg = Bukkit.getServicesManager().load(ClansAPI.class);
-		if (reg == null) {
-			return ClansPro.getInstance();
-		}
-		return reg;
+		return Bukkit.getServicesManager().load(ClansAPI.class);
 	}
 
 	static DataManager getData() {
-		return ClansPro.getInstance().dataManager;
+		return ((ClansJavaPlugin) JavaPlugin.getProvidingPlugin(ClansJavaPlugin.class)).dataManager;
 	}
 
 	/**
 	 * @return Gets the prefix object for the plugin.
 	 */
 	ClanPrefix getPrefix();
+
+	/**
+	 * The plugin instance for the api. Try not to use this!
+	 *
+	 * @return The primary plugin instance.
+	 */
+	Plugin getPlugin();
 
 	/**
 	 * @param target The target to look for
@@ -91,6 +95,13 @@ public interface ClansAPI {
 	FileList getFileList();
 
 	/**
+	 * Gets the service manager for event cycles.
+	 *
+	 * @return The event cycle services manager.
+	 */
+	KeyedServiceManager<EventCycle> getServiceManager();
+
+	/**
 	 * Get the manager for clans to load/delete from.
 	 *
 	 * @return The clan manager.
@@ -110,6 +121,13 @@ public interface ClansAPI {
 	 * @return The raid shield manager.
 	 */
 	ShieldManager getShieldManager();
+
+	/**
+	 * Check if pro needs to be updated.
+	 *
+	 * @return true if the plugin has an update.
+	 */
+	boolean isUpdated();
 
 	/**
 	 * Check if a clan contains the target UUID
@@ -166,6 +184,7 @@ public interface ClansAPI {
 	 * @param associate The clan associate to promote/demote.
 	 * @param priority  The rank to give
 	 */
+	@Deprecated
 	void setRank(ClanAssociate associate, RankPriority priority);
 
 	/**

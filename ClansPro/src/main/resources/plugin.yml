@@ -1,9 +1,9 @@
 name: ClansPro
-version: 1.2.9
+version: 1.3.0
 authors: [ Hempfest, ms5984 ]
 api-version: 1.13
 depend: [ Labyrinth ]
 softdepend: [ Enterprise, Vault ]
 description: A premium & unique alternative to Factions.
 website: https://github.com/the-h-team/ClansPro/wiki
-main: com.github.sanctum.clans.ClansPro
+main: com.github.sanctum.clans.ClansJavaPlugin

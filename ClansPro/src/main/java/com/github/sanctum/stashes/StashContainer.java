@@ -1,7 +1,7 @@
 package com.github.sanctum.stashes;
 
-import com.github.sanctum.clans.ClansPro;
-import com.github.sanctum.clans.construct.DefaultClan;
+import com.github.sanctum.clans.construct.api.Clan;
+import com.github.sanctum.clans.construct.api.ClansAPI;
 import java.util.HashMap;
 import java.util.Map;
 import org.bukkit.Bukkit;
@@ -15,8 +15,8 @@ public class StashContainer {
 
 	public static Inventory getStash(String clanName) {
 		return inventories.computeIfAbsent(clanName, name -> {
-			Inventory inventory = Bukkit.createInventory(null, 9, DefaultClan.action.color("&3&oStash: &0" + name));
-			inventory.setContents(StashListener.getInventoryContents(DefaultClan.action.getClanID(name)));
+			Inventory inventory = Bukkit.createInventory(null, 9, Clan.ACTION.color("&3&oStash: &0" + name));
+			inventory.setContents(StashListener.getInventoryContents(ClansAPI.getInstance().getClanID(name)));
 			return inventory;
 		});
 	}
@@ -32,7 +32,7 @@ public class StashContainer {
 					}
 				}
 			}
-		}).runTask(ClansPro.getInstance());
+		}).runTask(ClansAPI.getInstance().getPlugin());
 	}
 
 	public static void removeFromCache(Inventory inventory) {
@@ -44,7 +44,7 @@ public class StashContainer {
 						.map(Map.Entry::getKey)
 						.forEach(inventories::remove);
 			}
-		}).runTask(ClansPro.getInstance());
+		}).runTask(ClansAPI.getInstance().getPlugin());
 	}
 
 }

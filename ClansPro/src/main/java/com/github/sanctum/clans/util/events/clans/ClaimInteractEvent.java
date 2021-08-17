@@ -1,7 +1,6 @@
 package com.github.sanctum.clans.util.events.clans;
 
 import com.github.sanctum.clans.construct.Claim;
-import com.github.sanctum.clans.util.InteractionType;
 import com.github.sanctum.clans.util.events.ClanEventBuilder;
 import org.bukkit.Location;
 import org.bukkit.block.Block;
@@ -51,13 +50,18 @@ public class ClaimInteractEvent extends ClanEventBuilder {
 		return this.b != null ? this.b : location.getBlock();
 	}
 
-    public ItemStack getItemInMainHand() {
-        return p.getInventory().getItemInMainHand();
-    }
+	public ItemStack getItemInMainHand() {
+		return p.getInventory().getItemInMainHand();
+	}
 
-    @Override
-    public String getName() {
-        return getClass().getSimpleName();
-    }
+	@Override
+	public String getName() {
+		return getClass().getSimpleName();
+	}
 
+	public enum InteractionType {
+
+		BUILD, BREAK, USE
+
+	}
 }

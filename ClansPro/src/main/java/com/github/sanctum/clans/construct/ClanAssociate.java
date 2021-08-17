@@ -2,18 +2,16 @@ package com.github.sanctum.clans.construct;
 
 import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClansAPI;
-import com.github.sanctum.clans.construct.extra.Resident;
-import com.github.sanctum.clans.util.RankPriority;
-import com.github.sanctum.clans.util.data.DataManager;
+import com.github.sanctum.clans.construct.impl.Resident;
 import com.github.sanctum.labyrinth.data.FileManager;
 import com.github.sanctum.labyrinth.library.HUID;
+import com.github.sanctum.labyrinth.library.Message;
 import com.github.sanctum.labyrinth.library.TimeWatch;
 import com.github.sanctum.skulls.CustomHead;
 import java.text.MessageFormat;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
@@ -30,18 +28,35 @@ public class ClanAssociate {
 
 	private final UUID player;
 
+	private final HUID clan;
+
+	private RankPriority rank;
+
+	private String chat;
+
 	private final ItemStack head;
 
 	private final Map<Long, Long> killMap;
 
-	public ClanAssociate(UUID uuid) {
+	public ClanAssociate(UUID uuid, RankPriority priority, HUID clanID) {
 		this.player = uuid;
+		this.rank = priority;
+		this.clan = clanID;
+		this.chat = "GLOBAL";
 		this.head = CustomHead.Manager.get(uuid);
 		this.killMap = new HashMap<>();
 	}
 
-	public ClanAssociate(OfflinePlayer player) {
-		this(player.getUniqueId());
+	public ClanAssociate(OfflinePlayer player, RankPriority priority, HUID clan) {
+		this(player.getUniqueId(), priority, clan);
+	}
+
+	public String getName() {
+		return getPlayer().getName();
+	}
+
+	public Message getMessenger() {
+		return Message.form(getPlayer().getPlayer());
 	}
 
 	/**
@@ -56,6 +71,22 @@ public class ClanAssociate {
 	 */
 	public ItemStack getHead() {
 		return head;
+	}
+
+	/**
+	 * @return The chat channel this user resides in.
+	 */
+	public String getChat() {
+		return chat;
+	}
+
+	/**
+	 * Change the users chat channel.
+	 *
+	 * @param chat The channel to switch them to.
+	 */
+	public void setChat(String chat) {
+		this.chat = chat;
 	}
 
 	/**
@@ -83,22 +114,7 @@ public class ClanAssociate {
 	 * @return Gets the associates clan id or null if an issue has occurred.
 	 */
 	public synchronized @Nullable HUID getClanID() {
-		FileManager user = ClansAPI.getData().get(player);
-		if (user.exists()) {
-			if (user.getConfig().getString("Clan.id") != null) {
-				if (Objects.requireNonNull(user.getConfig().getString("Clan.id")).length() != 14) {
-					throw new UnsupportedOperationException("[ClansPro] - Clan ID " + user.getConfig().getString("Clan.id") + " invalid, expected format ####-####-####", new Throwable(user.getConfig().getString("Clan.id")));
-				}
-				FileManager clan = DataManager.FileType.CLAN_FILE.get(user.getConfig().getString("Clan.id"));
-				if (!clan.exists()) {
-					user.getConfig().set("Clan", null);
-					user.saveConfig();
-					return null;
-				}
-				return HUID.fromString(Objects.requireNonNull(user.getConfig().getString("Clan.id")));
-			}
-		}
-		return null;
+		return this.clan;
 	}
 
 	/**
@@ -111,17 +127,17 @@ public class ClanAssociate {
 		String mod = main.getConfig().getString("Formatting.Chat.Styles.Full.Moderator");
 		String admin = main.getConfig().getString("Formatting.Chat.Styles.Full.Admin");
 		String owner = main.getConfig().getString("Formatting.Chat.Styles.Full.Owner");
-		switch (getRank()) {
-			case "Member":
+		switch (getPriority()) {
+			case NORMAL:
 				result = member;
 				break;
-			case "Moderator":
+			case HIGH:
 				result = mod;
 				break;
-			case "Admin":
+			case HIGHER:
 				result = admin;
 				break;
-			case "Owner":
+			case HIGHEST:
 				result = owner;
 				break;
 		}
@@ -138,17 +154,17 @@ public class ClanAssociate {
 		String mod = main.getConfig().getString("Formatting.Chat.Styles.Wordless.Moderator");
 		String admin = main.getConfig().getString("Formatting.Chat.Styles.Wordless.Admin");
 		String owner = main.getConfig().getString("Formatting.Chat.Styles.Wordless.Owner");
-		switch (getRank()) {
-			case "Member":
+		switch (getPriority()) {
+			case NORMAL:
 				result = member;
 				break;
-			case "Moderator":
+			case HIGH:
 				result = mod;
 				break;
-			case "Admin":
+			case HIGHER:
 				result = admin;
 				break;
-			case "Owner":
+			case HIGHEST:
 				result = owner;
 				break;
 		}
@@ -156,46 +172,10 @@ public class ClanAssociate {
 	}
 
 	/**
-	 * @return Gets the associates direct clan position.
-	 */
-	public synchronized String getRank() {
-		FileManager clan = DataManager.FileType.CLAN_FILE.get(getClan().getId().toString());
-		String rank = "";
-		if (clan.getConfig().getStringList("members").contains(player.toString())) {
-			rank = "Member";
-		}
-		if (clan.getConfig().getStringList("moderators").contains(player.toString())) {
-			rank = "Moderator";
-		}
-		if (clan.getConfig().getStringList("admins").contains(player.toString())) {
-			rank = "Admin";
-		}
-		if (Objects.equals(clan.getConfig().getString("owner"), player.toString())) {
-			rank = "Owner";
-		}
-		return rank;
-	}
-
-	/**
 	 * @return Gets the associates rank priority.
 	 */
 	public RankPriority getPriority() {
-		RankPriority priority = null;
-		switch (getRank()) {
-			case "Owner":
-				priority = RankPriority.HIGHEST;
-				break;
-			case "Admin":
-				priority = RankPriority.HIGHER;
-				break;
-			case "Moderator":
-				priority = RankPriority.HIGH;
-				break;
-			case "Member":
-				priority = RankPriority.NORMAL;
-				break;
-		}
-		return priority;
+		return this.rank;
 	}
 
 	/**
@@ -227,10 +207,10 @@ public class ClanAssociate {
 			killMap.put(time, 1L);
 		}
 		if (ClansAPI.getData().getEnabled("Clans.war.killstreak.penalize")) {
-			if (getKilled(TimeUnit.valueOf(ClansAPI.getData().getString("Clans.war.killstreak.threshold")), Long.valueOf(ClansAPI.getData().getString("Clans.war.killstreak.time-span"))) >= Long.valueOf(ClansAPI.getData().getString("Clans.war.killstreak.amount"))) {
+			if (getKilled(TimeUnit.valueOf(ClansAPI.getData().getString("Clans.war.killstreak.threshold")), Long.parseLong(ClansAPI.getData().getString("Clans.war.killstreak.time-span"))) >= Long.parseLong(ClansAPI.getData().getString("Clans.war.killstreak.amount"))) {
 				killMap.clear();
 				getClan().broadcast("&4Camping detected, penalizing power gain.");
-				getClan().takePower(Double.valueOf(ClansAPI.getData().getString("Clans.war.killstreak.deduction")));
+				getClan().takePower(Double.parseDouble(ClansAPI.getData().getString("Clans.war.killstreak.deduction")));
 			}
 		}
 	}
@@ -241,7 +221,7 @@ public class ClanAssociate {
 	 * @param priority The rank priority to update the associate with.
 	 */
 	public void setPriority(RankPriority priority) {
-		ClansAPI.getInstance().setRank(this, priority);
+		this.rank = priority;
 	}
 
 	/**
@@ -299,7 +279,7 @@ public class ClanAssociate {
 		user.getConfig().set("Clan.bio", newBio);
 		user.saveConfig();
 		if (getPlayer().isOnline()) {
-			Claim.action.sendMessage(getPlayer().getPlayer(), MessageFormat.format(ClansAPI.getData().getMessage("member-bio"), newBio));
+			Claim.ACTION.sendMessage(getPlayer().getPlayer(), MessageFormat.format(ClansAPI.getData().getMessage("member-bio"), newBio));
 		}
 	}
 
@@ -318,12 +298,12 @@ public class ClanAssociate {
 		}
 		user.saveConfig();
 		if (getPlayer().isOnline()) {
-			DefaultClan.action.sendMessage(getPlayer().getPlayer(), MessageFormat.format(ClansAPI.getData().getMessage("nickname"), newName));
+			Clan.ACTION.sendMessage(getPlayer().getPlayer(), MessageFormat.format(ClansAPI.getData().getMessage("nickname"), newName));
 		}
 	}
 
 	public synchronized void kick() {
-		DefaultClan.action.kickPlayer(getPlayer().getUniqueId());
+		Clan.ACTION.kickPlayer(getPlayer().getUniqueId());
 	}
 
 }

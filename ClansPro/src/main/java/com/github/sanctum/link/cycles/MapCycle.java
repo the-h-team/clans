@@ -1,6 +1,6 @@
 package com.github.sanctum.link.cycles;
 
-import com.github.sanctum.clans.construct.DefaultClan;
+import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClansAPI;
 import com.github.sanctum.clans.util.events.command.CommandHelpInsertEvent;
 import com.github.sanctum.clans.util.events.command.CommandInsertEvent;
@@ -113,14 +113,14 @@ public class MapCycle extends EventCycle {
 					if (args[1].equalsIgnoreCase("on")) {
 						// on logic
 						if (!MapCommand.isToggled(p)) {
-							DefaultClan.action.sendMessage(p, "&aMap enabled.");
+							Clan.ACTION.sendMessage(p, "&aMap enabled.");
 							MapCommand.sendMapCurrentLoc(p);
 							MapCommand.toggle(p);
 						}
 					} else if (args[1].equalsIgnoreCase("off")) {
 						// off logic
 						if (MapCommand.isToggled(p)) {
-							DefaultClan.action.sendMessage(p, "&cMap disabled.");
+							Clan.ACTION.sendMessage(p, "&cMap disabled.");
 							MapCommand.toggle(p);
 						}
 					} else {

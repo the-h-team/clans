@@ -1,17 +1,16 @@
 package com.github.sanctum.clans.commands;
 
-import com.github.sanctum.clans.ClansPro;
-import com.github.sanctum.clans.construct.DefaultClan;
-import com.github.sanctum.clans.construct.actions.ClanAction;
+import com.github.sanctum.clans.construct.ClanAssociate;
+import com.github.sanctum.clans.construct.DataManager;
+import com.github.sanctum.clans.construct.UI;
 import com.github.sanctum.clans.construct.api.Clan;
-import com.github.sanctum.clans.construct.api.ClanBlueprint;
 import com.github.sanctum.clans.construct.api.ClansAPI;
-import com.github.sanctum.clans.gui.UI;
+import com.github.sanctum.clans.construct.extra.ClanBlueprint;
 import com.github.sanctum.clans.util.StringLibrary;
-import com.github.sanctum.clans.util.data.DataManager;
 import com.github.sanctum.labyrinth.data.FileManager;
-import com.github.sanctum.labyrinth.formatting.string.PaginatedAssortment;
+import com.github.sanctum.labyrinth.formatting.PaginatedList;
 import com.github.sanctum.labyrinth.library.HFEncoded;
+import com.github.sanctum.labyrinth.library.Message;
 import com.github.sanctum.labyrinth.library.StringUtils;
 import com.github.sanctum.link.CycleList;
 import com.github.sanctum.stashes.StashContainer;
@@ -63,10 +62,6 @@ public class CommandClanAdmin extends Command {
 		return help;
 	}
 
-	private ClanAction getUtil() {
-		return DefaultClan.action;
-	}
-
 	private final List<String> arguments = new ArrayList<>();
 
 	@Override
@@ -86,7 +81,7 @@ public class CommandClanAdmin extends Command {
 		if (args.length == 2) {
 			if (args[0].equalsIgnoreCase("give")) {
 				arguments.clear();
-				arguments.addAll(DefaultClan.action.getAllClanNames());
+				arguments.addAll(Clan.ACTION.getAllClanNames());
 				for (String a : arguments) {
 					if (a.toLowerCase().startsWith(args[1].toLowerCase()))
 						result.add(a);
@@ -131,7 +126,7 @@ public class CommandClanAdmin extends Command {
 			}
 			if (args[0].equalsIgnoreCase("take")) {
 				arguments.clear();
-				arguments.addAll(DefaultClan.action.getAllClanNames());
+				arguments.addAll(Clan.ACTION.getAllClanNames());
 				for (String a : arguments) {
 					if (a.toLowerCase().startsWith(args[1].toLowerCase()))
 						result.add(a);
@@ -140,7 +135,7 @@ public class CommandClanAdmin extends Command {
 			}
 			if (args[0].equalsIgnoreCase("tphere")) {
 				arguments.clear();
-				arguments.addAll(DefaultClan.action.getAllClanNames());
+				arguments.addAll(Clan.ACTION.getAllClanNames());
 				for (String a : arguments) {
 					if (a.toLowerCase().startsWith(args[1].toLowerCase()))
 						result.add(a);
@@ -149,7 +144,7 @@ public class CommandClanAdmin extends Command {
 			}
 			if (args[0].equalsIgnoreCase("view")) {
 				arguments.clear();
-				arguments.addAll(DefaultClan.action.getAllClanNames());
+				arguments.addAll(Clan.ACTION.getAllClanNames());
 				for (String a : arguments) {
 					if (a.toLowerCase().startsWith(args[1].toLowerCase()))
 						result.add(a);
@@ -158,7 +153,7 @@ public class CommandClanAdmin extends Command {
 			}
 			if (args[0].equalsIgnoreCase("close") || args[0].equalsIgnoreCase("set")) {
 				arguments.clear();
-				arguments.addAll(DefaultClan.action.getAllClanNames());
+				arguments.addAll(Clan.ACTION.getAllClanNames());
 				for (String a : arguments) {
 					if (a.toLowerCase().startsWith(args[1].toLowerCase()))
 						result.add(a);
@@ -167,7 +162,7 @@ public class CommandClanAdmin extends Command {
 			}
 			if (args[0].equalsIgnoreCase("purge")) {
 				arguments.clear();
-				arguments.addAll(DefaultClan.action.getAllClanNames());
+				arguments.addAll(Clan.ACTION.getAllClanNames());
 				for (String a : arguments) {
 					if (a.toLowerCase().startsWith(args[1].toLowerCase()))
 						result.add(a);
@@ -187,7 +182,7 @@ public class CommandClanAdmin extends Command {
 			}
 			if (args[0].equalsIgnoreCase("put")) {
 				arguments.clear();
-				arguments.addAll(DefaultClan.action.getAllClanNames());
+				arguments.addAll(Clan.ACTION.getAllClanNames());
 				for (String a : arguments) {
 					if (a.toLowerCase().startsWith(args[2].toLowerCase()))
 						result.add(a);
@@ -233,9 +228,9 @@ public class CommandClanAdmin extends Command {
 					FileManager file = DataManager.FileType.MISC_FILE.get(args[1], "Configuration");
 					if (file.exists()) {
 						file.reload();
-						ClansPro.getInstance().getLogger().info("File by the name of " + '"' + args[1] + '"' + " was reloaded.");
+						ClansAPI.getInstance().getPlugin().getLogger().info("File by the name of " + '"' + args[1] + '"' + " was reloaded.");
 					} else {
-						ClansPro.getInstance().getLogger().info("File by the name of " + '"' + args[1] + '"' + " was not found.");
+						ClansAPI.getInstance().getPlugin().getLogger().info("File by the name of " + '"' + args[1] + '"' + " was not found.");
 						return true;
 					}
 					return true;
@@ -259,13 +254,12 @@ public class CommandClanAdmin extends Command {
 			return true;
 		}
 		if (length == 0) {
-			PaginatedAssortment helpAssist = new PaginatedAssortment(p, helpMenu(commandLabel));
-			lib.sendMessage(p, "&r- Command help. (&7/cla #page&r)");
-			helpAssist.setListTitle("&7&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬");
-			helpAssist.setListBorder("&7&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬");
-			helpAssist.setNavigateCommand(commandLabel);
-			helpAssist.setLinesPerPage(5);
-			helpAssist.export(1);
+			new PaginatedList<>(helpMenu(commandLabel))
+					.limit(lib.menuSize())
+					.start((pagination, page, max) -> {
+						lib.sendMessage(p, lib.menuTitle());
+						Message.form(p).send(lib.menuBorder());
+					}).finish(builder -> builder.setPlayer(p).setPrefix(lib.menuBorder())).decorate((pagination, string, page, max, placement) -> Message.form(p).send(string)).get(1);
 			return true;
 		}
 		if (!p.hasPermission(this.getPermission())) {
@@ -321,7 +315,7 @@ public class CommandClanAdmin extends Command {
 			if (args0.equalsIgnoreCase("update")) {
 				FileManager main = ClansAPI.getInstance().getFileList().find("Config", "Configuration");
 				FileManager messages = ClansAPI.getInstance().getFileList().find("Messages", "Configuration");
-				if (ClansPro.getInstance().getDescription().getVersion().equals(main.getConfig().getString("Version"))) {
+				if (ClansAPI.getInstance().getPlugin().getDescription().getVersion().equals(main.getConfig().getString("Version"))) {
 					lib.sendMessage(p, "&3&oThe configuration is already up to date.");
 					return true;
 				} else {
@@ -333,7 +327,7 @@ public class CommandClanAdmin extends Command {
 					messOld.getConfig().options().copyDefaults(true);
 					messOld.getConfig().setDefaults(messages.getConfig());
 					messages.refreshConfig();
-					InputStream mainGrab = ClansPro.getInstance().getResource("Config.yml");
+					InputStream mainGrab = ClansAPI.getInstance().getPlugin().getResource("Config.yml");
 					if (mainGrab == null) throw new IllegalStateException("Unable to load Config.yml from the jar!");
 					FileManager.copy(mainGrab, main.getFile());
 					lib.sendMessage(p, "&b&oUpdated configuration to the latest plugin version.");
@@ -341,31 +335,31 @@ public class CommandClanAdmin extends Command {
 				return true;
 			}
 			if (args0.equalsIgnoreCase("idmode")) {
-				if (!ClansPro.getInstance().dataManager.staffID_MODE.containsKey(p)) {
-					ClansPro.getInstance().dataManager.staffID_MODE.put(p, "ENABLED");
+				if (!ClansAPI.getData().ID_MODE.containsKey(p)) {
+					ClansAPI.getData().ID_MODE.put(p, "ENABLED");
 					lib.sendMessage(p, "&f[&a&oADMIN&f] &6&lID &fmode &aENABLED.");
 					return true;
 				}
-				if (ClansPro.getInstance().dataManager.staffID_MODE.get(p).equals("ENABLED")) {
-					ClansPro.getInstance().dataManager.staffID_MODE.put(p, "DISABLED");
+				if (ClansAPI.getData().ID_MODE.get(p).equals("ENABLED")) {
+					ClansAPI.getData().ID_MODE.put(p, "DISABLED");
 					lib.sendMessage(p, "&f[&a&oADMIN&f] &6&lID &fmode &cDISABLED.");
 					return true;
 				}
-				if (ClansPro.getInstance().dataManager.staffID_MODE.get(p).equals("DISABLED")) {
-					ClansPro.getInstance().dataManager.staffID_MODE.put(p, "ENABLED");
+				if (ClansAPI.getData().ID_MODE.get(p).equals("DISABLED")) {
+					ClansAPI.getData().ID_MODE.put(p, "ENABLED");
 					lib.sendMessage(p, "&f[&a&oADMIN&f] &6&lID &fmode &aENABLED.");
 					return true;
 				}
 				return true;
 			}
-			PaginatedAssortment helpAssist = new PaginatedAssortment(p, helpMenu(commandLabel));
-			lib.sendMessage(p, "&r- Command help. (&7/cla #page&r)");
-			helpAssist.setListTitle("&7&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬");
-			helpAssist.setListBorder("&7&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬");
-			helpAssist.setNavigateCommand(commandLabel);
-			helpAssist.setLinesPerPage(5);
+			PaginatedList<String> list = new PaginatedList<>(helpMenu(commandLabel))
+					.limit(lib.menuSize())
+					.start((pagination, page, max) -> {
+						lib.sendMessage(p, lib.menuTitle());
+						Message.form(p).send(lib.menuBorder());
+					}).finish(builder -> builder.setPlayer(p).setPrefix(lib.menuBorder())).decorate((pagination, string, page, max, placement) -> Message.form(p).send(string));
 			try {
-				helpAssist.export(Integer.parseInt(args0));
+				list.get(Integer.parseInt(args0));
 			} catch (NumberFormatException e) {
 				lib.sendMessage(p, "&c&oInvalid page number!");
 			}
@@ -378,11 +372,10 @@ public class CommandClanAdmin extends Command {
 			if (args0.equalsIgnoreCase("close")) {
 				if (ClansAPI.getInstance().getClanID(args1) != null) {
 					Clan target = ClansAPI.getInstance().getClan(ClansAPI.getInstance().getClanID(args1));
-					for (String id : target.getMembersList()) {
-						UUID uuid = UUID.fromString(id);
-						if (DefaultClan.action.getRankPower(uuid) == 3) {
+					for (ClanAssociate id : target.getMembers()) {
+						if (id.getPriority().toInt() == 3) {
 							target.broadcast("&8(&e!&8) &4&oOur clan has been forcibly closed by a staff member.");
-							DefaultClan.action.removePlayer(uuid);
+							Clan.ACTION.removePlayer(id.getPlayer().getUniqueId());
 							break;
 						}
 					}
@@ -404,7 +397,7 @@ public class CommandClanAdmin extends Command {
 
 					if (args1.equalsIgnoreCase("all")) {
 						int amount = 0;
-						for (Clan target : ClansAPI.getData().CLANS) {
+						for (Clan target : ClansAPI.getInstance().getClanManager().getClans().list()) {
 							for (String data : target.getDataKeys()) {
 								target.removeValue(data);
 								amount++;
@@ -422,7 +415,7 @@ public class CommandClanAdmin extends Command {
 				String targetId = ClansAPI.getInstance().getClanID(args1);
 				Clan c = ClansAPI.getInstance().getClan(targetId);
 				if (targetId != null) {
-					for (String id : c.getMembersList()) {
+					for (String id : c.getMemberIds()) {
 						UUID u = UUID.fromString(id);
 						if (Bukkit.getOfflinePlayer(u).isOnline()) {
 							Bukkit.getOfflinePlayer(u).getPlayer().teleport(p.getLocation());
@@ -439,11 +432,11 @@ public class CommandClanAdmin extends Command {
 				return true;
 			}
 			if (args0.equalsIgnoreCase("kick")) {
-				if (DefaultClan.action.getUserID(args1) == null) {
+				if (Clan.ACTION.getUserID(args1) == null) {
 					lib.sendMessage(p, lib.playerUnknown(args1));
 					return true;
 				}
-				UUID target = DefaultClan.action.getUserID(args1);
+				UUID target = Clan.ACTION.getUserID(args1);
 				if (target.equals(p.getUniqueId())) {
 					lib.sendMessage(p, "&c&oInvalid usage, try &6/c leave");
 					return true;
@@ -554,15 +547,15 @@ public class CommandClanAdmin extends Command {
 				if (target == null) {
 
 					try {
-						lib.sendMessage(p, "&7#&fID &7of clan " + '"' + args1 + '"' + " is: &e&o" + getUtil().getClanID(args1));
+						lib.sendMessage(p, "&7#&fID &7of clan " + '"' + args1 + '"' + " is: &e&o" + ClansAPI.getInstance().getClanID(args1));
 					} catch (NullPointerException e) {
 						lib.sendMessage(p, "&c&oUh-oh there was an issue finding the clan.. Check console for errors");
-						ClansPro.getInstance().getLogger().severe(String.format("[%s] - Illegal use of ID retrieval. Clan directory non-existent.", ClansPro.getInstance().getDescription().getName()));
+						ClansAPI.getInstance().getPlugin().getLogger().severe(String.format("[%s] - Illegal use of ID retrieval. Clan directory non-existent.", ClansAPI.getInstance().getPlugin().getDescription().getName()));
 					}
 					return true;
 				}
 
-				lib.sendMessage(p, "&7|&e) &6&l" + target.getName() + "'s &e&oclan ID is &f" + getUtil().getClanID(target.getUniqueId()));
+				lib.sendMessage(p, "&7|&e) &6&l" + target.getName() + "'s &e&oclan ID is &f" + ClansAPI.getInstance().getClanID(target.getUniqueId()).toString());
 				return true;
 			}
 			if (args0.equalsIgnoreCase("reload")) {
@@ -584,11 +577,11 @@ public class CommandClanAdmin extends Command {
 			String args1 = args[1];
 			String args2 = args[2];
 			if (args0.equalsIgnoreCase("put")) {
-				if (DefaultClan.action.getUserID(args1) == null) {
+				if (Clan.ACTION.getUserID(args1) == null) {
 					lib.sendMessage(p, lib.playerUnknown(args1));
 					return true;
 				}
-				UUID target = DefaultClan.action.getUserID(args1);
+				UUID target = Clan.ACTION.getUserID(args1);
 				if (target.equals(p.getUniqueId())) {
 					lib.sendMessage(p, "&c&oWhat are you even trying to test?");
 					return true;
@@ -605,7 +598,7 @@ public class CommandClanAdmin extends Command {
 				return true;
 			}
 			if (args0.equalsIgnoreCase("set")) {
-				String id = DefaultClan.action.getClanID(args1);
+				String id = ClansAPI.getInstance().getClanID(args1);
 				switch (args2.toLowerCase()) {
 					case "logo":
 						ItemStack item = p.getInventory().getItemInMainHand();
@@ -649,7 +642,7 @@ public class CommandClanAdmin extends Command {
 				}
 			}
 			if (args0.equalsIgnoreCase("view")) {
-				String id = DefaultClan.action.getClanID(args1);
+				String id = ClansAPI.getInstance().getClanID(args1);
 				switch (args2.toLowerCase()) {
 					case "power":
 						if (id != null) {
@@ -735,11 +728,11 @@ public class CommandClanAdmin extends Command {
 			String args2 = args[2];
 			String amountPre = args[3];
 			if (args0.equalsIgnoreCase("put")) {
-				if (DefaultClan.action.getUserID(args1) == null) {
+				if (Clan.ACTION.getUserID(args1) == null) {
 					lib.sendMessage(p, lib.playerUnknown(args1));
 					return true;
 				}
-				UUID target = DefaultClan.action.getUserID(args1);
+				UUID target = Clan.ACTION.getUserID(args1);
 
 				if (ClansAPI.getInstance().isInClan(target)) {
 					lib.sendMessage(p, "&c&oPlayer " + args1 + " is already in a clan.");
@@ -761,7 +754,7 @@ public class CommandClanAdmin extends Command {
 				return true;
 			}
 			if (args0.equalsIgnoreCase("set")) {
-				String id = DefaultClan.action.getClanID(args1);
+				String id = ClansAPI.getInstance().getClanID(args1);
 				switch (args2.toLowerCase()) {
 					case "logo":
 						ItemStack item = p.getInventory().getItemInMainHand();
@@ -829,7 +822,7 @@ public class CommandClanAdmin extends Command {
 				}
 			}
 			if (args0.equalsIgnoreCase("give")) {
-				String id = DefaultClan.action.getClanID(args1);
+				String id = ClansAPI.getInstance().getClanID(args1);
 				switch (args2.toLowerCase()) {
 					case "power":
 						try {
@@ -911,7 +904,7 @@ public class CommandClanAdmin extends Command {
 				return true;
 			}
 			if (args0.equalsIgnoreCase("take")) {
-				String id = DefaultClan.action.getClanID(args1);
+				String id = ClansAPI.getInstance().getClanID(args1);
 				switch (args2.toLowerCase()) {
 					case "power":
 						try {

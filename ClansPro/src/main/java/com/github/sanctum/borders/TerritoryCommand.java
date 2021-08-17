@@ -1,8 +1,9 @@
 package com.github.sanctum.borders;
 
 import com.github.sanctum.borders.task.BorderTask;
-import com.github.sanctum.clans.construct.DefaultClan;
+import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClanSubCommand;
+import com.github.sanctum.clans.construct.api.ClansAPI;
 import com.github.sanctum.labyrinth.formatting.TabCompletion;
 import com.github.sanctum.labyrinth.library.Message;
 import java.util.Arrays;
@@ -23,13 +24,13 @@ public class TerritoryCommand extends ClanSubCommand {
 		Message msg = Message.form(p).setPrefix(prefix);
 		if (length == 0) {
 			if (!BorderListener.toggled.containsKey(p.getUniqueId())) {
-				msg.build(BorderListener.coToggle(DefaultClan.action.getPrefix().replace("&6", "&#eb9534&l") + " &#3ee67c&lChunk borders on &#ffffff| &#3ee6ddClick to toggle ", prefix.replace("&6", "&#eb9534")));
+				msg.build(BorderListener.coToggle(Clan.ACTION.getPrefix().replace("&6", "&#eb9534&l") + " &#3ee67c&lChunk borders on &#ffffff| &#3ee6ddClick to toggle ", prefix.replace("&6", "&#eb9534")));
 				BorderTask.run(p).cancelAfter(140).repeatReal(1, 40);
 				BorderListener.toggled.put(p.getUniqueId(), true);
 				return true;
 			}
 			if (BorderListener.toggled.get(p.getUniqueId())) {
-				msg.build(BorderListener.coToggle(DefaultClan.action.getPrefix().replace("&6", "&#eb9534&l") + " &#eb4034&lChunk borders off &#ffffff| &#3ee6ddClick to toggle ", prefix.replace("&6", "&#eb9534")));
+				msg.build(BorderListener.coToggle(Clan.ACTION.getPrefix().replace("&6", "&#eb9534&l") + " &#eb4034&lChunk borders off &#ffffff| &#3ee6ddClick to toggle ", prefix.replace("&6", "&#eb9534")));
 				BorderListener.toggled.remove(p.getUniqueId());
 				BorderListener.baseLocate.remove(p.getUniqueId());
 				BorderListener.spawnLocate.remove(p.getUniqueId());
@@ -47,13 +48,13 @@ public class TerritoryCommand extends ClanSubCommand {
 		if (length == 2) {
 			if (args[0].equalsIgnoreCase("-f")) {
 				if (args[1].equalsIgnoreCase("base")) {
-					if (DefaultClan.action.getClanID(p.getUniqueId()) != null) {
+					if (ClansAPI.getInstance().getClanID(p.getUniqueId()) != null) {
 						if (!BorderListener.baseLocate.contains(p.getUniqueId())) {
 							BorderListener.baseLocate.add(p.getUniqueId());
 							BorderListener.spawnLocate.remove(p.getUniqueId());
 							BorderListener.playerLocate.remove(p.getUniqueId());
 							if (!BorderListener.toggled.containsKey(p.getUniqueId())) {
-								msg.build(BorderListener.coToggle(DefaultClan.action.getPrefix().replace("&6", "&#eb9534&l") + " &#3ee67c&lChunk borders on &#ffffff| &#3ee6ddClick to toggle ", prefix.replace("&6", "&#eb9534")));
+								msg.build(BorderListener.coToggle(Clan.ACTION.getPrefix().replace("&6", "&#eb9534&l") + " &#3ee67c&lChunk borders on &#ffffff| &#3ee6ddClick to toggle ", prefix.replace("&6", "&#eb9534")));
 								BorderTask.run(p).cancelAfter(140).repeatReal(1, 40);
 								BorderListener.toggled.put(p.getUniqueId(), true);
 							}
@@ -64,7 +65,7 @@ public class TerritoryCommand extends ClanSubCommand {
 							msg.send("&c&oBase flag has been disabled.");
 						}
 					} else {
-						DefaultClan.action.sendMessage(p, DefaultClan.action.notInClan());
+						Clan.ACTION.sendMessage(p, Clan.ACTION.notInClan());
 					}
 					return true;
 				}
@@ -74,7 +75,7 @@ public class TerritoryCommand extends ClanSubCommand {
 						BorderListener.spawnLocate.remove(p.getUniqueId());
 						BorderListener.baseLocate.remove(p.getUniqueId());
 						if (!BorderListener.toggled.containsKey(p.getUniqueId())) {
-							msg.build(BorderListener.coToggle(DefaultClan.action.getPrefix().replace("&6", "&#eb9534&l") + " &#3ee67c&lChunk borders on &#ffffff| &#3ee6ddClick to toggle ", prefix.replace("&6", "&#eb9534")));
+							msg.build(BorderListener.coToggle(Clan.ACTION.getPrefix().replace("&6", "&#eb9534&l") + " &#3ee67c&lChunk borders on &#ffffff| &#3ee6ddClick to toggle ", prefix.replace("&6", "&#eb9534")));
 							BorderTask.run(p).cancelAfter(140).repeatReal(1, 40);
 							BorderListener.toggled.put(p.getUniqueId(), true);
 						}
@@ -92,7 +93,7 @@ public class TerritoryCommand extends ClanSubCommand {
 						BorderListener.playerLocate.remove(p.getUniqueId());
 						BorderListener.baseLocate.remove(p.getUniqueId());
 						if (!BorderListener.toggled.containsKey(p.getUniqueId())) {
-							msg.build(BorderListener.coToggle(DefaultClan.action.getPrefix().replace("&6", "&#eb9534&l") + " &#3ee67c&lChunk borders on &#ffffff| &#3ee6ddClick to toggle ", prefix.replace("&6", "&#eb9534")));
+							msg.build(BorderListener.coToggle(Clan.ACTION.getPrefix().replace("&6", "&#eb9534&l") + " &#3ee67c&lChunk borders on &#ffffff| &#3ee6ddClick to toggle ", prefix.replace("&6", "&#eb9534")));
 							BorderTask.run(p).cancelAfter(140).repeatReal(1, 40);
 							BorderListener.toggled.put(p.getUniqueId(), true);
 						}

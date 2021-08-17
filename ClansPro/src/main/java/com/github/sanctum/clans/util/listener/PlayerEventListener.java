@@ -1,38 +1,35 @@
 package com.github.sanctum.clans.util.listener;
 
-import com.github.sanctum.clans.ClansPro;
 import com.github.sanctum.clans.construct.Claim;
 import com.github.sanctum.clans.construct.ClanAssociate;
-import com.github.sanctum.clans.construct.DefaultClan;
 import com.github.sanctum.clans.construct.actions.ClanAction;
-import com.github.sanctum.clans.construct.actions.ClanCooldown;
 import com.github.sanctum.clans.construct.actions.ClansUpdate;
 import com.github.sanctum.clans.construct.api.Clan;
+import com.github.sanctum.clans.construct.api.ClanCooldown;
 import com.github.sanctum.clans.construct.api.ClansAPI;
+import com.github.sanctum.clans.construct.extra.ClanWar;
 import com.github.sanctum.clans.construct.extra.ScoreTag;
-import com.github.sanctum.clans.construct.extra.cooldown.CooldownCreate;
-import com.github.sanctum.clans.construct.extra.cooldown.CooldownRespawn;
-import com.github.sanctum.clans.construct.extra.misc.ClanWar;
-import com.github.sanctum.clans.util.InteractionType;
-import com.github.sanctum.clans.util.data.DataManager;
+import com.github.sanctum.clans.construct.impl.CooldownCreate;
+import com.github.sanctum.clans.construct.impl.CooldownRespawn;
+import com.github.sanctum.clans.construct.impl.DefaultClan;
+import com.github.sanctum.clans.util.TeleportRequest;
 import com.github.sanctum.clans.util.events.clans.ClaimInteractEvent;
 import com.github.sanctum.clans.util.events.clans.ClanCreateEvent;
 import com.github.sanctum.clans.util.events.clans.ClanCreatedEvent;
 import com.github.sanctum.clans.util.events.damage.PlayerKillPlayerEvent;
 import com.github.sanctum.clans.util.events.damage.PlayerPunchPlayerEvent;
 import com.github.sanctum.labyrinth.data.EconomyProvision;
-import com.github.sanctum.labyrinth.data.FileManager;
 import com.github.sanctum.labyrinth.event.custom.DefaultEvent;
 import com.github.sanctum.labyrinth.event.custom.Vent;
 import com.github.sanctum.labyrinth.library.Cooldown;
 import com.github.sanctum.labyrinth.library.HFEncoded;
+import com.github.sanctum.labyrinth.library.Message;
 import com.github.sanctum.labyrinth.library.StringUtils;
 import com.github.sanctum.labyrinth.task.Schedule;
 import com.github.sanctum.link.ClanVentBus;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.text.MessageFormat;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -59,15 +56,16 @@ import org.bukkit.event.player.PlayerPortalEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.util.Vector;
+import org.jetbrains.annotations.NotNull;
 
 public class PlayerEventListener implements Listener {
 
 	public PlayerEventListener() {
 
-		Vent.subscribe(new Vent.Subscription<>(DefaultEvent.Interact.class, ClansPro.getInstance(), Vent.Priority.MEDIUM, (event, subscription) -> {
+		Vent.subscribe(new Vent.Subscription<>(DefaultEvent.Interact.class, ClansAPI.getInstance().getPlugin(), Vent.Priority.MEDIUM, (event, subscription) -> {
 
 			if (event.getAction() == Action.RIGHT_CLICK_BLOCK && event.getBlock().get().getType().isInteractable()) {
-				ClaimInteractEvent e = new Vent.Call<>(Vent.Runtime.Synchronous, new ClaimInteractEvent(event.getPlayer(), event.getBlock().get().getLocation(), InteractionType.USE)).run();
+				ClaimInteractEvent e = new Vent.Call<>(Vent.Runtime.Synchronous, new ClaimInteractEvent(event.getPlayer(), event.getBlock().get().getLocation(), ClaimInteractEvent.InteractionType.USE)).run();
 				if (e.isCancelled()) {
 					e.stringLibrary().sendMessage(e.getPlayer(), MessageFormat.format(e.stringLibrary().notClaimOwner(e.getClaim().getClan().getName()), e.getClaim().getClan().getName()));
 					event.setCancelled(e.isCancelled());
@@ -99,10 +97,10 @@ public class PlayerEventListener implements Listener {
 
 			if (event.getMaker().isOnline()) {
 				Player p = event.getMaker().getPlayer();
-				if (ClansPro.getInstance().isNameBlackListed(event.getClanName())) {
+				if (ClansAPI.getInstance().isNameBlackListed(event.getClanName())) {
 					String command = ClansAPI.getData().getMain().getConfig().getString("Clans.name-blacklist." + event.getClanName() + ".action");
 					event.getUtil().sendMessage(p, "&c&oThis name is not allowed!");
-					Bukkit.dispatchCommand(Bukkit.getConsoleSender(), DefaultClan.action.format(command, "{PLAYER}", p.getName()));
+					Bukkit.dispatchCommand(Bukkit.getConsoleSender(), Clan.ACTION.format(command, "{PLAYER}", p.getName()));
 					event.setCancelled(true);
 				}
 				if (p != null && ClansAPI.getData().getEnabled("Clans.creation.cooldown.enabled")) {
@@ -150,11 +148,7 @@ public class PlayerEventListener implements Listener {
 			Player killer = e.getKiller();
 			if (killer != null) {
 
-				ClanAssociate associate2 = ClansAPI.getInstance().getAssociate(killer).orElse(null);
-
-				if (associate2 != null) {
-					associate2.killed();
-				}
+				ClansAPI.getInstance().getAssociate(killer).ifPresent(ClanAssociate::killed);
 
 				if (associate != null) {
 					Clan c = associate.getClan();
@@ -175,7 +169,7 @@ public class PlayerEventListener implements Listener {
 											}
 										}
 										killer.teleport(blue);
-										DefaultClan.action.sendMessage(killer, "&c&oYou've been stopped from spawn camping.");
+										Clan.ACTION.sendMessage(killer, "&c&oYou've been stopped from spawn camping.");
 									}
 								} catch (IOException | ClassNotFoundException ex) {
 									ex.printStackTrace();
@@ -194,7 +188,7 @@ public class PlayerEventListener implements Listener {
 											}
 										}
 										killer.teleport(red);
-										DefaultClan.action.sendMessage(killer, "&c&oYou've been stopped from spawn camping.");
+										Clan.ACTION.sendMessage(killer, "&c&oYou've been stopped from spawn camping.");
 									}
 								} catch (IOException | ClassNotFoundException ex) {
 									ex.printStackTrace();
@@ -211,9 +205,9 @@ public class PlayerEventListener implements Listener {
 
 	}
 
-	public ClanCooldown creationCooldown(UUID id) {
+	@NotNull ClanCooldown creationCooldown(UUID id) {
 		ClanCooldown target = null;
-		for (ClanCooldown c : ClansPro.getInstance().dataManager.COOLDOWNS) {
+		for (ClanCooldown c : ClansAPI.getData().COOLDOWNS) {
 			if (c.getAction().equals("Clans:create-limit") && c.getId().equals(id.toString())) {
 				target = c;
 				break;
@@ -221,7 +215,7 @@ public class PlayerEventListener implements Listener {
 		}
 		if (target == null) {
 			target = new CooldownCreate(id);
-			if (!ClansPro.getInstance().dataManager.COOLDOWNS.contains(target)) {
+			if (!ClansAPI.getData().COOLDOWNS.contains(target)) {
 				target.save();
 			}
 		}
@@ -248,9 +242,22 @@ public class PlayerEventListener implements Listener {
 	@EventHandler
 	public void onMove(PlayerMoveEvent e) {
 		if (e.getTo() != null) {
-			if (e.getFrom().getBlockX() != e.getTo().getBlockX()) {
+			if (e.getFrom().getX() != e.getTo().getX() && e.getFrom().getY() != e.getTo().getY() && e.getFrom().getZ() != e.getTo().getZ()) {
 
 				Player p = e.getPlayer();
+
+				ClanAssociate associate = ClansAPI.getInstance().getAssociate(p).orElse(null);
+
+				if (associate != null) {
+					TeleportRequest request = TeleportRequest.get(associate);
+
+					if (request != null) {
+						if (request.getState() == TeleportRequest.State.TELEPORTING) {
+							request.setState(TeleportRequest.State.EXPIRED);
+							Message.form(p).setPrefix(ClansAPI.getInstance().getPrefix().joined()).send("&cYou moved! No longer teleporting to " + request.getTarget().getName());
+						}
+					}
+				}
 
 			}
 		}
@@ -267,7 +274,7 @@ public class PlayerEventListener implements Listener {
 
 				Claim claim = Claim.from(p.getLocation());
 
-				if (claim.getClan().getPlayers().list().stream().noneMatch(pl -> p.getUniqueId().equals(pl.getUniqueId()))) {
+				if (claim.getClan().getMembers().stream().noneMatch(pl -> p.getUniqueId().equals(pl.getPlayer().getUniqueId()))) {
 
 					e.setCancelled(true);
 
@@ -285,36 +292,32 @@ public class PlayerEventListener implements Listener {
 
 		final ClansAPI API = ClansAPI.getInstance();
 
-		final ClanAssociate associate = API.getAssociate(p).orElse(null);
+		final ClanAssociate associate = API.getAssociate(p.getName()).orElse(null);
 
 		if (Bukkit.getVersion().contains("1.14") || Bukkit.getVersion().contains("1.15") || Bukkit.getVersion().contains("1.16") || Bukkit.getVersion().contains("1.17")) {
 			ScoreTag.remove(p);
 		}
 
 		if (associate != null) {
-			FileManager clan = DataManager.FileType.CLAN_FILE.get(associate.getClan().getId().toString());
 			if (associate.isValid()) {
 				if (ClansAPI.getData().prefixedTagsAllowed()) {
 					if (Bukkit.getVersion().contains("1.14") || Bukkit.getVersion().contains("1.15") || Bukkit.getVersion().contains("1.16") || Bukkit.getVersion().contains("1.17")) {
 						ScoreTag.set(p, ClansAPI.getData().prefixedTag(API.getClan(p.getUniqueId()).getColor(), API.getClan(p.getUniqueId()).getName()));
 					}
 				}
-				ClansAPI.getData().CLAN_ENEMY_MAP.put(associate.getClan().getId().toString(), new ArrayList<>(clan.getConfig().getStringList("enemies")));
-				ClansAPI.getData().CLAN_ALLY_MAP.put(associate.getClan().getId().toString(), new ArrayList<>(clan.getConfig().getStringList("allies")));
 			}
 		}
-		ClansAPI.getData().CHAT_MODE.put(p, "GLOBAL");
 		if (p.isOp()) {
 			if (ClansAPI.getData().assertDefaults()) {
-				DefaultClan.action.sendMessage(p, "&b&oUpdated configuration to the latest plugin version.");
+				Clan.ACTION.sendMessage(p, "&b&oUpdated configuration to the latest plugin version.");
 			}
-			ClansUpdate check = new ClansUpdate(ClansPro.getInstance());
+			ClansUpdate check = new ClansUpdate(ClansAPI.getInstance().getPlugin());
 			try {
 				if (check.hasUpdate()) {
-					DefaultClan.action.sendMessage(p, "&b&l&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬oO[&fUpdate&b&l&m]Oo▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬");
-					DefaultClan.action.sendMessage(p, "&eNew version: &3Clans [Pro] &f" + check.getLatest());
-					DefaultClan.action.sendMessage(p, "&e&oDownload: &f&n" + check.getResource());
-					DefaultClan.action.sendMessage(p, "&b&l&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬");
+					Clan.ACTION.sendMessage(p, "&b&l&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬oO[&fUpdate&b&l&m]Oo▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬");
+					Clan.ACTION.sendMessage(p, "&eNew version: &3Clans [Pro] &f" + check.getLatest());
+					Clan.ACTION.sendMessage(p, "&e&oDownload: &f&n" + check.getResource());
+					Clan.ACTION.sendMessage(p, "&b&l&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬");
 				}
 			} catch (Exception ignored) {
 			}
@@ -324,24 +327,12 @@ public class PlayerEventListener implements Listener {
 	@EventHandler(priority = EventPriority.NORMAL)
 	public void onPlayerLeave(PlayerQuitEvent e) {
 		final Player p = e.getPlayer();
-		if (ClansAPI.getInstance().isInClan(p.getUniqueId())) {
-			Clan c = ClansAPI.getInstance().getClan(p.getUniqueId());
+		ClanAssociate associate = ClansAPI.getInstance().getAssociate(p).orElse(null);
+		if (associate != null) {
 			if (ClansAPI.getData().prefixedTagsAllowed()) {
 				ScoreTag.remove(p);
 			}
-			int clanSize = c.getMembersList().length;
-			int offlineSize = 0;
-			for (String player : c.getMembersList()) {
-				if (!Bukkit.getOfflinePlayer(UUID.fromString(player)).isOnline()) {
-					offlineSize++;
-				}
-			}
-			if (offlineSize == clanSize) {
-				ClansAPI.getData().CLAN_ENEMY_MAP.clear();
-				ClansAPI.getData().CLAN_ALLY_MAP.clear();
-			} else {
-				DefaultClan.action.forfeitWar(p, c.getId().toString());
-			}
+			Clan.ACTION.forfeitWar(associate);
 		}
 		ClansAPI.getData().RESIDENTS.removeIf(r -> r.getPlayer().getUniqueId().equals(p.getUniqueId()));
 		ClansAPI.getData().INHABITANTS.remove(p);
@@ -378,7 +369,7 @@ public class PlayerEventListener implements Listener {
 									}
 								}
 							}
-							Schedule.sync(() -> p.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText(DefaultClan.action.color(DefaultClan.action.getPrefix() + " &8Current points: &3" + c.getCurrentWar().getPoints())))).cancelAfter(4).repeat(1, 1);
+							Schedule.sync(() -> p.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText(Clan.ACTION.color(Clan.ACTION.getPrefix() + " &8Current points: &3" + c.getCurrentWar().getPoints())))).cancelAfter(4).repeat(1, 1);
 						} catch (ClassNotFoundException | IOException ignored) {
 
 						}
@@ -395,7 +386,7 @@ public class PlayerEventListener implements Listener {
 									}
 								}
 							}
-							Schedule.sync(() -> p.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText(DefaultClan.action.color(DefaultClan.action.getPrefix() + " &8Current points: &3" + c.getCurrentWar().getPoints())))).cancelAfter(4).repeat(1, 1);
+							Schedule.sync(() -> p.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText(Clan.ACTION.color(Clan.ACTION.getPrefix() + " &8Current points: &3" + c.getCurrentWar().getPoints())))).cancelAfter(4).repeat(1, 1);
 						} catch (ClassNotFoundException | IOException ignored) {
 
 						}
@@ -413,12 +404,12 @@ public class PlayerEventListener implements Listener {
 			PlayerKillPlayerEvent e = new Vent.Call<>(Vent.Runtime.Synchronous, new PlayerKillPlayerEvent(p, target)).run();
 
 			ClanAction clanUtil = e.getUtil();
-			if (clanUtil.getClanID(e.getKiller().getUniqueId()) != null) {
+			if (ClansAPI.getInstance().getClanID(e.getKiller().getUniqueId()) != null) {
 				Clan kill = ClansAPI.getInstance().getClan(e.getKiller().getUniqueId());
-				if (clanUtil.getClanID(e.getVictim().getUniqueId()) != null) {
-					if (!clanUtil.getClanID(e.getKiller().getUniqueId()).equals(clanUtil.getClanID(e.getVictim().getUniqueId()))) {
+				if (ClansAPI.getInstance().getClanID(e.getVictim().getUniqueId()) != null) {
+					if (!ClansAPI.getInstance().getClanID(e.getKiller().getUniqueId()).equals(ClansAPI.getInstance().getClanID(e.getVictim().getUniqueId()))) {
 						Clan dead = ClansAPI.getInstance().getClan(e.getVictim().getUniqueId());
-						if (((DefaultClan) kill).getCurrentWar() != null) {
+						if (kill instanceof DefaultClan) {
 							((DefaultClan) kill).getCurrentWar().addPoint();
 							Bukkit.broadcastMessage(e.stringLibrary().color(e.stringLibrary().getPrefix() + " &a&o+1 point for clan &6&l" + kill.getName()));
 						}
@@ -431,8 +422,8 @@ public class PlayerEventListener implements Listener {
 				}
 			}
 
-			if (clanUtil.getClanID(e.getKiller().getUniqueId()) == null) {
-				if (clanUtil.getClanID(e.getVictim().getUniqueId()) != null) {
+			if (ClansAPI.getInstance().getClanID(e.getKiller().getUniqueId()) == null) {
+				if (ClansAPI.getInstance().getClanID(e.getVictim().getUniqueId()) != null) {
 					Clan dead = ClansAPI.getInstance().getClan(e.getVictim().getUniqueId());
 					dead.takePower(0.11);
 				}
@@ -449,7 +440,7 @@ public class PlayerEventListener implements Listener {
 
 	@EventHandler(priority = EventPriority.HIGHEST)
 	public void onBucketRelease(PlayerBucketEmptyEvent event) {
-		ClaimInteractEvent e = new Vent.Call<>(Vent.Runtime.Synchronous, new ClaimInteractEvent(event.getPlayer(), event.getBlock().getLocation(), InteractionType.USE)).run();
+		ClaimInteractEvent e = new Vent.Call<>(Vent.Runtime.Synchronous, new ClaimInteractEvent(event.getPlayer(), event.getBlock().getLocation(), ClaimInteractEvent.InteractionType.USE)).run();
 		if (e.isCancelled()) {
 			e.stringLibrary().sendMessage(e.getPlayer(), MessageFormat.format(e.stringLibrary().notClaimOwner(e.getClaim().getClan().getName()), e.getClaim().getClan().getName()));
 			final Material bucketType = event.getBucket();
@@ -466,7 +457,7 @@ public class PlayerEventListener implements Listener {
 
 	@EventHandler(priority = EventPriority.HIGHEST)
 	public void onBucketFill(PlayerBucketFillEvent event) {
-		ClaimInteractEvent e = new Vent.Call<>(Vent.Runtime.Synchronous, new ClaimInteractEvent(event.getPlayer(), event.getBlock().getLocation(), InteractionType.USE)).run();
+		ClaimInteractEvent e = new Vent.Call<>(Vent.Runtime.Synchronous, new ClaimInteractEvent(event.getPlayer(), event.getBlock().getLocation(), ClaimInteractEvent.InteractionType.USE)).run();
 		if (e.isCancelled()) {
 			e.stringLibrary().sendMessage(e.getPlayer(), MessageFormat.format(e.stringLibrary().notClaimOwner(e.getClaim().getClan().getName()), e.getClaim().getClan().getName()));
 			final Material bucketType = event.getBucket();

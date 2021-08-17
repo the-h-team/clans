@@ -1,0 +1,381 @@
+#==================================================#
+##  ██╗  ██╗███████╗██╗     ██████╗
+##  ██║  ██║██╔════╝██║     ██╔══██╗
+##  ███████║█████╗  ██║     ██████╔╝  v[1.3.0]
+##  ██╔══██║██╔══╝  ██║     ██╔═══╝
+##  ██║  ██║███████╗███████╗██║
+##  ╚═╝  ╚═╝╚══════╝╚══════╝╚═╝
+# Auto-translation can only happen with the help of you guys!
+# If you want the ability to simply type a command to translate to your
+# desired language each update, turn in your already translated language files!
+#
+# Translation by: Lan
+#==================================================#
+Title: '&r- Command help. (&7/clan #page&r)'
+Border: '&7&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬'
+Lines: 5
+Commands:
+  # Base command permission is "clanspro" add "clanspro." + your.permission when assigning permissions to players/groups.
+  create:
+    text: '&7|&e) &6/clan &fcreate <&7clanName&f> <&7password&f>'
+    permission: 'create'
+  password:
+    text: '&7|&e) &6/clan &fpassword <&7newPassword&f>'
+    permission: 'password'
+  leave:
+    text: '&7|&e) &6/clan &fleave'
+    permission: 'leave'
+  join:
+    text: '&7|&e) &6/clan &fjoin <&7clanName&f> | Optional [password]'
+    permission: 'join'
+  invite:
+    text: '&7|&e) &6/clan &finvite <&7playerName&f>'
+    permission: 'invite'
+  block:
+    text: '&7|&e) &6/clan &fblock <&7playerName&f>'
+    permission: 'block'
+  kick:
+    text: '&7|&e) &6/clan &fkick <&7playerName&f>'
+    permission: 'kick'
+  war:
+    text: '&7|&e) &6/clan &4war&f <&7clanName&f>'
+    permission: 'war'
+  war-set:
+    text: '&7|&e) &6/clan &4war&f <&7clanName&f> <timeInSeconds>'
+    permission: 'war'
+  peace:
+    text: '&7|&e) &6/clan &f&lpeace&f <&7clanName&f>'
+    permission: 'peace'
+  forfeit:
+    text: '&7|&e) &6/clan &fforfeit'
+    permission: 'forfeit'
+  mode:
+    text: '&7|&e) &6/clan &fmode <&apeace&f, &4war&f>'
+    permission: 'mode'
+  description:
+    text: '&7|&e) &6/clan &fdescription <&7description&f>'
+    permission: 'description'
+  message:
+    text: '&7|&e) &6/clan &fmessage <&7message&f>'
+    permission: 'message'
+  players:
+    text: '&7|&e) &6/clan &fplayers <&7#page&f>'
+    permission: 'players'
+  bio:
+    text: '&7|&e) &6/clan &fbio'
+    permission: 'bio'
+  chat:
+    text: '&7|&e) &6/clan &fchat'
+    permission: 'chat'
+  color:
+    text: '&7|&e) &6/clan &fcolor <&7newColor&f>'
+    permission: 'color'
+  info:
+    text: '&7|&e) &6/clan &finfo'
+    permission: 'info'
+  info-other:
+    text: '&7|&e) &6/clan &finfo <&7playerName/clanName&f>'
+    permission: 'info.other'
+  promote:
+    text: '&7|&e) &6/clan &fpromote <&7playerName&f>'
+    permission: 'promote'
+  demote:
+    text: '&7|&e) &6/clan &fdemote <&7playerName&f>'
+    permission: 'demote'
+  tag:
+    text: '&7|&e) &6/clan &ftag <&7newTag&f>'
+    permission: 'tag'
+  logo:
+    text: '&7|&e) &6/clan &flogo &7| &f[&eedit, apply, save, color, print, redraw&r]'
+    permission: 'logo'
+  friendlyfire:
+    text: '&7|&e) &6/clan &ffriendlyfire'
+    permission: 'friendlyfire'
+  nickname:
+    text: '&7|&e) &6/clan &fnickname <&7nickName&f>'
+    permission: 'nickname'
+  list:
+    text: '&7|&e) &6/clan &flist'
+    permission: 'list'
+  base:
+    text: '&7|&e) &6/clan &fbase'
+    permission: 'base'
+  setbase:
+    text: '&7|&e) &6/clan &fsetbase'
+    permission: 'setbase'
+  top:
+    text: '&7|&e) &6/clan &ftop'
+    permission: 'top'
+  claim:
+    text: '&7|&e) &6/clan &fclaim'
+    permission: 'claim'
+  unclaim:
+    text: '&7|&e) &6/clan &funclaim'
+    permission: 'unclaim'
+  unclaimall:
+    text: '&7|&e) &6/clan &funclaim all'
+    permission: 'unclaim.all'
+  passowner:
+    text: '&7|&e) &6/clan &fpassowner <&7playerName&f>'
+    permission: 'passowner'
+  bank:
+    text: '&7|&e) &6/clan &fbank'
+    permission: 'banks.use'
+  bank-balance:
+    text: '&7|&e) &6/clan &fbank balance'
+    permission: 'banks.use.balance'
+  bank-deposit:
+    text: '&7|&e) &6/clan &fbank <&adeposit&f> <&7amount&f>'
+    permission: 'banks.use.deposit'
+  bank-withdraw:
+    text: '&7|&e) &6/clan &fbank <&cwithdraw&f> <&7amount&f>'
+    permission: 'banks.use.withdraw'
+  ally:
+    text: '&7|&e) &6/clan &fally <&7clanName&f>'
+    permission: 'ally'
+  removeally:
+    text: '&7|&e) &6/clan &fally <&cremove&f> <&7clanName&f>'
+    permission: 'ally.remove'
+  enemy:
+    text: '&7|&e) &6/clan &fenemy <&7clanName&f>'
+    permission: 'enemy'
+  removeenemy:
+    text: '&7|&e) &6/clan &fenemy <&cremove&f> <&7clanName&f>'
+    permission: 'enemy.remove'
+#=====================================================#
+#  ██╗   ██╗ █████╗ ██╗     ██╗██████╗
+#  ██║   ██║██╔══██╗██║     ██║██╔══██╗
+#  ██║   ██║███████║██║     ██║██║  ██║
+#  ╚██╗ ██╔╝██╔══██║██║     ██║██║  ██║
+#   ╚████╔╝ ██║  ██║███████╗██║██████╔╝
+#    ╚═══╝  ╚═╝  ╚═╝╚══════╝╚═╝╚═════╝
+# Messages that get sent on a successful completion.
+#=====================================================#
+Response:
+  creation: '&a&o{0} Criou um &f{1} &a&oclã &7{2}'
+  deletion: '&c&oClan "{0}" caiu...'
+  kick-out: '&e&oJogador "{0}" foi expulso do clã.'
+  kick-in: '&4&o{0} chutou você do clã.'
+  member-join: '&a&oJogador "{0}" juntou-se ao clã.'
+  member-leave: '&c&oJogador "{0}" deixou o clã.'
+  password-change: '&b&o&nA senha do clã foi alterada.'
+  promotion: '&a&oJogador "{0}" foi promovido.'
+  demotion: '&d&oJogador "{0}" foi rebaixado.'
+  tag-change: '&b&oO nome do clã foi alterado para {0}'
+  base-changed: '&aA localização da base do clã foi atualizada.'
+  base: '&eBem-vindo à base do clã.'
+  chat: '&7&oTransferido para &a{0} &7&ocanal de bate-papo.'
+  neutral: '&f&oAgora neutro com o clã "&e{0}&f&o".'
+  enemies: '&4&oAgora inimigos com o clã &f"{0}"&4&o.'
+  allies: '&a&oAgora aliados com o clã &f"{0}"&a&o.'
+  war-mode: '&4Você está agora em modo de guerra.'
+  nickname: '&3&oApelido do bate-papo atualizado para: &f{0}'
+  member-bio: '&b&oA biografia do clã foi atualizada para: &f{0}'
+  peace-mode: '&f&oVocê está agora em modo de paz.'
+  pass-owner: '&d&lVocê passou a propriedade para o usuário {0}'
+  now-owner: '&aJogador {0} passou a propriedade do clã para você.'
+  peace: '&7(&4!&7) &a&l{0} &f&lAGORA ESTÁ EM MODO PACÍFICO.'
+  war: '&7(&4!&7) &4&L{0} &6&lAGORA ESTÁ EM &4&lMODO GUERRA.'
+  friendly-fire-on: '&c{0} ligou o fogo amigável'
+  friendly-fire-off: '&a{0} desligou o fogo amigável.'
+  claim: '&3&oNova terra foi reivindicada @ Chunk position: &7X:&b{0} &7Z:&b{1} &3&oin world &7{2}'
+  un-claim: '&c&oTerra não foi reclamada @ Chunk position: &7X:&b{0} &7Z:&b{1} &c&oin world &7{2}'
+  un-claim-all: '&e&oATodas as terras não sao mais de: &3&n{0}'
+  un-claim-cooldown: '&cVocê está agora em uma reivindicação de terras cooldown.'
+  claim-hint: '&f[&7DICA&f] &7&oVeja as bordas dos pedaços no jogo pressionando e soltando as teclas F3+G.'
+  claim-breach: '&7[&4REIVINDICAÇÃO DE VIOLAÇÃO&7] &6Clan &d&o{0} &r&o:'
+  claim-higherpower: '&7[&4PODER SUPERIOR&7] &d&o{0} &r&o:'
+  claim-overpowered: '&7&oTerra era &4over-powered&7&o @ Chunk position: &7X:&b{0} &7Z:&b{1} &3&ono mundo &7{2}'
+  cooldown-expired: '&6&oCooldown &f[&b&o{0}&f] &6&oexpirado.'
+  bank-header: '&fBancos' # displays with Clans prefix prepended
+  bank-greeting: '&bBem-vinda, {0}&b.' # {0} = Player name
+  bank-greeting-hover: "&6No clã: &f{0}\n&aClique para obter o equilíbrio" # {0} = clan name
+  bank-current-balance: "&bSaldo bancário atual: &a{0}" # {0} = Balance
+  bank-command-listing: '&6Comandos:'
+  bank-command-usage: '&6Use:'
+  bank-hover-balance: 'Obtenha o saldo bancário atual' #describes balance subcommand
+  bank-hover-deposit: 'Deposite dinheiro no banco do clã' #describes deposit subcommand
+  bank-hover-withdraw: 'Retire dinheiro do banco do clã' #describes withdraw subcommand
+  bank-deposit-message-player: '&7Você depositou &a{0} &7no banco do clã.'
+  bank-withdraw-message-player: '&7Você retirou &c{0} &7do banco do clã.'
+  #==========================================================================#
+  #  ███╗   ██╗ ██████╗ ███╗   ██╗      ██╗   ██╗ █████╗ ██╗     ██╗██████╗
+  #  ████╗  ██║██╔═══██╗████╗  ██║      ██║   ██║██╔══██╗██║     ██║██╔══██╗
+  #  ██╔██╗ ██║██║   ██║██╔██╗ ██║█████╗██║   ██║███████║██║     ██║██║  ██║
+  #  ██║╚██╗██║██║   ██║██║╚██╗██║╚════╝╚██╗ ██╔╝██╔══██║██║     ██║██║  ██║
+  #  ██║ ╚████║╚██████╔╝██║ ╚████║       ╚████╔╝ ██║  ██║███████╗██║██████╔╝
+  #  ╚═╝  ╚═══╝ ╚═════╝ ╚═╝  ╚═══╝        ╚═══╝  ╚═╝  ╚═╝╚══════╝╚═╝╚═════╝
+  # Messages that get sent when something goes wrong executing something.
+  #============================================================================#
+  cooldown-active: '&7Yvocê pode fazer isso de novo em &f(&3D&f)&b %d &7: &f(&3H&f)&b %h &7: &f(&3M&f)&b %m &7: &f(&3S&f)&b %s'
+  no-clan: 'Você não está em um clã.'
+  name-invalid: '&c&oNome inválido. Deve conter apenas caracteres alfanuméricos.'
+  no-base: '&c&oSeu clã não tem uma base definida.'
+  no-claims: 'Seu clã não tem terras para cancelar. Considere obter algum?'
+  no-clearance: '&cVocê não tem autorização do clã.'
+  no-permission: '&cVocê não tem permissão &4{0}'
+  no-removal: '&c&oEste clã iniciou você como um &4inimigo. &cIncapaz de perdoar.'
+  friendly-fire: '&cVocê não pode machucar aliados!'
+  clan-unknown: '&c{0} não foi encontrado.'
+  clan-neutral: '&c&oVocê não é inimigo deste clã. Incapaz de dominar a reivindicação aliada.'
+  clan-not-ready: '&c&oO outro clã ainda não concordou com uma guerra total.'
+  player-unknown: '&cAlvo {0} não foi encontrado.'
+  page-unknown: '&cNúmero de página inválido'
+  command-unknown: 'Uso de subcomando desconhecido "/{0}" for help.'
+  password-wrong: '&cA senha que você digitou estava errada.'
+  password-invalid: '&c&oSenha inválida. Deve conter apenas caracteres alfanuméricos.'
+  claim-not-connected: '&c&oVocê não pode reivindicar aqui. Todas as reivindicações devem ser conectadas.'
+  already-owned: '&cSeu clã já possui esta terra.'
+  already-occupied: '&cVocê já está em um clã.'
+  already-made: '&c&oJá existe um clã com este nome! Tente outro.'
+  already-max: '&c&oEste jogador é classificado &b&o{0} &c&omais poderoso próximo a &b&l{1}'
+  already-at-war: '&c&oJá em uma guerra.'
+  hard-max-claims: '&c&oReivindicação de capa dura alcançada. Você tem tanta terra quanto você pode conseguir!'
+  clan-max-claims: '&c&oAtingido o limite máximo de reivindicações, aumente o poder e o tamanho do seu clã para obter mais terras.'
+  already-max-claims: '&c&oLimite máximo de reclamações atingido, entre em contato com um membro da equipe para obter mais informações.'
+  already-neutral: '&fVocê já é neutro com {0}'
+  already-enemies: '&c&oVocê já é inimigo deste clã. Para se tornar um tipo neutro &7/clan enemy remove {0}'
+  already-allies: '&c&oVocê já é inimigo deste clã. Para se tornar um tipo neutro &7/clan ally remove {0}'
+  already-requested: '&e&oEsperando uma resposta de &f{0}'
+  already-peace: '&cVocê já está em modo pacífico.'
+  already-war: '&cVocê já está em modo de guerra.'
+  already-first-page: '&cVocê já está na primeira página.'
+  already-last-page: '&cVocê está na última página.'
+  already-wild: '&cEsta terra pertence a: &4&nRegião selvagem&c, e é livre para reivindicar.'
+  not-owner: '&cVocê não possui esta terra, ela pertence a: {0}'
+  not-enemies: '&f&oVocê não é inimigo deste clã.'
+  not-enough: '&cVocê não tem dinheiro suficiente, você precisa: &6{0}'
+  too-long: '&c&oO nome do clã que você escolheu é muito longo! Comprimento máximo da tag alcançado.'
+  too-weak: '&cO poder do seu clã é muito fraco.'
+  self-denial: '&cVocê não pode usar o seu nome.'
+  safe-zone: '&cVocê está dentro do alcance de {0}''s base, esta é considerada uma zona segura.'
+  alliance-denial: '&c&oVocê não pode aliar seu próprio clã.'
+  alliance-requested-in: '&a&oConvite aliado enviado.'
+  alliance-requested-out: '&a&oClan "&e{0}&a&o" deseja se aliar, aceitar &7use &f/clan ally &6{1}'
+  peaceful-deny: '&cVocê não pode fazer isso no modo pacífico!'
+  peaceful-deny-other: '&cVocê não pode fazer isso enquanto {0} está em modo pacífico!'
+  shield-deny: '&5&oVocê não pode tentar nada agora .. O escudo é resistente.'
+  bank-deposit-error-player: '&cIncapaz de depositar {0}' # {0} = amount
+  bank-withdraw-error-player: '&cIncapaz de retirar {0}' # {0} = amount
+  bank-amount: 'quantia' # Displayed when prompting user for number
+  bank-amount-hover: 'Nenhuma quantia fornecida!' # Displayed when hovering over amount^
+  bank-invalid-amount: '&cNúmero inválido!'
+  bank-invalid-subcommand: '&cSubcomando inválido!'
+  bank-no-permission-command: '&cVocê não tem permissão para executar este comando.'
+
+  #=================================================#
+  #  ██╗   ██╗███████╗ █████╗  ██████╗ ███████╗
+  #  ██║   ██║██╔════╝██╔══██╗██╔════╝ ██╔════╝
+  #  ██║   ██║███████╗███████║██║  ███╗█████╗
+  #  ██║   ██║╚════██║██╔══██║██║   ██║██╔══╝
+  #  ╚██████╔╝███████║██║  ██║╚██████╔╝███████╗
+  #   ╚═════╝ ╚══════╝╚═╝  ╚═╝ ╚═════╝ ╚══════╝
+  #=================================================#
+  create: '&7|&e) &fUso inválido : /clan create <clanName> <password>'
+  password: '&7|&e) &fUso inválido : /clan password <newPassword>'
+  join: '&7|&e) &fUso inválido : /clan join <clanName> <password>'
+  kick: '&7|&e) &fUso inválido : /clan kick <playerName>'
+  tag: '&7|&e) &fUso inválido : /clan tag <newTag>'
+  mode: '&7|&e) &fUso inválido : /clan mode <modeType>'
+  passowner: '&7|&e) &fUso inválido : /clan passowner <playerName>'
+  nick: '&7|&e) &fUso inválido : /clan nickname <newNickname>'
+  promote: '&7|&e) &fUso inválido : /clan promote <playerName>'
+  demote: '&7|&e) &fUso inválido : /clan demote <playerName>'
+  ally: '&7|&e) &fUso inválido : /clan ally <clanName>'
+  enemy: '&7|&e) &fUso inválido : /clan enemy <clanName>'
+  color: '&7|&e) &fUso inválido : /clan color <newTagColor>'
+  message: '&7|&e) &fUso inválido : /clan message <message>'
+  war-usage: '&7|&e) &fUso inválido : /clan war <clanName>'
+  peace-usage: '&7|&e) &fUso inválido : /clan peace <clanName>'
+  # =================================================#
+  #  ██████╗  █████╗ ███╗   ██╗██╗  ██╗███████╗
+  #  ██╔══██╗██╔══██╗████╗  ██║██║ ██╔╝██╔════╝
+  #  ██████╔╝███████║██╔██╗ ██║█████╔╝ ███████╗
+  #  ██╔══██╗██╔══██║██║╚██╗██║██╔═██╗ ╚════██║
+  #  ██████╔╝██║  ██║██║ ╚████║██║  ██╗███████║
+  #  ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═══╝╚═╝  ╚═╝╚══════╝
+  # =================================================#
+  bank-pretransaction-success: 'PENDENTE'
+  bank-pretransaction-failure: 'NEGADO'
+  # {0} = success, {1} = name, {2} = amount, {3} = clan name
+  bank-transaction-deposit-pre: 'Transação bancária >>PRE-Não cancelado [{0}]: {1} depositar {2} com clã {3}'
+  bank-transaction-deposit-pre-cancelled: 'Transação bancária >>PRE-Cancelado [{0}]: {1} depositar {2} com clã {3}'
+  bank-transaction-withdraw-pre: 'Transação bancária >>PRE-Não cancelado [{0}]: {1} sacar {2} do clã {3}'
+  bank-transaction-withdraw-pre-cancelled: 'Transação bancária >>PRE-Cancelado [{0}]: {1} sacar {2} do clã {3}'
+
+  bank-transaction-success: 'SUCESSO'
+  bank-transaction-failed: 'FRACASSADO'
+  # {0} = success, {1} = name, {2} = amount, {3} = clan name
+  bank-transaction-deposit: 'Transação bancária [{0}]: {1} deposited {2} with clan {3}'
+  bank-transaction-withdraw: 'Transação bancária [{0}]: {1} withdrew {2} from clan {3}'
+  # {0} = clanId
+  bank-verbose-clan-id: 'clanId={0}'
+
+#==================================#
+#   ██████╗ ██╗   ██╗██╗
+#  ██╔════╝ ██║   ██║██║
+#  ██║  ███╗██║   ██║██║
+#  ██║   ██║██║   ██║██║
+#  ╚██████╔╝╚██████╔╝██║
+#   ╚═════╝  ╚═════╝ ╚═╝
+#==================================#
+# MENU-SIZES: ONE, TWO, THREE, FOUR, FIVE, SIX
+pagination-size: THREE
+
+menu-format:
+  # {0} = Clan Color
+  # {1} = Clan Description
+  # {2} = Clan Power
+  # {3} = Clan Base Validation
+  # {4} = Clan Land Owned
+  # {5} = Clan PVP Mode
+  # {6} = Clan Members (Partial)
+  # {7} = Clan Allies (Partial)
+  # {8} = Clan Enemies (Partial)
+  # {9} = Clan Color (Normal)
+  clan:
+    - '&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬'
+    - '&3Cor: {0}'
+    - '&3Descrição: {1}'
+    - '&3Poder: {2}'
+    - '&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬'
+    - '&3Tem base: {3}'
+    - '&3Land Owned: &f({4}&f)'
+    - '&3Modo: {5}'
+    - '&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬'
+    - '&7Membros: {6}'
+    - '&7Alliados: {7}'
+    - '&7Inimigos: {8}'
+    - '&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬'
+    - '&b&oClique para revelar os membros do clã.'
+
+menu-items:
+  # Setup custom heads from the "Heads.yml" file.
+  navigate_left: Left_Button
+  navigate_right: Right_Button
+  back: BARRIER
+  top-list: GOLD_BLOCK
+  roster-list: PAPER
+  clan: Clan
+  player: PLAYER_HEAD
+
+menu-titles:
+  top-list: '&3&oTabela de classificação do clã &0&l»'
+  roster-list: '&3&oLista de servidores completa &0&l»'
+  member-list: 'Membros &0&l»'
+  # {0} = Clan Associate
+  member-information: '{0}''s &3&oInformação do clã &0&l»'
+  list-types: '&3&oVisão &0&l»'
+
+menu-categories:
+  top-list: '&7[&6Tabela de classificação&7]'
+  roster-list: '&7[&bLista&7]'
+  # {0} = Clan Color
+  # {1} = Clan Name
+  # {2} = Clan ID Short
+  clan: '&6&lTag: {0}{1} {0}(&3#{0}{2})'
+
+gui-navigation:
+  back: '&eClique para: &cVoltar.'
+  left: 'Clique para ir para a esquerda'
+  right: 'Clique para ir para a direita'

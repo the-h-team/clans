@@ -1,6 +1,6 @@
 package com.github.sanctum.link;
 
-import com.github.sanctum.clans.ClansPro;
+import com.github.sanctum.clans.construct.api.ClansAPI;
 import com.github.sanctum.labyrinth.LabyrinthProvider;
 import com.google.common.collect.Sets;
 import java.io.IOException;
@@ -40,9 +40,9 @@ public class CycleList {
 		e.setActive(false);
 		e.onDisable();
 		dataLog.clear();
-		ClansPro.getInstance().getLogger().info("- Queueing removal of " + '"' + e.getName() + '"' + " addon information.");
+		ClansAPI.getInstance().getPlugin().getLogger().info("- Queueing removal of " + '"' + e.getName() + '"' + " addon information.");
 		dataLog.add("Clans [Pro] - Queueing removal of " + '"' + e.getName() + '"' + " addon information.");
-		List<Listener> a = HandlerList.getRegisteredListeners(ClansPro.getInstance()).stream().sequential().filter(r -> e.getAdditions().contains(r.getListener())).map(RegisteredListener::getListener).collect(Collectors.toList());
+		List<Listener> a = HandlerList.getRegisteredListeners(ClansAPI.getInstance().getPlugin()).stream().sequential().filter(r -> e.getAdditions().contains(r.getListener())).map(RegisteredListener::getListener).collect(Collectors.toList());
 		int count = 0;
 		if (!a.isEmpty()) {
 			dataLog.add(" - Unregistering cycle from handler-list.");
@@ -51,11 +51,11 @@ public class CycleList {
 				count++;
 			}
 			if (count > 0) {
-				ClansPro.getInstance().getLogger().info("- (+" + count + ") Handler(s) successfully un-registered");
+				ClansAPI.getInstance().getPlugin().getLogger().info("- (+" + count + ") Handler(s) successfully un-registered");
 				dataLog.add(" - (+" + count + ") Handler(s) found and un-registered");
 			}
 		} else {
-			ClansPro.getInstance().getLogger().info("- Failed to un-register events. No cycles currently running.");
+			ClansAPI.getInstance().getPlugin().getLogger().info("- Failed to un-register events. No cycles currently running.");
 			dataLog.add(" - Failed to un-register events. No cycles currently running.");
 		}
 	}
@@ -64,21 +64,21 @@ public class CycleList {
 		e.setActive(true);
 		e.onEnable();
 		dataLog.clear();
-		ClansPro.getInstance().getLogger().info("- Queueing pickup for " + '"' + e.getName() + '"' + " addon information.");
+		ClansAPI.getInstance().getPlugin().getLogger().info("- Queueing pickup for " + '"' + e.getName() + '"' + " addon information.");
 		dataLog.add("Clans [Pro] - Queueing pickup for " + '"' + e.getName() + '"' + " addon information.");
-		List<Listener> a = HandlerList.getRegisteredListeners(ClansPro.getInstance()).stream().sequential().filter(r -> e.getAdditions().contains(r.getListener())).map(RegisteredListener::getListener).collect(Collectors.toList());
+		List<Listener> a = HandlerList.getRegisteredListeners(ClansAPI.getInstance().getPlugin()).stream().sequential().filter(r -> e.getAdditions().contains(r.getListener())).map(RegisteredListener::getListener).collect(Collectors.toList());
 		int count = 0;
 		for (Listener add : e.getAdditions()) {
 			if (a.contains(add)) {
-				ClansPro.getInstance().getLogger().info("- (+1) Handler failed to register. Already registered and skipping.");
+				ClansAPI.getInstance().getPlugin().getLogger().info("- (+1) Handler failed to register. Already registered and skipping.");
 				dataLog.add(" - (+1) Handler failed to register. Already registered and skipping.");
 			} else {
-				Bukkit.getPluginManager().registerEvents(add, ClansPro.getInstance());
+				Bukkit.getPluginManager().registerEvents(add, ClansAPI.getInstance().getPlugin());
 				count++;
 			}
 		}
 		if (count > 0) {
-			ClansPro.getInstance().getLogger().info("- (+" + count + ") Listener(s) successfully re-registered");
+			ClansAPI.getInstance().getPlugin().getLogger().info("- (+" + count + ") Listener(s) successfully re-registered");
 			dataLog.add(" - (+" + count + ") Listener(s) found and re-registered");
 		}
 	}
@@ -122,7 +122,7 @@ public class CycleList {
 				LabyrinthProvider.getInstance().getLogger().warning("- It's possible this has no effect to you as of this moment so you may be safe to ignore this message.");
 			}
 		} catch (InstantiationException | IllegalAccessException e) {
-			ClansPro.getInstance().getLogger().severe("- Unable to cast EventCycle to the class " + cycle.getName() + ". This likely means you are not implementing the EventCycle interface for your event class properly.");
+			ClansAPI.getInstance().getPlugin().getLogger().severe("- Unable to cast EventCycle to the class " + cycle.getName() + ". This likely means you are not implementing the EventCycle interface for your event class properly.");
 			e.printStackTrace();
 		}
 	}
@@ -142,7 +142,7 @@ public class CycleList {
 				try {
 					clazz = Class.forName(className.substring(0, className.length() - 6));
 				} catch (ClassNotFoundException e) {
-					ClansPro.getInstance().getLogger().severe("- Unable to find class" + className + "! Double check package location. See the error below for more information.");
+					ClansAPI.getInstance().getPlugin().getLogger().severe("- Unable to find class" + className + "! Double check package location. See the error below for more information.");
 					break;
 				}
 				if (EventCycle.class.isAssignableFrom(clazz)) {
@@ -161,7 +161,7 @@ public class CycleList {
 					LabyrinthProvider.getInstance().getLogger().warning("- It's possible this has no effect to you as of this moment so you may be safe to ignore this message.");
 				}
 			} catch (InstantiationException | IllegalAccessException | NoSuchMethodException | InvocationTargetException e) {
-				ClansPro.getInstance().getLogger().severe("- Unable to cast EventCycle to the class " + aClass.getName() + ". This likely means you are not implementing the EventCycle interface for your event class properly.");
+				ClansAPI.getInstance().getPlugin().getLogger().severe("- Unable to cast EventCycle to the class " + aClass.getName() + ". This likely means you are not implementing the EventCycle interface for your event class properly.");
 				e.printStackTrace();
 				break;
 			}
