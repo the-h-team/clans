@@ -9,6 +9,7 @@ import com.github.sanctum.labyrinth.formatting.string.ColoredString;
 import com.github.sanctum.labyrinth.library.DirectivePoint;
 import com.github.sanctum.labyrinth.library.StringUtils;
 import com.github.sanctum.labyrinth.library.TextLib;
+import com.github.sanctum.labyrinth.task.Schedule;
 import com.github.sanctum.link.CycleList;
 import com.github.sanctum.link.EventCycle;
 import com.github.sanctum.map.structure.ChunkPosition;
@@ -303,10 +304,12 @@ public class MapCommand implements Listener {
         }
         if (footer != null) {
             for (String extra : e.getAddedLinesBottom()) {
-	            player.sendMessage(Clan.ACTION.color(extra));
+                player.sendMessage(Clan.ACTION.color(extra));
             }
         }
     }
+
+    private final HashMap<Player, Boolean> actionWait = new HashMap<>();
 
     @EventHandler(priority = EventPriority.HIGH)
     public void onFormat(AsyncMapFormatEvent e) {
@@ -373,12 +376,28 @@ public class MapCommand implements Listener {
 		                                            p.setAppliance(() -> {
 			                                            Clan c = ClansAPI.getInstance().getClan(e.getPlayer().getUniqueId());
 			                                            if (c != null) {
-				                                            Claim claim = c.obtain(e.getPlayer().getWorld().getChunkAt(p.chunkPosition.x, p.chunkPosition.z));
-				                                            if (claim != null) {
-					                                            e.getPlayer().performCommand("c map");
-					                                            Clan.ACTION.sendMessage(e.getPlayer(), "&aChunk &6&7(&3X: &f" + claim.getChunk().getX() + " &3Z: &f" + claim.getChunk().getZ() + "&7) &ais now owned by our clan.");
-				                                            }
-			                                            }
+                                                            Claim claim = c.obtain(e.getPlayer().getWorld().getChunkAt(p.chunkPosition.x, p.chunkPosition.z));
+                                                            if (claim != null) {
+                                                                if (actionWait.containsKey(e.getPlayer())) {
+                                                                    if (actionWait.get(e.getPlayer())) {
+                                                                        Clan.ACTION.sendMessage(e.getPlayer(), "&cNot so fast!");
+                                                                        return;
+                                                                    }
+                                                                }
+                                                                actionWait.put(e.getPlayer(), true);
+                                                                Schedule.sync(() -> {
+
+                                                                    e.getPlayer().performCommand("c map");
+                                                                    actionWait.remove(e.getPlayer());
+
+                                                                }).wait(2);
+                                                                Clan.ACTION.sendMessage(e.getPlayer(), "&aChunk &6&7(&3X: &f" + claim.getChunk().getX() + " &3Z: &f" + claim.getChunk().getZ() + "&7) &ais now owned by our clan.");
+                                                            } else {
+                                                                if (c.getOwnedClaims().length == c.getMaxClaims()) {
+                                                                    Clan.ACTION.sendMessage(e.getPlayer(), Claim.ACTION.alreadyMaxClaims());
+                                                                }
+                                                            }
+                                                        }
 		                                            });
                                                 }
                                                 p.setColor("&8");
@@ -406,10 +425,26 @@ public class MapCommand implements Listener {
 			                                            Clan c = ClansAPI.getInstance().getClan(e.getPlayer().getUniqueId());
 			                                            if (c != null) {
 				                                            Claim claim = c.obtain(e.getPlayer().getWorld().getChunkAt(p.chunkPosition.x, p.chunkPosition.z));
-				                                            if (claim != null) {
-					                                            e.getPlayer().performCommand("c map");
-					                                            Clan.ACTION.sendMessage(e.getPlayer(), "&aChunk &6&7(&3X: &f" + claim.getChunk().getX() + " &3Z: &f" + claim.getChunk().getZ() + "&7) &ais now owned by our clan.");
-				                                            }
+                                                            if (claim != null) {
+                                                                if (actionWait.containsKey(e.getPlayer())) {
+                                                                    if (actionWait.get(e.getPlayer())) {
+                                                                        Clan.ACTION.sendMessage(e.getPlayer(), "&cNot so fast!");
+                                                                        return;
+                                                                    }
+                                                                }
+                                                                actionWait.put(e.getPlayer(), true);
+                                                                Schedule.sync(() -> {
+
+                                                                    e.getPlayer().performCommand("c map");
+                                                                    actionWait.remove(e.getPlayer());
+
+                                                                }).wait(2);
+                                                                Clan.ACTION.sendMessage(e.getPlayer(), "&aChunk &6&7(&3X: &f" + claim.getChunk().getX() + " &3Z: &f" + claim.getChunk().getZ() + "&7) &ais now owned by our clan.");
+                                                            } else {
+                                                                if (c.getOwnedClaims().length == c.getMaxClaims()) {
+                                                                    Clan.ACTION.sendMessage(e.getPlayer(), Claim.ACTION.alreadyMaxClaims());
+                                                                }
+                                                            }
 			                                            }
 		                                            });
                                                 }

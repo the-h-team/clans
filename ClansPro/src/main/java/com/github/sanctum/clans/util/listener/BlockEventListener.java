@@ -1,6 +1,7 @@
 package com.github.sanctum.clans.util.listener;
 
 import com.github.sanctum.clans.construct.Claim;
+import com.github.sanctum.clans.construct.ClanAssociate;
 import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClansAPI;
 import com.github.sanctum.clans.construct.extra.ShieldTamper;
@@ -98,33 +99,24 @@ public class BlockEventListener implements Listener {
 		}
 	}
 
-	public BlockEventListener() {
-
-		ClanVentBus.subscribe(RaidShieldEvent.class, Vent.Priority.MEDIUM, (e, subscription) -> {
-
-
-		});
-
-		ClanVentBus.subscribe(ClaimInteractEvent.class, Vent.Priority.MEDIUM, (e, subscription) -> {
-
-			if (ClansAPI.getInstance().getClaimManager().isInClaim(e.getLocation())) {
-				if (ClansAPI.getInstance().getAssociate(e.getPlayer()).isPresent()) {
-					if (!e.getClaim().getOwner().equals(ClansAPI.getInstance().getClanID(e.getPlayer().getUniqueId()).toString())) {
-						if (!e.getPlayer().hasPermission("clanspro.claim.bypass")) {
-							if (!e.getClaim().getClan().getAllyList().contains(ClansAPI.getInstance().getClanID(e.getPlayer().getUniqueId()).toString())) {
-								e.setCancelled(true);
-							}
+	@Subscribe
+	public void onClaimInteract(ClaimInteractEvent e) {
+		if (ClansAPI.getInstance().getClaimManager().isInClaim(e.getLocation())) {
+			ClanAssociate associate = ClansAPI.getInstance().getAssociate(e.getPlayer()).orElse(null);
+			if (associate != null && associate.isValid()) {
+				if (!e.getClaim().getOwner().equals(associate.getClan().getId().toString())) {
+					if (!e.getPlayer().hasPermission("clanspro.claim.bypass")) {
+						if (!e.getClaim().getClan().getAllyList().contains(associate.getClan().getId().toString())) {
+							e.setCancelled(true);
 						}
 					}
-				} else {
-					if (!e.getPlayer().hasPermission("clanspro.claim.bypass")) {
-						e.setCancelled(true);
-					}
+				}
+			} else {
+				if (!e.getPlayer().hasPermission("clanspro.claim.bypass")) {
+					e.setCancelled(true);
 				}
 			}
-
-		});
-
+		}
 	}
 
 	@EventHandler(priority = EventPriority.LOWEST)

@@ -141,7 +141,7 @@ public final class DynmapSubscription implements Listener {
 							Claim claim = Claim.from(p.getLocation());
 							if (claim != null) {
 								if (Arrays.asList(clan.getOwnedClaimsList()).contains(Claim.ACTION.getClaimID(p.getLocation()))) {
-									integration.removeMarker(Claim.ACTION.getClaimID(p.getLocation()));
+									integration.removeMarker(claim.getId());
 								} else {
 									if (ClansAPI.getInstance().getShieldManager().isEnabled()) {
 										if (e.getUtil().overPowerBypass()) {

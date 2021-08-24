@@ -49,7 +49,7 @@ public class StashListener implements Listener {
 
 	private void saveInventory(String clanID, Inventory inv) {
 		Clan c = ClansAPI.getInstance().getClan(clanID);
-		c.setValue("stash", inv.getContents());
+		c.setValue("stash", inv.getContents(), false);
 	}
 
 	public static ItemStack[] getInventoryContents(String clanID) {

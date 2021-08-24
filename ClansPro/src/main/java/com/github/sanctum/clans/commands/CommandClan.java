@@ -3,7 +3,6 @@ package com.github.sanctum.clans.commands;
 import com.github.sanctum.clans.construct.Claim;
 import com.github.sanctum.clans.construct.ClanAssociate;
 import com.github.sanctum.clans.construct.DataManager;
-import com.github.sanctum.clans.construct.GUI;
 import com.github.sanctum.clans.construct.UI;
 import com.github.sanctum.clans.construct.actions.ClanAction;
 import com.github.sanctum.clans.construct.api.Clan;
@@ -743,7 +742,7 @@ public class CommandClan extends Command {
 					lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("list")));
 					return true;
 				}
-				GUI.CLAN_ROSTER_SELECT.get().open(p);
+				UI.select(UI.Singular.ROSTER_ORGANIZATION).open(p);
 				return true;
 			}
 			if (args0.equalsIgnoreCase("claim")) {
@@ -755,7 +754,6 @@ public class CommandClan extends Command {
 					if (associate != null) {
 						if (associate.getPriority().toInt() >= Clan.ACTION.claimingClearance()) {
 							Claim.ACTION.claim(p);
-							ClansAPI.getInstance().getClaimManager().refresh();
 						} else {
 							lib.sendMessage(p, lib.noClearance());
 							return true;
@@ -776,16 +774,19 @@ public class CommandClan extends Command {
 					lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("unclaim")));
 					return true;
 				}
-				if (Claim.ACTION.isEnabled()) {
-					if (associate.getPriority().toInt() >= Clan.ACTION.claimingClearance()) {
-						Claim.ACTION.unclaim(p);
-						ClansAPI.getInstance().getClaimManager().refresh();
+				if (associate != null) {
+					if (Claim.ACTION.isEnabled()) {
+						if (associate.getPriority().toInt() >= Clan.ACTION.claimingClearance()) {
+							Claim.ACTION.unclaim(p);
+						} else {
+							lib.sendMessage(p, lib.noClearance());
+						}
 					} else {
-						lib.sendMessage(p, lib.noClearance());
+						lib.sendMessage(p, "&c&oYour server doesn't allow the use of clan land-claiming.");
+						return true;
 					}
 				} else {
-					lib.sendMessage(p, "&c&oYour server doesn't allow the use of clan land-claiming.");
-					return true;
+					lib.sendMessage(p, lib.notInClan());
 				}
 				return true;
 			}
@@ -1151,7 +1152,7 @@ public class CommandClan extends Command {
 							}
 						}
 
-						c.setValue("logo", new ArrayList<>(item.getItemMeta().getLore()));
+						c.setValue("logo", new ArrayList<>(item.getItemMeta().getLore()), false);
 
 						lib.sendMessage(p, "&aPrinted insignia applied to clan container.");
 
@@ -1175,7 +1176,7 @@ public class CommandClan extends Command {
 					Insignia.copy(c.getId().toString(), i);
 					if (i != null) {
 
-						c.setValue("logo", i.getLines().stream().map(Insignia.Line::toString).collect(Collectors.toList()));
+						c.setValue("logo", i.getLines().stream().map(Insignia.Line::toString).collect(Collectors.toList()), false);
 
 						lib.sendMessage(p, "&aCustom insignia applied to clan container.");
 
@@ -1906,7 +1907,6 @@ public class CommandClan extends Command {
 						if (associate != null) {
 							if (associate.getPriority().toInt() >= Clan.ACTION.unclaimAllClearance()) {
 								Claim.ACTION.unclaimAll(p);
-								ClansAPI.getInstance().getClaimManager().refresh();
 							} else {
 								lib.sendMessage(p, lib.noClearance());
 								return true;

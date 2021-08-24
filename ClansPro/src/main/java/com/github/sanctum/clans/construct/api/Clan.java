@@ -62,7 +62,7 @@ public interface Clan extends ClanBank, Serializable {
 	 * @param <R>   The type of the value.
 	 * @return The same value passed through the parameters.
 	 */
-	<R> R setValue(String key, R value);
+	<R> R setValue(String key, R value, boolean temporary);
 
 	/**
 	 * Kick a specified member from the clan.

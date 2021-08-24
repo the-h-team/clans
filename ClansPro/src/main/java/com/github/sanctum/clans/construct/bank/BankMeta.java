@@ -100,7 +100,7 @@ public class BankMeta implements Serializable {
 	}
 
 	private synchronized void storeMetaToClan() {
-		clan.setValue("bank", this);
+		clan.setValue("bank", this, false);
 	}
 
 	private synchronized void loadMetaFromClan() {

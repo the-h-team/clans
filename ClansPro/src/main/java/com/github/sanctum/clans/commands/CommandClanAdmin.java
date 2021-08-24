@@ -624,7 +624,7 @@ public class CommandClanAdmin extends Command {
 
 							if (id != null) {
 								Clan target = ClansAPI.getInstance().getClan(id);
-								target.setValue("logo", new ArrayList<>(item.getItemMeta().getLore()));
+								target.setValue("logo", new ArrayList<>(item.getItemMeta().getLore()), false);
 							} else {
 								lib.sendMessage(p, lib.clanUnknown(args1));
 								return true;
@@ -780,7 +780,7 @@ public class CommandClanAdmin extends Command {
 
 							if (id != null) {
 								Clan target = ClansAPI.getInstance().getClan(id);
-								target.setValue("logo", new ArrayList<>(item.getItemMeta().getLore()));
+								target.setValue("logo", new ArrayList<>(item.getItemMeta().getLore()), false);
 							} else {
 								lib.sendMessage(p, lib.clanUnknown(args1));
 								return true;

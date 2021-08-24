@@ -60,6 +60,7 @@ public class DefaultClan implements Clan {
 	transient NamespacedKey key;
 	private final Set<ClanAssociate> associates = new HashSet<>();
 	private final List<Clan> warInvites = new ArrayList<>();
+	private final Set<Claim> claims = new HashSet<>();
 	private final List<String> allies = new ArrayList<>();
 	private final List<String> enemies = new ArrayList<>();
 	protected final List<String> requests = new ArrayList<>();
@@ -421,24 +422,24 @@ public class DefaultClan implements Clan {
 
 	@Override
 	public synchronized String[] getOwnedClaimsList() {
-		List<String> array = new ArrayList<>();
-		for (Claim claim : ClansAPI.getInstance().getClaimManager().getClaims()) {
-			if (claim.getOwner().equalsIgnoreCase(getId().toString())) {
-				array.add(claim.getId());
-			}
-		}
-		return array.toArray(new String[0]);
+		return claims.stream().map(Claim::getId).toArray(String[]::new);
 	}
 
 	@Override
 	public synchronized Claim[] getOwnedClaims() {
-		List<Claim> result = new ArrayList<>();
-		for (Claim claim : ClansAPI.getInstance().getClaimManager().getClaims()) {
-			if (claim.getOwner().equalsIgnoreCase(getId().toString())) {
-				result.add(claim);
-			}
-		}
-		return result.toArray(new Claim[0]);
+		return claims.toArray(new Claim[0]);
+	}
+
+	public synchronized void resetClaims() {
+		claims.clear();
+	}
+
+	public synchronized void addClaim(Claim c) {
+		Schedule.sync(() -> claims.add(c)).run();
+	}
+
+	public synchronized void removeClaim(Claim c) {
+		claims.remove(c);
 	}
 
 	@Override
@@ -481,7 +482,8 @@ public class DefaultClan implements Clan {
 	}
 
 	@Override
-	public <R> R setValue(String key, R value) {
+	public <R> R setValue(String key, R value, boolean temporary) {
+		if (temporary) return LabyrinthProvider.getInstance().getContainer(this.key).lend(key, value);
 		return LabyrinthProvider.getInstance().getContainer(this.key).attach(key, value);
 	}
 
@@ -685,6 +687,7 @@ public class DefaultClan implements Clan {
 					return null;
 				}
 			}
+			if (getOwnedClaims().length == getMaxClaims()) return null;
 			String claimID = new RandomID(6, "AKZ0123456789").generate();
 			int x = c.getX();
 			int z = c.getZ();
@@ -694,9 +697,9 @@ public class DefaultClan implements Clan {
 			d.getConfig().set(getId().toString() + ".Claims." + claimID + ".Z", z);
 			d.getConfig().set(getId().toString() + ".Claims." + claimID + ".World", world);
 			d.saveConfig();
-			ClansAPI.getInstance().getClaimManager().refresh();
+			claim = new Claim(x, z, clanID, claimID, world, true);
+			ClansAPI.getInstance().getClaimManager().load(claim);
 			broadcast(Claim.ACTION.claimed(x, z, world));
-			claim = ClansAPI.getInstance().getClaimManager().getClaim(claimID);
 			new Vent.Call<>(Vent.Runtime.Synchronous, new LandClaimedEvent(null, claim)).run();
 		}
 		return claim;

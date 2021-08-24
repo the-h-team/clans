@@ -51,7 +51,7 @@ public class GiftBox implements Serializable {
 	}
 
 	private void saveChanges() {
-		getClan().setValue("gift-box", this);
+		getClan().setValue("gift-box", this, false);
 	}
 
 	public List<String> getSenders() {

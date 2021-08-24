@@ -422,7 +422,7 @@ public class KingdomCycle extends EventCycle {
 
 								Kingdom create = new Kingdom(name, this);
 
-								c.setValue("kingdom", name);
+								c.setValue("kingdom", name, false);
 
 								create.getMembers().add(c);
 

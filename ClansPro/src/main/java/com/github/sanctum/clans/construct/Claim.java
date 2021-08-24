@@ -3,6 +3,7 @@ package com.github.sanctum.clans.construct;
 import com.github.sanctum.clans.construct.actions.ClaimAction;
 import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClansAPI;
+import com.github.sanctum.clans.construct.impl.DefaultClan;
 import com.github.sanctum.clans.construct.impl.Resident;
 import java.util.ArrayList;
 import java.util.List;
@@ -25,6 +26,10 @@ public class Claim {
 		this.id = ID;
 		this.pos = POS;
 		this.active = active;
+	}
+
+	public Claim(int x, int z, String clanId, String claimId, String world, boolean active) {
+		this(new String[]{clanId, claimId, world}, new int[]{x, z}, active);
 	}
 
 	/**
@@ -186,7 +191,10 @@ public class Claim {
 	public void remove() {
 		ClansAPI.getInstance().getClaimManager().getFile().getConfig().set(getOwner() + ".Claims." + getId(), null);
 		ClansAPI.getInstance().getClaimManager().getFile().saveConfig();
-		ClansAPI.getInstance().getClaimManager().refresh();
+		if (getClan() instanceof DefaultClan) {
+			DefaultClan cl = (DefaultClan) getClan();
+			cl.removeClaim(this);
+		}
 	}
 
 }

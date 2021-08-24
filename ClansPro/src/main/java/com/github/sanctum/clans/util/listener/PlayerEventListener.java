@@ -20,13 +20,13 @@ import com.github.sanctum.clans.util.events.damage.PlayerKillPlayerEvent;
 import com.github.sanctum.clans.util.events.damage.PlayerPunchPlayerEvent;
 import com.github.sanctum.labyrinth.data.EconomyProvision;
 import com.github.sanctum.labyrinth.event.custom.DefaultEvent;
+import com.github.sanctum.labyrinth.event.custom.Subscribe;
 import com.github.sanctum.labyrinth.event.custom.Vent;
 import com.github.sanctum.labyrinth.library.Cooldown;
 import com.github.sanctum.labyrinth.library.HFEncoded;
 import com.github.sanctum.labyrinth.library.Message;
 import com.github.sanctum.labyrinth.library.StringUtils;
 import com.github.sanctum.labyrinth.task.Schedule;
-import com.github.sanctum.link.ClanVentBus;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.text.MessageFormat;
@@ -60,149 +60,140 @@ import org.jetbrains.annotations.NotNull;
 
 public class PlayerEventListener implements Listener {
 
-	public PlayerEventListener() {
-
-		Vent.subscribe(new Vent.Subscription<>(DefaultEvent.Interact.class, ClansAPI.getInstance().getPlugin(), Vent.Priority.MEDIUM, (event, subscription) -> {
-
-			if (event.getAction() == Action.RIGHT_CLICK_BLOCK && event.getBlock().get().getType().isInteractable()) {
-				ClaimInteractEvent e = new Vent.Call<>(Vent.Runtime.Synchronous, new ClaimInteractEvent(event.getPlayer(), event.getBlock().get().getLocation(), ClaimInteractEvent.InteractionType.USE)).run();
-				if (e.isCancelled()) {
-					e.stringLibrary().sendMessage(e.getPlayer(), MessageFormat.format(e.stringLibrary().notClaimOwner(e.getClaim().getClan().getName()), e.getClaim().getClan().getName()));
-					event.setCancelled(e.isCancelled());
-				}
+	@Subscribe
+	public void onInteract(DefaultEvent.Interact event) {
+		if (event.getAction() == Action.RIGHT_CLICK_BLOCK && event.getBlock().get().getType().isInteractable()) {
+			ClaimInteractEvent e = new Vent.Call<>(Vent.Runtime.Synchronous, new ClaimInteractEvent(event.getPlayer(), event.getBlock().get().getLocation(), ClaimInteractEvent.InteractionType.USE)).run();
+			if (e.isCancelled()) {
+				e.stringLibrary().sendMessage(e.getPlayer(), MessageFormat.format(e.stringLibrary().notClaimOwner(e.getClaim().getClan().getName()), e.getClaim().getClan().getName()));
+				event.setCancelled(e.isCancelled());
 			}
+		}
+	}
 
-		}));
-
-		ClanVentBus.subscribe(PlayerPunchPlayerEvent.class, Vent.Priority.MEDIUM, (e, subscription) -> {
-
-			Player attacker = e.getAttacker();
-			Cooldown test = Cooldown.getById("ClansPro-war-respawn-" + e.getVictim().getUniqueId().toString());
-			if (test != null) {
-				if (!test.isComplete()) {
-					if (test.getSecondsLeft() == 0) {
-						Cooldown.remove(test);
-						return;
-					}
-					e.getUtil().sendMessage(attacker, "&cYou must wait &6&l" + test.getSecondsLeft() + " &cseconds before doing this to me.");
-					e.setCanHurt(false);
-				} else {
+	@Subscribe
+	public void onPunch(PlayerPunchPlayerEvent e) {
+		Player attacker = e.getAttacker();
+		Cooldown test = Cooldown.getById("ClansPro-war-respawn-" + e.getVictim().getUniqueId().toString());
+		if (test != null) {
+			if (!test.isComplete()) {
+				if (test.getSecondsLeft() == 0) {
 					Cooldown.remove(test);
+					return;
 				}
+				e.getUtil().sendMessage(attacker, "&cYou must wait &6&l" + test.getSecondsLeft() + " &cseconds before doing this to me.");
+				e.setCanHurt(false);
+			} else {
+				Cooldown.remove(test);
 			}
+		}
+	}
 
-		});
-
-		ClanVentBus.subscribe(ClanCreateEvent.class, Vent.Priority.MEDIUM, (event, subscription) -> {
-
-			if (event.getMaker().isOnline()) {
-				Player p = event.getMaker().getPlayer();
-				if (ClansAPI.getInstance().isNameBlackListed(event.getClanName())) {
-					String command = ClansAPI.getData().getMain().getConfig().getString("Clans.name-blacklist." + event.getClanName() + ".action");
-					event.getUtil().sendMessage(p, "&c&oThis name is not allowed!");
-					Bukkit.dispatchCommand(Bukkit.getConsoleSender(), Clan.ACTION.format(command, "{PLAYER}", p.getName()));
+	@Subscribe
+	public void onClanCreate(ClanCreateEvent event) {
+		if (event.getMaker().isOnline()) {
+			Player p = event.getMaker().getPlayer();
+			if (ClansAPI.getInstance().isNameBlackListed(event.getClanName())) {
+				String command = ClansAPI.getData().getMain().getConfig().getString("Clans.name-blacklist." + event.getClanName() + ".action");
+				event.getUtil().sendMessage(p, "&c&oThis name is not allowed!");
+				Bukkit.dispatchCommand(Bukkit.getConsoleSender(), Clan.ACTION.format(command, "{PLAYER}", p.getName()));
+				event.setCancelled(true);
+			}
+			if (p != null && ClansAPI.getData().getEnabled("Clans.creation.cooldown.enabled")) {
+				if (creationCooldown(p.getUniqueId()).isComplete()) {
+					creationCooldown(p.getUniqueId()).setCooldown();
+				} else {
 					event.setCancelled(true);
-				}
-				if (p != null && ClansAPI.getData().getEnabled("Clans.creation.cooldown.enabled")) {
-					if (creationCooldown(p.getUniqueId()).isComplete()) {
-						creationCooldown(p.getUniqueId()).setCooldown();
-					} else {
-						event.setCancelled(true);
-						event.stringLibrary().sendMessage(p, "&c&oYou can't do this right now.");
-						event.stringLibrary().sendMessage(p, creationCooldown(p.getUniqueId()).fullTimeLeft());
-						return;
-					}
-				}
-				if (ClansAPI.getData().getEnabled("Clans.creation.charge")) {
-					double amount = ClansAPI.getData().getMain().getConfig().getDouble("Clans.creation.amount");
-					Optional<Boolean> opt = EconomyProvision.getInstance().withdraw(BigDecimal.valueOf(amount), p, p.getWorld().getName());
-
-					boolean success = opt.orElse(false);
-					if (!success) {
-						event.setCancelled(true);
-						event.stringLibrary().sendMessage(p, "&c&oYou don't have enough money. Amount needed: &6" + amount);
-					}
+					event.stringLibrary().sendMessage(p, "&c&oYou can't do this right now.");
+					event.stringLibrary().sendMessage(p, creationCooldown(p.getUniqueId()).fullTimeLeft());
+					return;
 				}
 			}
+			if (ClansAPI.getData().getEnabled("Clans.creation.charge")) {
+				double amount = ClansAPI.getData().getMain().getConfig().getDouble("Clans.creation.amount");
+				Optional<Boolean> opt = EconomyProvision.getInstance().withdraw(BigDecimal.valueOf(amount), p, p.getWorld().getName());
 
-		});
-
-		ClanVentBus.subscribe(ClanCreatedEvent.class, Vent.Priority.MEDIUM, (e, subscription) -> {
-
-			DefaultClan c = e.getClan();
-			if (ClansAPI.getData().getEnabled("Clans.land-claiming.claim-influence.allow")) {
-				if (ClansAPI.getData().getString("Clans.land-claiming.claim-influence.dependence").equalsIgnoreCase("LOW")) {
-					c.addMaxClaim(12);
+				boolean success = opt.orElse(false);
+				if (!success) {
+					event.setCancelled(true);
+					event.stringLibrary().sendMessage(p, "&c&oYou don't have enough money. Amount needed: &6" + amount);
 				}
 			}
+		}
+	}
 
-		});
-
-		ClanVentBus.subscribe(PlayerKillPlayerEvent.class, Vent.Priority.MEDIUM, (e, subscription) -> {
-
-			Player p = e.getVictim();
-			ClanAssociate associate = ClansAPI.getInstance().getAssociate(p).orElse(null);
-			if (!Bukkit.getOnlinePlayers().contains(p)) {
-				return;
+	@Subscribe
+	public void onClanCreated(ClanCreatedEvent e) {
+		DefaultClan c = e.getClan();
+		if (ClansAPI.getData().getEnabled("Clans.land-claiming.claim-influence.allow")) {
+			if (ClansAPI.getData().getString("Clans.land-claiming.claim-influence.dependence").equalsIgnoreCase("LOW")) {
+				c.addMaxClaim(12);
 			}
-			Player killer = e.getKiller();
-			if (killer != null) {
+		}
+	}
 
-				ClansAPI.getInstance().getAssociate(killer).ifPresent(ClanAssociate::killed);
+	@Subscribe
+	public void onPlayerKillPlayer(PlayerKillPlayerEvent e) {
+		Player p = e.getVictim();
+		ClanAssociate associate = ClansAPI.getInstance().getAssociate(p).orElse(null);
+		if (!Bukkit.getOnlinePlayers().contains(p)) {
+			return;
+		}
+		Player killer = e.getKiller();
+		if (killer != null) {
 
-				if (associate != null) {
-					Clan c = associate.getClan();
-					if (c.getCurrentWar() != null) {
-						if (c.getCurrentWar().warActive()) {
-							ClanWar team1 = c.getCurrentWar();
-							if (team1.isRed()) {
-								try {
-									Location blue = (Location) new HFEncoded(ClansAPI.getData().arenaBlueTeamFile().getConfig().getString("spawn")).deserialized();
-									Location red = (Location) new HFEncoded(ClansAPI.getData().arenaRedTeamFile().getConfig().getString("spawn")).deserialized();
-									if (killer.getLocation().distance(red) <= 20) {
-										for (Entity ent : killer.getNearbyEntities(8, 8, 8)) {
-											if (ent instanceof Player) {
-												Player target = (Player) ent;
-												if (!c.getCurrentWar().getParticipants().contains(target)) {
-													target.teleport(blue);
-												}
+			ClansAPI.getInstance().getAssociate(killer).ifPresent(ClanAssociate::killed);
+
+			if (associate != null) {
+				Clan c = associate.getClan();
+				if (c.getCurrentWar() != null) {
+					if (c.getCurrentWar().warActive()) {
+						ClanWar team1 = c.getCurrentWar();
+						if (team1.isRed()) {
+							try {
+								Location blue = (Location) new HFEncoded(ClansAPI.getData().arenaBlueTeamFile().getConfig().getString("spawn")).deserialized();
+								Location red = (Location) new HFEncoded(ClansAPI.getData().arenaRedTeamFile().getConfig().getString("spawn")).deserialized();
+								if (killer.getLocation().distance(red) <= 20) {
+									for (Entity ent : killer.getNearbyEntities(8, 8, 8)) {
+										if (ent instanceof Player) {
+											Player target = (Player) ent;
+											if (!c.getCurrentWar().getParticipants().contains(target)) {
+												target.teleport(blue);
 											}
 										}
-										killer.teleport(blue);
-										Clan.ACTION.sendMessage(killer, "&c&oYou've been stopped from spawn camping.");
 									}
-								} catch (IOException | ClassNotFoundException ex) {
-									ex.printStackTrace();
+									killer.teleport(blue);
+									Clan.ACTION.sendMessage(killer, "&c&oYou've been stopped from spawn camping.");
 								}
-							} else {
-								try {
-									Location blue = (Location) new HFEncoded(ClansAPI.getData().arenaBlueTeamFile().getConfig().getString("spawn")).deserialized();
-									Location red = (Location) new HFEncoded(ClansAPI.getData().arenaRedTeamFile().getConfig().getString("spawn")).deserialized();
-									if (killer.getLocation().distance(blue) <= 20) {
-										for (Entity ent : killer.getNearbyEntities(8, 8, 8)) {
-											if (ent instanceof Player) {
-												Player target = (Player) ent;
-												if (!c.getCurrentWar().getParticipants().contains(target)) {
-													target.teleport(red);
-												}
-											}
-										}
-										killer.teleport(red);
-										Clan.ACTION.sendMessage(killer, "&c&oYou've been stopped from spawn camping.");
-									}
-								} catch (IOException | ClassNotFoundException ex) {
-									ex.printStackTrace();
-								}
+							} catch (IOException | ClassNotFoundException ex) {
+								ex.printStackTrace();
 							}
-							e.setKeepInventory(true);
-							e.setClearDrops(true);
+						} else {
+							try {
+								Location blue = (Location) new HFEncoded(ClansAPI.getData().arenaBlueTeamFile().getConfig().getString("spawn")).deserialized();
+								Location red = (Location) new HFEncoded(ClansAPI.getData().arenaRedTeamFile().getConfig().getString("spawn")).deserialized();
+								if (killer.getLocation().distance(blue) <= 20) {
+									for (Entity ent : killer.getNearbyEntities(8, 8, 8)) {
+										if (ent instanceof Player) {
+											Player target = (Player) ent;
+											if (!c.getCurrentWar().getParticipants().contains(target)) {
+												target.teleport(red);
+											}
+										}
+									}
+									killer.teleport(red);
+									Clan.ACTION.sendMessage(killer, "&c&oYou've been stopped from spawn camping.");
+								}
+							} catch (IOException | ClassNotFoundException ex) {
+								ex.printStackTrace();
+							}
 						}
+						e.setKeepInventory(true);
+						e.setClearDrops(true);
 					}
 				}
 			}
-
-		});
-
+		}
 	}
 
 	@NotNull ClanCooldown creationCooldown(UUID id) {
@@ -239,9 +230,12 @@ public class PlayerEventListener implements Listener {
 		}
 	}
 
-	@EventHandler
+	@EventHandler(priority = EventPriority.LOWEST)
 	public void onMove(PlayerMoveEvent e) {
 		if (e.getTo() != null) {
+
+			if (e.getTo().distanceSquared(e.getFrom()) == 0) return;
+
 			if (e.getFrom().getX() != e.getTo().getX() && e.getFrom().getY() != e.getTo().getY() && e.getFrom().getZ() != e.getTo().getZ()) {
 
 				Player p = e.getPlayer();
@@ -300,6 +294,7 @@ public class PlayerEventListener implements Listener {
 
 		if (associate != null) {
 			if (associate.isValid()) {
+
 				if (ClansAPI.getData().prefixedTagsAllowed()) {
 					if (Bukkit.getVersion().contains("1.14") || Bukkit.getVersion().contains("1.15") || Bukkit.getVersion().contains("1.16") || Bukkit.getVersion().contains("1.17")) {
 						ScoreTag.set(p, ClansAPI.getData().prefixedTag(API.getClan(p.getUniqueId()).getColor(), API.getClan(p.getUniqueId()).getName()));

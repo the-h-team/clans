@@ -48,7 +48,7 @@ public class MailBox implements Serializable {
 	}
 
 	private void saveChanges() {
-		getClan().setValue("mail-box", this);
+		getClan().setValue("mail-box", this, false);
 	}
 
 	public List<String> getMailList() {

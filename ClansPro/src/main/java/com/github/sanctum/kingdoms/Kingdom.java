@@ -96,7 +96,7 @@ public class Kingdom extends Progressable {
 
 		this.name = name;
 		for (Clan c : getMembers()) {
-			c.setValue("kingdom", name);
+			c.setValue("kingdom", name, false);
 		}
 
 	}

@@ -18,9 +18,8 @@ public class ClanCreatedEvent extends ClanEventBuilder {
 		this.name = name;
 	}
 
-	@Override
-	public String getName() {
-		return getClass().getSimpleName();
+	public String getClanName() {
+		return name;
 	}
 
 	public OfflinePlayer getMaker() {

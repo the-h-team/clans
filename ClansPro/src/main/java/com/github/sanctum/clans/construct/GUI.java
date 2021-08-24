@@ -7,22 +7,24 @@ import com.github.sanctum.labyrinth.formatting.string.Paragraph;
 import com.github.sanctum.labyrinth.gui.unity.construct.Menu;
 import com.github.sanctum.labyrinth.gui.unity.construct.PaginatedMenu;
 import com.github.sanctum.labyrinth.gui.unity.construct.SingularMenu;
-import com.github.sanctum.labyrinth.gui.unity.impl.InventoryElement;
+import com.github.sanctum.labyrinth.gui.unity.impl.BorderElement;
+import com.github.sanctum.labyrinth.gui.unity.impl.FillerElement;
 import com.github.sanctum.labyrinth.gui.unity.impl.ItemElement;
 import com.github.sanctum.labyrinth.gui.unity.impl.ListElement;
 import com.github.sanctum.labyrinth.gui.unity.impl.MenuType;
 import com.github.sanctum.labyrinth.library.StringUtils;
 import java.text.MessageFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
-import org.jetbrains.annotations.NotNull;
 
 public enum GUI {
 
@@ -108,7 +110,7 @@ public enum GUI {
 						.setSize(getSize())
 						.setKey("ClansPro:Roster")
 						.setStock(i -> {
-							i.addItem(b -> b.setElement(getLeftItem()).setSlot(getLeft()).setNavigation(ItemElement.Navigation.Previous).setClick(click -> {
+							i.addItem(b -> b.setElement(getLeftItem()).setSlot(getLeft()).setType(ItemElement.ControlType.BUTTON_BACK).setClick(click -> {
 								click.setCancelled(true);
 								click.setHotbarAllowed(false);
 								click.setConsumer((target, success) -> {
@@ -122,7 +124,7 @@ public enum GUI {
 								});
 							}));
 
-							i.addItem(b -> b.setElement(getRightItem()).setSlot(getRight()).setNavigation(ItemElement.Navigation.Next).setClick(click -> {
+							i.addItem(b -> b.setElement(getRightItem()).setSlot(getRight()).setType(ItemElement.ControlType.BUTTON_NEXT).setClick(click -> {
 								click.setCancelled(true);
 								click.setHotbarAllowed(false);
 								click.setConsumer((target, success) -> {
@@ -136,16 +138,10 @@ public enum GUI {
 								});
 							}));
 
-							i.addItem(b -> b.setElement(getBackItem()).setSlot(getBack()).setNavigation(ItemElement.Navigation.Back).setClick(click -> {
+							i.addItem(b -> b.setElement(getBackItem()).setSlot(getBack()).setType(ItemElement.ControlType.BUTTON_EXIT).setClick(click -> {
 								click.setCancelled(true);
 								click.setHotbarAllowed(false);
-								click.setConsumer((target, success) -> {
-
-									if (!success) {
-										CLAN_ROSTER_SELECT.get().open(target);
-									}
-
-								});
+								click.setConsumer((target, success) -> CLAN_ROSTER_SELECT.get().open(target));
 							}));
 
 							i.addItem(new ListElement<>(ClansAPI.getInstance().getClanManager().getClans().list()).setLimit(getLimit()).setPopulate((c, element) -> {
@@ -250,7 +246,6 @@ public enum GUI {
 									UI.view(c).open(click.getElement());
 								});
 							}));
-							border(new ItemStack(Material.GRAY_STAINED_GLASS_PANE), i, c -> c.setCancelled(true));
 						}).orGet(m -> m instanceof PaginatedMenu && m.getKey().isPresent() && m.getKey().get().equals("ClansPro:Roster"));
 			case CLAN_ROSTER_TOP:
 				return MenuType.PAGINATED.build().setHost(ClansAPI.getInstance().getPlugin())
@@ -259,7 +254,7 @@ public enum GUI {
 						.setSize(getSize())
 						.setKey("ClansPro:Roster_top")
 						.setStock(i -> {
-							i.addItem(b -> b.setElement(getLeftItem()).setSlot(getLeft()).setNavigation(ItemElement.Navigation.Previous).setClick(click -> {
+							i.addItem(b -> b.setElement(getLeftItem()).setSlot(getLeft()).setType(ItemElement.ControlType.BUTTON_BACK).setClick(click -> {
 								click.setCancelled(true);
 								click.setHotbarAllowed(false);
 								click.setConsumer((target, success) -> {
@@ -273,7 +268,7 @@ public enum GUI {
 								});
 							}));
 
-							i.addItem(b -> b.setElement(getRightItem()).setSlot(getRight()).setNavigation(ItemElement.Navigation.Next).setClick(click -> {
+							i.addItem(b -> b.setElement(getRightItem()).setSlot(getRight()).setType(ItemElement.ControlType.BUTTON_NEXT).setClick(click -> {
 								click.setCancelled(true);
 								click.setHotbarAllowed(false);
 								click.setConsumer((target, success) -> {
@@ -287,7 +282,7 @@ public enum GUI {
 								});
 							}));
 
-							i.addItem(b -> b.setElement(getBackItem()).setSlot(getBack()).setNavigation(ItemElement.Navigation.Back).setClick(click -> {
+							i.addItem(b -> b.setElement(getBackItem()).setSlot(getBack()).setType(ItemElement.ControlType.BUTTON_EXIT).setClick(click -> {
 								click.setCancelled(true);
 								click.setHotbarAllowed(false);
 								click.setConsumer((target, success) -> {
@@ -401,7 +396,19 @@ public enum GUI {
 									UI.view(c).open(click.getElement());
 								});
 							}));
-							border(new ItemStack(Material.GRAY_STAINED_GLASS_PANE), i, c -> c.setCancelled(true));
+
+							BorderElement<?> element = new BorderElement<>(i);
+
+							for (Menu.Panel p : Arrays.stream(Menu.Panel.values()).filter(p -> p != Menu.Panel.MIDDLE).collect(Collectors.toSet())) {
+								element.add(p, it -> it.setType(ItemElement.ControlType.ITEM_BORDER).setElement(b -> b.setType(Material.GRAY_STAINED_GLASS_PANE).setTitle(" ").build()));
+							}
+
+							i.addItem(element);
+
+							FillerElement<?> filler = new FillerElement<>(i);
+							filler.add(it -> it.setElement(b -> b.setType(Material.GREEN_STAINED_GLASS_PANE).setTitle(" ").build()));
+							i.addItem(filler);
+
 						}).orGet(m -> m instanceof PaginatedMenu && m.getKey().isPresent() && m.getKey().get().equals("ClansPro:Roster_top"));
 			case CLAN_ROSTER_SELECT:
 				return MenuType.SINGULAR.build().setHost(ClansAPI.getInstance().getPlugin())
@@ -463,152 +470,6 @@ public enum GUI {
 		return Menu.Rows.valueOf(ClansAPI.getData().getPath("pagination-size"));
 	}
 
-	private void filler(@NotNull ItemStack filler, @NotNull InventoryElement element, @NotNull Menu.Click click, @NotNull Player player) {
-
-		for (int l = 0; l < element.getParent().getSize().getSlots(); l++) {
-			if (element.getElement(player).getItem(l) == null) {
-				int finalL = l;
-				element.addItem(b -> b.setElement(filler).setSlot(finalL).setClick(click));
-			}
-		}
-
-	}
-
-	private void border(@NotNull ItemStack border, @NotNull InventoryElement element, @NotNull Menu.Click click) {
-		switch (element.getParent().getSize().getSlots()) {
-			case 27:
-				int f;
-				for (f = 0; f < 10; f++) {
-					int finalF = f;
-					if (element.getItem(item -> item.getSlot().isPresent() && item.getSlot().get() == finalF) == null) {
-						ItemElement<?> e = new ItemElement<>().setElement(border).setSlot(f).setClick(click);
-						element.addItem(e);
-					}
-				}
-				if (element.getItem(item -> item.getSlot().isPresent() && item.getSlot().get() == 17) == null) {
-					ItemElement<?> el = new ItemElement<>().setElement(border).setSlot(17).setClick(click);
-					element.addItem(el);
-				}
-				for (f = 18; f < 27; f++) {
-					int finalF1 = f;
-					if (element.getItem(item -> item.getSlot().isPresent() && item.getSlot().get() == finalF1) == null) {
-						ItemElement<?> e = new ItemElement<>().setElement(border).setSlot(f).setClick(click);
-						element.addItem(e);
-					}
-				}
-				break;
-			case 36:
-				int h;
-				for (h = 0; h < 10; h++) {
-					int finalH = h;
-					if (element.getItem(item -> item.getSlot().isPresent() && item.getSlot().get() == finalH) == null) {
-						ItemElement<?> e = new ItemElement<>().setElement(border).setSlot(h).setClick(click);
-						element.addItem(e);
-					}
-				}
-				if (element.getItem(item -> item.getSlot().isPresent() && item.getSlot().get() == 17) == null) {
-					ItemElement<?> el2 = new ItemElement<>().setElement(border).setSlot(17).setClick(click);
-					element.addItem(el2);
-				}
-				if (element.getItem(item -> item.getSlot().isPresent() && item.getSlot().get() == 18) == null) {
-					ItemElement<?> el3 = new ItemElement<>().setElement(border).setSlot(18).setClick(click);
-					element.addItem(el3);
-				}
-				if (element.getItem(item -> item.getSlot().isPresent() && item.getSlot().get() == 26) == null) {
-					ItemElement<?> el4 = new ItemElement<>().setElement(border).setSlot(26).setClick(click);
-					element.addItem(el4);
-				}
-
-				for (h = 27; h < 36; h++) {
-					int finalH = h;
-					if (element.getItem(item -> item.getSlot().isPresent() && item.getSlot().get() == finalH) == null) {
-						ItemElement<?> e = new ItemElement<>().setElement(border).setSlot(h).setClick(click);
-						element.addItem(e);
-					}
-				}
-				break;
-			case 45:
-				int o;
-				for (o = 0; o < 10; o++) {
-					int finalO = o;
-					if (element.getItem(item -> item.getSlot().isPresent() && item.getSlot().get() == finalO) == null) {
-						ItemElement<?> e = new ItemElement<>().setElement(border).setSlot(o).setClick(click);
-						element.addItem(e);
-					}
-				}
-				if (element.getItem(item -> item.getSlot().isPresent() && item.getSlot().get() == 17) == null) {
-					ItemElement<?> el5 = new ItemElement<>().setElement(border).setSlot(17).setClick(click);
-					element.addItem(el5);
-				}
-				if (element.getItem(item -> item.getSlot().isPresent() && item.getSlot().get() == 18) == null) {
-					ItemElement<?> el6 = new ItemElement<>().setElement(border).setSlot(18).setClick(click);
-					element.addItem(el6);
-				}
-				if (element.getItem(item -> item.getSlot().isPresent() && item.getSlot().get() == 26) == null) {
-					ItemElement<?> el7 = new ItemElement<>().setElement(border).setSlot(26).setClick(click);
-					element.addItem(el7);
-				}
-				if (element.getItem(item -> item.getSlot().isPresent() && item.getSlot().get() == 27) == null) {
-					ItemElement<?> el8 = new ItemElement<>().setElement(border).setSlot(27).setClick(click);
-					element.addItem(el8);
-				}
-				if (element.getItem(item -> item.getSlot().isPresent() && item.getSlot().get() == 35) == null) {
-					ItemElement<?> el9 = new ItemElement<>().setElement(border).setSlot(35).setClick(click);
-					element.addItem(el9);
-				}
-				if (element.getItem(item -> item.getSlot().isPresent() && item.getSlot().get() == 36) == null) {
-					ItemElement<?> el10 = new ItemElement<>().setElement(border).setSlot(36).setClick(click);
-					element.addItem(el10);
-				}
-				for (o = 36; o < 45; o++) {
-					ItemElement<?> e = new ItemElement<>().setElement(border).setSlot(o).setClick(click);
-					element.addItem(e);
-				}
-				break;
-			case 54:
-				int j;
-				for (j = 0; j < 10; j++) {
-					int finalJ = j;
-					if (element.getItem(item -> item.getSlot().isPresent() && item.getSlot().get() == finalJ) == null) {
-						ItemElement<?> e = new ItemElement<>().setElement(border).setSlot(j).setClick(click);
-						element.addItem(e);
-					}
-				}
-				if (element.getItem(item -> item.getSlot().isPresent() && item.getSlot().get() == 17) == null) {
-					ItemElement<?> el5 = new ItemElement<>().setElement(border).setSlot(17).setClick(click);
-					element.addItem(el5);
-				}
-				if (element.getItem(item -> item.getSlot().isPresent() && item.getSlot().get() == 18) == null) {
-					ItemElement<?> el6 = new ItemElement<>().setElement(border).setSlot(18).setClick(click);
-					element.addItem(el6);
-				}
-				if (element.getItem(item -> item.getSlot().isPresent() && item.getSlot().get() == 26) == null) {
-					ItemElement<?> el7 = new ItemElement<>().setElement(border).setSlot(26).setClick(click);
-					element.addItem(el7);
-				}
-				if (element.getItem(item -> item.getSlot().isPresent() && item.getSlot().get() == 27) == null) {
-					ItemElement<?> el8 = new ItemElement<>().setElement(border).setSlot(27).setClick(click);
-					element.addItem(el8);
-				}
-				if (element.getItem(item -> item.getSlot().isPresent() && item.getSlot().get() == 35) == null) {
-					ItemElement<?> el9 = new ItemElement<>().setElement(border).setSlot(35).setClick(click);
-					element.addItem(el9);
-				}
-				if (element.getItem(item -> item.getSlot().isPresent() && item.getSlot().get() == 36) == null) {
-					ItemElement<?> el10 = new ItemElement<>().setElement(border).setSlot(36).setClick(click);
-					element.addItem(el10);
-				}
-				for (j = 44; j < 54; j++) {
-					int finalJ = j;
-					if (element.getItem(item -> item.getSlot().isPresent() && item.getSlot().get() == finalJ) == null) {
-						ItemElement<?> e = new ItemElement<>().setElement(border).setSlot(j).setClick(click);
-						element.addItem(e);
-					}
-				}
-				break;
-		}
-	}
-
 	protected List<String> color(String... text) {
 		ArrayList<String> convert = new ArrayList<>();
 		for (String t : text) {
@@ -647,7 +508,7 @@ public enum GUI {
 
 	public int getLimit() {
 		int amnt = 0;
-		switch (getSize().getSlots()) {
+		switch (getSize().getSize()) {
 			case 9:
 				amnt = 6;
 				break;
@@ -672,7 +533,7 @@ public enum GUI {
 
 	public int getBack() {
 		int amnt = 0;
-		switch (getSize().getSlots()) {
+		switch (getSize().getSize()) {
 			case 9:
 				amnt = 7;
 				break;
@@ -697,7 +558,7 @@ public enum GUI {
 
 	public int getLeft() {
 		int amnt = 0;
-		switch (getSize().getSlots()) {
+		switch (getSize().getSize()) {
 			case 9:
 				amnt = 6;
 				break;
@@ -722,7 +583,7 @@ public enum GUI {
 
 	public int getRight() {
 		int amnt = 0;
-		switch (getSize().getSlots()) {
+		switch (getSize().getSize()) {
 			case 9:
 				amnt = 8;
 				break;

@@ -104,7 +104,7 @@ public class VaultsListener implements Listener {
 
 	private void saveInventory(String clanID, Inventory inv) {
 		Clan c = ClansAPI.getInstance().getClan(clanID);
-		int size = c.setValue("vault", inv.getContents()).length;
+		c.setValue("vault", inv.getContents(), false);
 	}
 
 	public static ItemStack[] getInventoryContents(String clanID) {

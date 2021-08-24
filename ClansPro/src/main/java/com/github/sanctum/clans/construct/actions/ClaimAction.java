@@ -84,9 +84,11 @@ public class ClaimAction extends StringLibrary {
 			d.getConfig().set(clan.getId().toString() + ".Claims." + claimID + ".Z", z);
 			d.getConfig().set(clan.getId().toString() + ".Claims." + claimID + ".World", world);
 			d.saveConfig();
+			Claim cl = new Claim(x, z, clan.getId().toString(), claimID, world, true);
+			ClansAPI.getInstance().getClaimManager().load(cl);
 			clan.broadcast(claimed(x, z, world));
 			chunkBorderHint(p);
-			ClanVentBus.call(new LandClaimedEvent(p, ClansAPI.getInstance().getClaimManager().getClaim(claimID)));
+			ClanVentBus.call(new LandClaimedEvent(p, cl));
 		} else {
 			if (claim.isActive()) {
 				if (claim.getOwner().equals(associate.getClan().getId().toString())) {
@@ -157,7 +159,9 @@ public class ClaimAction extends StringLibrary {
 			d.saveConfig();
 			clan.broadcast(claimed(x, z, world));
 			chunkBorderHint(p);
-			ClanVentBus.call(new LandClaimedEvent(p, ClansAPI.getInstance().getClaimManager().getClaim(claimID)));
+			Claim cl = new Claim(x, z, clan.getId().toString(), claimID, world, true);
+			ClansAPI.getInstance().getClaimManager().load(cl);
+			ClanVentBus.call(new LandClaimedEvent(p, cl));
 		} else {
 			if (claim.isActive()) {
 				if (claim.getOwner().equals(associate.getClan().getId().toString())) {
@@ -189,9 +193,7 @@ public class ClaimAction extends StringLibrary {
 						sendMessage(p, noClearance());
 						return false;
 					}
-
-					d.getConfig().set(clan.getId().toString() + ".Claims." + claim.getId(), null);
-					d.saveConfig();
+					claim.remove();
 					int x = p.getLocation().getChunk().getX();
 					int z = p.getLocation().getChunk().getZ();
 					String world = p.getWorld().getName();
@@ -244,8 +246,7 @@ public class ClaimAction extends StringLibrary {
 									sendMessage(p, unClaimCooldown(clan).fullTimeLeft());
 									return false;
 								}
-								d.getConfig().set(claim.getOwner() + ".Claims." + claim.getId(), null);
-								d.saveConfig();
+								claim.remove();
 								int x = p.getLocation().getChunk().getX();
 								int z = p.getLocation().getChunk().getZ();
 								String world = p.getWorld().getName();
@@ -305,8 +306,7 @@ public class ClaimAction extends StringLibrary {
 								sendMessage(p, unClaimCooldown(clan).fullTimeLeft());
 								return false;
 							}
-							d.getConfig().set(claim.getOwner() + ".Claims." + getClaimID(p.getLocation()), null);
-							d.saveConfig();
+							claim.remove();
 							int x = p.getLocation().getChunk().getX();
 							int z = p.getLocation().getChunk().getZ();
 							String world = p.getWorld().getName();
@@ -343,13 +343,12 @@ public class ClaimAction extends StringLibrary {
 						sendMessage(p, noClearance());
 						return false;
 					}
-
-					d.getConfig().set(clan.getId().toString() + ".Claims." + claim.getId(), null);
-					d.saveConfig();
+					claim.remove();
 					int x = ch.getX();
 					int z = ch.getZ();
 					String world = ch.getWorld().getName();
 					clan.broadcast(unclaimed(x, z, world));
+
 					return true;
 				}
 				return false;
@@ -398,8 +397,7 @@ public class ClaimAction extends StringLibrary {
 									sendMessage(p, unClaimCooldown(clan).fullTimeLeft());
 									return false;
 								}
-								d.getConfig().set(claim.getOwner() + ".Claims." + claim.getId(), null);
-								d.saveConfig();
+								claim.remove();
 								int x = p.getLocation().getChunk().getX();
 								int z = p.getLocation().getChunk().getZ();
 								String world = p.getWorld().getName();
@@ -459,8 +457,7 @@ public class ClaimAction extends StringLibrary {
 								sendMessage(p, unClaimCooldown(clan).fullTimeLeft());
 								return false;
 							}
-							d.getConfig().set(claim.getOwner() + ".Claims." + getClaimID(p.getLocation()), null);
-							d.saveConfig();
+							claim.remove();
 							int x = p.getLocation().getChunk().getX();
 							int z = p.getLocation().getChunk().getZ();
 							String world = p.getWorld().getName();
@@ -492,6 +489,7 @@ public class ClaimAction extends StringLibrary {
 			d.saveConfig();
 			Clan clan = ClansAPI.getInstance().getClan(p.getUniqueId());
 			clan.broadcast(unclaimedAll(p.getName()));
+			ClansAPI.getInstance().getClaimManager().refresh();
 			return true;
 		} else {
 			sendMessage(p, noClaims());

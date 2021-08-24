@@ -19,6 +19,8 @@ public abstract class TeleportRequest {
 
 	private final Date date;
 
+	private Date accepted;
+
 	private State state;
 
 	private final ClanAssociate associate;
@@ -39,6 +41,10 @@ public abstract class TeleportRequest {
 		return TimeWatch.Recording.subtract(date.getTime());
 	}
 
+	public TimeWatch.Recording getAccepted() {
+		return TimeWatch.Recording.subtract(accepted.getTime());
+	}
+
 	public Player getTarget() {
 		return target;
 	}
@@ -55,6 +61,7 @@ public abstract class TeleportRequest {
 		Message.form(getAssociate().getPlayer().getPlayer()).setPrefix(ClansAPI.getInstance().getPrefix().joined()).send("&aTeleporting in 10 seconds, don't move.");
 		Message.form(getTarget()).setPrefix(ClansAPI.getInstance().getPrefix().joined()).send("&a" + associate.getPlayer().getName() + " is teleporting to you.");
 		this.state = State.TELEPORTING;
+		this.accepted = new Date();
 		Schedule.sync(() -> {
 
 		}).cancelAfter(associate.getPlayer().getPlayer()).cancelAfter(task -> {
