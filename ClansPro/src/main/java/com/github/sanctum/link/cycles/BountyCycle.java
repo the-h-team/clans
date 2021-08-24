@@ -28,7 +28,7 @@ public class BountyCycle extends EventCycle {
 
 	@Override
 	public boolean persist() {
-		return !EconomyProvision.getInstance().getImplementation().equals("Default | No Economy Bridge") && ClansAPI.getData().getEnabled("Addon." + getName() + ".enabled");
+		return EconomyProvision.getInstance().isValid();
 	}
 
 	@Override

@@ -28,6 +28,7 @@ import com.github.sanctum.labyrinth.task.Synchronous;
 import com.github.sanctum.link.ClanVentBus;
 import com.github.sanctum.link.CycleList;
 import com.github.sanctum.link.EventCycle;
+import com.github.sanctum.link.cycles.BountyCycle;
 import com.github.sanctum.link.dynmap.DynmapCycle;
 import java.math.BigDecimal;
 import java.text.MessageFormat;
@@ -378,6 +379,9 @@ public class StartProcedure {
 		Schedule.sync(() -> {
 			if (Bukkit.getPluginManager().isPluginEnabled("dynmap")) {
 				instance.importAddon(DynmapCycle.class);
+			}
+			if (EconomyProvision.getInstance().isValid()) {
+				instance.importAddon(BountyCycle.class);
 			}
 		}).wait(5);
 		instance.getLogger().info("- Found (" + CycleList.getRegisteredCycles().size() + ") event cycle(s)");

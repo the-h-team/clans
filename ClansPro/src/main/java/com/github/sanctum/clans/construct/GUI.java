@@ -12,6 +12,7 @@ import com.github.sanctum.labyrinth.gui.unity.impl.FillerElement;
 import com.github.sanctum.labyrinth.gui.unity.impl.ItemElement;
 import com.github.sanctum.labyrinth.gui.unity.impl.ListElement;
 import com.github.sanctum.labyrinth.gui.unity.impl.MenuType;
+import com.github.sanctum.labyrinth.library.Items;
 import com.github.sanctum.labyrinth.library.StringUtils;
 import java.text.MessageFormat;
 import java.util.ArrayList;
@@ -438,6 +439,93 @@ public enum GUI {
 
 						}).orGet(m -> m instanceof SingularMenu && m.getKey().isPresent() && m.getKey().get().equals("ClansPro:Settings_Select")).addAction(c -> c.setCancelled(true));
 			case SETTINGS_SELECT:
+				/*
+				builder = new MenuBuilder(InventoryRows.SIX, StringUtils.use(" &0&l» &2&oManagement Area").translate())
+						.cancelLowerInventoryClicks(false)
+						.addElement()
+						.setLore(StringUtils.use("&bClick to manage all &dclans addons").translate())
+						.setText(StringUtils.use("&7[&5Addon Management&7]").translate())
+						.setAction(click -> {
+							Player p = click.getPlayer();
+							// TODO: open the addon inventory.
+							UI.select(Singular.CYCLE_ORGANIZATION).open(p);
+						})
+						.assignToSlots(33)
+						.addElement(new ItemStack(Items.getMaterial("CLOCK") != null ? Items.getMaterial("CLOCK") : Items.getMaterial("WATCH")))
+						.setLore(StringUtils.use("&bClick to edit the &3raid-shield").translate())
+						.setText(StringUtils.use("&7[&2Shield Edit&7]").translate())
+						.setAction(click -> {
+							Player p = click.getPlayer();
+							UI.select(Singular.SHIELD_TAMPER).open(p);
+						})
+						.assignToSlots(29)
+						.addElement(new ItemStack(Material.ENCHANTED_BOOK))
+						.setLore(StringUtils.use("&7Click to toggle spy ability on all clan chat channels.").translate())
+						.setText(StringUtils.use("&7[&cAll Spy&7]").translate())
+						.setAction(click -> {
+							Player p = click.getPlayer();
+							Bukkit.dispatchCommand(p, "cla spy clan");
+							Bukkit.dispatchCommand(p, "cla spy ally");
+							Bukkit.dispatchCommand(p, "cla spy custom");
+						})
+						.assignToSlots(12)
+						.addElement(new ItemStack(Material.ANVIL))
+						.setLore(StringUtils.use("&7Click to manage clans.").translate())
+						.setText(StringUtils.use("&7[&eClan Edit&7]").translate())
+						.setAction(click -> {
+							Player p = click.getPlayer();
+							UI.browseEdit().open(p);
+						})
+						.assignToSlots(10)
+						.addElement(new ItemStack(Material.DIAMOND_SWORD))
+						.setLore(StringUtils.use("&7Click to manage arena spawns.").translate())
+						.setText(StringUtils.use("&7[&2War Arena&7]").translate())
+						.setAction(click -> {
+							Player p = click.getPlayer();
+							UI.select(Singular.ARENA_SETUP).open(p);
+						})
+						.assignToSlots(16)
+						.addElement(new ItemStack(ClansAPI.getData().getMaterial("clan") != null ? ClansAPI.getData().getMaterial("clan") : Material.PAPER))
+						.setLore(StringUtils.use("&bClick to view the entire &6clan roster").translate())
+						.setText(StringUtils.use("&7[&eClan List&7]").translate())
+						.setAction(click -> {
+							Player p = click.getPlayer();
+							UI.select(Singular.ROSTER_ORGANIZATION).open(p);
+						})
+						.assignToSlots(14)
+						.addElement(getBack())
+						.setText(StringUtils.use("&7[&4Close&7]").translate())
+						.setAction(click -> {
+							Player p = click.getPlayer();
+							p.closeInventory();
+						})
+						.assignToSlots(49)
+						.addElement(new ItemStack(Items.getMaterial("HEARTOFTHESEA") != null ? Items.getMaterial("HEARTOFTHESEA") : Items.getMaterial("SLIMEBALL")))
+						.setText(StringUtils.use("&7[&cReload&7]").translate())
+						.setLore(StringUtils.use("&7Reload configuration files.").translate())
+						.setAction(click -> {
+							Player p = click.getPlayer();
+							UI.select(Singular.RELOAD_WINDOW).open(p);
+						})
+						.assignToSlots(31);
+				if (Bukkit.getVersion().contains("1.8") || Bukkit.getVersion().contains("1.9") || Bukkit.getVersion().contains("1.10") || Bukkit.getVersion().contains("1.11") || Bukkit.getVersion().contains("1.12")) {
+					builder.setFiller(new ItemStack(Items.getMaterial("STAINED_GLASS_PANE")))
+							.setText(" ")
+							.set();
+				} else {
+					builder.setFiller(new ItemStack(Material.GRAY_STAINED_GLASS_PANE))
+							.setText(" ")
+							.set();
+				}
+
+				 */
+				return MenuType.SINGULAR.build().setStock(i -> {
+					i.addItem(b -> b.setElement(new ItemStack(Items.getMaterial("NAUTILUS_SHELL") != null ? Items.getMaterial("NAUTILUS_SHELL") : Items.getMaterial("NETHERSTAR"))).setElement(ed -> ed.setLore("&bClick to manage all &dclans addons").setTitle("&7[&5Addon Management&7]").build()).setClick(click -> {
+						EVENT_CYCLES_SELECT.get().open(click.getElement());
+					}));
+					i.addItem(b -> {
+					});
+				}).join();
 			case EVENT_CYCLES_SELECT:
 			case SETTINGS_ARENA:
 			case SETTINGS_RELOAD:
