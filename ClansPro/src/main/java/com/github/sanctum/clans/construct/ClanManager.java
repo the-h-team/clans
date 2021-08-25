@@ -2,6 +2,7 @@ package com.github.sanctum.clans.construct;
 
 import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClansAPI;
+import com.github.sanctum.clans.construct.extra.ClanRosterElement;
 import com.github.sanctum.clans.construct.impl.DefaultClan;
 import com.github.sanctum.labyrinth.formatting.UniformedComponents;
 import java.util.LinkedList;
@@ -10,9 +11,14 @@ import java.util.List;
 public class ClanManager {
 
 	private final List<Clan> CLANS = new LinkedList<>();
+	private final ClanRosterElement element;
+
+	public ClanManager() {
+		this.element = new ClanRosterElement(CLANS);
+	}
 
 	public UniformedComponents<Clan> getClans() {
-		return UniformedComponents.accept(CLANS);
+		return this.element.update(CLANS);
 	}
 
 	/**

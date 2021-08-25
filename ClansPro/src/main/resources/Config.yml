@@ -134,6 +134,10 @@ Clans:
   #########################
   land-claiming:
     allow: true
+    # Charge users to claim land.
+    charge: false
+    # The amount to charge users for +1 land.
+    amount: 420.0
     # Change the minimum clearance level needed to claim/un-claim land.
     clearance: 2
     # Change the minimum clearance level needed to un-claim all owned land.

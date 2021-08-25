@@ -1,10 +1,11 @@
 package com.github.sanctum.clans.construct;
 
 import com.github.sanctum.clans.ClansJavaPlugin;
+import com.github.sanctum.clans.bridge.ClanAddon;
+import com.github.sanctum.clans.bridge.ClanAddonQuery;
 import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClansAPI;
 import com.github.sanctum.clans.construct.extra.ClanPrefix;
-import com.github.sanctum.clans.util.TeleportRequest;
 import com.github.sanctum.labyrinth.LabyrinthProvider;
 import com.github.sanctum.labyrinth.data.EconomyProvision;
 import com.github.sanctum.labyrinth.data.FileList;
@@ -26,8 +27,6 @@ import com.github.sanctum.labyrinth.library.Items;
 import com.github.sanctum.labyrinth.library.Message;
 import com.github.sanctum.labyrinth.library.StringUtils;
 import com.github.sanctum.labyrinth.task.Schedule;
-import com.github.sanctum.link.CycleList;
-import com.github.sanctum.link.EventCycle;
 import com.github.sanctum.skulls.CustomHead;
 import com.github.sanctum.skulls.SkullType;
 import java.text.MessageFormat;
@@ -54,6 +53,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.java.JavaPlugin;
 
+@Deprecated
 public class UI {
 
 	private static final Map<UUID, ClanEdit.Option> CLAN_OPTION_MAP = new HashMap<>();
@@ -611,16 +611,16 @@ public class UI {
 								ClanAssociate a = ClansAPI.getInstance().getAssociate(click.getPlayer()).orElse(null);
 
 								if (a != null) {
-									TeleportRequest request = TeleportRequest.get(a);
+									ClanAssociate.Teleport request = ClanAssociate.Teleport.get(a);
 									if (request == null) {
 										if (associate.getPlayer().getName().equals(a.getPlayer().getName())) {
 											return;
 										}
-										TeleportRequest r = new TeleportRequest.Impl(a, associate.getPlayer().getPlayer());
+										ClanAssociate.Teleport r = new ClanAssociate.Teleport.Impl(a, associate.getPlayer().getPlayer());
 										r.teleport();
 									} else {
 										click.getPlayer().closeInventory();
-										request.setState(TeleportRequest.State.EXPIRED);
+										request.setState(ClanAssociate.Teleport.State.EXPIRED);
 										Message.form(click.getPlayer()).setPrefix(ClansAPI.getInstance().getPrefix().joined()).send("&cYou already have a teleport request pending, cancelling...");
 									}
 								}
@@ -1172,10 +1172,10 @@ public class UI {
 		return builder.create((JavaPlugin) ClansAPI.getInstance().getPlugin());
 	}
 
-	public static Menu.Paginated<EventCycle> moderate(Paginated type) {
+	public static Menu.Paginated<ClanAddon> moderate(Paginated type) {
 		switch (type) {
 			case REGISTERED_CYCLES:
-				return new PaginatedBuilder<>(new LinkedList<>(CycleList.getRegisteredCycles()))
+				return new PaginatedBuilder<>(new LinkedList<>(ClanAddonQuery.getRegisteredAddons()))
 						.forPlugin(ClansAPI.getInstance().getPlugin())
 						.setTitle(Clan.ACTION.color("&3&oRegistered Cycles &f(&6&lCACHE&f) &8&l»"))
 						.setAlreadyFirst(Clan.ACTION.color(Clan.ACTION.alreadyFirstPage()))
@@ -1186,12 +1186,12 @@ public class UI {
 						.setSize(InventoryRows.SIX)
 						.setCloseAction(PaginatedCloseAction::clear)
 						.setupProcess(e -> e.setItem(() -> {
-							EventCycle cycle = e.getContext();
+							ClanAddon cycle = e.getContext();
 							ItemStack i = new ItemStack(Material.CHEST);
 
 							ItemMeta meta = i.getItemMeta();
 
-							meta.setLore(color("&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬", "&2&oPersistent: &f" + cycle.persist(), "&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬", "&2&oDescription: &f" + cycle.getDescription(), "&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬", "&2&oVersion: &f" + cycle.getVersion(), "&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬", "&2&oAuthors: &f" + Arrays.toString(cycle.getAuthors()), "&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬", "&2&oActive: &6&o" + CycleList.getUsedAddons().contains(cycle.getName()), "&7Clicking these icons won't do anything."));
+							meta.setLore(color("&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬", "&2&oPersistent: &f" + cycle.persist(), "&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬", "&2&oDescription: &f" + cycle.getDescription(), "&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬", "&2&oVersion: &f" + cycle.getVersion(), "&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬", "&2&oAuthors: &f" + Arrays.toString(cycle.getAuthors()), "&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬", "&2&oActive: &6&o" + ClanAddonQuery.getUsedNames().contains(cycle.getName()), "&7Clicking these icons won't do anything."));
 
 							meta.setDisplayName(StringUtils.use("&3&o " + e.getContext().getName() + " &8&l»").translate());
 
@@ -1208,7 +1208,7 @@ public class UI {
 						.limit(28)
 						.build();
 			case ACTIVATED_CYCLES:
-				return new PaginatedBuilder<>(CycleList.getUsedAddons().stream().map(CycleList::getAddon).collect(Collectors.toList()))
+				return new PaginatedBuilder<>(ClanAddonQuery.getUsedNames().stream().map(ClanAddonQuery::getAddon).collect(Collectors.toList()))
 						.forPlugin(ClansAPI.getInstance().getPlugin())
 						.setTitle(Clan.ACTION.color("&3&oRegistered Cycles &f(&2RUNNING&f) &8&l»"))
 						.setAlreadyFirst(Clan.ACTION.color(Clan.ACTION.alreadyFirstPage()))
@@ -1220,12 +1220,12 @@ public class UI {
 						.setCloseAction(PaginatedCloseAction::clear)
 						.setupProcess(e -> {
 							e.setItem(() -> {
-								EventCycle cycle = e.getContext();
+								ClanAddon cycle = e.getContext();
 								ItemStack i = new ItemStack(Material.CHEST);
 
 								ItemMeta meta = i.getItemMeta();
 
-								meta.setLore(color("&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬", "&2&oPersistent: &f" + cycle.persist(), "&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬", "&2&oDescription: &f" + cycle.getDescription(), "&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬", "&2&oVersion: &f" + cycle.getVersion(), "&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬", "&2&oAuthors: &f" + Arrays.toString(cycle.getAuthors()), "&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬", "&2&oActive: &6&o" + CycleList.getUsedAddons().contains(cycle.getName())));
+								meta.setLore(color("&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬", "&2&oPersistent: &f" + cycle.persist(), "&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬", "&2&oDescription: &f" + cycle.getDescription(), "&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬", "&2&oVersion: &f" + cycle.getVersion(), "&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬", "&2&oAuthors: &f" + Arrays.toString(cycle.getAuthors()), "&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬", "&2&oActive: &6&o" + ClanAddonQuery.getUsedNames().contains(cycle.getName())));
 
 								meta.setDisplayName(StringUtils.use("&3&o " + e.getContext().getName() + " &8&l»").translate());
 
@@ -1234,9 +1234,9 @@ public class UI {
 								return i;
 							}).setClick(click -> {
 								Player p = click.getPlayer();
-								EventCycle ec = e.getContext();
-								CycleList.unregisterAll(ec);
-								for (String d : CycleList.getDataLog()) {
+								ClanAddon ec = e.getContext();
+								ClanAddonQuery.unregisterAll(ec);
+								for (String d : ClanAddonQuery.getDataLog()) {
 									p.sendMessage(Clan.ACTION.color("&b" + d.replace("Clans [Pro]", "&3Clans &7[&6Pro&7]&b")));
 								}
 								UI.moderate(Paginated.ACTIVATED_CYCLES).open(p);
@@ -1249,7 +1249,7 @@ public class UI {
 						.limit(28)
 						.build();
 			case DEACTIVATED_CYCLES:
-				return new PaginatedBuilder<>(CycleList.getUnusedAddons().stream().map(CycleList::getAddon).collect(Collectors.toList()))
+				return new PaginatedBuilder<>(ClanAddonQuery.getUnusedNames().stream().map(ClanAddonQuery::getAddon).collect(Collectors.toList()))
 						.forPlugin(ClansAPI.getInstance().getPlugin())
 						.setTitle(Clan.ACTION.color("&3&oRegistered Cycles &f(&4DISABLED&f) &8&l»"))
 						.setAlreadyFirst(Clan.ACTION.color(Clan.ACTION.alreadyFirstPage()))
@@ -1261,12 +1261,12 @@ public class UI {
 						.setCloseAction(PaginatedCloseAction::clear)
 						.setupProcess(e -> {
 							e.setItem(() -> {
-								EventCycle cycle = e.getContext();
+								ClanAddon cycle = e.getContext();
 								ItemStack i = new ItemStack(Material.CHEST);
 
 								ItemMeta meta = i.getItemMeta();
 
-								meta.setLore(color("&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬", "&2&oPersistent: &f" + cycle.persist(), "&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬", "&2&oDescription: &f" + cycle.getDescription(), "&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬", "&2&oVersion: &f" + cycle.getVersion(), "&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬", "&2&oAuthors: &f" + Arrays.toString(cycle.getAuthors()), "&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬", "&2&oActive: &6&o" + CycleList.getUsedAddons().contains(cycle.getName())));
+								meta.setLore(color("&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬", "&2&oPersistent: &f" + cycle.persist(), "&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬", "&2&oDescription: &f" + cycle.getDescription(), "&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬", "&2&oVersion: &f" + cycle.getVersion(), "&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬", "&2&oAuthors: &f" + Arrays.toString(cycle.getAuthors()), "&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬", "&2&oActive: &6&o" + ClanAddonQuery.getUsedNames().contains(cycle.getName())));
 
 								meta.setDisplayName(StringUtils.use("&3&o " + e.getContext().getName() + " &8&l»").translate());
 
@@ -1275,9 +1275,9 @@ public class UI {
 								return i;
 							}).setClick(click -> {
 								Player p = click.getPlayer();
-								EventCycle ec = e.getContext();
-								CycleList.registerAll(ec);
-								for (String d : CycleList.getDataLog()) {
+								ClanAddon ec = e.getContext();
+								ClanAddonQuery.registerAll(ec);
+								for (String d : ClanAddonQuery.getDataLog()) {
 									p.sendMessage(Clan.ACTION.color("&b" + Clan.ACTION.format(d, "Clans [Pro]", "&3Clans &7[&6Pro&7]&b")));
 								}
 								UI.moderate(Paginated.DEACTIVATED_CYCLES).open(p);

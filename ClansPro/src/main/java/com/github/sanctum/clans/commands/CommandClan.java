@@ -1,5 +1,8 @@
 package com.github.sanctum.clans.commands;
 
+import com.github.sanctum.clans.bridge.ClanAddon;
+import com.github.sanctum.clans.bridge.ClanAddonQuery;
+import com.github.sanctum.clans.bridge.ClanVentBus;
 import com.github.sanctum.clans.construct.Claim;
 import com.github.sanctum.clans.construct.ClanAssociate;
 import com.github.sanctum.clans.construct.DataManager;
@@ -13,17 +16,17 @@ import com.github.sanctum.clans.construct.api.Insignia;
 import com.github.sanctum.clans.construct.bank.BankAction;
 import com.github.sanctum.clans.construct.bank.BankLog;
 import com.github.sanctum.clans.construct.bank.BankPermissions;
+import com.github.sanctum.clans.construct.extra.ClanDisplayName;
 import com.github.sanctum.clans.construct.extra.ClanWar;
 import com.github.sanctum.clans.construct.extra.Color;
-import com.github.sanctum.clans.construct.extra.ScoreTag;
+import com.github.sanctum.clans.construct.extra.StringLibrary;
 import com.github.sanctum.clans.construct.impl.DefaultClan;
-import com.github.sanctum.clans.util.StringLibrary;
-import com.github.sanctum.clans.util.events.clans.ClanTagChangeEvent;
-import com.github.sanctum.clans.util.events.clans.bank.messaging.Messages;
-import com.github.sanctum.clans.util.events.command.CommandHelpInsertEvent;
-import com.github.sanctum.clans.util.events.command.CommandInsertEvent;
-import com.github.sanctum.clans.util.events.command.ServerCommandInsertEvent;
-import com.github.sanctum.clans.util.events.command.TabInsertEvent;
+import com.github.sanctum.clans.events.command.CommandHelpInsertEvent;
+import com.github.sanctum.clans.events.command.CommandInsertEvent;
+import com.github.sanctum.clans.events.command.ServerCommandInsertEvent;
+import com.github.sanctum.clans.events.command.TabInsertEvent;
+import com.github.sanctum.clans.events.core.ClanTagChangeEvent;
+import com.github.sanctum.clans.events.core.bank.messaging.Messages;
 import com.github.sanctum.labyrinth.LabyrinthProvider;
 import com.github.sanctum.labyrinth.data.EconomyProvision;
 import com.github.sanctum.labyrinth.data.FileManager;
@@ -35,9 +38,6 @@ import com.github.sanctum.labyrinth.library.Item;
 import com.github.sanctum.labyrinth.library.Message;
 import com.github.sanctum.labyrinth.library.StringUtils;
 import com.github.sanctum.labyrinth.library.TextLib;
-import com.github.sanctum.link.ClanVentBus;
-import com.github.sanctum.link.CycleList;
-import com.github.sanctum.link.EventCycle;
 import com.google.common.collect.MapMaker;
 import java.math.BigDecimal;
 import java.text.MessageFormat;
@@ -117,7 +117,7 @@ public class CommandClan extends Command {
 
 		List<String> result = new ArrayList<>();
 
-		for (EventCycle cycle : CycleList.getRegisteredCycles()) {
+		for (ClanAddon cycle : ClanAddonQuery.getRegisteredAddons()) {
 			if (cycle.isActive()) {
 				for (ClanSubCommand subCommand : cycle.getCommands()) {
 					if (subCommand.tab(p, alias, args) != null) {
@@ -440,7 +440,7 @@ public class CommandClan extends Command {
 			boolean customMessage = false;
 			if (sender instanceof ConsoleCommandSender) {
 
-				for (EventCycle cycle : CycleList.getRegisteredCycles()) {
+				for (ClanAddon cycle : ClanAddonQuery.getRegisteredAddons()) {
 					if (cycle.isActive()) {
 						for (ClanSubCommand subCommand : cycle.getCommands()) {
 							if (subCommand.getLabel() != null) {
@@ -478,7 +478,7 @@ public class CommandClan extends Command {
         //
          */
 
-		for (EventCycle cycle : CycleList.getRegisteredCycles()) {
+		for (ClanAddon cycle : ClanAddonQuery.getRegisteredAddons()) {
 			if (cycle.isActive()) {
 				for (ClanSubCommand subCommand : cycle.getCommands()) {
 					if (subCommand.getLabel() != null) {
@@ -1779,7 +1779,7 @@ public class CommandClan extends Command {
 							OfflinePlayer op = Bukkit.getOfflinePlayer(UUID.fromString(s));
 							if (op.isOnline()) {
 								if (ClansAPI.getData().prefixedTagsAllowed()) {
-									ScoreTag.update(p, ClansAPI.getData().prefixedTag(ClansAPI.getInstance().getClan(op.getUniqueId()).getColor(), ClansAPI.getInstance().getClan(op.getUniqueId()).getName()));
+									ClanDisplayName.update(p, ClansAPI.getData().prefixedTag(ClansAPI.getInstance().getClan(op.getUniqueId()).getColor(), ClansAPI.getInstance().getClan(op.getUniqueId()).getName()));
 								}
 							}
 						}
@@ -1820,7 +1820,7 @@ public class CommandClan extends Command {
 							try {
 								if (op.isOnline()) {
 									if (ClansAPI.getData().prefixedTagsAllowed()) {
-										ScoreTag.update(p, ClansAPI.getData().prefixedTag(ClansAPI.getInstance().getClan(op.getUniqueId()).getColor(), ClansAPI.getInstance().getClan(op.getUniqueId()).getName()));
+										ClanDisplayName.update(p, ClansAPI.getData().prefixedTag(ClansAPI.getInstance().getClan(op.getUniqueId()).getColor(), ClansAPI.getInstance().getClan(op.getUniqueId()).getName()));
 									}
 								}
 							} catch (NullPointerException e) {

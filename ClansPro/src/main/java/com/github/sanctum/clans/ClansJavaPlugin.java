@@ -1,5 +1,7 @@
 package com.github.sanctum.clans;
 
+import com.github.sanctum.clans.bridge.ClanAddon;
+import com.github.sanctum.clans.bridge.ClanAddonQuery;
 import com.github.sanctum.clans.construct.Claim;
 import com.github.sanctum.clans.construct.ClaimManager;
 import com.github.sanctum.clans.construct.ClanAssociate;
@@ -13,8 +15,8 @@ import com.github.sanctum.clans.construct.api.ClanCooldown;
 import com.github.sanctum.clans.construct.api.ClansAPI;
 import com.github.sanctum.clans.construct.bank.BankMeta;
 import com.github.sanctum.clans.construct.extra.ClanPrefix;
-import com.github.sanctum.clans.util.Metrics;
-import com.github.sanctum.clans.util.StartProcedure;
+import com.github.sanctum.clans.construct.extra.Metrics;
+import com.github.sanctum.clans.construct.extra.StartProcedure;
 import com.github.sanctum.labyrinth.data.FileList;
 import com.github.sanctum.labyrinth.data.FileManager;
 import com.github.sanctum.labyrinth.data.Registry;
@@ -22,8 +24,6 @@ import com.github.sanctum.labyrinth.data.RegistryData;
 import com.github.sanctum.labyrinth.data.container.KeyedServiceManager;
 import com.github.sanctum.labyrinth.library.HUID;
 import com.github.sanctum.labyrinth.library.StringUtils;
-import com.github.sanctum.link.CycleList;
-import com.github.sanctum.link.EventCycle;
 import com.github.sanctum.skulls.CustomHead;
 import java.text.MessageFormat;
 import java.time.ZoneId;
@@ -83,7 +83,7 @@ public class ClansJavaPlugin extends JavaPlugin implements ClansAPI {
 	private ShieldManager shieldManager;
 	private ClanManager clanManager;
 	public DataManager dataManager;
-	private KeyedServiceManager<EventCycle> serviceManager;
+	private KeyedServiceManager<ClanAddon> serviceManager;
 
 	public String USER_ID = "%%__USER__%%";
 	public String NONCE = "%%__NONCE__%%";
@@ -97,7 +97,7 @@ public class ClansJavaPlugin extends JavaPlugin implements ClansAPI {
 		claimManager = new ClaimManager();
 		shieldManager = new ShieldManager();
 		serviceManager = new KeyedServiceManager<>();
-		if (System.getProperty("OLD") != null && System.getProperty("OLD").equals("TRUE")) {
+		if (System.getProperty("RELOAD") != null && System.getProperty("RELOAD").equals("TRUE")) {
 			getLogger().severe("- RELOAD DETECTED! Shutting down...");
 			getLogger().severe("      ██╗");
 			getLogger().severe("  ██╗██╔╝");
@@ -124,7 +124,7 @@ public class ClansJavaPlugin extends JavaPlugin implements ClansAPI {
 			Bukkit.getPluginManager().disablePlugin(this);
 			return;
 		} else {
-			System.setProperty("OLD", "FALSE");
+			System.setProperty("RELOAD", "FALSE");
 		}
 
 		dataManager.assertDefaults();
@@ -142,23 +142,22 @@ public class ClansJavaPlugin extends JavaPlugin implements ClansAPI {
 			throw new IllegalStateException("Unable to properly initialize the plugin!", e);
 		}
 		primary.printLogo();
-		primary.registerDefaults();
+		primary.runRegistry();
 		primary.sendBorder();
-		primary.runDataCleaner();
+		primary.runQuickDataCleaning();
 		primary.sendBorder();
-		primary.runCacheLoader();
+		primary.runCacheRefresh();
 		primary.sendBorder();
-		primary.refillUserData();
-		primary.checkForPlaceholders();
-		primary.checkForUpdate();
+		primary.runCoreTask();
+		primary.runPlaceholderCheck();
+		primary.runUpdateCheck();
 		primary.sendBorder();
 		primary.runShieldTimer();
+		primary.runInternalAddonServices();
 		primary.sendBorder();
-		primary.checkForCycles();
+		primary.runBankSetup();
 		primary.sendBorder();
-		primary.setupBank();
-		primary.sendBorder();
-		primary.registerMetrics(10461, metrics -> {
+		primary.runMetric(10461, metrics -> {
 			metrics.addCustomChart(new Metrics.SimplePie("using_claiming", () -> {
 				String result = "No";
 				if (Claim.ACTION.isEnabled()) {
@@ -177,9 +176,9 @@ public class ClansJavaPlugin extends JavaPlugin implements ClansAPI {
 			metrics.addCustomChart(new Metrics.DrilldownPie("addon_popularity", () -> {
 				Map<String, Map<String, Integer>> map = new HashMap<>();
 				Map<String, Integer> entry = new HashMap<>();
-				for (EventCycle cycle : CycleList.getRegisteredCycles()) {
+				for (ClanAddon cycle : ClanAddonQuery.getRegisteredAddons()) {
 					if (cycle.persist()) {
-						entry.put(cycle.getName(), 1);
+						entry.put(Bukkit.getServer().getName(), 1);
 						map.put(cycle.getName(), entry);
 					}
 				}
@@ -209,7 +208,7 @@ public class ClansJavaPlugin extends JavaPlugin implements ClansAPI {
 	public void onDisable() {
 		try {
 
-			for (EventCycle cycle : CycleList.getCycles()) {
+			for (ClanAddon cycle : ClanAddonQuery.getRegisteredAddons()) {
 				cycle.remove();
 			}
 
@@ -219,8 +218,8 @@ public class ClansJavaPlugin extends JavaPlugin implements ClansAPI {
 		} catch (Exception ignored) {
 		}
 		getClanManager().getClans().list().forEach(Clan::save);
-		if (System.getProperty("OLD").equals("FALSE")) {
-			System.setProperty("OLD", "TRUE");
+		if (System.getProperty("RELOAD").equals("FALSE")) {
+			System.setProperty("RELOAD", "TRUE");
 		}
 	}
 
@@ -229,7 +228,7 @@ public class ClansJavaPlugin extends JavaPlugin implements ClansAPI {
 	}
 
 	@Override
-	public KeyedServiceManager<EventCycle> getServiceManager() {
+	public KeyedServiceManager<ClanAddon> getServiceManager() {
 		return this.serviceManager;
 	}
 
@@ -264,35 +263,17 @@ public class ClansJavaPlugin extends JavaPlugin implements ClansAPI {
 
 	@Override
 	public Optional<ClanAssociate> getAssociate(OfflinePlayer player) {
-		for (Clan c : getClanManager().getClans().list()) {
-			ClanAssociate target = c.getMember(m -> Objects.equals(m.getPlayer().getName(), player.getName()));
-			if (target != null) {
-				return Optional.of(target);
-			}
-		}
-		return Optional.empty();
+		return getClanManager().getClans().filter(c -> c.getMember(m -> Objects.equals(m.getPlayer().getName(), player.getName())) != null).map(c -> c.getMember(m -> Objects.equals(m.getPlayer().getName(), player.getName()))).findFirst();
 	}
 
 	@Override
 	public Optional<ClanAssociate> getAssociate(UUID uuid) {
-		for (Clan c : getClanManager().getClans().list()) {
-			ClanAssociate target = c.getMember(m -> Objects.equals(m.getPlayer().getUniqueId(), uuid));
-			if (target != null) {
-				return Optional.of(target);
-			}
-		}
-		return Optional.empty();
+		return getClanManager().getClans().filter(c -> c.getMember(m -> Objects.equals(m.getPlayer().getUniqueId(), uuid)) != null).map(c -> c.getMember(m -> Objects.equals(m.getPlayer().getUniqueId(), uuid))).findFirst();
 	}
 
 	@Override
 	public Optional<ClanAssociate> getAssociate(String playerName) {
-		for (Clan c : getClanManager().getClans().list()) {
-			ClanAssociate target = c.getMember(m -> Objects.equals(m.getPlayer().getName(), playerName));
-			if (target != null) {
-				return Optional.of(target);
-			}
-		}
-		return Optional.empty();
+		return getClanManager().getClans().filter(c -> c.getMember(m -> Objects.equals(m.getPlayer().getName(), playerName)) != null).map(c -> c.getMember(m -> Objects.equals(m.getPlayer().getName(), playerName))).findFirst();
 	}
 
 	@Override
@@ -320,14 +301,14 @@ public class ClansJavaPlugin extends JavaPlugin implements ClansAPI {
 		ClansUpdate update = new ClansUpdate(getPlugin());
 		try {
 			if (update.hasUpdate()) {
-				getPlugin().getLogger().warning("- An update is available! " + update.getLatest() + " download: " + update.getResource());
+				getPlugin().getLogger().warning("- An update is available! " + update.getLatest() + " download: [" + update.getResource() + "]");
 				return false;
 			} else {
-				getPlugin().getLogger().info("- All up to date!");
+				getPlugin().getLogger().info("- All up to date! Latest:(" + update.getLatest() + ") Current:(" + getDescription().getVersion() + ")");
 				return true;
 			}
 		} catch (Exception e) {
-			getPlugin().getLogger().info("- There was a problem while looking for an update.");
+			getPlugin().getLogger().info("- Couldn't connect to servers, unable to check for updates.");
 		}
 		return false;
 	}
@@ -392,18 +373,18 @@ public class ClansJavaPlugin extends JavaPlugin implements ClansAPI {
 
 	@Override
 	public void searchNewAddons(Plugin plugin, String packageName) {
-		RegistryData<EventCycle> data = new Registry<>(EventCycle.class)
+		RegistryData<ClanAddon> data = new Registry<>(ClanAddon.class)
 				.source(plugin)
 				.pick(packageName)
 				.operate(cycle -> {
 					cycle.onLoad();
-					cycle.register();
+					ClanAddonQuery.getRegisteredAddons().add(cycle);
 					cycle.onEnable();
 				});
 
-		getLogger().info("- Found (" + data.getData().size() + ") event cycle(s)");
+		getLogger().info("- Found (" + data.getData().size() + ") clan addon(s)");
 
-		for (EventCycle e : data.getData()) {
+		for (ClanAddon e : data.getData()) {
 			if (e.persist()) {
 
 				getLogger().info(" ");
@@ -434,7 +415,7 @@ public class ClansJavaPlugin extends JavaPlugin implements ClansAPI {
 				getLogger().info(" ");
 				getLogger().info("- Listeners: (" + e.getAdditions().size() + ")");
 				for (Listener addition : e.getAdditions()) {
-					getLogger().info("- [" + e.getName() + "] (+1) Cycle failed to load due to no persistence.");
+					getLogger().info("- [" + e.getName() + "] (+1) Addon failed to load due to no persistence.");
 				}
 			}
 		}
@@ -442,11 +423,11 @@ public class ClansJavaPlugin extends JavaPlugin implements ClansAPI {
 	}
 
 	@Override
-	public void importAddon(Class<? extends EventCycle> cycle) {
+	public void importAddon(Class<? extends ClanAddon> cycle) {
 		try {
-			EventCycle c = cycle.newInstance();
+			ClanAddon c = cycle.newInstance();
 			c.onLoad();
-			c.register();
+			ClanAddonQuery.getRegisteredAddons().add(c);
 			c.onEnable();
 			if (c.persist()) {
 
@@ -476,11 +457,11 @@ public class ClansJavaPlugin extends JavaPlugin implements ClansAPI {
 				getLogger().info(" ");
 				getLogger().info("- Listeners: (" + c.getAdditions().size() + ")");
 				for (Listener addition : c.getAdditions()) {
-					getLogger().info("- [" + c.getName() + "] (+1) Cycle failed to load due to no persistence.");
+					getLogger().info("- [" + c.getName() + "] (+1) Addon failed to load due to no persistence.");
 				}
 			}
 		} catch (InstantiationException | IllegalAccessException e) {
-			getLogger().severe("- Unable to cast EventCycle to the class " + cycle.getName() + ". This likely means you are not implementing the EventCycle interface for your event class properly.");
+			getLogger().severe("- Unable to cast Addon to the class " + cycle.getName() + ". This likely means you are not implementing the Addon interface for your event class properly.");
 			e.printStackTrace();
 		}
 	}
@@ -519,8 +500,8 @@ public class ClansJavaPlugin extends JavaPlugin implements ClansAPI {
 	}
 
 	@Override
-	public EventCycle getEventCycleByAddon(String name) {
-		return CycleList.getAddon(name);
+	public ClanAddon getEventCycleByAddon(String name) {
+		return ClanAddonQuery.getAddon(name);
 	}
 
 	@Override

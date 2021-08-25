@@ -7,17 +7,22 @@ import com.github.sanctum.labyrinth.data.FileManager;
 import com.github.sanctum.labyrinth.library.HUID;
 import com.github.sanctum.labyrinth.library.Message;
 import com.github.sanctum.labyrinth.library.TimeWatch;
+import com.github.sanctum.labyrinth.task.Schedule;
 import com.github.sanctum.skulls.CustomHead;
 import java.text.MessageFormat;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
+import org.bukkit.Sound;
 import org.bukkit.Statistic;
+import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.Nullable;
 
@@ -306,4 +311,91 @@ public class ClanAssociate {
 		Clan.ACTION.kickPlayer(getPlayer().getUniqueId());
 	}
 
+	public abstract static class Teleport {
+
+		private static final Set<Teleport> REQUESTS = new HashSet<>();
+
+		private final Player target;
+
+		private final Date date;
+
+		private Date accepted;
+
+		private State state;
+
+		private final ClanAssociate associate;
+
+		protected Teleport(ClanAssociate teleporter, Player target) {
+			this.target = target;
+			this.associate = teleporter;
+			this.date = new Date();
+			this.state = State.INITIALIZED;
+			REQUESTS.add(this);
+		}
+
+		public ClanAssociate getAssociate() {
+			return associate;
+		}
+
+		public TimeWatch.Recording getRecording() {
+			return TimeWatch.Recording.subtract(date.getTime());
+		}
+
+		public TimeWatch.Recording getAccepted() {
+			return TimeWatch.Recording.subtract(accepted.getTime());
+		}
+
+		public Player getTarget() {
+			return target;
+		}
+
+		public void setState(State state) {
+			this.state = state;
+		}
+
+		public State getState() {
+			return this.state;
+		}
+
+		public void teleport() {
+			Message.form(getAssociate().getPlayer().getPlayer()).setPrefix(ClansAPI.getInstance().getPrefix().joined()).send("&aTeleporting in 10 seconds, don't move.");
+			Message.form(getTarget()).setPrefix(ClansAPI.getInstance().getPrefix().joined()).send("&a" + associate.getPlayer().getName() + " is teleporting to you.");
+			this.state = State.TELEPORTING;
+			this.accepted = new Date();
+			Schedule.sync(() -> {
+
+			}).cancelAfter(associate.getPlayer().getPlayer()).cancelAfter(task -> {
+
+				if (getState() == State.TELEPORTING) {
+					associate.getPlayer().getPlayer().teleport(getTarget());
+					cancel();
+					task.cancel();
+					associate.getPlayer().getPlayer().getWorld().playSound(associate.getPlayer().getPlayer().getLocation(), Sound.ENTITY_VILLAGER_AMBIENT, 10, 1);
+				} else {
+					task.cancel();
+					cancel();
+				}
+
+			}).waitReal(20 * 10);
+		}
+
+		public void cancel() {
+			REQUESTS.remove(this);
+		}
+
+		public static Teleport get(ClanAssociate associate) {
+			return REQUESTS.stream().filter(r -> r.getAssociate().equals(associate)).findFirst().orElse(null);
+		}
+
+		public static class Impl extends Teleport {
+			public Impl(ClanAssociate teleporter, Player target) {
+				super(teleporter, target);
+			}
+		}
+
+		public enum State {
+			INITIALIZED, TELEPORTING, EXPIRED;
+		}
+
+	}
 }

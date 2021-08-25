@@ -2,7 +2,7 @@ package com.github.sanctum.clans.construct.bank;
 
 import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClansAPI;
-import com.github.sanctum.clans.util.events.clans.bank.AsyncNewBankEvent;
+import com.github.sanctum.clans.events.core.bank.AsyncNewBankEvent;
 import com.github.sanctum.labyrinth.event.custom.Vent;
 import com.github.sanctum.labyrinth.library.HFEncoded;
 import java.io.IOException;

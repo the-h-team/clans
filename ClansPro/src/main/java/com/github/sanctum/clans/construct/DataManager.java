@@ -29,6 +29,8 @@ import org.jetbrains.annotations.NotNull;
 @SuppressWarnings("ResultOfMethodCallIgnored")
 public class DataManager {
 
+	public List<String> WAR_BLOCKED_CMDS = new ArrayList<>();
+
 	public HashMap<Player, String> ID_MODE = new HashMap<>();
 
 	public List<String> CLAN_GUI_FORMAT = new LinkedList<>();
@@ -44,6 +46,10 @@ public class DataManager {
 	public List<Player> INHABITANTS = new ArrayList<>();
 
 	public final LinkedList<ClanCooldown> COOLDOWNS = new LinkedList<>();
+
+	public DataManager() {
+		this.WAR_BLOCKED_CMDS.addAll(getMain().getConfig().getStringList("Clans.war.blocked-commands"));
+	}
 
 	public FileManager arenaFile() {
 		return FileType.MISC_FILE.get("Settings", "Settings/Arena");

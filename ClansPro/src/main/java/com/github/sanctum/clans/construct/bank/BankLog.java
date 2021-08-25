@@ -1,7 +1,7 @@
 package com.github.sanctum.clans.construct.bank;
 
 import com.github.sanctum.clans.construct.impl.DefaultClan;
-import com.github.sanctum.clans.util.events.clans.bank.BankTransactionEvent;
+import com.github.sanctum.clans.events.core.bank.BankTransactionEvent;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;

@@ -10,8 +10,8 @@ import com.github.sanctum.clans.construct.api.ClanCooldown;
 import com.github.sanctum.clans.construct.api.ClansAPI;
 import com.github.sanctum.clans.construct.extra.ClanWar;
 import com.github.sanctum.clans.construct.extra.ClanWrapper;
-import com.github.sanctum.clans.util.events.clans.LandClaimedEvent;
-import com.github.sanctum.clans.util.events.command.OtherInformationAdaptEvent;
+import com.github.sanctum.clans.events.command.OtherInformationAdaptEvent;
+import com.github.sanctum.clans.events.core.LandClaimedEvent;
 import com.github.sanctum.labyrinth.LabyrinthProvider;
 import com.github.sanctum.labyrinth.data.EconomyProvision;
 import com.github.sanctum.labyrinth.data.FileManager;
@@ -45,6 +45,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class DefaultClan implements Clan {
+
 	private static final long serialVersionUID = 427254537180595211L;
 	private final String clanID;
 	private ClanWar clanWar = null;

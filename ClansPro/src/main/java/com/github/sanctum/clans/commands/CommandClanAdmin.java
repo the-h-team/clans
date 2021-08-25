@@ -1,20 +1,20 @@
 package com.github.sanctum.clans.commands;
 
+import com.github.sanctum.clans.bridge.ClanAddonQuery;
 import com.github.sanctum.clans.construct.ClanAssociate;
 import com.github.sanctum.clans.construct.DataManager;
 import com.github.sanctum.clans.construct.UI;
 import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClansAPI;
 import com.github.sanctum.clans.construct.extra.ClanBlueprint;
-import com.github.sanctum.clans.util.StringLibrary;
+import com.github.sanctum.clans.construct.extra.StringLibrary;
+import com.github.sanctum.clans.internal.stashes.StashContainer;
+import com.github.sanctum.clans.internal.vaults.VaultContainer;
 import com.github.sanctum.labyrinth.data.FileManager;
 import com.github.sanctum.labyrinth.formatting.PaginatedList;
 import com.github.sanctum.labyrinth.library.HFEncoded;
 import com.github.sanctum.labyrinth.library.Message;
 import com.github.sanctum.labyrinth.library.StringUtils;
-import com.github.sanctum.link.CycleList;
-import com.github.sanctum.stashes.StashContainer;
-import com.github.sanctum.vaults.VaultContainer;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -678,7 +678,7 @@ public class CommandClanAdmin extends Command {
 					case "vault":
 						if (id != null) {
 							Clan target = ClansAPI.getInstance().getClan(id);
-							if (CycleList.getUsedAddons().contains("Vaults")) {
+							if (ClanAddonQuery.getUsedNames().contains("Vaults")) {
 								p.openInventory(VaultContainer.getVault(target.getName()));
 								return true;
 							} else {
@@ -694,7 +694,7 @@ public class CommandClanAdmin extends Command {
 					case "stash":
 						if (id != null) {
 							Clan target = ClansAPI.getInstance().getClan(id);
-							if (CycleList.getUsedAddons().contains("Stashes")) {
+							if (ClanAddonQuery.getUsedNames().contains("Stashes")) {
 								p.openInventory(StashContainer.getStash(target.getName()));
 								return true;
 							} else {

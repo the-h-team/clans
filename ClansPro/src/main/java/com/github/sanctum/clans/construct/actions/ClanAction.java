@@ -1,19 +1,20 @@
 package com.github.sanctum.clans.construct.actions;
 
+import com.github.sanctum.clans.bridge.ClanVentBus;
 import com.github.sanctum.clans.construct.ClanAssociate;
 import com.github.sanctum.clans.construct.DataManager;
 import com.github.sanctum.clans.construct.RankPriority;
 import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClanCooldown;
 import com.github.sanctum.clans.construct.api.ClansAPI;
-import com.github.sanctum.clans.construct.extra.ScoreTag;
+import com.github.sanctum.clans.construct.extra.ClanDisplayName;
+import com.github.sanctum.clans.construct.extra.StringLibrary;
 import com.github.sanctum.clans.construct.impl.CooldownArena;
 import com.github.sanctum.clans.construct.impl.DefaultClan;
-import com.github.sanctum.clans.util.StringLibrary;
-import com.github.sanctum.clans.util.events.clans.ClanCreateEvent;
-import com.github.sanctum.clans.util.events.clans.ClanCreatedEvent;
-import com.github.sanctum.clans.util.events.clans.ClanLeaveEvent;
-import com.github.sanctum.clans.util.events.command.ClanInformationAdaptEvent;
+import com.github.sanctum.clans.events.command.ClanInformationAdaptEvent;
+import com.github.sanctum.clans.events.core.ClanCreateEvent;
+import com.github.sanctum.clans.events.core.ClanCreatedEvent;
+import com.github.sanctum.clans.events.core.ClanLeaveEvent;
 import com.github.sanctum.labyrinth.data.EconomyProvision;
 import com.github.sanctum.labyrinth.data.FileManager;
 import com.github.sanctum.labyrinth.formatting.PaginatedList;
@@ -21,7 +22,6 @@ import com.github.sanctum.labyrinth.library.HUID;
 import com.github.sanctum.labyrinth.library.Message;
 import com.github.sanctum.labyrinth.library.TextLib;
 import com.github.sanctum.labyrinth.task.Schedule;
-import com.github.sanctum.link.ClanVentBus;
 import java.io.File;
 import java.math.BigDecimal;
 import java.text.MessageFormat;
@@ -84,7 +84,7 @@ public class ClanAction extends StringLibrary {
 				instance.save();
 				API.getClanManager().load(instance);
 				if (ClansAPI.getData().prefixedTagsAllowed()) {
-					ScoreTag.set(Bukkit.getPlayer(owner), ClansAPI.getData().prefixedTag(API.getClan(API.getClanID(clanName)).getColor(), clanName));
+					ClanDisplayName.set(Bukkit.getPlayer(owner), ClansAPI.getData().prefixedTag(API.getClan(API.getClanID(clanName)).getColor(), clanName));
 				}
 				ClanVentBus.call(new ClanCreatedEvent(owner, clanName));
 			}
@@ -125,7 +125,7 @@ public class ClanAction extends StringLibrary {
 			FileManager user = ClansAPI.getData().get(target);
 			if (associate.getPlayer().isOnline()) {
 				if (ClansAPI.getData().prefixedTagsAllowed()) {
-					ScoreTag.remove(associate.getPlayer().getPlayer());
+					ClanDisplayName.remove(associate.getPlayer().getPlayer());
 				}
 			}
 			switch (associate.getPriority()) {
@@ -193,7 +193,7 @@ public class ClanAction extends StringLibrary {
 				clanIndex.broadcast(MessageFormat.format(ClansAPI.getData().getMessage("member-join"), Bukkit.getOfflinePlayer(target).getName()));
 				if (ClansAPI.getData().prefixedTagsAllowed()) {
 					if (Bukkit.getOfflinePlayer(target).isOnline()) {
-						ScoreTag.set(Bukkit.getOfflinePlayer(target).getPlayer(), ClansAPI.getData().prefixedTag(API.getClan(API.getClanID(clanName)).getColor(), clanName));
+						ClanDisplayName.set(Bukkit.getOfflinePlayer(target).getPlayer(), ClansAPI.getData().prefixedTag(API.getClan(API.getClanID(clanName)).getColor(), clanName));
 					}
 				}
 				return;
@@ -207,7 +207,7 @@ public class ClanAction extends StringLibrary {
 				clanIndex.broadcast(MessageFormat.format(ClansAPI.getData().getMessage("member-join"), Bukkit.getOfflinePlayer(target).getName()));
 				if (ClansAPI.getData().prefixedTagsAllowed()) {
 					if (Bukkit.getOfflinePlayer(target).isOnline()) {
-						ScoreTag.set(Bukkit.getOfflinePlayer(target).getPlayer(), ClansAPI.getData().prefixedTag(API.getClan(API.getClanID(clanName)).getColor(), clanName));
+						ClanDisplayName.set(Bukkit.getOfflinePlayer(target).getPlayer(), ClansAPI.getData().prefixedTag(API.getClan(API.getClanID(clanName)).getColor(), clanName));
 					}
 				}
 			} else {
@@ -285,7 +285,7 @@ public class ClanAction extends StringLibrary {
 		if (associate != null) {
 			if (ClansAPI.getData().prefixedTagsAllowed()) {
 				if (Bukkit.getPlayer(target) != null) {
-					ScoreTag.remove(Bukkit.getPlayer(target));
+					ClanDisplayName.remove(Bukkit.getPlayer(target));
 				}
 			}
 			Schedule.sync(() -> associate.getClan().getMembers().remove(associate)).wait(1);

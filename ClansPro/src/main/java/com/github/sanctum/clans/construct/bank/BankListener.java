@@ -1,11 +1,11 @@
 package com.github.sanctum.clans.construct.bank;
 
 import com.github.sanctum.clans.construct.api.ClanBank;
-import com.github.sanctum.clans.util.events.clans.bank.AsyncNewBankEvent;
-import com.github.sanctum.clans.util.events.clans.bank.BankPreTransactionEvent;
-import com.github.sanctum.clans.util.events.clans.bank.BankSetBalanceEvent;
-import com.github.sanctum.clans.util.events.clans.bank.BankTransactionEvent;
-import com.github.sanctum.clans.util.events.clans.bank.messaging.Messages;
+import com.github.sanctum.clans.events.core.bank.AsyncNewBankEvent;
+import com.github.sanctum.clans.events.core.bank.BankPreTransactionEvent;
+import com.github.sanctum.clans.events.core.bank.BankSetBalanceEvent;
+import com.github.sanctum.clans.events.core.bank.BankTransactionEvent;
+import com.github.sanctum.clans.events.core.bank.messaging.Messages;
 import com.github.sanctum.labyrinth.data.EconomyProvision;
 import com.github.sanctum.labyrinth.event.custom.Vent;
 import java.math.BigDecimal;

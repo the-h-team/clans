@@ -1,6 +1,7 @@
 package com.github.sanctum.clans.construct.api;
 
 import com.github.sanctum.clans.ClansJavaPlugin;
+import com.github.sanctum.clans.bridge.ClanAddon;
 import com.github.sanctum.clans.construct.ClaimManager;
 import com.github.sanctum.clans.construct.ClanAssociate;
 import com.github.sanctum.clans.construct.ClanManager;
@@ -11,7 +12,6 @@ import com.github.sanctum.clans.construct.extra.ClanPrefix;
 import com.github.sanctum.labyrinth.data.FileList;
 import com.github.sanctum.labyrinth.data.container.KeyedServiceManager;
 import com.github.sanctum.labyrinth.library.HUID;
-import com.github.sanctum.link.EventCycle;
 import java.util.Optional;
 import java.util.UUID;
 import org.bukkit.Bukkit;
@@ -99,7 +99,7 @@ public interface ClansAPI {
 	 *
 	 * @return The event cycle services manager.
 	 */
-	KeyedServiceManager<EventCycle> getServiceManager();
+	KeyedServiceManager<ClanAddon> getServiceManager();
 
 	/**
 	 * Get the manager for clans to load/delete from.
@@ -201,7 +201,7 @@ public interface ClansAPI {
 	 *
 	 * @param cycle The class that extends EventCycle functionality
 	 */
-	void importAddon(Class<? extends EventCycle> cycle);
+	void importAddon(Class<? extends ClanAddon> cycle);
 
 	/**
 	 * Kick a specified user from a clan they might be in.
@@ -233,7 +233,7 @@ public interface ClansAPI {
 	 * @param name The addon to manage
 	 * @return An event cycle for a given addon's listeners
 	 */
-	EventCycle getEventCycleByAddon(String name);
+	ClanAddon getEventCycleByAddon(String name);
 
 
 }
