@@ -81,6 +81,7 @@ public class ClanAction extends StringLibrary {
 					instance.setPassword(password);
 				}
 				instance.getMembers().add(new ClanAssociate(owner, RankPriority.HIGHEST, HUID.fromString(newID)));
+				instance.save();
 				API.getClanManager().load(instance);
 				if (ClansAPI.getData().prefixedTagsAllowed()) {
 					ScoreTag.set(Bukkit.getPlayer(owner), ClansAPI.getData().prefixedTag(API.getClan(API.getClanID(clanName)).getColor(), clanName));

@@ -145,31 +145,31 @@
         <dependency>
             <groupId>com.github.the-h-team.Labyrinth</groupId>
             <artifactId>labyrinth-gui</artifactId>
-            <version>1.7.1-SNAPSHOT</version>
+            <version>1.7.1R1</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>com.github.the-h-team.Labyrinth</groupId>
             <artifactId>labyrinth-regions</artifactId>
-            <version>1.7.1-SNAPSHOT</version>
+            <version>1.7.1R1</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>com.github.the-h-team.Labyrinth</groupId>
             <artifactId>labyrinth-common</artifactId>
-            <version>1.7.1-SNAPSHOT</version>
+            <version>1.7.1R1</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>com.github.the-h-team.Labyrinth</groupId>
             <artifactId>labyrinth-skulls</artifactId>
-            <version>1.7.1-SNAPSHOT</version>
+            <version>1.7.1R1</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>com.github.the-h-team.Labyrinth</groupId>
-            <artifactId>labyrinth</artifactId>
-            <version>1.7.1-SNAPSHOT</version>
+            <artifactId>labyrinth-plugin</artifactId>
+            <version>1.7.1R1</version>
             <scope>provided</scope>
         </dependency>
     </dependencies>
