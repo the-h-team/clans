@@ -4,7 +4,6 @@ import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClansAPI;
 import com.github.sanctum.clans.construct.impl.DefaultClan;
 import com.github.sanctum.labyrinth.data.FileManager;
-import com.github.sanctum.labyrinth.task.Schedule;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Objects;
@@ -106,31 +105,30 @@ public class ClaimManager {
 	 * Clear and re-load all persistent claims.
 	 */
 	public void refresh() {
-		Schedule.sync(() -> {
-			for (Clan c : ClansAPI.getInstance().getClanManager().getClans().list()) {
-				if (c instanceof DefaultClan) {
-					DefaultClan clan = (DefaultClan) c;
-					clan.resetClaims();
+
+		for (Clan c : ClansAPI.getInstance().getClanManager().getClans().list()) {
+			if (c instanceof DefaultClan) {
+				DefaultClan clan = (DefaultClan) c;
+				clan.resetClaims();
+			}
+		}
+
+		FileConfiguration d = regions.getConfig();
+		for (String clan : d.getKeys(false)) {
+			for (String claimID : Objects.requireNonNull(d.getConfigurationSection(clan + ".Claims")).getKeys(false)) {
+				int x = d.getInt(clan + ".Claims." + claimID + ".X");
+				int z = d.getInt(clan + ".Claims." + claimID + ".Z");
+				String w = d.getString(clan + ".Claims." + claimID + ".World");
+				String[] ID = {clan, claimID, w};
+				int[] pos = {x, z};
+				Claim c = new Claim(ID, pos, true);
+				load(c);
+				if (!getFile().getConfig().isBoolean(clan + ".Claims." + claimID + ".active")) {
+					getFile().getConfig().set(clan + ".Claims." + claimID + ".active", true);
+					getFile().saveConfig();
 				}
 			}
-		}).applyAfter(() -> {
-			FileConfiguration d = regions.getConfig();
-			for (String clan : d.getKeys(false)) {
-				for (String claimID : Objects.requireNonNull(d.getConfigurationSection(clan + ".Claims")).getKeys(false)) {
-					int x = d.getInt(clan + ".Claims." + claimID + ".X");
-					int z = d.getInt(clan + ".Claims." + claimID + ".Z");
-					String w = d.getString(clan + ".Claims." + claimID + ".World");
-					String[] ID = {clan, claimID, w};
-					int[] pos = {x, z};
-					Claim c = new Claim(ID, pos, true);
-					load(c);
-					if (!getFile().getConfig().isBoolean(clan + ".Claims." + claimID + ".active")) {
-						getFile().getConfig().set(clan + ".Claims." + claimID + ".active", true);
-						getFile().saveConfig();
-					}
-				}
-			}
-		}).run();
+		}
 	}
 
 

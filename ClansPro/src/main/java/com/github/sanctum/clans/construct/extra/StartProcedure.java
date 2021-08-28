@@ -24,8 +24,6 @@ import com.github.sanctum.labyrinth.data.EconomyProvision;
 import com.github.sanctum.labyrinth.data.FileManager;
 import com.github.sanctum.labyrinth.data.Registry;
 import com.github.sanctum.labyrinth.data.RegistryData;
-import com.github.sanctum.labyrinth.data.service.AnnotationDiscovery;
-import com.github.sanctum.labyrinth.event.custom.Subscribe;
 import com.github.sanctum.labyrinth.event.custom.Vent;
 import com.github.sanctum.labyrinth.library.HUID;
 import com.github.sanctum.labyrinth.task.JoinableRepeatingTask;
@@ -147,10 +145,7 @@ public class StartProcedure {
 		instance.dataManager.copyDefaults();
 		new Registry<>(Listener.class).source(ClansAPI.getInstance().getPlugin()).pick("com.github.sanctum.clans.listener").operate(listener -> {
 			Bukkit.getPluginManager().registerEvents(listener, instance);
-			AnnotationDiscovery<Subscribe, Object> discovery = AnnotationDiscovery.of(Subscribe.class, listener);
-			if (discovery.filter(m -> m.getParameters().length == 1 && m.getParameters()[0].getType().isAssignableFrom(Vent.class) && m.isAnnotationPresent(Subscribe.class)).count() > 0) {
-				Vent.register(instance, listener);
-			}
+			Vent.register(instance, listener);
 		});
 		new Registry<>(Command.class).source(ClansAPI.getInstance().getPlugin()).pick("com.github.sanctum.clans.commands").operate(CommandRegistration::use);
 		RegistryData<ClanAddon> data = new Registry.Loader<>(ClanAddon.class)
@@ -205,15 +200,22 @@ public class StartProcedure {
 	public void runShieldTimer() {
 		ClansAPI.getInstance().getShieldManager().setEnabled(true);
 		boolean configAllow = instance.dataManager.getMain().getConfig().getBoolean("Clans.raid-shield.allow");
-		if (configAllow) {
-			Schedule.sync(() -> {
-				if (Bukkit.getOnlinePlayers().size() > 0) {
-					new Vent.Call<>(Vent.Runtime.Synchronous, new RaidShieldEvent()).run();
-				}
-			}).repeatReal(1, 40);
-			instance.getLogger().info("- Running raid shield timer.");
+		if (Claim.ACTION.isEnabled()) {
+			if (configAllow) {
+				Schedule.sync(() -> {
+					if (Bukkit.getOnlinePlayers().size() > 0) {
+						new Vent.Call<>(Vent.Runtime.Synchronous, new RaidShieldEvent()).run();
+					}
+				}).repeatReal(1, 40);
+				instance.getLogger().info("- Running raid shield timer.");
+			} else {
+				instance.getLogger().info("- Denying raid shield timer. (Off)");
+			}
 		} else {
-			instance.getLogger().info("- Denying raid shield timer. (Off)");
+			if (configAllow) {
+				instance.getLogger().info("- Land claiming is turned off, to use the raid shield make sure you have claiming enabled.");
+				instance.getLogger().info("- Denying raid shield timer. (Off)");
+			}
 		}
 	}
 

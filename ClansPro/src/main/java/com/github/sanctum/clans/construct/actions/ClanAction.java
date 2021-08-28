@@ -423,12 +423,7 @@ public class ClanAction extends StringLibrary {
 	 * @return Gets a list of all saved clans by name
 	 */
 	public List<String> getAllClanNames() {
-		List<String> array = new ArrayList<>();
-		for (String clan : getAllClanIDs()) {
-			FileManager c = DataManager.FileType.CLAN_FILE.get(clan);
-			array.add(c.getConfig().getString("name"));
-		}
-		return array;
+		return ClansAPI.getInstance().getClanManager().getClans().map(Clan::getName).collect(Collectors.toList());
 	}
 
 	/**

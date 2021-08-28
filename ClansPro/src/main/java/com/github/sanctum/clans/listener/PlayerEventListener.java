@@ -13,9 +13,11 @@ import com.github.sanctum.clans.construct.impl.CooldownCreate;
 import com.github.sanctum.clans.construct.impl.CooldownRespawn;
 import com.github.sanctum.clans.construct.impl.DefaultClan;
 import com.github.sanctum.clans.events.core.ClaimInteractEvent;
+import com.github.sanctum.clans.events.core.ClaimResidentEvent;
 import com.github.sanctum.clans.events.core.ClanCreateEvent;
 import com.github.sanctum.clans.events.core.ClanCreatedEvent;
 import com.github.sanctum.clans.events.core.LandPreClaimEvent;
+import com.github.sanctum.clans.events.core.WildernessInhabitantEvent;
 import com.github.sanctum.clans.events.damage.PlayerKillPlayerEvent;
 import com.github.sanctum.clans.events.damage.PlayerPunchPlayerEvent;
 import com.github.sanctum.labyrinth.data.EconomyProvision;
@@ -29,8 +31,10 @@ import com.github.sanctum.labyrinth.task.Schedule;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.text.MessageFormat;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.chat.TextComponent;
@@ -55,6 +59,10 @@ import org.bukkit.util.Vector;
 import org.jetbrains.annotations.NotNull;
 
 public class PlayerEventListener implements Listener {
+	private final Set<Player> test = new HashSet<>();
+
+	public PlayerEventListener() {
+	}
 
 	@Subscribe(priority = Vent.Priority.HIGHEST)
 	public void onClaim(LandPreClaimEvent e) {
@@ -72,6 +80,31 @@ public class PlayerEventListener implements Listener {
 
 			}
 
+		}
+	}
+
+	@Subscribe
+	public void onResident(ClaimResidentEvent e) {
+		Player p = e.getResident().getPlayer();
+		if (!test.contains(p)) {
+			ClansAPI.getInstance().getAssociate(p).ifPresent(a -> {
+				a.getBar().addPlayer(p);
+				a.getBar().setVisible(true);
+				a.getBar().setProgress(1.0);
+				a.getBar().setTitle(StringUtils.use(e.getClaim().getClan().getColor() + e.getClaim().getClan().getDescription()).translate());
+				test.add(p);
+			});
+		}
+	}
+
+	@Subscribe
+	public void onWild(WildernessInhabitantEvent e) {
+		Player p = e.getPlayer();
+		if (test.contains(p)) {
+			ClansAPI.getInstance().getAssociate(p).ifPresent(a -> {
+				a.getBar().removePlayer(p);
+				test.remove(p);
+			});
 		}
 	}
 
@@ -258,10 +291,10 @@ public class PlayerEventListener implements Listener {
 		if (associate != null) {
 			if (associate.isValid()) {
 				if (Bukkit.getVersion().contains("1.14") || Bukkit.getVersion().contains("1.15") || Bukkit.getVersion().contains("1.16") || Bukkit.getVersion().contains("1.17")) {
+					ClanDisplayName.remove(associate);
 					if (ClansAPI.getData().prefixedTagsAllowed()) {
 						ClanDisplayName.set(p, ClansAPI.getData().prefixedTag(API.getClan(p.getUniqueId()).getColor(), API.getClan(p.getUniqueId()).getName()));
 					}
-					ClanDisplayName.remove(associate);
 				}
 			}
 		} else {

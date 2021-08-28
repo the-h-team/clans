@@ -28,7 +28,7 @@ public class BlockEventListener implements Listener {
 
 
 	@Subscribe
-	private void onBreak(DefaultEvent.BlockBreak event) {
+	public void onBreak(DefaultEvent.BlockBreak event) {
 		final Block b = event.getBlock();
 		ClaimInteractEvent e = ClanVentBus.call(new ClaimInteractEvent(event.getPlayer(), b, b.getLocation(), ClaimInteractEvent.InteractionType.BREAK));
 		if (e.isCancelled()) {
@@ -44,7 +44,7 @@ public class BlockEventListener implements Listener {
 	}
 
 	@Subscribe
-	private void onBuild(DefaultEvent.BlockPlace event) {
+	public void onBuild(DefaultEvent.BlockPlace event) {
 		ClaimInteractEvent e = ClanVentBus.call(new ClaimInteractEvent(event.getPlayer(), event.getBlock(), event.getBlock().getLocation(), ClaimInteractEvent.InteractionType.BUILD));
 		if (e.isCancelled()) {
 			e.stringLibrary().sendMessage(e.getPlayer(), MessageFormat.format(e.stringLibrary().notClaimOwner(e.getClaim().getClan().getName()), e.getClaim().getClan().getName()));
@@ -57,37 +57,7 @@ public class BlockEventListener implements Listener {
 	}
 
 	@Subscribe
-	private void onShield(RaidShieldEvent e) {
-		if (!e.isCancelled()) {
-
-			World world = Bukkit.getWorld(ClansAPI.getData().getMain().getConfig().getString("Clans.raid-shield.main-world"));
-			if (world == null) {
-				world = Bukkit.getWorlds().get(0);
-			}
-			if (Clan.ACTION.isNight(world, e.getStartTime(), e.getStopTime())) {
-				if (ClansAPI.getInstance().getShieldManager().isEnabled()) {
-					ClansAPI.getInstance().getShieldManager().setEnabled(false);
-					if (e.getShieldOn().equals("{0} &a&lRAID SHIELD ENABLED")) {
-						e.setShieldOff(ClansAPI.getData().getMain().getConfig().getString("Clans.raid-shield.messages.disabled"));
-					}
-					if (ClansAPI.getData().getEnabled("Clans.raid-shield.receive-messages")) {
-						Bukkit.broadcastMessage(Clan.ACTION.color(MessageFormat.format(e.getShieldOff(), Clan.ACTION.getPrefix())));
-					}
-				}
-			}
-			if (!Clan.ACTION.isNight(world, e.getStartTime(), e.getStopTime())) {
-				if (!ClansAPI.getInstance().getShieldManager().isEnabled()) {
-					ClansAPI.getInstance().getShieldManager().setEnabled(true);
-					if (e.getShieldOn().equals("{0} &a&lRAID SHIELD ENABLED")) {
-						e.setShieldOn(ClansAPI.getData().getMain().getConfig().getString("Clans.raid-shield.messages.enabled"));
-					}
-					if (ClansAPI.getData().getEnabled("Clans.raid-shield.receive-messages")) {
-						Bukkit.broadcastMessage(Clan.ACTION.color(MessageFormat.format(e.getShieldOn(), Clan.ACTION.getPrefix())));
-					}
-				}
-			}
-		}
-
+	public void onTesT(RaidShieldEvent e) {
 		ShieldTamper edit = ClansAPI.getInstance().getShieldManager().getTamper();
 		if (edit.isOff()) {
 			e.setCancelled(true);
@@ -95,6 +65,36 @@ public class BlockEventListener implements Listener {
 			if (edit.getUpTime() != 0) {
 				e.setStartTime(edit.getUpTime());
 				e.setStopTime(edit.getDownTime());
+			}
+		}
+	}
+
+	@Subscribe(priority = Vent.Priority.READ_ONLY)
+	public void onShield(RaidShieldEvent e) {
+		World world = Bukkit.getWorld(ClansAPI.getData().getMain().getConfig().getString("Clans.raid-shield.main-world"));
+		if (world == null) {
+			world = Bukkit.getWorlds().get(0);
+		}
+		if (Clan.ACTION.isNight(world, e.getStartTime(), e.getStopTime())) {
+			if (ClansAPI.getInstance().getShieldManager().isEnabled()) {
+				ClansAPI.getInstance().getShieldManager().setEnabled(false);
+				if (e.getShieldOn().equals("{0} &a&lRAID SHIELD ENABLED")) {
+					e.setShieldOff(ClansAPI.getData().getMain().getConfig().getString("Clans.raid-shield.messages.disabled"));
+				}
+				if (ClansAPI.getData().getEnabled("Clans.raid-shield.send-messages")) {
+					Bukkit.broadcastMessage(Clan.ACTION.color(MessageFormat.format(e.getShieldOff(), Clan.ACTION.getPrefix())));
+				}
+			}
+		}
+		if (!Clan.ACTION.isNight(world, e.getStartTime(), e.getStopTime())) {
+			if (!ClansAPI.getInstance().getShieldManager().isEnabled()) {
+				ClansAPI.getInstance().getShieldManager().setEnabled(true);
+				if (e.getShieldOn().equals("{0} &a&lRAID SHIELD ENABLED")) {
+					e.setShieldOn(ClansAPI.getData().getMain().getConfig().getString("Clans.raid-shield.messages.enabled"));
+				}
+				if (ClansAPI.getData().getEnabled("Clans.raid-shield.send-messages")) {
+					Bukkit.broadcastMessage(Clan.ACTION.color(MessageFormat.format(e.getShieldOn(), Clan.ACTION.getPrefix())));
+				}
 			}
 		}
 	}

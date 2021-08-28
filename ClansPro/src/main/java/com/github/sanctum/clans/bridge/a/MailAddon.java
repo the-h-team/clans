@@ -125,8 +125,7 @@ public class MailAddon extends ClanAddon {
 							new PaginatedList<>(array)
 									.limit(e.getUtil().menuSize())
 									.start((pagination, page, max) -> {
-										e.getUtil().sendMessage(p, "&7&m------------&7&l[&3&oGift Box" + "&7&l]&7&m------------");
-										Message.form(p).send(e.getUtil().menuBorder());
+										Message.form(p).send("&7&m------------&7&l[&3&oGift Box" + "&7&l]&7&m------------");
 									}).finish(builder -> builder.setPlayer(p).setPrefix(e.getUtil().menuBorder())).decorate((pagination, string, page, max, placement) -> {
 
 								TextLib.consume(t -> {
@@ -158,13 +157,12 @@ public class MailAddon extends ClanAddon {
 					new PaginatedList<>(helpMenu())
 							.limit(e.getUtil().menuSize())
 							.start((pagination, page, max) -> {
-								e.getUtil().sendMessage(p, "&7&m------------&7&l[&6&oMail Help&7&l]&7&m------------");
-								Message.form(p).send(e.getUtil().menuBorder());
+								Message.form(p).send("&7&m------------&7&l[&6&oMail Help&7&l]&7&m------------");
 							}).finish(builder -> builder.setPlayer(p).setPrefix(e.getUtil().menuBorder())).decorate((pagination, string, page, max, placement) -> {
 
 						TextLib.consume(t -> {
 
-							Message.form(p).build(t.textRunnable("&aGift from ", "&b" + string, "&7Click to view gifts from &6" + string, "c gifts " + string));
+							Message.form(p).send(string);
 
 						});
 
@@ -191,8 +189,7 @@ public class MailAddon extends ClanAddon {
 									new PaginatedList<>(array)
 											.limit(e.getUtil().menuSize())
 											.start((pagination, page, max) -> {
-												e.getUtil().sendMessage(p, "&7&m------------&7&l[&3&oGift Box" + "&7&l]&7&m------------");
-												Message.form(p).send(e.getUtil().menuBorder());
+												Message.form(p).send("&7&m------------&7&l[&3&oGift Box" + "&7&l]&7&m------------");
 											}).finish(builder -> builder.setPlayer(p).setPrefix(e.getUtil().menuBorder())).decorate((pagination, string, page, max, placement) -> {
 
 										TextLib.consume(t -> {
@@ -228,8 +225,7 @@ public class MailAddon extends ClanAddon {
 								new PaginatedList<>(array)
 										.limit(e.getUtil().menuSize())
 										.start((pagination, page, max) -> {
-											e.getUtil().sendMessage(p, "&7&m------------&7&l[&3&oGifts from " + target.getName() + "&7&l]&7&m------------");
-											Message.form(p).send(e.getUtil().menuBorder());
+											Message.form(p).send("&7&m------------&7&l[&3&oGifts from " + target.getName() + "&7&l]&7&m------------");
 										}).finish(builder -> builder.setPlayer(p).setPrefix(e.getUtil().menuBorder())).decorate((pagination, string, page, max, placement) -> {
 
 									TextLib.consume(t -> {
@@ -341,8 +337,7 @@ public class MailAddon extends ClanAddon {
 							new PaginatedList<>(array)
 									.limit(e.getUtil().menuSize())
 									.start((pagination, page, max) -> {
-										e.getUtil().sendMessage(p, "&7&m------------&7&l[&6&oInbox&7&l]&7&m------------");
-										Message.form(p).send(e.getUtil().menuBorder());
+										Message.form(p).send("&7&m------------&7&l[&6&oInbox&7&l]&7&m------------");
 									}).finish(builder -> builder.setPlayer(p).setPrefix(e.getUtil().menuBorder())).decorate((pagination, string, page, max, placement) -> {
 
 								TextLib.consume(t -> {
@@ -369,13 +364,12 @@ public class MailAddon extends ClanAddon {
 					new PaginatedList<>(helpMenu())
 							.limit(e.getUtil().menuSize())
 							.start((pagination, page, max) -> {
-								e.getUtil().sendMessage(p, "&7&m------------&7&l[&6&oMail Help&7&l]&7&m------------");
-								Message.form(p).send(e.getUtil().menuBorder());
+								Message.form(p).send("&7&m------------&7&l[&6&oMail Help&7&l]&7&m------------");
 							}).finish(builder -> builder.setPlayer(p).setPrefix(e.getUtil().menuBorder())).decorate((pagination, string, page, max, placement) -> {
 
 						TextLib.consume(t -> {
 
-							Message.form(p).build(t.textRunnable("&aMessage(s) from ", "&b" + string, "&7Click to view mail from &6" + string, "c mail list " + string));
+							Message.form(p).send(string);
 
 						});
 
@@ -417,8 +411,7 @@ public class MailAddon extends ClanAddon {
 								new PaginatedList<>(array)
 										.limit(e.getUtil().menuSize())
 										.start((pagination, page, max) -> {
-											e.getUtil().sendMessage(p, "&7&m------------&7&l[&3&oGifts from " + target.getName() + "&7&l]&7&m------------");
-											Message.form(p).send(e.getUtil().menuBorder());
+											Message.form(p).send("&7&m------------&7&l[&3&oGifts from " + target.getName() + "&7&l]&7&m------------");
 										}).finish(builder -> builder.setPlayer(p).setPrefix(e.getUtil().menuBorder())).decorate((pagination, string, page, max, placement) -> {
 
 									TextLib.consume(t -> {
@@ -513,8 +506,7 @@ public class MailAddon extends ClanAddon {
 						new PaginatedList<>(array)
 								.limit(e.getUtil().menuSize())
 								.start((pagination, page, max) -> {
-									e.getUtil().sendMessage(p, "&7&m------------&7&l[&3&oMail from " + args[2] + "&7&l]&7&m------------");
-									Message.form(p).send(e.getUtil().menuBorder());
+									Message.form(p).send("&7&m------------&7&l[&3&oMail from " + args[2] + "&7&l]&7&m------------");
 								}).finish(builder -> builder.setPlayer(p).setPrefix(e.getUtil().menuBorder())).decorate((pagination, string, page, max, placement) -> {
 
 							TextLib.consume(t -> {
@@ -549,8 +541,7 @@ public class MailAddon extends ClanAddon {
 							new PaginatedList<>(array)
 									.limit(e.getUtil().menuSize())
 									.start((pagination, page, max) -> {
-										e.getUtil().sendMessage(p, "&7&m------------&7&l[&6&oInbox&7&l]&7&m------------");
-										Message.form(p).send(e.getUtil().menuBorder());
+										Message.form(p).send("&7&m------------&7&l[&6&oInbox&7&l]&7&m------------");
 									}).finish(builder -> builder.setPlayer(p).setPrefix(e.getUtil().menuBorder())).decorate((pagination, string, page, max, placement) -> {
 
 								TextLib.consume(t -> {
@@ -609,8 +600,7 @@ public class MailAddon extends ClanAddon {
 						new PaginatedList<>(array)
 								.limit(e.getUtil().menuSize())
 								.start((pagination, page, max) -> {
-									e.getUtil().sendMessage(p, "&7&m------------&7&l[&3&oMail from " + args[2] + "&7&l]&7&m------------");
-									Message.form(p).send(e.getUtil().menuBorder());
+									Message.form(p).send("&7&m------------&7&l[&3&oMail from " + args[2] + "&7&l]&7&m------------");
 								}).finish(builder -> builder.setPlayer(p).setPrefix(e.getUtil().menuBorder())).decorate((pagination, string, page, max, placement) -> {
 
 							TextLib.consume(t -> {

@@ -3,7 +3,7 @@ package com.github.sanctum.clans.commands;
 import com.github.sanctum.clans.bridge.ClanAddonQuery;
 import com.github.sanctum.clans.construct.ClanAssociate;
 import com.github.sanctum.clans.construct.DataManager;
-import com.github.sanctum.clans.construct.UI;
+import com.github.sanctum.clans.construct.GUI;
 import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClansAPI;
 import com.github.sanctum.clans.construct.extra.ClanBlueprint;
@@ -293,7 +293,7 @@ public class CommandClanAdmin extends Command {
 				return true;
 			}
 			if (args0.equalsIgnoreCase("settings")) {
-				UI.select(UI.Singular.SETTINGS_WINDOW).open(p);
+				GUI.SETTINGS_SELECT.get().open(p);
 				return true;
 			}
 			if (args0.equalsIgnoreCase("give")) {

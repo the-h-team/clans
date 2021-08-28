@@ -526,8 +526,8 @@ public class DefaultClan implements Clan {
 		List<String> members = getMembers().stream().filter(m -> m.getPriority().toInt() == 0).map(ClanAssociate::getPlayer).map(OfflinePlayer::getName).collect(Collectors.toList());
 		List<String> mods = getMembers().stream().filter(m -> m.getPriority().toInt() == 1).map(ClanAssociate::getPlayer).map(OfflinePlayer::getName).collect(Collectors.toList());
 		List<String> admins = getMembers().stream().filter(m -> m.getPriority().toInt() == 2).map(ClanAssociate::getPlayer).map(OfflinePlayer::getName).collect(Collectors.toList());
-		List<String> allies = getAllies().map(Clan::getName).collect(Collectors.toList());
-		List<String> enemies = getEnemies().map(Clan::getName).collect(Collectors.toList());
+		List<String> allies = getAllies().map(Clan::getId).map(HUID::toString).collect(Collectors.toList());
+		List<String> enemies = getEnemies().map(Clan::getId).map(HUID::toString).collect(Collectors.toList());
 		String status = "LOCKED";
 		if (password == null)
 			status = "OPEN";
@@ -567,11 +567,7 @@ public class DefaultClan implements Clan {
 			}
 		}
 		array.add("&f&m---------------------------");
-		List<String> names = new ArrayList<>();
-		for (String u : members) {
-			names.add(Bukkit.getOfflinePlayer(UUID.fromString(u)).getName());
-		}
-		array.add("&n" + ClansAPI.getData().getMain().getConfig().getString("Formatting.Chat.Styles.Full.Member") + "s&r [&7" + members.size() + "&r] - " + names.toString());
+		array.add("&n" + ClansAPI.getData().getMain().getConfig().getString("Formatting.Chat.Styles.Full.Member") + "s&r [&7" + members.size() + "&r] - " + members.toString());
 		array.add(" ");
 		OtherInformationAdaptEvent event = new Vent.Call<>(Vent.Runtime.Synchronous, new OtherInformationAdaptEvent(array, clanID)).run();
 		return event.getInsertions().toArray(new String[0]);

@@ -6,7 +6,7 @@ import com.github.sanctum.clans.bridge.ClanVentBus;
 import com.github.sanctum.clans.construct.Claim;
 import com.github.sanctum.clans.construct.ClanAssociate;
 import com.github.sanctum.clans.construct.DataManager;
-import com.github.sanctum.clans.construct.UI;
+import com.github.sanctum.clans.construct.GUI;
 import com.github.sanctum.clans.construct.actions.ClanAction;
 import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClanBank;
@@ -742,7 +742,7 @@ public class CommandClan extends Command {
 					lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("list")));
 					return true;
 				}
-				UI.select(UI.Singular.ROSTER_ORGANIZATION).open(p);
+				GUI.CLAN_ROSTER_SELECT.get().open(p);
 				return true;
 			}
 			if (args0.equalsIgnoreCase("claim")) {
@@ -1668,7 +1668,7 @@ public class CommandClan extends Command {
 						lib.sendMessage(p, lib.nameInvalid(args1));
 						return true;
 					}
-					associate.changeNickname(args1);
+					associate.setNickname(args1);
 				} else {
 					lib.sendMessage(p, lib.notInClan());
 					return true;
@@ -2039,16 +2039,12 @@ public class CommandClan extends Command {
 					}
 					return true;
 				}
-				Clan c = ClansAPI.getInstance().getClan(target);
-				if (c != null) {
-					UI.select(UI.Singular.MEMBER_INFO, target).open(p);
+				ClansAPI.getInstance().getAssociate(target).ifPresent(a -> {
+					GUI.MEMBER_INFO.get(a).open(p);
 					if (ClansAPI.getData().ID_MODE.containsKey(p) && ClansAPI.getData().ID_MODE.get(p).equals("ENABLED")) {
-						lib.sendMessage(p, "&7#&fID &7of player " + '"' + args1 + '"' + " clan " + '"' + c.getName() + '"' + " is: &e&o" + c.getId().toString());
+						lib.sendMessage(p, "&7#&fID &7of player " + '"' + args1 + '"' + " clan " + '"' + a.getClan().getName() + '"' + " is: &e&o" + a.getClan().getId().toString());
 					}
-				} else {
-					lib.sendMessage(p, args1 + " &c&oisn't in a clan.");
-					return true;
-				}
+				});
 				return true;
 			}
 			if (args0.equalsIgnoreCase("message")) {
@@ -2067,7 +2063,7 @@ public class CommandClan extends Command {
 					return true;
 				}
 				if (associate != null) {
-					associate.changeBio(args1);
+					associate.setBio(args1);
 				}
 				return true;
 			}
@@ -2429,7 +2425,7 @@ public class CommandClan extends Command {
 					return true;
 				}
 				if (associate != null) {
-					associate.changeBio(args1 + " " + args2);
+					associate.setBio(args1 + " " + args2);
 				} else {
 					lib.sendMessage(p, lib.notInClan());
 				}
@@ -2778,7 +2774,7 @@ public class CommandClan extends Command {
 				return true;
 			}
 			if (associate != null) {
-				associate.changeBio(rsn.substring(0, stop));
+				associate.setBio(rsn.substring(0, stop));
 			} else {
 				lib.sendMessage(p, lib.notInClan());
 			}

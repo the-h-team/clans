@@ -22,6 +22,10 @@ import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.Sound;
 import org.bukkit.Statistic;
+import org.bukkit.boss.BarColor;
+import org.bukkit.boss.BarFlag;
+import org.bukkit.boss.BarStyle;
+import org.bukkit.boss.BossBar;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.Nullable;
@@ -42,6 +46,8 @@ public class ClanAssociate {
 	private final ItemStack head;
 
 	private final Map<Long, Long> killMap;
+
+	private final BossBar bar = Bukkit.createBossBar("", BarColor.BLUE, BarStyle.SEGMENTED_10, BarFlag.DARKEN_SKY);
 
 	public ClanAssociate(UUID uuid, RankPriority priority, HUID clanID) {
 		this.player = uuid;
@@ -83,6 +89,10 @@ public class ClanAssociate {
 	 */
 	public String getChat() {
 		return chat;
+	}
+
+	public BossBar getBar() {
+		return bar;
 	}
 
 	/**
@@ -279,7 +289,7 @@ public class ClanAssociate {
 	 *
 	 * @param newBio The new biography to set to the associate
 	 */
-	public synchronized void changeBio(String newBio) {
+	public synchronized void setBio(String newBio) {
 		FileManager user = ClansAPI.getData().get(player);
 		user.getConfig().set("Clan.bio", newBio);
 		user.saveConfig();
@@ -293,7 +303,7 @@ public class ClanAssociate {
 	 *
 	 * @param newName The new nick name
 	 */
-	public synchronized void changeNickname(String newName) {
+	public synchronized void setNickname(String newName) {
 		FileManager user = ClansAPI.getData().get(player);
 		if (newName.equals("empty")) {
 			user.getConfig().set("Clan.nickname", getPlayer().getName());
@@ -363,19 +373,13 @@ public class ClanAssociate {
 			this.state = State.TELEPORTING;
 			this.accepted = new Date();
 			Schedule.sync(() -> {
-
-			}).cancelAfter(associate.getPlayer().getPlayer()).cancelAfter(task -> {
-
 				if (getState() == State.TELEPORTING) {
 					associate.getPlayer().getPlayer().teleport(getTarget());
 					cancel();
-					task.cancel();
 					associate.getPlayer().getPlayer().getWorld().playSound(associate.getPlayer().getPlayer().getLocation(), Sound.ENTITY_VILLAGER_AMBIENT, 10, 1);
 				} else {
-					task.cancel();
 					cancel();
 				}
-
 			}).waitReal(20 * 10);
 		}
 
