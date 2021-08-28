@@ -131,6 +131,10 @@ public class DefaultClan implements Clan {
 					this.base = c.getLegacySafeLocation("base");
 				}
 
+			} else {
+				if (c.getLegacySafeLocation("base") != null) {
+					this.base = c.getLegacySafeLocation("base");
+				}
 			}
 			if (c.readValue(f -> f.isConfigurationSection("members"))) {
 				// Look how simple the new format is...
@@ -358,6 +362,9 @@ public class DefaultClan implements Clan {
 
 		FileManager file = ClansAPI.getData().getClanFile(this);
 		file.getConfig().set("name", getName());
+		if (getBase() != null) {
+			file.getConfig().set("base", getBase());
+		}
 		file.getConfig().set("name-color", getColor());
 		file.getConfig().set("description", getDescription());
 		file.getConfig().set("password", getPassword());
