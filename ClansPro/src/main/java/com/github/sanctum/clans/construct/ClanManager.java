@@ -4,9 +4,12 @@ import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClansAPI;
 import com.github.sanctum.clans.construct.extra.ClanRosterElement;
 import com.github.sanctum.clans.construct.impl.DefaultClan;
+import com.github.sanctum.labyrinth.data.FileManager;
 import com.github.sanctum.labyrinth.formatting.UniformedComponents;
+import com.github.sanctum.labyrinth.task.Schedule;
 import java.util.LinkedList;
 import java.util.List;
+import org.bukkit.Bukkit;
 
 public class ClanManager {
 
@@ -55,14 +58,17 @@ public class ClanManager {
 	 */
 	public synchronized boolean delete(Clan c) {
 		try {
-			for (ClanAssociate associate : c.getMembers()) {
+			for (Clan.Associate associate : c.getMembers()) {
 				if (!associate.getPlayer().getUniqueId().equals(c.getOwner().getPlayer().getUniqueId())) {
 					associate.kick();
 				}
 			}
-			if (ClansAPI.getData().getClanFile(c).exists()) {
-				ClansAPI.getData().getClanFile(c).delete();
-			}
+			final FileManager m = ClansAPI.getData().getClanFile(c);
+			Schedule.sync(() -> {
+				if (!m.getRoot().delete()) {
+					Bukkit.broadcastMessage("Something is wrong");
+				}
+			}).run();
 			return CLANS.remove(c);
 		} catch (Exception e) {
 			return false;
@@ -72,7 +78,7 @@ public class ClanManager {
 	/**
 	 * Clears the clan and associate cache base and reloads from file.
 	 */
-	public synchronized void refresh() {
+	public synchronized int refresh() {
 		for (Clan c : CLANS) {
 			try {
 				c.save();
@@ -82,9 +88,9 @@ public class ClanManager {
 		CLANS.clear();
 		for (String clanID : Clan.ACTION.getAllClanIDs()) {
 			DefaultClan instance = new DefaultClan(clanID);
-			ClansAPI.getInstance().getClanManager().load(instance);
+			load(instance);
 		}
-
+		return CLANS.size();
 	}
 
 }

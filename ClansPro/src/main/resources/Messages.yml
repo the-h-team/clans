@@ -32,6 +32,12 @@ Commands:
   block:
     text: '&7|&e) &6/clan &fblock <&7playerName&f>'
     permission: 'block'
+  permit:
+    text: '&7|&e) &6/clan &fpermit <&7permName&f> <&7level&f>'
+    permission: 'permit'
+  permissions:
+    text: '&7|&e) &6/clan &fpermissions'
+    permission: 'permissions'
   kick:
     text: '&7|&e) &6/clan &fkick <&7playerName&f>'
     permission: 'kick'
@@ -41,12 +47,12 @@ Commands:
   war-set:
     text: '&7|&e) &6/clan &4war&f <&7clanName&f> <timeInSeconds>'
     permission: 'war'
-  peace:
-    text: '&7|&e) &6/clan &f&lpeace&f <&7clanName&f>'
-    permission: 'peace'
   forfeit:
-    text: '&7|&e) &6/clan &fforfeit'
+    text: '&7|&e) &6/clan &fforfeit,surrender'
     permission: 'forfeit'
+  truce:
+    text: '&7|&e) &6/clan &ftruce'
+    permission: 'truce'
   mode:
     text: '&7|&e) &6/clan &fmode <&apeace&f, &4war&f>'
     permission: 'mode'
@@ -70,10 +76,10 @@ Commands:
     permission: 'color'
   info:
     text: '&7|&e) &6/clan &finfo'
-    permission: 'info'
+    permission: 'run'
   info-other:
     text: '&7|&e) &6/clan &finfo <&7playerName/clanName&f>'
-    permission: 'info.other'
+    permission: 'run.other'
   promote:
     text: '&7|&e) &6/clan &fpromote <&7playerName&f>'
     permission: 'promote'
@@ -230,7 +236,7 @@ Response:
   already-at-war: '&c&oAlready in a war.'
   hard-max-claims: '&c&oClaim hardcap reached. You have as much land as you can get!'
   clan-max-claims: '&c&oMax claim limit reached grow your clan power and size to obtain more land.'
-  already-max-claims: '&c&oMax claim limit reached, contact a staff member for more info.'
+  already-max-claims: '&c&oMax claim limit reached, contact a staff member for more run.'
   already-neutral: '&fYou are already neutral with {0}'
   already-allies: '&c&oYou are already allies with this clan. To become neutral type &7/clan ally remove {0}'
   already-enemies: '&c&oYou are already enemies with this clan. To become neutral type &7/clan enemy remove {0}'
@@ -279,6 +285,7 @@ Response:
   nick: '&7|&e) &fInvalid usage : /clan nickname <newNickname>'
   promote: '&7|&e) &fInvalid usage : /clan promote <playerName>'
   demote: '&7|&e) &fInvalid usage : /clan demote <playerName>'
+  permit: '&7|&e) &fInvalid usage : /clan permit <permission> <level>'
   ally: '&7|&e) &fInvalid usage : /clan ally <clanName>'
   enemy: '&7|&e) &fInvalid usage : /clan enemy <clanName>'
   color: '&7|&e) &fInvalid usage : /clan color <newTagColor>'
@@ -348,7 +355,7 @@ menu-format:
     - '&b&oClick to reveal clan members.'
 
 menu-items:
-  # Setup custom heads from the "Heads.yml" file.
+  # Setup custom heads from the "heads.data" file.
   navigate_left: Left_Button
   navigate_right: Right_Button
   back: BARRIER

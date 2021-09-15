@@ -189,8 +189,7 @@ public class Claim {
 	 * Completely delete/un-claim this clan land.
 	 */
 	public void remove() {
-		ClansAPI.getInstance().getClaimManager().getFile().getConfig().set(getOwner() + ".Claims." + getId(), null);
-		ClansAPI.getInstance().getClaimManager().getFile().saveConfig();
+		ClansAPI.getInstance().getClaimManager().getFile().write(c -> c.set(getOwner() + ".Claims." + getId(), null));
 		if (getClan() instanceof DefaultClan) {
 			DefaultClan cl = (DefaultClan) getClan();
 			cl.removeClaim(this);

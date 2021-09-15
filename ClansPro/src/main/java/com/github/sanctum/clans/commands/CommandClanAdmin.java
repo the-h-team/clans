@@ -1,22 +1,20 @@
 package com.github.sanctum.clans.commands;
 
 import com.github.sanctum.clans.bridge.ClanAddonQuery;
-import com.github.sanctum.clans.construct.ClanAssociate;
+import com.github.sanctum.clans.bridge.internal.stashes.StashContainer;
+import com.github.sanctum.clans.bridge.internal.vaults.VaultContainer;
 import com.github.sanctum.clans.construct.DataManager;
 import com.github.sanctum.clans.construct.GUI;
 import com.github.sanctum.clans.construct.api.Clan;
+import com.github.sanctum.clans.construct.api.ClanBlueprint;
 import com.github.sanctum.clans.construct.api.ClansAPI;
-import com.github.sanctum.clans.construct.extra.ClanBlueprint;
+import com.github.sanctum.clans.construct.api.War;
 import com.github.sanctum.clans.construct.extra.StringLibrary;
-import com.github.sanctum.clans.internal.stashes.StashContainer;
-import com.github.sanctum.clans.internal.vaults.VaultContainer;
 import com.github.sanctum.labyrinth.data.FileManager;
+import com.github.sanctum.labyrinth.data.FileType;
 import com.github.sanctum.labyrinth.formatting.PaginatedList;
-import com.github.sanctum.labyrinth.library.HFEncoded;
 import com.github.sanctum.labyrinth.library.Message;
 import com.github.sanctum.labyrinth.library.StringUtils;
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -226,8 +224,8 @@ public class CommandClanAdmin extends Command {
 			if (args.length == 2) {
 				if (args[0].equalsIgnoreCase("reload")) {
 					FileManager file = DataManager.FileType.MISC_FILE.get(args[1], "Configuration");
-					if (file.exists()) {
-						file.reload();
+					if (file.getRoot().exists()) {
+						file.getRoot().reload();
 						ClansAPI.getInstance().getPlugin().getLogger().info("File by the name of " + '"' + args[1] + '"' + " was reloaded.");
 					} else {
 						ClansAPI.getInstance().getPlugin().getLogger().info("File by the name of " + '"' + args[1] + '"' + " was not found.");
@@ -268,6 +266,30 @@ public class CommandClanAdmin extends Command {
 		}
 		if (length == 1) {
 			String args0 = args[0];
+			if (args0.equalsIgnoreCase("copy")) {
+				FileManager reg = ClansAPI.getInstance().getClaimManager().getFile();
+				if (reg.getRoot().getType() != FileType.JSON) {
+					if (reg.toJSON("regions", "Configuration").getRoot().save()) {
+						lib.sendMessage(p, "&aRegions file copied to Json");
+					}
+				} else {
+					if (!reg.getRoot().exists()) {
+						FileManager m = ClansAPI.getInstance().getFileList().get("Regions", "Configuration");
+						if (m.toJSON("regions", "Configuration").getRoot().save()) {
+							lib.sendMessage(p, "&aRegions file copied to Json");
+						}
+					}
+				}
+				for (Clan c : ClansAPI.getInstance().getClanManager().getClans().list()) {
+					FileManager f = ClansAPI.getData().getClanFile(c);
+					if (f.getRoot().getType() != FileType.JSON) {
+						if (f.toJSON().getRoot().save()) {
+							lib.sendMessage(p, "&aClan " + c.getName() + " file copied to Json");
+						}
+					}
+				}
+				return true;
+			}
 			if (args0.equalsIgnoreCase("reload")) {
 				lib.sendMessage(p, "&7|&e) &fInvalid usage : /" + commandLabel + " reload <fileName>");
 				return true;
@@ -289,7 +311,13 @@ public class CommandClanAdmin extends Command {
 				return true;
 			}
 			if (args0.equalsIgnoreCase("spy")) {
-				lib.sendMessage(p, "&7|&e) &fInvalid usage : /" + commandLabel + " spy <chatType>");
+				if (ClansAPI.getData().CHAT_SPY.contains(p)) {
+					ClansAPI.getData().CHAT_SPY.remove(p);
+					lib.sendMessage(p, "&cNo longer spying on chat channels.");
+				} else {
+					ClansAPI.getData().CHAT_SPY.add(p);
+					lib.sendMessage(p, "&aNow spying on chat channels.");
+				}
 				return true;
 			}
 			if (args0.equalsIgnoreCase("settings")) {
@@ -313,24 +341,11 @@ public class CommandClanAdmin extends Command {
 				return true;
 			}
 			if (args0.equalsIgnoreCase("update")) {
-				FileManager main = ClansAPI.getInstance().getFileList().find("Config", "Configuration");
-				FileManager messages = ClansAPI.getInstance().getFileList().find("Messages", "Configuration");
-				if (ClansAPI.getInstance().getPlugin().getDescription().getVersion().equals(main.getConfig().getString("Version"))) {
+				if (!ClansAPI.getData().assertDefaults()) {
 					lib.sendMessage(p, "&3&oThe configuration is already up to date.");
-					return true;
 				} else {
-					FileManager mainOld = ClansAPI.getInstance().getFileList().find("config_old", "Configuration");
-					FileManager messOld = ClansAPI.getInstance().getFileList().find("messages_old", "Configuration");
-					mainOld.getConfig().options().copyDefaults(true);
-					mainOld.getConfig().setDefaults(main.getConfig());
-					main.refreshConfig();
-					messOld.getConfig().options().copyDefaults(true);
-					messOld.getConfig().setDefaults(messages.getConfig());
-					messages.refreshConfig();
-					InputStream mainGrab = ClansAPI.getInstance().getPlugin().getResource("Config.yml");
-					if (mainGrab == null) throw new IllegalStateException("Unable to load Config.yml from the jar!");
-					FileManager.copy(mainGrab, main.getFile());
-					lib.sendMessage(p, "&b&oUpdated configuration to the latest plugin version.");
+					lib.sendMessage(p, "&aUpdated configuration to latest...");
+					return true;
 				}
 				return true;
 			}
@@ -372,7 +387,7 @@ public class CommandClanAdmin extends Command {
 			if (args0.equalsIgnoreCase("close")) {
 				if (ClansAPI.getInstance().getClanID(args1) != null) {
 					Clan target = ClansAPI.getInstance().getClan(ClansAPI.getInstance().getClanID(args1));
-					for (ClanAssociate id : target.getMembers()) {
+					for (Clan.Associate id : target.getMembers()) {
 						if (id.getPriority().toInt() == 3) {
 							target.broadcast("&8(&e!&8) &4&oOur clan has been forcibly closed by a staff member.");
 							Clan.ACTION.removePlayer(id.getPlayer().getUniqueId());
@@ -453,93 +468,21 @@ public class CommandClanAdmin extends Command {
 				return true;
 			}
 			if (args0.equalsIgnoreCase("setspawn")) {
-				if (args1.equalsIgnoreCase("blue")) {
-					FileManager blue = ClansAPI.getData().arenaBlueTeamFile();
-					try {
-						String loc = new HFEncoded(p.getLocation()).serialize();
-						blue.getConfig().set("spawn", loc);
-						blue.saveConfig();
-						lib.sendMessage(p, "&9&oBlue spawn set.");
-					} catch (IOException e) {
-						e.printStackTrace();
-					}
-
-					return true;
-				}
-				if (args1.equalsIgnoreCase("blue_death")) {
-					FileManager blue = ClansAPI.getData().arenaBlueTeamFile();
-					try {
-						String loc = new HFEncoded(p.getLocation()).serialize();
-						blue.getConfig().set("re-spawn", loc);
-						blue.saveConfig();
-						lib.sendMessage(p, "&9&oBlue re-spawn location set.");
-					} catch (IOException e) {
-						e.printStackTrace();
-					}
-
-					return true;
-				}
-				if (args1.equalsIgnoreCase("red")) {
-					FileManager red = ClansAPI.getData().arenaRedTeamFile();
-					try {
-						String loc = new HFEncoded(p.getLocation()).serialize();
-						red.getConfig().set("spawn", loc);
-						red.saveConfig();
-						lib.sendMessage(p, "&c&oRed spawn set.");
-					} catch (IOException e) {
-						e.printStackTrace();
-					}
-					return true;
-				}
-				if (args1.equalsIgnoreCase("red_death")) {
-					FileManager red = ClansAPI.getData().arenaRedTeamFile();
-					try {
-						String loc = new HFEncoded(p.getLocation()).serialize();
-						red.getConfig().set("re-spawn", loc);
-						red.saveConfig();
-						lib.sendMessage(p, "&c&oRed re-spawn location set.");
-					} catch (IOException e) {
-						e.printStackTrace();
-					}
-
-					return true;
-				}
-				return true;
-			}
-			if (args0.equalsIgnoreCase("spy")) {
-				switch (args1.toLowerCase()) {
-					case "ally":
-						if (ClansAPI.getData().ALLY_SPY.contains(p)) {
-							ClansAPI.getData().ALLY_SPY.remove(p);
-							lib.sendMessage(p, "&5&oNo longer spying on ally channels.");
-						} else {
-							lib.sendMessage(p, "&5&oNow spying on ally channels.");
-							ClansAPI.getData().ALLY_SPY.add(p);
-						}
+				switch (args1.toUpperCase()) {
+					case "A":
+						War.setSpawn(War.Team.A, p.getLocation());
 						break;
-					case "clan":
-						if (ClansAPI.getData().CLAN_SPY.contains(p)) {
-							ClansAPI.getData().CLAN_SPY.remove(p);
-							lib.sendMessage(p, "&5&oNo longer spying on clan channels.");
-						} else {
-							lib.sendMessage(p, "&5&oNow spying on clan channels.");
-							ClansAPI.getData().CLAN_SPY.add(p);
-						}
+					case "B":
+						War.setSpawn(War.Team.B, p.getLocation());
 						break;
-					case "custom":
-						if (ClansAPI.getData().CUSTOM_SPY.contains(p)) {
-							ClansAPI.getData().CUSTOM_SPY.remove(p);
-							lib.sendMessage(p, "&5&oNo longer spying on custom channels.");
-						} else {
-							lib.sendMessage(p, "&5&oNow spying on custom channels.");
-							ClansAPI.getData().CUSTOM_SPY.add(p);
-						}
+					case "C":
+						War.setSpawn(War.Team.C, p.getLocation());
 						break;
-
-					default:
-						lib.sendMessage(p, "&cUnknown channel type.");
+					case "D":
+						War.setSpawn(War.Team.D, p.getLocation());
 						break;
 				}
+				lib.sendMessage(p, "&aUpdated team '&b" + args1.toUpperCase() + "&a' spawn location.");
 				return true;
 			}
 			if (args0.equalsIgnoreCase("getid")) {
@@ -560,8 +503,8 @@ public class CommandClanAdmin extends Command {
 			}
 			if (args0.equalsIgnoreCase("reload")) {
 				FileManager file = DataManager.FileType.MISC_FILE.get(args[1], "Configuration");
-				if (file.exists()) {
-					file.reload();
+				if (file.getRoot().exists()) {
+					file.getRoot().reload();
 					lib.sendMessage(p, "&a&oFile by the name of " + '"' + args1 + '"' + " was reloaded.");
 				} else {
 					lib.sendMessage(p, "&c&oFile by the name of " + '"' + args1 + '"' + " not found.");
@@ -885,7 +828,7 @@ public class CommandClanAdmin extends Command {
 								return true;
 							}
 
-							for (String s : ClansAPI.getData().getMain().getConfig().getStringList("Clans.color-blacklist")) {
+							for (String s : ClansAPI.getData().getMain().getRoot().getStringList("Clans.color-blacklist")) {
 
 								if (StringUtils.use(args[3]).containsIgnoreCase(s)) {
 									lib.sendMessage(p, "&c&oInvalid color format. Code: '" + s + "' is not allowed.");

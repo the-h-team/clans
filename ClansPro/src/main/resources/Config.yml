@@ -277,9 +277,9 @@ Clans:
   war:
     # If someone is getting spawn camped penalize the attacker?
     killstreak:
-      # The amount of kills to check for.
+      # The amount of kills to call for.
       amount: 7
-      # The amount of time to check for.
+      # The amount of time to call for.
       time-span: 5
       # The time threshold to calculate in
       # Valid thresholds: [ SECONDS, MINUTES, HOURS, DAYS ]
@@ -293,16 +293,16 @@ Clans:
       - 'clan base'
       - 'spawn'
       - 'home'
-    # Change the minimum rank clearance needed to request war from another clan.
-    clearance: 2
-    # Change the minimum length of time a clan war can last.
-    battle-length-seconds: 60
-    # Change the maximum length of time a clan war can last.
-    battle-length-max: 120
-    # The amount of members required to be online to participate in a war.
-    online-needed: 1
-    # The amount of time to wait before starting the match.
-    wait-time-seconds: 60
+    # Change the max amount clans allowed within a clan war. Hard-cap = 4
+    max-clans: 2
+    # The amount of members queued required to start a war.
+    que-needed: 4
+    # The amount of seconds to wait when a war is ready to start.
+    start-wait: 61
+    # The max duration a clan war can be in seconds.
+    max-length: 240
+    # The max amount of points a team can get before the winner is concluded.
+    max-points: 24
 
 #-------------------------------------------------------------------
 #
@@ -322,6 +322,13 @@ Formatting:
   # Let the plugin include native chat formatting? If your chat plugin uses BaseComponents for formatting this will not work by default,
   # and you'll need to use the placeholders from the wiki within your chat management plugin.
   allow: true
+  # What kind of file type should clans use for clan data?
+  # If you are wanting to convert your in game data first go in game, use '/cla copy' after you do that
+  # bring your server to a complete stop then change this value to JSON. After doing that delete the old yml files
+  # and start your server!
+  #
+  # Valid types = [ YAML, JSON ]
+  file-type: YAML
   # Allow clans to put prefixes before player names above heads.
   nametag-prefix:
     use: true
@@ -338,6 +345,8 @@ Formatting:
   chat-spy-console: true
   # Change the format for the /clan message command
   chat-message-format: '&7{0} say''s :'
+  # Allow clans to use gradients for clan coloring?
+  gradient-name-coloring: true
   # Change the prefix displayed for the plugin messaging.
   prefix:
     prefix: '&7['
@@ -372,13 +381,13 @@ Formatting:
       global: '&8(&b{0}&8)&r &8[&3{1}&8]&r'
 
       clan:
-        # {0} = Player name, {1} = Clan name, {2} = Clan color, {3} = Player rank
+        # {0} = Player name, {1} = Clan name colored, {2} = Clan color, {3} = Player rank, {4} = Clan name colorless
         prefix: '&8(&3&lCC&8) &b{0} '
         divider: '&8: &r'
         highlight: '&8({2}{1}&8)'
         hover: 'My clan rank is: &a{3}'
       ally:
-        # {0} = Player name, {1} = Clan name, {2} = Clan color, {3} = Player rank
+        # {0} = Player name, {1} = Clan name colored, {2} = Clan color, {3} = Player rank, {4} = Clan name colorless
         prefix: '&8(&2&lAC&8) &b{0} '
         divider: '&8: &r'
         highlight: '&8({2}{1}&8)'

@@ -70,8 +70,7 @@ public abstract class ClanCooldown {
 
 	protected void abp(String key, int seconds) {
 		FileManager clan = DataManager.FileType.CLAN_FILE.get(getId());
-		clan.getConfig().set("cooldown." + key, abv(seconds));
-		clan.saveConfig();
+		clan.write(t -> t.set("cooldown." + key, abv(seconds)));
 	}
 
 	@Override

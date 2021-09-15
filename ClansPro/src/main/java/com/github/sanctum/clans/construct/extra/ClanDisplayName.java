@@ -1,6 +1,5 @@
 package com.github.sanctum.clans.construct.extra;
 
-import com.github.sanctum.clans.construct.ClanAssociate;
 import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClansAPI;
 import org.bukkit.ChatColor;
@@ -16,14 +15,14 @@ public class ClanDisplayName {
 	public static Team getTeam(Player player) {
 		Team result = null;
 		Scoreboard scoreboard = player.getScoreboard();
-		ClanAssociate associate = ClansAPI.getInstance().getAssociate(player).orElse(null);
+		Clan.Associate associate = ClansAPI.getInstance().getAssociate(player).orElse(null);
 		if (associate != null && associate.isValid()) {
 			result = scoreboard.getTeam(associate.getClan().getId().toString());
 		}
 		return result;
 	}
 
-	public static void set(ClanAssociate associate, String prefix) {
+	public static void set(Clan.Associate associate, String prefix) {
 		Scoreboard scoreboard = associate.getPlayer().getPlayer().getScoreboard();
 		Team team = getTeam(associate.getPlayer().getPlayer());
 		if (team == null) {
@@ -36,7 +35,7 @@ public class ClanDisplayName {
 			t.setOption(Team.Option.NAME_TAG_VISIBILITY, Team.OptionStatus.ALWAYS);
 			t.addEntry(associate.getName());
 			if (scoreboard.getObjective("showhealth") == null) {
-				if (ClansAPI.getData().getEnabled("Clans.nametag-prefix.show-health")) {
+				if (ClansAPI.getData().isTrue("Clans.nametag-prefix.show-health")) {
 					Objective h = scoreboard.registerNewObjective("showhealth", Criterias.HEALTH, ChatColor.DARK_RED + "❤");
 					h.setDisplaySlot(DisplaySlot.BELOW_NAME);
 				}
@@ -45,7 +44,7 @@ public class ClanDisplayName {
 	}
 
 	public static void set(Player player, String prefix) {
-		ClanAssociate associate = ClansAPI.getInstance().getAssociate(player).orElse(null);
+		Clan.Associate associate = ClansAPI.getInstance().getAssociate(player).orElse(null);
 		Scoreboard scoreboard = player.getScoreboard();
 
 		if (associate == null) {
@@ -62,7 +61,7 @@ public class ClanDisplayName {
 			team.setOption(Team.Option.NAME_TAG_VISIBILITY, Team.OptionStatus.ALWAYS);
 			team.addEntry(player.getName());
 			if (scoreboard.getObjective("showhealth") == null) {
-				if (ClansAPI.getData().getEnabled("Clans.nametag-prefix.show-health")) {
+				if (ClansAPI.getData().isTrue("Clans.nametag-prefix.show-health")) {
 					Objective h = scoreboard.registerNewObjective("showhealth", Criterias.HEALTH, ChatColor.DARK_RED + "❤");
 					h.setDisplaySlot(DisplaySlot.BELOW_NAME);
 				}
@@ -71,7 +70,7 @@ public class ClanDisplayName {
 	}
 
 	public static void update(Player player, String prefix) {
-		ClanAssociate associate = ClansAPI.getInstance().getAssociate(player).orElse(null);
+		Clan.Associate associate = ClansAPI.getInstance().getAssociate(player).orElse(null);
 
 		if (associate == null) {
 			return;
@@ -85,7 +84,7 @@ public class ClanDisplayName {
 
 	}
 
-	public static void remove(ClanAssociate associate) {
+	public static void remove(Clan.Associate associate) {
 
 		if (!associate.isValid()) return;
 
@@ -124,7 +123,7 @@ public class ClanDisplayName {
 		Scoreboard scoreboard = player.getScoreboard();
 		try {
 			if (getTeam(player) != null) {
-				ClanAssociate associate = ClansAPI.getInstance().getAssociate(player).orElse(null);
+				Clan.Associate associate = ClansAPI.getInstance().getAssociate(player).orElse(null);
 
 				if (associate == null) {
 					return;

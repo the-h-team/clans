@@ -1,6 +1,6 @@
 package com.github.sanctum.clans.construct.extra;
 
-import com.github.sanctum.clans.construct.ClanAssociate;
+import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.labyrinth.formatting.UniformedComponents;
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -15,16 +15,16 @@ import org.bukkit.OfflinePlayer;
 public class MemberPlayerWrapper extends UniformedComponents<OfflinePlayer> implements Serializable {
 
 	private static final long serialVersionUID = -6713773767070009087L;
-	private final UniformedComponents<ClanAssociate> wrapper;
+	private final UniformedComponents<Clan.Associate> wrapper;
 
-	public MemberPlayerWrapper(UniformedComponents<ClanAssociate> wrapper) {
+	public MemberPlayerWrapper(UniformedComponents<Clan.Associate> wrapper) {
 		this.wrapper = wrapper;
 	}
 
 	@Override
 	public List<OfflinePlayer> list() {
 		List<OfflinePlayer> list = new ArrayList<>();
-		for (ClanAssociate a : wrapper.list()) {
+		for (Clan.Associate a : wrapper.list()) {
 			list.add(a.getPlayer());
 		}
 		return list;

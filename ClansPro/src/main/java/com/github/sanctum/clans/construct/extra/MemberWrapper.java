@@ -1,6 +1,6 @@
 package com.github.sanctum.clans.construct.extra;
 
-import com.github.sanctum.clans.construct.ClanAssociate;
+import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClansAPI;
 import com.github.sanctum.clans.construct.impl.DefaultClan;
 import com.github.sanctum.labyrinth.data.FileManager;
@@ -16,7 +16,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.bukkit.OfflinePlayer;
 
-public class MemberWrapper extends UniformedComponents<ClanAssociate> implements Serializable {
+public class MemberWrapper extends UniformedComponents<Clan.Associate> implements Serializable {
 
 	private static final long serialVersionUID = -1769055045640489378L;
 	private final DefaultClan c;
@@ -26,55 +26,55 @@ public class MemberWrapper extends UniformedComponents<ClanAssociate> implements
 	}
 
 	@Override
-	public List<ClanAssociate> list() {
+	public List<Clan.Associate> list() {
 		FileManager c = ClansAPI.getData().getClanFile(this.c);
 		return c.getConfig().getStringList("members").stream().map(i -> ClansAPI.getInstance().getAssociate(UUID.fromString(i)).orElse(null)).collect(Collectors.toList());
 	}
 
 	@Override
-	public List<ClanAssociate> sort() {
-		List<ClanAssociate> list = list();
-		list.sort(Comparator.comparingDouble(ClanAssociate::getKD));
+	public List<Clan.Associate> sort() {
+		List<Clan.Associate> list = list();
+		list.sort(Comparator.comparingDouble(Clan.Associate::getKD));
 		return list();
 	}
 
 	@Override
-	public List<ClanAssociate> sort(Comparator<? super ClanAssociate> comparable) {
+	public List<Clan.Associate> sort(Comparator<? super Clan.Associate> comparable) {
 		return sort();
 	}
 
 	@Override
-	public Collection<ClanAssociate> collect() {
+	public Collection<Clan.Associate> collect() {
 		return list();
 	}
 
 	@Override
-	public ClanAssociate[] array() {
-		return list().toArray(new ClanAssociate[0]);
+	public Clan.Associate[] array() {
+		return list().toArray(new Clan.Associate[0]);
 	}
 
 	@Override
-	public <R> Stream<R> map(Function<? super ClanAssociate, ? extends R> mapper) {
+	public <R> Stream<R> map(Function<? super Clan.Associate, ? extends R> mapper) {
 		return list().stream().map(mapper);
 	}
 
 	@Override
-	public Stream<ClanAssociate> filter(Predicate<? super ClanAssociate> predicate) {
+	public Stream<Clan.Associate> filter(Predicate<? super Clan.Associate> predicate) {
 		return list().stream().filter(predicate);
 	}
 
 	@Override
-	public ClanAssociate getFirst() {
+	public Clan.Associate getFirst() {
 		return list().get(0);
 	}
 
 	@Override
-	public ClanAssociate getLast() {
+	public Clan.Associate getLast() {
 		return list().get(Math.max(list().size() - 1, 0));
 	}
 
 	@Override
-	public ClanAssociate get(int index) {
+	public Clan.Associate get(int index) {
 		return list().get(index);
 	}
 

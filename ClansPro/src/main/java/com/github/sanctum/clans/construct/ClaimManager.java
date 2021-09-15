@@ -1,23 +1,105 @@
 package com.github.sanctum.clans.construct;
 
+import com.github.sanctum.clans.ClansJavaPlugin;
+import com.github.sanctum.clans.bridge.ClanVentBus;
 import com.github.sanctum.clans.construct.api.Clan;
+import com.github.sanctum.clans.construct.api.ClanCooldown;
 import com.github.sanctum.clans.construct.api.ClansAPI;
 import com.github.sanctum.clans.construct.impl.DefaultClan;
+import com.github.sanctum.clans.construct.impl.Resident;
+import com.github.sanctum.clans.events.core.ClaimResidentEvent;
+import com.github.sanctum.clans.events.core.WildernessInhabitantEvent;
+import com.github.sanctum.labyrinth.data.Configurable;
 import com.github.sanctum.labyrinth.data.FileManager;
+import com.github.sanctum.labyrinth.data.FileType;
+import com.github.sanctum.labyrinth.data.Node;
+import com.github.sanctum.labyrinth.task.JoinableRepeatingTask;
+import com.github.sanctum.labyrinth.task.Schedule;
+import java.text.MessageFormat;
 import java.util.Arrays;
 import java.util.HashSet;
-import java.util.Objects;
 import java.util.Set;
 import org.bukkit.Chunk;
 import org.bukkit.Location;
-import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.entity.Player;
 
 public class ClaimManager {
 
 	private final FileManager regions;
+	private final JoinableRepeatingTask<Player> task;
 
 	public ClaimManager() {
-		this.regions = DataManager.FileType.MISC_FILE.get("Regions", "Configuration");
+		switch (((ClansJavaPlugin) ClansAPI.getInstance().getPlugin()).TYPE) {
+			case YAML:
+				this.regions = DataManager.FileType.MISC_FILE.get("Regions", "Configuration");
+				break;
+			case JSON:
+				this.regions = ClansAPI.getInstance().getFileList().find("regions", "Configuration", FileType.JSON);
+				break;
+			default:
+				this.regions = DataManager.FileType.MISC_FILE.get("Regions", "Configuration");
+				break;
+		}
+
+		this.task = JoinableRepeatingTask.create(18, ClansAPI.getInstance().getPlugin(), p -> {
+			ClansAPI API = ClansAPI.getInstance();
+
+			Clan.Associate associate = API.getAssociate(p).orElse(null);
+
+			if (associate != null) {
+				for (ClanCooldown clanCooldown : ClansAPI.getData().COOLDOWNS) {
+					if (clanCooldown.getId().equals(p.getUniqueId().toString())) {
+						if (clanCooldown.isComplete()) {
+							Schedule.sync(() -> ClanCooldown.remove(clanCooldown)).run();
+							Clan.ACTION.sendMessage(p, MessageFormat.format(ClansAPI.getData().getMessageResponse("cooldown-expired"), clanCooldown.getAction().replace("Clans:", "")));
+						}
+					}
+				}
+
+			}
+
+			if (Claim.ACTION.isEnabled()) {
+
+				if (!API.getClaimManager().isInClaim(p.getLocation())) {
+
+					ClanVentBus.call(new WildernessInhabitantEvent(p));
+
+				} else {
+					ClaimResidentEvent event = ClanVentBus.call(new ClaimResidentEvent(p));
+					if (!event.isCancelled()) {
+						ClansAPI.getData().INHABITANTS.remove(event.getResident().getPlayer());
+						Resident r = event.getResident();
+						Claim current = event.getClaim();
+						if (current.isActive()) {
+							if (ClansAPI.getInstance().getClanName(current.getOwner()) == null) {
+								current.remove();
+								return;
+							}
+							Claim lastKnown = r.getLastKnown();
+							if (!current.getId().equals(lastKnown.getId())) {
+								if (r.hasProperty(Resident.Property.NOTIFIED)) {
+									if (!lastKnown.getOwner().equals(r.getCurrent().getOwner())) {
+										r.setProperty(Resident.Property.TRAVERSED, true);
+										r.updateLastKnown(event.getClaim());
+										r.updateJoinTime(System.currentTimeMillis());
+									}
+								}
+							}
+							if (!r.hasProperty(Resident.Property.NOTIFIED)) {
+								event.sendNotification();
+								r.setProperty(Resident.Property.NOTIFIED, true);
+							} else {
+								if (r.hasProperty(Resident.Property.TRAVERSED)) {
+									r.setProperty(Resident.Property.TRAVERSED, false);
+									r.updateJoinTime(System.currentTimeMillis());
+									event.sendNotification();
+								}
+							}
+						}
+					}
+				}
+			}
+		});
 	}
 
 	public boolean isInClaim(Location location) {
@@ -85,11 +167,14 @@ public class ClaimManager {
 	}
 
 	public Set<Claim> getClaims() {
-		Set<Claim> claims = new HashSet<>();
-		for (Clan c : ClansAPI.getInstance().getClanManager().getClans().list()) {
-			claims.addAll(Arrays.asList(c.getOwnedClaims()));
-		}
-		return claims;
+		return ClansAPI.getInstance().getClanManager().getClans()
+				.map(Clan::getOwnedClaims)
+				.map(cl -> (Set<Claim>) new HashSet<>(Arrays.asList(cl)))
+				.reduce((claims1, claims2) -> {
+					Set<Claim> c = new HashSet<>(claims1);
+					c.addAll(claims2);
+					return c;
+				}).orElse(new HashSet<>());
 	}
 
 	public boolean load(Claim claim) {
@@ -101,10 +186,14 @@ public class ClaimManager {
 		return false;
 	}
 
+	public JoinableRepeatingTask<Player> getTask() {
+		return this.task;
+	}
+
 	/**
 	 * Clear and re-load all persistent claims.
 	 */
-	public void refresh() {
+	public int refresh() {
 
 		for (Clan c : ClansAPI.getInstance().getClanManager().getClans().list()) {
 			if (c instanceof DefaultClan) {
@@ -112,23 +201,27 @@ public class ClaimManager {
 				clan.resetClaims();
 			}
 		}
-
-		FileConfiguration d = regions.getConfig();
+		int loaded = 0;
+		Configurable d = getFile().getRoot();
 		for (String clan : d.getKeys(false)) {
-			for (String claimID : Objects.requireNonNull(d.getConfigurationSection(clan + ".Claims")).getKeys(false)) {
-				int x = d.getInt(clan + ".Claims." + claimID + ".X");
-				int z = d.getInt(clan + ".Claims." + claimID + ".Z");
-				String w = d.getString(clan + ".Claims." + claimID + ".World");
+			Node cl = d.getNode(clan);
+			Node claims = cl.getNode("Claims");
+			for (String claimID : claims.getKeys(false)) {
+				Node claim = claims.getNode(claimID);
+				int x = claim.getNode("X").toPrimitive().getInt();
+				int z = claim.getNode("Z").toPrimitive().getInt();
+				String w = claim.getNode("World").toPrimitive().getString();
 				String[] ID = {clan, claimID, w};
 				int[] pos = {x, z};
 				Claim c = new Claim(ID, pos, true);
 				load(c);
-				if (!getFile().getConfig().isBoolean(clan + ".Claims." + claimID + ".active")) {
-					getFile().getConfig().set(clan + ".Claims." + claimID + ".active", true);
-					getFile().saveConfig();
+				loaded++;
+				if (!d.isBoolean(clan + ".Claims." + claimID + ".active")) {
+					getFile().write(t -> t.set(clan + ".Claims." + claimID + ".active", true));
 				}
 			}
 		}
+		return loaded;
 	}
 
 

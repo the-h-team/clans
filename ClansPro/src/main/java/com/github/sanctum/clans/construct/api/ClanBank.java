@@ -93,7 +93,7 @@ public interface ClanBank {
 
 			@Override
 			public BigDecimal startingBalance() {
-				final String string = ClansAPI.getData().getString("Clans.banks.starting-balance");
+				final String string = ClansAPI.getData().getConfigString("Clans.banks.starting-balance");
 				if (string == null) {
 					providingPlugin.getLogger().severe("Error reading starting-balance, returning 0!");
 				} else {
@@ -110,7 +110,7 @@ public interface ClanBank {
 
 			@Override
 			public @Nullable BigDecimal maxBalance() {
-				final String string = ClansAPI.getData().getString("Clans.banks.maximum-balance");
+				final String string = ClansAPI.getData().getConfigString("Clans.banks.maximum-balance");
 				if (string != null) {
 					try {
 						return new BigDecimal(string);

@@ -2,7 +2,7 @@ package com.github.sanctum.clans.construct.impl;
 
 import com.github.sanctum.clans.construct.Claim;
 import java.util.HashSet;
-import java.util.LinkedList;
+import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.bukkit.Material;
@@ -19,9 +19,9 @@ public class Resident {
 
 	private Claim claim;
 
-	private final LinkedList<BlockMeta> placed = new LinkedList<>();
+	private final Set<BlockMeta> placed = new LinkedHashSet<>();
 
-	private final LinkedList<BlockMeta> broken = new LinkedList<>();
+	private final Set<BlockMeta> broken = new LinkedHashSet<>();
 
 	public Resident(Player inhabitant) {
 		this.properties = new HashSet<>();

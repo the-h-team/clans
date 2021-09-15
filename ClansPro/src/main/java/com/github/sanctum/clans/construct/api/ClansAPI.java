@@ -2,13 +2,13 @@ package com.github.sanctum.clans.construct.api;
 
 import com.github.sanctum.clans.ClansJavaPlugin;
 import com.github.sanctum.clans.bridge.ClanAddon;
+import com.github.sanctum.clans.construct.ArenaManager;
 import com.github.sanctum.clans.construct.ClaimManager;
-import com.github.sanctum.clans.construct.ClanAssociate;
 import com.github.sanctum.clans.construct.ClanManager;
 import com.github.sanctum.clans.construct.DataManager;
 import com.github.sanctum.clans.construct.RankPriority;
 import com.github.sanctum.clans.construct.ShieldManager;
-import com.github.sanctum.clans.construct.extra.ClanPrefix;
+import com.github.sanctum.clans.construct.extra.MessagePrefix;
 import com.github.sanctum.labyrinth.data.FileList;
 import com.github.sanctum.labyrinth.data.container.KeyedServiceManager;
 import com.github.sanctum.labyrinth.library.HUID;
@@ -32,7 +32,7 @@ public interface ClansAPI {
 	/**
 	 * @return Gets the prefix object for the plugin.
 	 */
-	ClanPrefix getPrefix();
+	MessagePrefix getPrefix();
 
 	/**
 	 * The plugin instance for the api. Try not to use this!
@@ -69,7 +69,7 @@ public interface ClansAPI {
 	 * @param player The player to use.
 	 * @return A clan associate with properties such as nickname, bio etc.
 	 */
-	Optional<ClanAssociate> getAssociate(OfflinePlayer player);
+	Optional<Clan.Associate> getAssociate(OfflinePlayer player);
 
 	/**
 	 * Gets a clan associate by their player idd.
@@ -77,7 +77,7 @@ public interface ClansAPI {
 	 * @param uuid The player to use.
 	 * @return A clan associate with properties such as nickname, bio etc.
 	 */
-	Optional<ClanAssociate> getAssociate(UUID uuid);
+	Optional<Clan.Associate> getAssociate(UUID uuid);
 
 	/**
 	 * Gets a clan associate by their player name.
@@ -85,7 +85,7 @@ public interface ClansAPI {
 	 * @param playerName The player to use.
 	 * @return A clan associate with properties such as nickname, bio etc.
 	 */
-	Optional<ClanAssociate> getAssociate(String playerName);
+	Optional<Clan.Associate> getAssociate(String playerName);
 
 	/**
 	 * Get the ClansPro file listing.
@@ -100,6 +100,13 @@ public interface ClansAPI {
 	 * @return The event cycle services manager.
 	 */
 	KeyedServiceManager<ClanAddon> getServiceManager();
+
+	/**
+	 * Get the manager for clan war arenas.
+	 *
+	 * @return The arena manager.
+	 */
+	ArenaManager getArenaManager();
 
 	/**
 	 * Get the manager for clans to load/delete from.
@@ -185,7 +192,7 @@ public interface ClansAPI {
 	 * @param priority  The rank to give
 	 */
 	@Deprecated
-	void setRank(ClanAssociate associate, RankPriority priority);
+	void setRank(Clan.Associate associate, RankPriority priority);
 
 	/**
 	 * Search and automatically register all found pro addons in a given package location

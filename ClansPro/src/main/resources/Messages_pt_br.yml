@@ -34,20 +34,20 @@ Commands:
   block:
     text: '&7|&e) &6/clan &fblock <&7playerName&f>'
     permission: 'block'
+  permit:
+    text: '&7|&e) &6/clan &fpermit <&7permName&f> <&7level&f>'
+    permission: 'permit'
+  permissions:
+    text: '&7|&e) &6/clan &fpermissions'
+    permission: 'permissions'
   kick:
     text: '&7|&e) &6/clan &fkick <&7playerName&f>'
     permission: 'kick'
   war:
-    text: '&7|&e) &6/clan &4war&f <&7clanName&f>'
+    text: '&7|&e) &6/clan &4war&f'
     permission: 'war'
-  war-set:
-    text: '&7|&e) &6/clan &4war&f <&7clanName&f> <timeInSeconds>'
-    permission: 'war'
-  peace:
-    text: '&7|&e) &6/clan &f&lpeace&f <&7clanName&f>'
-    permission: 'peace'
   forfeit:
-    text: '&7|&e) &6/clan &fforfeit'
+    text: '&7|&e) &6/clan &fforfeit, surrender'
     permission: 'forfeit'
   mode:
     text: '&7|&e) &6/clan &fmode <&apeace&f, &4war&f>'
@@ -72,10 +72,10 @@ Commands:
     permission: 'color'
   info:
     text: '&7|&e) &6/clan &finfo'
-    permission: 'info'
+    permission: 'run'
   info-other:
     text: '&7|&e) &6/clan &finfo <&7playerName/clanName&f>'
-    permission: 'info.other'
+    permission: 'run.other'
   promote:
     text: '&7|&e) &6/clan &fpromote <&7playerName&f>'
     permission: 'promote'
@@ -279,6 +279,7 @@ Response:
   mode: '&7|&e) &fUso inválido : /clan mode <modeType>'
   passowner: '&7|&e) &fUso inválido : /clan passowner <playerName>'
   nick: '&7|&e) &fUso inválido : /clan nickname <newNickname>'
+  permit: '&7|&e) &fUso inválido : /clan permit <permission> <level>'
   promote: '&7|&e) &fUso inválido : /clan promote <playerName>'
   demote: '&7|&e) &fUso inválido : /clan demote <playerName>'
   ally: '&7|&e) &fUso inválido : /clan ally <clanName>'
@@ -350,7 +351,7 @@ menu-format:
     - '&b&oClique para revelar os membros do clã.'
 
 menu-items:
-  # Setup custom heads from the "Heads.yml" file.
+  # Setup custom heads from the "heads.data" file.
   navigate_left: Left_Button
   navigate_right: Right_Button
   back: BARRIER

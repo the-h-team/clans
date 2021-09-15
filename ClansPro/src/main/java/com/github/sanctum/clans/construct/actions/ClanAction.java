@@ -1,15 +1,15 @@
 package com.github.sanctum.clans.construct.actions;
 
+import com.github.sanctum.clans.bridge.ClanAddon;
+import com.github.sanctum.clans.bridge.ClanAddonQuery;
 import com.github.sanctum.clans.bridge.ClanVentBus;
-import com.github.sanctum.clans.construct.ClanAssociate;
 import com.github.sanctum.clans.construct.DataManager;
 import com.github.sanctum.clans.construct.RankPriority;
 import com.github.sanctum.clans.construct.api.Clan;
-import com.github.sanctum.clans.construct.api.ClanCooldown;
 import com.github.sanctum.clans.construct.api.ClansAPI;
+import com.github.sanctum.clans.construct.api.Permission;
 import com.github.sanctum.clans.construct.extra.ClanDisplayName;
 import com.github.sanctum.clans.construct.extra.StringLibrary;
-import com.github.sanctum.clans.construct.impl.CooldownArena;
 import com.github.sanctum.clans.construct.impl.DefaultClan;
 import com.github.sanctum.clans.events.command.ClanInformationAdaptEvent;
 import com.github.sanctum.clans.events.core.ClanCreateEvent;
@@ -18,12 +18,13 @@ import com.github.sanctum.clans.events.core.ClanLeaveEvent;
 import com.github.sanctum.labyrinth.data.EconomyProvision;
 import com.github.sanctum.labyrinth.data.FileManager;
 import com.github.sanctum.labyrinth.formatting.PaginatedList;
+import com.github.sanctum.labyrinth.formatting.string.Paragraph;
+import com.github.sanctum.labyrinth.library.HFEncoded;
 import com.github.sanctum.labyrinth.library.HUID;
 import com.github.sanctum.labyrinth.library.Message;
 import com.github.sanctum.labyrinth.library.TextLib;
 import com.github.sanctum.labyrinth.task.Schedule;
 import java.io.File;
-import java.math.BigDecimal;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -38,53 +39,47 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.World;
-import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
 public class ClanAction extends StringLibrary {
 
-	public final CooldownArena ARENA = new CooldownArena();
-
 	private final ClansAPI API = ClansAPI.getInstance();
 
 	public void create(UUID owner, String clanName, String password) {
-		FileManager user = ClansAPI.getData().get(owner);
 		if (API.getClanID(owner) == null) {
-			if (clanName.length() > ClansAPI.getData().getMain().getConfig().getInt("Formatting.tag-size")) {
+			if (clanName.length() > ClansAPI.getData().getMain().read(c -> c.getInt("Formatting.tag-size"))) {
 				if (Bukkit.getPlayer(owner) != null) {
-					sendMessage(Bukkit.getPlayer(owner), ClansAPI.getData().getMessage("too-long"));
+					sendMessage(Bukkit.getPlayer(owner), ClansAPI.getData().getMessageResponse("too-long"));
 				}
 				return;
 			}
 			ClanCreateEvent e = ClanVentBus.call(new ClanCreateEvent(owner, clanName, password));
 			if (!e.isCancelled()) {
-				FileConfiguration local = user.getConfig();
-				String newID = generateCleanClanCode();
-				local.set("Clan.join-date", new Date().getTime());
-				user.saveConfig();
 				String status = "OPEN";
 				if (password == null) {
-					String format = MessageFormat.format(ClansAPI.getData().getMessage("creation"), Bukkit.getPlayer(owner).getName(), status, clanName);
+					String format = MessageFormat.format(ClansAPI.getData().getMessageResponse("creation"), Bukkit.getPlayer(owner).getName(), status, clanName);
 					Bukkit.broadcastMessage(color(getPrefix() + " " + format));
 				} else {
 					status = "LOCKED";
-					String format = MessageFormat.format(ClansAPI.getData().getMessage("creation"), Bukkit.getPlayer(owner).getName(), status, clanName);
+					String format = MessageFormat.format(ClansAPI.getData().getMessageResponse("creation"), Bukkit.getPlayer(owner).getName(), status, clanName);
 					Bukkit.broadcastMessage(color(getPrefix() + " " + format));
 				}
+				String newID = generateCleanClanCode();
 				DefaultClan instance = new DefaultClan(newID);
 				instance.setName(clanName);
-				boolean war = ClansAPI.getData().getMain().getConfig().getString("Clans.mode-change.default").equalsIgnoreCase("peace");
+				boolean war = ClansAPI.getData().getMain().read(c -> c.getString("Clans.mode-change.default").equalsIgnoreCase("peace"));
 				instance.setPeaceful(war);
 				if (password != null) {
 					instance.setPassword(password);
 				}
-				instance.getMembers().add(new ClanAssociate(owner, RankPriority.HIGHEST, HUID.fromString(newID)));
+				instance.getMembers().add(new Clan.Associate(owner, RankPriority.HIGHEST, HUID.fromString(newID)));
 				instance.save();
 				API.getClanManager().load(instance);
+				ClansAPI.getData().getClanFile(instance).write(t -> t.set("user-data." + owner.toString() + ".join-date", new Date().getTime()));
 				if (ClansAPI.getData().prefixedTagsAllowed()) {
-					ClanDisplayName.set(Bukkit.getPlayer(owner), ClansAPI.getData().prefixedTag(API.getClan(API.getClanID(clanName)).getColor(), clanName));
+					ClanDisplayName.set(Bukkit.getPlayer(owner), ClansAPI.getData().prefixedTag(instance.getColor(), clanName));
 				}
 				ClanVentBus.call(new ClanCreatedEvent(owner, clanName));
 			}
@@ -96,7 +91,7 @@ public class ClanAction extends StringLibrary {
 	}
 
 	private String generateCleanClanCode() {
-		// Triple check, The same clan ID must never co-exist.
+		// Triple call, The same clan ID must never co-exist.
 		HUID code = HUID.randomID();
 		List<String> allids = getAllClanIDs();
 		for (int i = 0; i < 3; i++) {
@@ -108,7 +103,7 @@ public class ClanAction extends StringLibrary {
 	}
 
 	public void removePlayer(UUID target) {
-		ClanAssociate associate = API.getAssociate(target).orElse(null);
+		Clan.Associate associate = API.getAssociate(target).orElse(null);
 		if (associate != null) {
 			if (!(associate.getClan() instanceof DefaultClan))
 				return;
@@ -122,7 +117,6 @@ public class ClanAction extends StringLibrary {
 			}
 
 			FileManager clan = ClansAPI.getData().getClanFile(clanIndex);
-			FileManager user = ClansAPI.getData().get(target);
 			if (associate.getPlayer().isOnline()) {
 				if (ClansAPI.getData().prefixedTagsAllowed()) {
 					ClanDisplayName.remove(associate.getPlayer().getPlayer());
@@ -130,9 +124,6 @@ public class ClanAction extends StringLibrary {
 			}
 			switch (associate.getPriority()) {
 				case HIGHEST:
-					for (ClanAssociate s : clanIndex.getMembers()) {
-						kickPlayer(s.getPlayer().getUniqueId());
-					}
 					for (String ally : clanIndex.getAllyList()) {
 						Clan a = API.getClan(ally);
 						a.removeAlly(clanIndex.getId());
@@ -142,25 +133,21 @@ public class ClanAction extends StringLibrary {
 						a.removeEnemy(clanIndex.getId());
 					}
 					FileManager regions = API.getClaimManager().getFile();
-					regions.getConfig().set(API.getClanID(target).toString(), null);
-					regions.saveConfig();
-					String clanName = clan.getConfig().getString("name");
+					regions.write(t -> t.set(associate.getClan().getId().toString(), null));
+					String clanName = clan.getRoot().getString("name");
 					for (String s : associate.getClan().getDataKeys()) {
 						associate.getClan().removeValue(s);
 					}
 					API.getClanManager().delete(clanIndex);
-					user.getConfig().set("Clan", null);
-					user.saveConfig();
-					String format = MessageFormat.format(ClansAPI.getData().getMessage("deletion"), clanName);
+					String format = MessageFormat.format(ClansAPI.getData().getMessageResponse("deletion"), clanName);
 					Bukkit.broadcastMessage(color(getPrefix() + " " + format));
 					API.getClaimManager().refresh();
 					break;
 				case HIGHER:
 				case NORMAL:
 				case HIGH:
-					clanIndex.broadcast(MessageFormat.format(ClansAPI.getData().getMessage("member-leave"), Bukkit.getOfflinePlayer(target).getName()));
-					user.getConfig().set("Clan", null);
-					user.saveConfig();
+					clanIndex.broadcast(MessageFormat.format(ClansAPI.getData().getMessageResponse("member-leave"), Bukkit.getOfflinePlayer(target).getName()));
+					clan.write(t -> t.set("user-data." + target.toString(), null));
 					Schedule.sync(associate::kick).run();
 					break;
 			}
@@ -172,7 +159,7 @@ public class ClanAction extends StringLibrary {
 	}
 
 	public void joinClan(UUID target, String clanName, String password) {
-		ClanAssociate associate = API.getAssociate(target).orElse(null);
+		Clan.Associate associate = API.getAssociate(target).orElse(null);
 		if (associate == null) {
 			Clan c = API.getClan(API.getClanID(clanName));
 
@@ -185,12 +172,10 @@ public class ClanAction extends StringLibrary {
 				return;
 			}
 			if (c.getPassword() == null) {
-				FileManager user = ClansAPI.getData().get(target);
-				user.getConfig().set("Clan.join-date", new Date().getTime());
-				user.saveConfig();
 				Clan clanIndex = API.getClan(API.getClanID(clanName));
-				clanIndex.getMembers().add(new ClanAssociate(target, RankPriority.NORMAL, clanIndex.getId()));
-				clanIndex.broadcast(MessageFormat.format(ClansAPI.getData().getMessage("member-join"), Bukkit.getOfflinePlayer(target).getName()));
+				ClansAPI.getData().getClanFile(clanIndex).write(t -> t.set("user-data." + target.toString() + ".join-date", new Date().getTime()));
+				clanIndex.getMembers().add(new Clan.Associate(target, RankPriority.NORMAL, clanIndex.getId()));
+				clanIndex.broadcast(MessageFormat.format(ClansAPI.getData().getMessageResponse("member-join"), Bukkit.getOfflinePlayer(target).getName()));
 				if (ClansAPI.getData().prefixedTagsAllowed()) {
 					if (Bukkit.getOfflinePlayer(target).isOnline()) {
 						ClanDisplayName.set(Bukkit.getOfflinePlayer(target).getPlayer(), ClansAPI.getData().prefixedTag(API.getClan(API.getClanID(clanName)).getColor(), clanName));
@@ -199,12 +184,10 @@ public class ClanAction extends StringLibrary {
 				return;
 			}
 			if (c.getPassword().equals(password)) {
-				FileManager user = ClansAPI.getData().get(target);
-				user.getConfig().set("Clan.join-date", new Date().getTime());
-				user.saveConfig();
 				Clan clanIndex = API.getClan(API.getClanID(clanName));
-				clanIndex.getMembers().add(new ClanAssociate(target, RankPriority.NORMAL, clanIndex.getId()));
-				clanIndex.broadcast(MessageFormat.format(ClansAPI.getData().getMessage("member-join"), Bukkit.getOfflinePlayer(target).getName()));
+				ClansAPI.getData().getClanFile(clanIndex).write(t -> t.set("user-data." + target.toString() + ".join-date", new Date().getTime()));
+				clanIndex.getMembers().add(new Clan.Associate(target, RankPriority.NORMAL, clanIndex.getId()));
+				clanIndex.broadcast(MessageFormat.format(ClansAPI.getData().getMessageResponse("member-join"), Bukkit.getOfflinePlayer(target).getName()));
 				if (ClansAPI.getData().prefixedTagsAllowed()) {
 					if (Bukkit.getOfflinePlayer(target).isOnline()) {
 						ClanDisplayName.set(Bukkit.getOfflinePlayer(target).getPlayer(), ClansAPI.getData().prefixedTag(API.getClan(API.getClanID(clanName)).getColor(), clanName));
@@ -232,15 +215,11 @@ public class ClanAction extends StringLibrary {
 	}
 
 	public List<UUID> getAllUsers() {
-		List<UUID> result = new ArrayList<>();
-		for (File file : Objects.requireNonNull(ClansAPI.getData().getUserFolder().listFiles())) {
-			result.add(UUID.fromString(file.getName().replace(".yml", "")));
-		}
-		return result;
+		return Arrays.stream(Bukkit.getOfflinePlayers()).map(OfflinePlayer::getUniqueId).collect(Collectors.toList());
 	}
 
 	public void demotePlayer(UUID target) {
-		ClanAssociate associate = API.getAssociate(target).orElse(null);
+		Clan.Associate associate = API.getAssociate(target).orElse(null);
 		if (associate != null) {
 
 			if (associate.getPriority().toInt() < 3) {
@@ -254,13 +233,13 @@ public class ClanAction extends StringLibrary {
 				}
 			}
 			Clan clanIndex = associate.getClan();
-			String format = MessageFormat.format(ClansAPI.getData().getMessage("demotion"), Bukkit.getOfflinePlayer(target).getName(), associate.getRankTag());
+			String format = MessageFormat.format(ClansAPI.getData().getMessageResponse("demotion"), Bukkit.getOfflinePlayer(target).getName(), associate.getRankTag());
 			clanIndex.broadcast(format);
 		}
 	}
 
 	public void promotePlayer(UUID target) {
-		ClanAssociate associate = API.getAssociate(target).orElse(null);
+		Clan.Associate associate = API.getAssociate(target).orElse(null);
 		if (associate != null) {
 
 			if (associate.getPriority().toInt() < 2) {
@@ -274,23 +253,22 @@ public class ClanAction extends StringLibrary {
 				}
 			}
 			Clan clanIndex = API.getClan(API.getClanID(target).toString());
-			String format = MessageFormat.format(ClansAPI.getData().getMessage("demotion"), Bukkit.getOfflinePlayer(target).getName(), associate.getRankTag());
+			String format = MessageFormat.format(ClansAPI.getData().getMessageResponse("demotion"), Bukkit.getOfflinePlayer(target).getName(), associate.getRankTag());
 			clanIndex.broadcast(format);
 		}
 	}
 
 	public void kickPlayer(UUID target) {
-		FileManager user = ClansAPI.getData().get(target);
-		ClanAssociate associate = API.getAssociate(target).orElse(null);
+		Clan.Associate associate = API.getAssociate(target).orElse(null);
 		if (associate != null) {
 			if (ClansAPI.getData().prefixedTagsAllowed()) {
 				if (Bukkit.getPlayer(target) != null) {
 					ClanDisplayName.remove(Bukkit.getPlayer(target));
 				}
 			}
+			FileManager clan = ClansAPI.getData().getClanFile(associate.getClan());
+			clan.write(t -> t.set("user-data." + target.toString(), null));
 			Schedule.sync(() -> associate.getClan().getMembers().remove(associate)).wait(1);
-			user.getConfig().set("Clan", null);
-			user.saveConfig();
 		}
 	}
 
@@ -321,10 +299,6 @@ public class ClanAction extends StringLibrary {
 		}
 	}
 
-	public int maxRankPower() {
-		return 2;
-	}
-
 	/**
 	 * Get the relation color between two clans.
 	 *
@@ -336,20 +310,7 @@ public class ClanAction extends StringLibrary {
 		String result = "&f&o";
 		Clan a = API.getClan(clanID);
 		try {
-			if (getAllClanIDs().contains(targetClanID)) {
-				if (a.isNeutral(targetClanID)) {
-					result = "&f";
-				}
-				if (clanID.equals(targetClanID)) {
-					result = "&6";
-				}
-				if (a.getAllyList().contains(targetClanID)) {
-					result = "&a";
-				}
-				if (a.getEnemyList().contains(targetClanID)) {
-					result = "&c";
-				}
-			}
+			return a.relate(API.getClan(targetClanID));
 		} catch (NullPointerException ignored) {
 		}
 		return result;
@@ -357,66 +318,18 @@ public class ClanAction extends StringLibrary {
 
 	/**
 	 * Get the relation color between two clans.
+	 * <p>
+	 * WHITE = Neutral
+	 * GREEN = Allies
+	 * RED = Enemies
+	 * GOLD = Same clan
 	 *
 	 * @param a Primary clan
 	 * @param b Target clan
 	 * @return Gets the relation color in color code format for the two clans.
 	 */
 	public String getRelationColor(Clan a, Clan b) {
-		String result = "&f&o";
-		try {
-			if (getAllClanIDs().contains(b.getId().toString())) {
-				if (a.isNeutral(b.getId().toString())) {
-					result = "&f";
-				}
-				if (a.getId().equals(b.getId())) {
-					result = "&6";
-				}
-				if (a.getAllyList().contains(b.getId().toString())) {
-					result = "&a";
-				}
-				if (a.getEnemyList().contains(b.getId().toString())) {
-					result = "&c";
-				}
-			}
-		} catch (NullPointerException ignored) {
-		}
-		return result;
-	}
-
-	public void forfeitWar(ClanAssociate associate) {
-		DefaultClan c = API.getClanManager().cast(DefaultClan.class, associate.getClan());
-		if (c == null) return;
-		if (c.getCurrentWar() != null) {
-			DefaultClan winner = (DefaultClan) c.getCurrentWar().getTargeted();
-			Bukkit.broadcastMessage(Clan.ACTION.color("&c&o" + c.getName() + " &f&lFORFEIT &c&ofrom member &4" + associate.getName()));
-			Bukkit.broadcastMessage(Clan.ACTION.color(Clan.ACTION.getPrefix() + " &4&oWar &6between &4" + c.getName() + " &6and &4" + c.getCurrentWar().getTargeted().getName() + " &6concluded with winner " + winner.getName()));
-			winner.givePower((c.getPower() / 2) + winner.getCurrentWar().getPoints());
-			String loserC;
-			String winnerC;
-			if (c.getCurrentWar().isRed()) {
-				loserC = "&c";
-				winnerC = "&9";
-			} else {
-				loserC = "&9";
-				winnerC = "&c";
-			}
-			for (Player par : winner.getCurrentWar().getParticipants()) {
-				par.giveExp((winner.getCurrentWar().getPoints() * 2));
-				EconomyProvision.getInstance().deposit(BigDecimal.valueOf(18.14 * winner.getCurrentWar().getPoints()), par);
-				par.sendTitle(color(winnerC + winner.getCurrentWar().getPoints() + " &f/ " + loserC + c.getCurrentWar().getPoints()), color("&aWe win."), 10, 45, 10);
-
-			}
-			c.takePower((c.getPower() / 2) + winner.getCurrentWar().getPoints());
-			for (Player par : c.getCurrentWar().getParticipants()) {
-				par.giveExp((c.getCurrentWar().getPoints() * 2));
-				EconomyProvision.getInstance().deposit(BigDecimal.valueOf(10.14 * c.getCurrentWar().getPoints()), par);
-				par.sendTitle(color(winnerC + winner.getCurrentWar().getPoints() + " &f/ " + loserC + c.getCurrentWar().getPoints()), color("&cWe lose."), 10, 45, 10);
-
-			}
-			ClanCooldown.remove(c.getCurrentWar().getArenaTimer());
-			c.getCurrentWar().conclude();
-		}
+		return a.relate(b);
 	}
 
 	/**
@@ -433,74 +346,74 @@ public class ClanAction extends StringLibrary {
 		DataManager dm = new DataManager();
 		List<String> array = new ArrayList<>();
 		for (File file : Objects.requireNonNull(dm.getClanFolder().listFiles())) {
-			array.add(file.getName().replace(".yml", ""));
+			array.add(file.getName().replace(".yml", "").replace(".data", ""));
 		}
 		return array;
 	}
 
 	public boolean overPowerBypass() {
 		FileManager main = ClansAPI.getData().getMain();
-		return main.getConfig().getBoolean("Clans.raid-shield.claiming");
+		return main.getRoot().getBoolean("Clans.raid-shield.claiming");
 	}
 
 	public int modeChangeClearance() {
 		FileManager main = ClansAPI.getData().getMain();
-		return main.getConfig().getInt("Clans.mode-clearance");
+		return main.getRoot().getInt("Clans.mode-clearance");
 	}
 
 	public int tagChangeClearance() {
 		FileManager main = ClansAPI.getData().getMain();
-		return main.getConfig().getInt("Clans.rename-clearance");
+		return main.getRoot().getInt("Clans.rename-clearance");
 	}
 
 	public int descriptionChangeClearance() {
 		FileManager main = ClansAPI.getData().getMain();
-		return main.getConfig().getInt("Clans.description-clearance");
+		return main.getRoot().getInt("Clans.description-clearance");
 	}
 
 	public int colorChangeClearance() {
 		FileManager main = ClansAPI.getData().getMain();
-		return main.getConfig().getInt("Clans.recolor-clearance");
+		return main.getRoot().getInt("Clans.recolor-clearance");
 	}
 
 	public int friendlyFireClearance() {
 		FileManager main = ClansAPI.getData().getMain();
-		return main.getConfig().getInt("Clans.friendly-fire.clearance");
+		return main.getRoot().getInt("Clans.friendly-fire.clearance");
 	}
 
 	public int positionClearance() {
 		FileManager main = ClansAPI.getData().getMain();
-		return main.getConfig().getInt("Clans.position-clearance");
+		return main.getRoot().getInt("Clans.position-clearance");
 	}
 
 	public int unclaimAllClearance() {
 		FileManager main = ClansAPI.getData().getMain();
-		return main.getConfig().getInt("Clans.land-claiming.unclaim-all-clearance");
+		return main.getRoot().getInt("Clans.land-claiming.unclaim-all-clearance");
 	}
 
 	public int claimingClearance() {
 		FileManager main = ClansAPI.getData().getMain();
-		return main.getConfig().getInt("Clans.land-claiming.clearance");
+		return main.getRoot().getInt("Clans.land-claiming.clearance");
 	}
 
 	public int invitationClearance() {
 		FileManager main = ClansAPI.getData().getMain();
-		return main.getConfig().getInt("Clans.invite-clearance");
+		return main.getRoot().getInt("Clans.invite-clearance");
 	}
 
 	public int baseClearance() {
 		FileManager main = ClansAPI.getData().getMain();
-		return main.getConfig().getInt("Clans.base-clearance");
+		return main.getRoot().getInt("Clans.base-clearance");
 	}
 
 	public int kickClearance() {
 		FileManager main = ClansAPI.getData().getMain();
-		return main.getConfig().getInt("Clans.kick-clearance");
+		return main.getRoot().getInt("Clans.kick-clearance");
 	}
 
 	public int passwordClearance() {
 		FileManager main = ClansAPI.getData().getMain();
-		return main.getConfig().getInt("Clans.password-clearance");
+		return main.getRoot().getInt("Clans.password-clearance");
 	}
 
 	public boolean isNight(@NotNull World world, int on, int off) {
@@ -514,6 +427,20 @@ public class ClanAction extends StringLibrary {
 		return time <= on || time >= off;
 	}
 
+	public String[] getMotd(List<String> logo, Clan clan) {
+		String[] ar = logo.toArray(new String[0]);
+		String[] motd = new Paragraph(clan.getMotd()).setRegex(Paragraph.COMMA_AND_PERIOD).get();
+		for (int i = 0; i < ar.length; i++) {
+			if (i > 0) {
+				if ((Math.max(0, i - 1)) <= motd.length - 1) {
+					String m = motd[Math.max(0, i - 1)];
+					ar[i] = ar[i] + "   &r" + m;
+				}
+			}
+		}
+		return ar;
+	}
+
 	public List<Clan> getMostPowerful() {
 		List<Clan> c = ClansAPI.getInstance().getClanManager().getClans().list();
 		c.sort(Comparator.comparingDouble(Clan::getPower));
@@ -522,7 +449,7 @@ public class ClanAction extends StringLibrary {
 	}
 
 	public void getClanboard(Player target, int page) {
-		ClanAssociate associate = API.getAssociate(target).orElse(null);
+		Clan.Associate associate = API.getAssociate(target).orElse(null);
 
 		if (associate == null) return;
 
@@ -533,22 +460,28 @@ public class ClanAction extends StringLibrary {
 		String owner = clan.getOwner().getPlayer().getName();
 		String password = clan.getPassword();
 
-		List<String> members = clan.getMembers().stream().filter(a -> a.getPriority().toInt() == 0).map(ClanAssociate::getPlayer).map(OfflinePlayer::getUniqueId).map(UUID::toString).collect(Collectors.toList());
-		List<String> mods = clan.getMembers().stream().filter(a -> a.getPriority().toInt() == 1).map(ClanAssociate::getPlayer).map(OfflinePlayer::getName).collect(Collectors.toList());
-		List<String> admins = clan.getMembers().stream().filter(a -> a.getPriority().toInt() == 2).map(ClanAssociate::getPlayer).map(OfflinePlayer::getName).collect(Collectors.toList());
+		List<String> members = clan.getMembers().stream().filter(a -> a.getPriority().toInt() != 3).map(Clan.Associate::getPlayer).map(OfflinePlayer::getUniqueId).map(UUID::toString).collect(Collectors.toList());
+		List<String> mods = clan.getMembers().stream().filter(a -> a.getPriority().toInt() == 1).map(Clan.Associate::getPlayer).map(OfflinePlayer::getName).collect(Collectors.toList());
+		List<String> admins = clan.getMembers().stream().filter(a -> a.getPriority().toInt() == 2).map(Clan.Associate::getPlayer).map(OfflinePlayer::getName).collect(Collectors.toList());
 		List<String> allies = clan.getAllies().map(Clan::getId).map(HUID::toString).collect(Collectors.toList());
 		List<String> allyRequests = clan.getAllyRequests();
 		List<String> enemies = clan.getEnemies().map(Clan::getId).map(HUID::toString).collect(Collectors.toList());
 
-		String c = clan.getColor();
+		String c = clan.getPalette().getStart();
 
 		if (c.equals("&f"))
 			c = "&6";
 		array.add(" ");
-		array.add("&6&lClan&7: &f" + clan.getColor() + clan.getName());
+		array.add("&6&lClan&7: &f" + (clan.getPalette().isGradient() ? clan.getPalette().toGradient().context(clan.getName()).translate() : clan.getPalette().toString() + clan.getName()));
 		array.add("&f&m---------------------------");
 		array.add("&6Description: &7" + clan.getDescription());
-		array.add("&6" + associate.getRankTag() + ": &f" + owner);
+		List<String> logo = (List<String>) new HFEncoded("rO0ABXNyABNqYXZhLnV0aWwuQXJyYXlMaXN0eIHSHZnHYZ0DAAFJAARzaXpleHAAAAAGdwQAAAAGdABswqc04paRwqd4wqcywqcxwqcwwqc5wqc0wqdG4paRwqd4wqcywqcxwqcwwqc5wqc0wqdG4paRwqd4wqcywqcxwqcwwqc5wqc0wqdG4paRwqd4wqcywqcxwqcwwqc5wqc0wqdG4paRwqc04paRdACQwqd4wqcywqcxwqcwwqc5wqc0wqdG4paRwqd4wqcywqcxwqcwwqc5wqc0wqdG4paSwqd4wqdBwqc2wqcxwqcywqc4wqdE4paRwqd4wqdBwqc2wqcxwqcywqc4wqdE4paRwqd4wqcywqcxwqcwwqc5wqc0wqdG4paSwqd4wqcywqcxwqcwwqc5wqc0wqdG4paRdACQwqd4wqcywqcxwqcwwqc5wqc0wqdG4paRwqd4wqdBwqc2wqcxwqcywqc4wqdE4paRwqd4wqdBwqc2wqcxwqcywqc4wqdE4paTwqd4wqdBwqc2wqcxwqcywqc4wqdE4paTwqd4wqdBwqc2wqcxwqcywqc4wqdE4paRwqd4wqcywqcxwqcwwqc5wqc0wqdG4paRdACQwqd4wqcywqcxwqcwwqc5wqc0wqdG4paRwqd4wqdBwqc2wqcxwqcywqc4wqdE4paRwqd4wqdBwqc2wqcxwqcywqc4wqdE4paTwqd4wqdBwqc2wqcxwqcywqc4wqdE4paTwqd4wqdBwqc2wqcxwqcywqc4wqdE4paRwqd4wqcywqcxwqcwwqc5wqc0wqdG4paRdACQwqd4wqcywqcxwqcwwqc5wqc0wqdG4paRwqd4wqcywqcxwqcwwqc5wqc0wqdG4paSwqd4wqdBwqc2wqcxwqcywqc4wqdE4paRwqd4wqdBwqc2wqcxwqcywqc4wqdE4paRwqd4wqcywqcxwqcwwqc5wqc0wqdG4paSwqd4wqcywqcxwqcwwqc5wqc0wqdG4paRdABswqc04paRwqd4wqcywqcxwqcwwqc5wqc0wqdG4paRwqd4wqcywqcxwqcwwqc5wqc0wqdG4paRwqd4wqcywqcxwqcwwqc5wqc0wqdG4paRwqd4wqcywqcxwqcwwqc5wqc0wqdG4paRwqc04paReA").deserialize(List.class);
+		if (logo != null) {
+			array.add("&f&m---------------------------");
+			array.addAll(Arrays.asList(getMotd(logo, clan)));
+			array.add("&f&m---------------------------");
+		}
+		array.add("&6" + clan.getOwner().getRankTag() + ": &f" + owner);
 		if (password == null)
 			password = "NO PASS";
 		if (clan.getBase() != null)
@@ -559,16 +492,20 @@ public class ClanAction extends StringLibrary {
 			array.add("&6Mode: &f&lPEACE");
 		if (!clan.isPeaceful())
 			array.add("&6Mode: &4&lWAR");
-		array.add("&6Color: " + clan.getColor() + clan.getColor().replace("&", "&f»" + clan.getColor()));
-		if (associate.getPriority().toInt() >= passwordClearance()) {
+		if (clan.getPalette().isGradient()) {
+			array.add("&6Color: " + (clan.getPalette().getStart() + clan.getPalette().getEnd()).replace("&", "").replace("#", "&f»" + c));
+		} else {
+			array.add("&6Color: " + c + c.replace("&", "&f»" + c));
+		}
+		if (Permission.MANAGE_PASSWORD.test(associate)) {
 			array.add("&6Password: &f" + password);
 		}
 		array.add("&6&lPower [&e" + clan.format(String.valueOf(clan.getPower())) + "&6&l]");
-		if (Bukkit.getPluginManager().isPluginEnabled("Enterprise") || Bukkit.getPluginManager().isPluginEnabled("Vault")) {
+		if (EconomyProvision.getInstance().isValid()) {
 			array.add("&6&lBank [&e" + clan.format(String.valueOf(clan.getBalance().doubleValue())) + "&6&l]");
 		}
-		array.add("&6" + ClansAPI.getData().getMain().getConfig().getString("Formatting.Chat.Styles.Full.Admin") + "s [" + c + admins.size() + "&6]");
-		array.add("&6" + ClansAPI.getData().getMain().getConfig().getString("Formatting.Chat.Styles.Full.Moderator") + "s [" + c + mods.size() + "&6]");
+		array.add("&6" + ClansAPI.getData().getMain().getRoot().getString("Formatting.Chat.Styles.Full.Admin") + "s [" + c + admins.size() + "&6]");
+		array.add("&6" + ClansAPI.getData().getMain().getRoot().getString("Formatting.Chat.Styles.Full.Moderator") + "s [" + c + mods.size() + "&6]");
 		array.add("&6Claims [" + c + clan.getOwnedClaimsList().length + "&f/ " + c + clan.getMaxClaims() + "&6]");
 		array.add("&f&m---------------------------");
 		if (allyRequests.size() > 0) {
@@ -596,23 +533,32 @@ public class ClanAction extends StringLibrary {
 		if (enemies.isEmpty())
 			array.add("&6Enemies [" + c + 0 + "&6]");
 		array.add("&f&m---------------------------");
-		array.add("&n" + ClansAPI.getData().getMain().getConfig().getString("Formatting.Chat.Styles.Full.Member") + "s&r [" + c + members.size() + "&r]");
 		ClanInformationAdaptEvent event = ClanVentBus.call(new ClanInformationAdaptEvent(array, clan.getId().toString()));
 		for (String l : event.getInsertions()) {
 			target.sendMessage(color(l));
 		}
+		sendComponent(target, TextLib.getInstance().textRunnable("&fPerms &7(", "&bClick", "&7)", "&b&oClick to view clan permissions.", "clan perms"));
+		ClanAddon stashes = ClanAddonQuery.getAddon("Stashes");
+		ClanAddon vaults = ClanAddonQuery.getAddon("Vaults");
+		if (stashes != null && stashes.isActive()) {
+			sendComponent(target, TextLib.getInstance().textRunnable("&eStash &7(", "&bClick", "&7)", "&b&oClick to view the clan stash.", "clan stash"));
+		}
+		if (vaults != null && vaults.isActive()) {
+			sendComponent(target, TextLib.getInstance().textRunnable("&6Vault &7(", "&bClick", "&7)", "&b&oClick to view the clan vault.", "clan vault"));
+		}
+		target.sendMessage(color("&f&m---------------------------"));
+		target.sendMessage(color("&n" + ClansAPI.getData().getMain().getRoot().getString("Formatting.Chat.Styles.Full.Member") + "s&r [" + c + members.size() + "&r]"));
 		getMemberboard(target, members, page);
 		target.sendMessage(" ");
 	}
 
 	public void getPlayerboard(Player p, int page) {
-		List<String> array = new ArrayList<>();
 		Message msg = Message.form(p);
 		new PaginatedList<>(Arrays.stream(Bukkit.getOfflinePlayers()).map(OfflinePlayer::getName).collect(Collectors.toList())).limit(10)
 				.finish(b -> b.setPage(page).setPlayer(p).setPrefix("&7&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬").setSuffix("&7&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬"))
 				.start((pagination, page1, max) -> msg.send("&7&m------------&7&l[&6&oPlayer List&7&l]&7&m------------"))
 				.compare(String::compareTo)
-				.decorate((pagination, object, page1, max, placement) -> msg.build(TextLib.getInstance().textRunnable("&aI am", " &6" + object, "&7Click toview my clan info.", "c info " + object)));
+				.decorate((pagination, object, page1, max, placement) -> msg.build(TextLib.getInstance().textRunnable("&aI am", " &6" + object, "&7Click to view my clan info.", "c info " + object))).get(page);
 	}
 
 	public void getLeaderboard(LeaderboardType type, Player p, int pageNum) {
@@ -691,11 +637,11 @@ public class ClanAction extends StringLibrary {
 						.limit(menuSize())
 						.compare((o1, o2) -> {
 							double kd1 = 0;
-							for (ClanAssociate associate : o1.getMembers()) {
+							for (Clan.Associate associate : o1.getMembers()) {
 								kd1 += associate.getKD();
 							}
 							double kd2 = 0;
-							for (ClanAssociate associate : o2.getMembers()) {
+							for (Clan.Associate associate : o2.getMembers()) {
 								kd2 += associate.getKD();
 							}
 							return Double.compare(kd2, kd1);
@@ -711,7 +657,7 @@ public class ClanAction extends StringLibrary {
 				help3.finish((builder -> builder.setPlayer(p)
 						.setPrefix("&7&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬"))).decorate((pagination, clan, page, max, placement) -> {
 					double kd = 0;
-					for (ClanAssociate associate : clan.getMembers()) {
+					for (Clan.Associate associate : clan.getMembers()) {
 						kd += associate.getKD();
 					}
 					if (Bukkit.getVersion().contains("1.17") || Bukkit.getVersion().contains("1.16")) {

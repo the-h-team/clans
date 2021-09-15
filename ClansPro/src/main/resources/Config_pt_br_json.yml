@@ -1,0 +1,512 @@
+#
+# --------------------------------------------------------------------------------------- #
+#   ▄████████  ▄█          ▄████████ ███▄▄▄▄      ▄████████         ▄███████▄    ▄████████  ▄██████▄
+#  ███    ███ ███         ███    ███ ███▀▀▀██▄   ███    ███        ███    ███   ███    ███ ███    ███
+#  ███    █▀  ███         ███    ███ ███   ███   ███    █▀         ███    ███   ███    ███ ███    ███
+#  ███        ███         ███    ███ ███   ███   ███               ███    ███  ▄███▄▄▄▄██▀ ███    ███
+#  ███        ███       ▀███████████ ███   ███ ▀███████████      ▀█████████▀  ▀▀███▀▀▀▀▀   ███    ███
+#  ███    █▄  ███         ███    ███ ███   ███          ███        ███        ▀███████████ ███    ███
+#  ███    ███ ███▌    ▄   ███    ███ ███   ███    ▄█    ███        ███          ███    ███ ███    ███
+#  ████████▀  █████▄▄██   ███    █▀   ▀█   █▀   ▄████████▀        ▄████▀        ███    ███  ▀██████▀
+# ------------------------------------------------------------------------------███----███#
+# ------------------ Translation by: Lan --------------------------------------- #
+Clans:
+  #################################
+  ##                             ##
+  ## Allow plugin update checks? ##
+  ##                             ##
+  #################################
+  check-version: true
+
+  ############################################################
+  ## Select a language for the configuration automatically! ##
+  ## Current turned in languages are: en-US, pt-BR          ##
+  ############################################################
+  lang: 'pt-BR'
+
+  ##############################################
+  ##                                          ##
+  ## Max amount of clans the server can have. ##
+  ##                                          ##
+  ##############################################
+  max-clans: 60
+
+  #################################
+  ##                             ##
+  ## Modify clan pvp mode change ##
+  ##          settings.          ##
+  ##                             ##
+  #################################
+  mode-change:
+    # Change what pvp mode a clan gets put in on creation {Valid types = peace, war}
+    default: peace
+    # Allow a cooldown every use of mode switch? If so how long.
+    timer:
+      use: true
+      cooldown-in-seconds: 1800
+    # Charge for pvp mode change? If so how much.
+    charge: false
+    amount: 420.0
+
+  #################################
+  ##                             ##
+  ##      Relation Settings      ##
+  ##                             ##
+  #################################
+  relations:
+    enemy:
+      # Allow players to modify enemy relations with a fully offline clan?
+      cancel-if-empty: true
+    ally:
+      # Allow players to modify alliance relations with a fully offline clan?
+      cancel-if-empty: true
+
+  ######################################
+  ##                                  ##
+  ## Clan pre-creation settings apply ##
+  ##                                  ##
+  ######################################
+  creation:
+    charge: false
+    amount: 420.0
+    # Only allow players to create clans every so often?
+    cooldown:
+      enabled: true
+      # After how long in seconds will the cooldown expire?
+      time: 120
+
+  ########################
+  ##                    ##
+  ## Clan bank settings ##
+  ##                    ##
+  ########################
+  banks:
+    # Let a clans bank balance effect their total power level.
+    influence: true
+    # Configure starting balance of clan banks
+    starting-balance: 0
+    # Optionally set the maximum balance of clan banks
+    #    maximum-balance: 10000000000.00 # Uncomment this line to activate
+    # 0 - Silent, 1 - Successful and cancelled transaction, 2 - ALL transactions
+    log-level: 0
+    # Manage default clan bank access permissions
+    default-access:
+      balance: 0  # Clan rank 0 or higher can access bank balance
+      deposit: 1  # Clan rank 1 or higher can deposit
+      withdraw: 2 # Clan rank 2 can withdraw
+      view-log: 3 # Clan rank 3 can view transaction log
+
+  ###########################
+  ##                       ##
+  ## Clan WORLD whitelist. ##
+  ##                       ##
+  ###########################
+  world-whitelist:
+    - Lobby
+    - Sobrevivencia
+    - Mine
+    - Warzone
+    - Nether
+    - End
+    - Dungeon
+    - Survival
+    - Barn
+    - Pvp
+
+  ##########################
+  ##                      ##
+  ## Clan NAME blacklist. ##
+  ##                      ##
+  ##########################
+  # Any words here found within a clans name will NOT be tolerated and an optional action will be enforced upon use.
+  name-blacklist:
+    faggot:
+      action: 'kick {PLAYER} Este tipo de uso de nome não é permitido!'
+    nigger:
+      action: 'ban {PLAYER} Este tipo de uso de nome não é permitido!'
+
+  ##########################
+  ##                      ##
+  ## Clan COLOR blacklist. ##
+  ##                      ##
+  ##########################
+  # Any color-codes attempted to be used from this list will NOT be allowed.
+  color-blacklist:
+    - '&k'
+
+  #########################
+  ##                     ##
+  ## Clan claim settings ##
+  ##                     ##
+  #########################
+  land-claiming:
+    allow: true
+    # Charge users to claim land.
+    charge: false
+    # The amount to charge users for +1 land.
+    amount: 420.0
+    # Change the minimum clearance level needed to claim/un-claim land.
+    clearance: 2
+    # Change the minimum clearance level needed to un-claim all owned land.
+    unclaim-all-clearance: 2
+    # Allow nether portals to be generated within clan claims.
+    ports-in-claims: true
+    # Allow clan member size and clan bank to decide claim amounts.
+    claim-influence:
+      allow: true
+      ## NORMAL = Depend on a clans bank balance for obtaining land.
+      ## LOW = Assist the base multiplier and all other power additions for no / slower bank situations.
+      dependence: NORMAL
+    # All claims must be connected to their initial claim.
+    claim-connections: true
+    # Turn on or off titles as players traverse land-scape.
+    send-titles: true
+    # Turn on or off the messages that get sent in chat when you traverse.
+    send-messages: true
+    # Use an alternate detection system for bucket interaction. (Use only if players can still place water and lava in claims; primarily w/ EssentialsX)
+    debug: false
+    # Set a cooldown for when players over-power a specified amount of land.
+    over-powering:
+      cooldown:
+        # Use cooldown?
+        enabled: true
+        # How long will the cooldown last in seconds?
+        length: 920
+        # After how many un-claims will the cooldown trigger?
+        after-uses: 4
+    # Change the information displayed to the player
+    in-land:
+      # {0} = Claim owner
+      title: '&3&oTerra possuída &6{0}'
+      sub-title: 'Este terreno é propriedade de &b{0}'
+      message: '&7Você está entrando agora {0}''s terra'
+    wilderness:
+      title: 'Deixando &6{0}'
+      sub-title: 'Deixando {0}''s land'
+      message: '&7Agora saindo {0}''s land'
+
+  #################################
+  ##                             ##
+  ## Clan friendly-fire settings ##
+  ##                             ##
+  #################################
+  friendly-fire:
+    clearance: 3
+    # Allow a cooldown every use of friendly fire? If so how long.
+    timer:
+      use: false
+      cooldown-in-seconds: 120
+
+  ##########################
+  ##                      ##
+  ## Raid-shield settings ##
+  ##                      ##
+  ##########################
+  raid-shield:
+    # Allow the raid-shield to run, enabling claim raiding?
+    allow: true
+    # This section is crucial. It tells the shield events what world to base the time off of.
+    main-world: 'world'
+    # Default: 0 for dawn
+    up-time: 0
+    # Default: 13000 for dusk
+    down-time: 13000
+    # Allow land over-powering while the shield is up.
+    claiming: false
+    # Clans will only be able to over-claim enemy clans with this option turned on.
+    claiming-only-enemy: true
+    # Allow chat messages to receive
+    send-messages: true
+    # Change the messages for the raid-shield announcements, {0} = Configured prefix
+    messages:
+      enabled: '{0} &8» &aEscudo de ataque ativado.'
+      disabled: '{0} &8» &cEscudo de ataque levantado.'
+
+
+  ##################################
+  ##                              ##
+  ## Clan miscellaneous clearance ##
+  ##           section.           ##
+  ##                              ##
+  ##################################
+
+  ##----------------------------( Clearance start )----------------------------##
+  ## Clearance levels: [Member: 0, Moderator: 1, Admin: 2, Owner:3]
+
+  # Change the minimum clearance required to change the clans name.
+  rename-clearance: 3
+
+  # Change the minimum clearance required to change the clans name COLOR.
+  recolor-clearance: 1
+
+  # Change the minimum clearance level needed to kick other clan members.
+  kick-clearance: 2
+
+  # Change the minimum clearance needed to promote/demote clan members.
+  position-clearance: 2
+
+  # Change the minimum clearance needed to effectively use /c logo apply
+  logo-apply-clearance: 2
+
+  # Change the minimum clearance needed to apply printed logos
+  logo-upload-clearance: 2
+
+  # Change the minimum clearance needed to edit/create new drawing templates.
+  logo-edit-clearance: 1
+
+  # Change the minimum clearance needed to select custom colors for the insignia color pallet.
+  logo-color-clearance: 1
+
+  # Change the minimum clearance needed to print out drawings for public use.
+  logo-print-clearance: 1
+
+  # Change the minimum clearance needed to update the clan description.
+  description-clearance: 3
+
+  # Change the minimum clearance needed to view & change the clans password.
+  password-clearance: 2
+
+  # Change the minimum rank clearance needed to update the clan base.
+  base-clearance: 1
+
+  # Change the minimum rank clearance needed to invite players to the clan.
+  invite-clearance: 1
+
+  # Change the minimum rank clearance needed to change the clans pvp mode.
+  mode-clearance: 2
+  ##----------------------------( Clearance end )----------------------------##
+
+  ###################################
+  ##                               ##
+  ## Clan war (TDM) & pvp settings ##
+  ##                               ##
+  ###################################
+  war:
+    # If someone is getting spawn camped penalize the attacker?
+    killstreak:
+      # The amount of kills to call for.
+      amount: 7
+      # The amount of time to call for.
+      time-span: 5
+      # The time threshold to calculate in
+      # Valid thresholds: [ SECONDS, MINUTES, HOURS, DAYS ]
+      threshold: SECONDS
+      # The amount of power to take
+      deduction: 2.15
+      # If the attacker is in a clan, allow clans to deduct power based off the given information?
+      penalize: true
+    # Blocked commands while in a war
+    blocked-commands:
+      - 'clan base'
+      - 'spawn'
+      - 'home'
+    # Change the max amount clans allowed within a clan war. Hard-cap = 4
+    max-clans: 2
+    # The amount of members queued required to start a war.
+    que-needed: 4
+    # The amount of seconds to wait when a war is ready to start.
+    start-wait: 61
+    # The max duration a clan war can be in seconds.
+    max-length: 240
+    # The max amount of points a team can get before the winner is concluded.
+    max-points: 24
+
+#-------------------------------------------------------------------
+#
+#-------------------------------------------------------------
+#     ▄████████  ▄██████▄     ▄████████   ▄▄▄▄███▄▄▄▄      ▄████████     ███
+#    ███    ███ ███    ███   ███    ███ ▄██▀▀▀███▀▀▀██▄   ███    ███ ▀█████████▄
+#    ███    █▀  ███    ███   ███    ███ ███   ███   ███   ███    ███    ▀███▀▀██
+#   ▄███▄▄▄     ███    ███  ▄███▄▄▄▄██▀ ███   ███   ███   ███    ███     ███   ▀
+#  ▀▀███▀▀▀     ███    ███ ▀▀███▀▀▀▀▀   ███   ███   ███ ▀███████████     ███
+#    ███        ███    ███ ▀███████████ ███   ███   ███   ███    ███     ███
+#    ███        ███    ███   ███    ███ ███   ███   ███   ███    ███     ███
+#    ███         ▀██████▀    ███    ███  ▀█   ███   █▀    ███    █▀     ▄████▀
+#----------------------------███----███-----------------------
+#
+#-------------------------------------------------------------------
+Formatting:
+  # Let the plugin include native chat formatting? If your chat plugin uses BaseComponents for formatting this will not work by default,
+  # and you'll need to use the placeholders from the wiki within your chat management plugin.
+  allow: true
+  # What kind of file type should clans use for clan data?
+  # If you are wanting to convert your in game data first go in game, use '/cla copy' after you do that
+  # bring your server to a complete stop then change this value to JSON. After doing that delete the old yml files
+  # and start your server!
+  #
+  # Valid types = [ YAML, JSON ]
+  file-type: JSON
+  # Allow clans to put prefixes before player names above heads.
+  nametag-prefix:
+    use: true
+    # {0} = Clan color, {1} = Clan name
+    text: '&7[{0}{1}&7] '
+  # Change number formatting lang. [en = English, fr = French, de = german, nl = Dutch]
+  # NOTE: REQUIRES a full server restart.
+  locale: en
+  # Change the max size a clan tag can be.
+  tag-size: 15
+  # Allow for tasks to print debug messages in console?
+  console-debug: true
+  # Allow console to spy on messages from clan/ally chat channels
+  chat-spy-console: true
+  # Change the format for the /clan message command
+  chat-message-format: '&7{0} say''s :'
+  # Change the prefix displayed for the plugin messaging.
+  prefix:
+    prefix: '&7['
+    text: '&6&lClans'
+    suffix: '&7]&r'
+  # Set custom command aliases.
+  # NOTE: REQUIRES a full server restart.
+  aliase:
+    - guild
+
+  # Change the formatting for different chat channels
+  Chat:
+    # Rank presentation style
+    # Example w/ WORDLESS: (•❂•) [Test] <Hempfest> Hello world!
+    rank-style: WORDLESS
+    Styles:
+      Full:
+        # Note: Changing these styles will have an effect regardless of rank style.
+        # They are displayed in certain areas of the plugin.
+        Member: 'Member'
+        Moderator: 'Moderator'
+        Admin: 'Admin'
+        Owner: 'Owner'
+      Wordless:
+        Member: '•'
+        Moderator: '••'
+        Admin: '•••'
+        Owner: '&4•❂•'
+    Channel:
+      # {0} = Clan rank formatting, {1} = Clan name w/ color
+      # Example w/ WORDLESS: (•❂•) [Test] <Hempfest> Hello world!
+      global: '&8(&b{0}&8)&r &8[&3{1}&8]&r'
+
+      clan:
+        # {0} = Player name, {1} = Clan name, {2} = Clan color, {3} = Player rank
+        prefix: '&8(&3&lCC&8) &b{0} '
+        divider: '&8: &r'
+        highlight: '&8({2}{1}&8)'
+        hover: 'Minha classificação de clã é: &a{3}'
+      ally:
+        # {0} = Player name, {1} = Clan name, {2} = Clan color, {3} = Player rank
+        prefix: '&8(&2&lAC&8) &b{0} '
+        divider: '&8: &r'
+        highlight: '&8({2}{1}&8)'
+        hover: 'Minha classificação de clã é: &d{3}'
+#-------------------------------------------------------------------
+#
+#----------------------------------------------------------------
+#     ▄████████ ████████▄  ████████▄   ▄██████▄  ███▄▄▄▄      ▄████████
+#    ███    ███ ███   ▀███ ███   ▀███ ███    ███ ███▀▀▀██▄   ███    ███
+#    ███    ███ ███    ███ ███    ███ ███    ███ ███   ███   ███    █▀
+#    ███    ███ ███    ███ ███    ███ ███    ███ ███   ███   ███
+#  ▀███████████ ███    ███ ███    ███ ███    ███ ███   ███ ▀███████████
+#    ███    ███ ███    ███ ███    ███ ███    ███ ███   ███          ███
+#    ███    ███ ███   ▄███ ███   ▄███ ███    ███ ███   ███    ▄█    ███
+#    ███    █▀  ████████▀  ████████▀   ▀██████▀   ▀█   █▀   ▄████████▀
+#----------------------------------------------------------------
+#
+#-------------------------------------------------------------------
+Addon:
+  Stashes:
+    ################################################
+    ##                                            ##
+    ## A private clan inventory with only 9 slots ##
+    ##         Default clearance is 2             ##
+    ##                                            ##
+    ################################################
+    enabled: true
+    clearance: 2
+  Vaults:
+    #######################################################
+    ##                                                   ##
+    ## A virtual clan vault inventory for storing items. ##
+    ##            Default clearance is 1                 ##
+    ##                                                   ##
+    #######################################################
+    enabled: true
+    clearance: 1
+  Mail:
+    ####################################################
+    ##                                                ##
+    ## Allows clan's to send each-other gift's & mail ##
+    ##                                                ##
+    ####################################################
+    mail:
+      clearance: 0
+    gift:
+      clearance: 0
+    enabled: true
+  Borders:
+    ##################################################################
+    ##                                                              ##
+    ## Allows users to see chunk borders in relation to clan status ##
+    ##                                                              ##
+    ##################################################################
+    enabled: true
+  Kingdoms:
+    ###########################################################################
+    ##                                                                       ##
+    ## Enabling this at the moment will do nothing. Feature not yet-finished ##
+    ##                                                                       ##
+    ###########################################################################
+    enabled: false
+    required-creation-power: 180.00
+    # These permission settings utilize clan permission levels from the clearance section above.
+    perms:
+      start: 2
+    roundtable:
+      # The consistent name of the hierarchy of clan users.
+      name: 'Roundtable'
+      # Kingdoms has a stacked permissions system for the roundtable only.
+      # Kingdoms by themselves simply follow normal clan permissions.
+      perms:
+        # 4 = HIGHEST
+        # 3 = HIGHER
+        # 2 = HIGH
+        # 1 = LOW
+        name-change: 2
+        invite: 3
+        promote: 4
+        demote: 4
+        kick: 4
+  Map:
+    #####################################################
+    ##                                                 ##
+    ##        An ms5984 (Regurgitator) original        ##
+    ##   Map surrounding chunks around you and display ##
+    ##          information for them in chat.          ##
+    ##                                                 ##
+    #####################################################
+    # NEW feature by Hempfest, enhances interaction with map symbols.
+    enhanced: true
+    enabled: true
+  Bounty:
+    ##############################################################
+    ##                                                          ##
+    ## Requires Vault or Enterprise. Place bounties on players! ##
+    ##                                                          ##
+    ##############################################################
+    enabled: true
+    settings:
+      # Choose where the rewarded money gets sent. To the killer or the killers clan?
+      # Valid types: [ PLAYER, CLAN ]
+      deposit-type: PLAYER
+      # Whether or not to announce retrieval of the bounty globally.
+      announce-defeat: true
+      # Turning this to false will take the money from the players clan bank if possible or if not in a clan no money will be taken from the killed player.
+      # Otherwise the money will be taken from the killed player's wallet.
+      take-from-killed: true
+      # The message broadcast when a bounty gets called on a player.
+      called-message: '&6{PLAYER} &7do clã {CLAN} colocou uma recompensa em {TARGET} por &6&l$&e{BOUNTY}'
+      # The message broadcast when a players bounty gets collected.
+      defeat-message: '&c&o{KILLER} do clã {KILLER_CLAN} coletou o &6${BOUNTY} &c&orecompensa por matar {PLAYER}'
+##------------------------
+## -- DO NOT EDIT BELOW --
+# Authors: Hempfest, ms5984
+##------------------------
+Version: 1.3.0

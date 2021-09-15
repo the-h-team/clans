@@ -30,12 +30,12 @@ public class CooldownMode extends ClanCooldown {
 
 	@Override
 	public long getCooldown() {
-		return DataManager.FileType.CLAN_FILE.get(clanId).getConfig().getLong("cooldown.mode-switch");
+		return DataManager.FileType.CLAN_FILE.get(clanId).getRoot().getLong("cooldown.mode-switch");
 	}
 
 	@Override
 	public String fullTimeLeft() {
-		return Clan.ACTION.format(Clan.ACTION.format(Clan.ACTION.format(Clan.ACTION.format(ClansAPI.getData().getMessage("cooldown-active"), "%d", String.valueOf(getDaysLeft())), "%h", String.valueOf(getHoursLeft())), "%m", String.valueOf(getMinutesLeft())), "%s", String.valueOf(getSecondsLeft()));
+		return Clan.ACTION.format(Clan.ACTION.format(Clan.ACTION.format(Clan.ACTION.format(ClansAPI.getData().getMessageResponse("cooldown-active"), "%d", String.valueOf(getDaysLeft())), "%h", String.valueOf(getHoursLeft())), "%m", String.valueOf(getMinutesLeft())), "%s", String.valueOf(getSecondsLeft()));
 	}
 
 	@Override

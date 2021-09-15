@@ -1,6 +1,5 @@
 package com.github.sanctum.clans.construct.bank;
 
-import com.github.sanctum.clans.construct.ClanAssociate;
 import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClansAPI;
 import com.github.sanctum.clans.construct.impl.DefaultClan;
@@ -56,7 +55,7 @@ public enum BankAction {
     }
 
     public boolean testForPlayer(Clan clan, Player player) {
-        ClanAssociate associate = ClansAPI.getInstance().getAssociate(player).orElse(null);
+        Clan.Associate associate = ClansAPI.getInstance().getAssociate(player).orElse(null);
         return associate != null && associate.getPriority().toInt() >= AccessMap.getForClan(clan).acl.get(this);
     }
 

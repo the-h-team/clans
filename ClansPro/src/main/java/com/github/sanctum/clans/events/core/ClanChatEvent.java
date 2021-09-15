@@ -1,6 +1,6 @@
 package com.github.sanctum.clans.events.core;
 
-import com.github.sanctum.clans.construct.ClanAssociate;
+import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.events.AsyncClanEventBuilder;
 import java.util.Set;
 import net.md_5.bungee.api.chat.BaseComponent;
@@ -9,14 +9,14 @@ import org.bukkit.entity.Player;
 
 public class ClanChatEvent extends AsyncClanEventBuilder {
 
-	private final ClanAssociate associate;
+	private final Clan.Associate associate;
 	private final Set<Player> recipients;
 	private BaseComponent[] components;
 	private String message;
 
 	private Sound pingSound = Sound.ENTITY_EXPERIENCE_ORB_PICKUP;
 
-	public ClanChatEvent(ClanAssociate associate, Set<Player> recipients, String message) {
+	public ClanChatEvent(Clan.Associate associate, Set<Player> recipients, String message) {
 		this.message = message;
 		this.recipients = recipients;
 		this.associate = associate;
@@ -38,7 +38,7 @@ public class ClanChatEvent extends AsyncClanEventBuilder {
 		return recipients;
 	}
 
-	public ClanAssociate getAssociate() {
+	public Clan.Associate getAssociate() {
 		return associate;
 	}
 

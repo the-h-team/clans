@@ -9,7 +9,7 @@ import java.util.concurrent.CompletableFuture;
 import org.bukkit.plugin.Plugin;
 
 /**
- * A class used to subscribe to and call specific {@link ClanEventBuilder} or {@link AsyncClanEventBuilder} {@link Vent}'s
+ * A class used to subscribe to and check specific {@link ClanEventBuilder} or {@link AsyncClanEventBuilder} {@link Vent}'s
  */
 public class ClanVentBus {
 

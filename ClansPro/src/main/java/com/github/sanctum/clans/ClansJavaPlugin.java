@@ -2,9 +2,8 @@ package com.github.sanctum.clans;
 
 import com.github.sanctum.clans.bridge.ClanAddon;
 import com.github.sanctum.clans.bridge.ClanAddonQuery;
-import com.github.sanctum.clans.construct.Claim;
+import com.github.sanctum.clans.construct.ArenaManager;
 import com.github.sanctum.clans.construct.ClaimManager;
-import com.github.sanctum.clans.construct.ClanAssociate;
 import com.github.sanctum.clans.construct.ClanManager;
 import com.github.sanctum.clans.construct.DataManager;
 import com.github.sanctum.clans.construct.RankPriority;
@@ -14,33 +13,33 @@ import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClanCooldown;
 import com.github.sanctum.clans.construct.api.ClansAPI;
 import com.github.sanctum.clans.construct.bank.BankMeta;
-import com.github.sanctum.clans.construct.extra.ClanPrefix;
-import com.github.sanctum.clans.construct.extra.Metrics;
+import com.github.sanctum.clans.construct.extra.MessagePrefix;
 import com.github.sanctum.clans.construct.extra.StartProcedure;
+import com.github.sanctum.clans.construct.impl.DefaultArena;
+import com.github.sanctum.labyrinth.data.Configurable;
 import com.github.sanctum.labyrinth.data.FileList;
 import com.github.sanctum.labyrinth.data.FileManager;
-import com.github.sanctum.labyrinth.data.Registry;
-import com.github.sanctum.labyrinth.data.RegistryData;
+import com.github.sanctum.labyrinth.data.FileType;
+import com.github.sanctum.labyrinth.data.Node;
 import com.github.sanctum.labyrinth.data.container.KeyedServiceManager;
 import com.github.sanctum.labyrinth.library.HUID;
 import com.github.sanctum.labyrinth.library.StringUtils;
 import com.github.sanctum.skulls.CustomHead;
+import java.io.InputStream;
 import java.text.MessageFormat;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
-import org.bukkit.event.HandlerList;
-import org.bukkit.event.Listener;
+import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.serialization.ConfigurationSerialization;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.ServicePriority;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -75,10 +74,12 @@ import org.bukkit.plugin.java.JavaPlugin;
  */
 public class ClansJavaPlugin extends JavaPlugin implements ClansAPI {
 
+	public FileType TYPE;
 	private static ClansJavaPlugin PRO;
 	private static FileList origin;
 
-	private ClanPrefix prefix;
+	private MessagePrefix prefix;
+	private ArenaManager arenaManager;
 	private ClaimManager claimManager;
 	private ShieldManager shieldManager;
 	private ClanManager clanManager;
@@ -93,10 +94,14 @@ public class ClansJavaPlugin extends JavaPlugin implements ClansAPI {
 		origin = FileList.search(this);
 		Bukkit.getServicesManager().register(ClansAPI.class, this, this, ServicePriority.Normal);
 		dataManager = new DataManager();
+		FileManager main = dataManager.getMain();
+		TYPE = FileType.valueOf(main.read(c -> c.getNode("Formatting").getNode("file-type").toPrimitive().getString()));
 		clanManager = new ClanManager();
 		claimManager = new ClaimManager();
 		shieldManager = new ShieldManager();
 		serviceManager = new KeyedServiceManager<>();
+		arenaManager = new ArenaManager();
+		arenaManager.load(new DefaultArena("PRO"));
 		if (System.getProperty("RELOAD") != null && System.getProperty("RELOAD").equals("TRUE")) {
 			getLogger().severe("- RELOAD DETECTED! Shutting down...");
 			getLogger().severe("      ██╗");
@@ -107,9 +112,9 @@ public class ClansJavaPlugin extends JavaPlugin implements ClansAPI {
 			getLogger().severe("      ╚═╝");
 			getLogger().severe("- (You are not supported in the case of corrupt data)");
 			getLogger().severe("- (Reloading is NEVER safe and you should always restart instead.)");
-			FileManager file = origin.find("ignore", "");
+			FileManager file = origin.find("ignore", FileType.JSON);
 			String location = new Date().toInstant().atZone(ZoneId.systemDefault()).format(DateTimeFormatter.ISO_LOCAL_DATE);
-			List<String> toAdd = new ArrayList<>(file.getConfig().getStringList(location));
+			List<String> toAdd = new ArrayList<>(file.getRoot().getStringList(location));
 			toAdd.add("RELOAD DETECTED! Shutting down...");
 			toAdd.add("      ██╗");
 			toAdd.add("  ██╗██╔╝");
@@ -119,89 +124,37 @@ public class ClansJavaPlugin extends JavaPlugin implements ClansAPI {
 			toAdd.add("      ╚═╝");
 			toAdd.add("(You are not supported in the case of corrupt data)");
 			toAdd.add("(Reloading is NEVER safe and you should always restart instead.)");
-			file.getConfig().set(location, toAdd);
-			file.saveConfig();
+			file.write(t -> t.set(location, toAdd));
 			Bukkit.getPluginManager().disablePlugin(this);
 			return;
 		} else {
 			System.setProperty("RELOAD", "FALSE");
 		}
+		Node formatting = main.read(c -> c.getNode("Formatting"));
+		Node prefix = formatting.getNode("prefix");
+		this.prefix = new MessagePrefix(prefix.getNode("prefix").toPrimitive().getString(),
+				prefix.getNode("text").toPrimitive().getString(),
+				prefix.getNode("suffix").toPrimitive().getString());
 
-		dataManager.assertDefaults();
-
-		FileManager main = ClansAPI.getData().getMain();
-		this.prefix = new ClanPrefix(main.getConfig().getString("Formatting.prefix.prefix"),
-				main.getConfig().getString("Formatting.prefix.text"),
-				main.getConfig().getString("Formatting.prefix.suffix"));
-
-		StartProcedure primary;
-		try {
-			primary = new StartProcedure(this, DataManager.hidden());
-		} catch (IllegalAccessException e) {
-			// switch to re-throw over assertion
-			throw new IllegalStateException("Unable to properly initialize the plugin!", e);
-		}
-		primary.printLogo();
-		primary.runRegistry();
-		primary.sendBorder();
-		primary.runQuickDataCleaning();
-		primary.sendBorder();
-		primary.runCacheRefresh();
-		primary.sendBorder();
-		primary.runCoreTask();
-		primary.runPlaceholderCheck();
-		primary.runUpdateCheck();
-		primary.sendBorder();
-		primary.runShieldTimer();
-		primary.runInternalAddonServices();
-		primary.sendBorder();
-		primary.runBankSetup();
-		primary.sendBorder();
-		primary.runMetric(10461, metrics -> {
-			metrics.addCustomChart(new Metrics.SimplePie("using_claiming", () -> {
-				String result = "No";
-				if (Claim.ACTION.isEnabled()) {
-					result = "Yes";
-				}
-				return result;
-			}));
-			boolean configAllow = PRO.dataManager.getMain().getConfig().getBoolean("Clans.raid-shield.allow");
-			metrics.addCustomChart(new Metrics.SimplePie("using_raidshield", () -> {
-				String result = "No";
-				if (configAllow) {
-					result = "Yes";
-				}
-				return result;
-			}));
-			metrics.addCustomChart(new Metrics.DrilldownPie("addon_popularity", () -> {
-				Map<String, Map<String, Integer>> map = new HashMap<>();
-				Map<String, Integer> entry = new HashMap<>();
-				for (ClanAddon cycle : ClanAddonQuery.getRegisteredAddons()) {
-					if (cycle.persist()) {
-						entry.put(Bukkit.getServer().getName(), 1);
-						map.put(cycle.getName(), entry);
-					}
-				}
-				return map;
-			}));
-			metrics.addCustomChart(new Metrics.SingleLineChart("total_logged_players", () -> Clan.ACTION.getAllUsers().size()));
-			metrics.addCustomChart(new Metrics.SingleLineChart("total_clans_registered", () -> Clan.ACTION.getAllClanIDs().size()));
+		StartProcedure start = new Beginning(this).then((s, instance) -> {
+			if (instance.dataManager.assertDefaults()) {
+				instance.getLogger().info("- The configuration has been updated to the latest version.");
+			}
 		});
+		start.run();
 
-		FileManager config = DataManager.FileType.MISC_FILE.get("Messages", "Configuration");
+		FileManager config = dataManager.getMessages();
+		dataManager.CLAN_GUI_FORMAT.addAll(config.read(c -> c.getStringList("menu-format.clan")));
 
-		List<String> format = config.getConfig().getStringList("menu-format.clan");
-
-		dataManager.CLAN_GUI_FORMAT.addAll(format);
-
-		FileManager man = getFileList().find("Heads", "Configuration");
-
-		if (!man.exists()) {
-			FileManager.copy(getResource("Heads.yml"), man);
-			man.reload();
+		FileManager man = getFileList().get("heads", "Configuration", FileType.JSON);
+		if (!man.getRoot().exists()) {
+			InputStream stream = getResource("heads.data");
+			FileList.copy(stream, man.getRoot().getParent());
+			man.getRoot().reload();
 		}
-
-		CustomHead.Manager.newLoader(man.getConfig()).look("My_heads").complete();
+		Configurable.registerClass(Clan.class);
+		ConfigurationSerialization.registerClass(Clan.class);
+		CustomHead.Manager.newLoader(man.getRoot()).look("My_heads").complete();
 
 	}
 
@@ -223,13 +176,18 @@ public class ClansJavaPlugin extends JavaPlugin implements ClansAPI {
 		}
 	}
 
-	public void setPrefix(ClanPrefix prefix) {
+	public void setPrefix(MessagePrefix prefix) {
 		this.prefix = prefix;
 	}
 
 	@Override
 	public KeyedServiceManager<ClanAddon> getServiceManager() {
 		return this.serviceManager;
+	}
+
+	@Override
+	public ArenaManager getArenaManager() {
+		return this.arenaManager;
 	}
 
 	@Override
@@ -262,17 +220,17 @@ public class ClansJavaPlugin extends JavaPlugin implements ClansAPI {
 	}
 
 	@Override
-	public Optional<ClanAssociate> getAssociate(OfflinePlayer player) {
+	public Optional<Clan.Associate> getAssociate(OfflinePlayer player) {
 		return getClanManager().getClans().filter(c -> c.getMember(m -> Objects.equals(m.getPlayer().getName(), player.getName())) != null).map(c -> c.getMember(m -> Objects.equals(m.getPlayer().getName(), player.getName()))).findFirst();
 	}
 
 	@Override
-	public Optional<ClanAssociate> getAssociate(UUID uuid) {
+	public Optional<Clan.Associate> getAssociate(UUID uuid) {
 		return getClanManager().getClans().filter(c -> c.getMember(m -> Objects.equals(m.getPlayer().getUniqueId(), uuid)) != null).map(c -> c.getMember(m -> Objects.equals(m.getPlayer().getUniqueId(), uuid))).findFirst();
 	}
 
 	@Override
-	public Optional<ClanAssociate> getAssociate(String playerName) {
+	public Optional<Clan.Associate> getAssociate(String playerName) {
 		return getClanManager().getClans().filter(c -> c.getMember(m -> Objects.equals(m.getPlayer().getName(), playerName)) != null).map(c -> c.getMember(m -> Objects.equals(m.getPlayer().getName(), playerName))).findFirst();
 	}
 
@@ -308,7 +266,7 @@ public class ClansJavaPlugin extends JavaPlugin implements ClansAPI {
 				return true;
 			}
 		} catch (Exception e) {
-			getPlugin().getLogger().info("- Couldn't connect to servers, unable to check for updates.");
+			getPlugin().getLogger().info("- Couldn't connect to servers, unable to call for updates.");
 		}
 		return false;
 	}
@@ -325,7 +283,7 @@ public class ClansJavaPlugin extends JavaPlugin implements ClansAPI {
 
 	@Override
 	public boolean isNameBlackListed(String name) {
-		for (String s : ClansAPI.getData().getMain().getConfig().getConfigurationSection("Clans.name-blacklist").getKeys(false)) {
+		for (String s : ClansAPI.getData().getMain().read(c -> c.getNode("Clans.name-blacklist").get(ConfigurationSection.class)).getKeys(false)) {
 			if (StringUtils.use(name).containsIgnoreCase(s)) {
 				return true;
 			}
@@ -336,7 +294,7 @@ public class ClansJavaPlugin extends JavaPlugin implements ClansAPI {
 	@Override
 	public String getClanName(String clanID) {
 		FileManager clan = DataManager.FileType.CLAN_FILE.get(clanID);
-		return clan.getConfig().getString("name");
+		return clan.read(c -> c.getNode("name").toPrimitive().getString());
 	}
 
 	@Override
@@ -351,7 +309,7 @@ public class ClansJavaPlugin extends JavaPlugin implements ClansAPI {
 
 	@Override
 	public HUID getClanID(UUID uuid) {
-		ClanAssociate associate = getAssociate(uuid).orElse(null);
+		Clan.Associate associate = getAssociate(uuid).orElse(null);
 		if (associate != null && associate.isValid()) {
 			return associate.getClan().getId();
 		}
@@ -359,111 +317,26 @@ public class ClansJavaPlugin extends JavaPlugin implements ClansAPI {
 	}
 
 	@Override
-	public void setRank(ClanAssociate associate, RankPriority priority) {
+	public void setRank(Clan.Associate associate, RankPriority priority) {
 		if (associate == null) return;
 
 		if (associate.isValid()) return;
 
 		associate.setPriority(priority);
 		Clan clanIndex = associate.getClan();
-		String format = MessageFormat.format(ClansAPI.getData().getMessage("promotion"), Bukkit.getOfflinePlayer(associate.getPlayer().getUniqueId()).getName(), associate.getRankTag());
+		String format = MessageFormat.format(ClansAPI.getData().getMessageResponse("promotion"), Bukkit.getOfflinePlayer(associate.getPlayer().getUniqueId()).getName(), associate.getRankTag());
 		clanIndex.broadcast(format);
 
 	}
 
 	@Override
 	public void searchNewAddons(Plugin plugin, String packageName) {
-		RegistryData<ClanAddon> data = new Registry<>(ClanAddon.class)
-				.source(plugin)
-				.pick(packageName)
-				.operate(cycle -> {
-					cycle.onLoad();
-					ClanAddonQuery.getRegisteredAddons().add(cycle);
-					cycle.onEnable();
-				});
-
-		getLogger().info("- Found (" + data.getData().size() + ") clan addon(s)");
-
-		for (ClanAddon e : data.getData()) {
-			if (e.persist()) {
-
-				getLogger().info(" ");
-				getLogger().info("▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬");
-				getLogger().info("- Addon: " + e.getName());
-				getLogger().info("- Version: " + e.getVersion());
-				getLogger().info("- Author(s): " + Arrays.toString(e.getAuthors()));
-				getLogger().info("- Description: " + e.getDescription());
-				getLogger().info("- Persistent: (" + e.persist() + ")");
-				getLogger().info("▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬");
-				getLogger().info(" ");
-				getLogger().info("- Listeners: (" + e.getAdditions().size() + ")");
-				for (Listener addition : e.getAdditions()) {
-					boolean registered = HandlerList.getRegisteredListeners(PRO).stream().anyMatch(r -> r.getListener().equals(addition));
-					if (!registered) {
-						getLogger().info("- [" + e.getName() + "] (+1) Class " + addition.getClass().getSimpleName() + " loaded");
-						Bukkit.getPluginManager().registerEvents(addition, PRO);
-					} else {
-						getLogger().info("- [" + e.getName() + "] (-1) Class " + addition.getClass().getSimpleName() + " already loaded. Skipping.");
-					}
-				}
-			} else {
-				getLogger().info(" ");
-				getLogger().info("- Addon: " + e.getName());
-				getLogger().info("- Description: " + e.getDescription());
-				getLogger().info("- Persistent: (" + e.persist() + ")");
-				e.remove();
-				getLogger().info(" ");
-				getLogger().info("- Listeners: (" + e.getAdditions().size() + ")");
-				for (Listener addition : e.getAdditions()) {
-					getLogger().info("- [" + e.getName() + "] (+1) Addon failed to load due to no persistence.");
-				}
-			}
-		}
-
+		ClanAddonQuery.register(plugin, packageName);
 	}
 
 	@Override
 	public void importAddon(Class<? extends ClanAddon> cycle) {
-		try {
-			ClanAddon c = cycle.newInstance();
-			c.onLoad();
-			ClanAddonQuery.getRegisteredAddons().add(c);
-			c.onEnable();
-			if (c.persist()) {
-
-				getLogger().info(" ");
-				getLogger().info("▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬");
-				getLogger().info("- Addon: " + c.getName());
-				getLogger().info("- Description: " + c.getDescription());
-				getLogger().info("- Persistent: (" + c.persist() + ")");
-				getLogger().info("▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬");
-				getLogger().info(" ");
-				getLogger().info("- Listeners: (" + c.getAdditions().size() + ")");
-				for (Listener addition : c.getAdditions()) {
-					boolean registered = HandlerList.getRegisteredListeners(PRO).stream().anyMatch(r -> r.getListener().equals(addition));
-					if (!registered) {
-						getLogger().info("- [" + c.getName() + "] (+1) Class " + addition.getClass().getSimpleName() + " loaded");
-						Bukkit.getPluginManager().registerEvents(addition, PRO);
-					} else {
-						getLogger().info("- [" + c.getName() + "] (-1) Class " + addition.getClass().getSimpleName() + " already loaded. Skipping.");
-					}
-				}
-			} else {
-				getLogger().info(" ");
-				getLogger().info("- Addon: " + c.getName());
-				getLogger().info("- Description: " + c.getDescription());
-				getLogger().info("- Persistent: (" + c.persist() + ")");
-				c.remove();
-				getLogger().info(" ");
-				getLogger().info("- Listeners: (" + c.getAdditions().size() + ")");
-				for (Listener addition : c.getAdditions()) {
-					getLogger().info("- [" + c.getName() + "] (+1) Addon failed to load due to no persistence.");
-				}
-			}
-		} catch (InstantiationException | IllegalAccessException e) {
-			getLogger().severe("- Unable to cast Addon to the class " + cycle.getName() + ". This likely means you are not implementing the Addon interface for your event class properly.");
-			e.printStackTrace();
-		}
+		ClanAddonQuery.register(cycle);
 	}
 
 	@Override
@@ -505,7 +378,7 @@ public class ClansJavaPlugin extends JavaPlugin implements ClansAPI {
 	}
 
 	@Override
-	public ClanPrefix getPrefix() {
+	public MessagePrefix getPrefix() {
 		return this.prefix;
 	}
 

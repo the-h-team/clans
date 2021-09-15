@@ -92,6 +92,14 @@
             <url>https://jcenter.bintray.com</url>
         </repository>
         <repository>
+            <id>s01-snapshots</id>
+            <url>https://s01.oss.sonatype.org/content/repositories/snapshots/</url>
+        </repository>
+        <repository>
+            <id>ossrh</id>
+            <url>https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+        </repository>
+        <repository>
             <id>sonatype-snapshots</id>
             <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
         </repository>
@@ -143,33 +151,27 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>com.github.the-h-team.Labyrinth</groupId>
+            <groupId>com.github.the-h-team</groupId>
             <artifactId>labyrinth-gui</artifactId>
-            <version>6fc236c38e</version>
+            <version>1.7.2-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>com.github.the-h-team.Labyrinth</groupId>
+            <groupId>com.github.the-h-team</groupId>
             <artifactId>labyrinth-regions</artifactId>
-            <version>6fc236c38e</version>
+            <version>1.7.2-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>com.github.the-h-team.Labyrinth</groupId>
+            <groupId>com.github.the-h-team</groupId>
             <artifactId>labyrinth-common</artifactId>
-            <version>6fc236c38e</version>
+            <version>1.7.2-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>com.github.the-h-team.Labyrinth</groupId>
+            <groupId>com.github.the-h-team</groupId>
             <artifactId>labyrinth-skulls</artifactId>
-            <version>6fc236c38e</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.github.the-h-team.Labyrinth</groupId>
-            <artifactId>labyrinth-plugin</artifactId>
-            <version>6fc236c38e</version>
+            <version>1.7.2-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
     </dependencies>

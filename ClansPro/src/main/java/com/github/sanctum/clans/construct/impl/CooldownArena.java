@@ -1,48 +1,25 @@
 package com.github.sanctum.clans.construct.impl;
 
-import com.github.sanctum.clans.construct.api.Clan;
-import com.github.sanctum.clans.construct.api.ClanCooldown;
-import com.github.sanctum.clans.construct.api.ClansAPI;
-import com.github.sanctum.labyrinth.data.FileManager;
-import com.github.sanctum.labyrinth.library.HUID;
+import com.github.sanctum.labyrinth.library.Cooldown;
 
-public class CooldownArena extends ClanCooldown {
+public class CooldownArena extends Cooldown {
 
-	private int time;
+	private final long time;
+	private final String id;
+
+	public CooldownArena(String id, int seconds) {
+		this.id = id;
+		this.time = abv(seconds);
+	}
 
 	@Override
 	public String getId() {
-		return HUID.randomID().toString();
+		return this.id;
 	}
 
-	@Override
-	public String getAction() {
-		return "Clans:arena-timer";
-	}
-
-	public void setTime(int time) {
-		this.time = time;
-	}
-
-	@Override
-	public void setCooldown() {
-		FileManager config = ClansAPI.getData().arenaFile();
-		config.getConfig().set("Time-allotted", System.currentTimeMillis() + (time * 1000));
-		config.saveConfig();
-	}
 
 	@Override
 	public long getCooldown() {
-		return ClansAPI.getData().arenaFile().getConfig().getLong("Time-allotted");
-	}
-
-	@Override
-	public String fullTimeLeft() {
-		return Clan.ACTION.format(Clan.ACTION.format(Clan.ACTION.format(Clan.ACTION.format(ClansAPI.getData().getMessage("cooldown-active"), "%d", String.valueOf(getDaysLeft())), "%h", String.valueOf(getHoursLeft())), "%m", String.valueOf(getMinutesLeft())), "%s", String.valueOf(getSecondsLeft()));
-	}
-
-	@Override
-	public ClanCooldown getInstance() {
-		return this;
+		return this.time;
 	}
 }

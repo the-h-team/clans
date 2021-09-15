@@ -4,11 +4,9 @@ import com.github.sanctum.clans.ClansJavaPlugin;
 import com.github.sanctum.clans.bridge.ClanAddon;
 import com.github.sanctum.clans.bridge.ClanAddonQuery;
 import com.github.sanctum.clans.construct.Claim;
-import com.github.sanctum.clans.construct.ClanAssociate;
 import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClansAPI;
-import com.github.sanctum.clans.construct.impl.CooldownArena;
-import com.github.sanctum.clans.construct.impl.DefaultClan;
+import com.github.sanctum.clans.construct.api.War;
 import java.util.UUID;
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
 import org.bukkit.Bukkit;
@@ -36,7 +34,7 @@ public class ClanPlaceholders extends PlaceholderExpansion {
 	}
 
 	/**
-	 * Because this is a internal class, this check is not needed
+	 * Because this is a internal class, this call is not needed
 	 * and we can simply return {@code true}
 	 *
 	 * @return Always true since it's an internal class.
@@ -59,7 +57,7 @@ public class ClanPlaceholders extends PlaceholderExpansion {
 
 	/**
 	 * The placeholder identifier should go here.
-	 * <br>This is what tells PlaceholderAPI to call our onRequest
+	 * <br>This is what tells PlaceholderAPI to check our onRequest
 	 * method to obtain a value if a placeholder starts with our
 	 * identifier.
 	 * <br>This must be unique and can not contain % or _
@@ -101,7 +99,7 @@ public class ClanPlaceholders extends PlaceholderExpansion {
 			return "";
 		}
 
-		ClanAssociate associate = ClansAPI.getInstance().getAssociate(player).orElse(null);
+		Clan.Associate associate = ClansAPI.getInstance().getAssociate(player).orElse(null);
 
 		if (associate == null) {
 			return "";
@@ -143,6 +141,10 @@ public class ClanPlaceholders extends PlaceholderExpansion {
 		// %someplugin_placeholder1%
 		if (identifier.equals("clan_name")) {
 			return c.getName();
+		}
+
+		if (identifier.equals("clan_name_colored")) {
+			return c.getPalette().isGradient() ? c.getPalette().toString() : c.getPalette().getStart() + c.getName();
 		}
 
 		if (identifier.equals("clan_description")) {
@@ -189,54 +191,49 @@ public class ClanPlaceholders extends PlaceholderExpansion {
 			return result;
 		}
 		if (identifier.equals("clan_war_active")) {
-			boolean result = false;
-			if (ClansAPI.getData().arenaFile().exists()) {
-				result = true;
+			War w = ClansAPI.getInstance().getArenaManager().get("PRO");
+			if (w != null) {
+				return String.valueOf(w.isRunning());
 			}
-			return String.valueOf(result);
+			return "false";
 		}
 		if (identifier.equals("clan_war_score")) {
-			if (ClansAPI.getData().arenaFile().exists()) {
-				return ((DefaultClan) associate.getClan()).getCurrentWar().getPoints() + "";
+			War w = ClansAPI.getInstance().getArenaManager().get(associate);
+			if (w != null) {
+				return String.valueOf(w.getPoints(w.getTeam(associate.getClan())));
 			} else {
 				return "0";
 			}
 		}
 		if (identifier.equals("clan_war_hours")) {
-			String result = "";
-			if (ClansAPI.getData().arenaFile().exists()) {
-				CooldownArena arena = Clan.ACTION.ARENA;
-				if (!arena.isComplete()) {
-					result = String.valueOf(arena.getHoursLeft());
+			War w = ClansAPI.getInstance().getArenaManager().get(associate);
+			if (w != null) {
+				if (!w.getTimer().isComplete()) {
+					return String.valueOf(w.getTimer().getHoursLeft());
 				}
 			} else {
-				result = "00";
+				return "00";
 			}
-			return result;
 		}
 		if (identifier.equals("clan_war_minutes")) {
-			String result = "";
-			if (ClansAPI.getData().arenaFile().exists()) {
-				CooldownArena arena = Clan.ACTION.ARENA;
-				if (!arena.isComplete()) {
-					result = String.valueOf(arena.getMinutesLeft());
+			War w = ClansAPI.getInstance().getArenaManager().get(associate);
+			if (w != null) {
+				if (!w.getTimer().isComplete()) {
+					return String.valueOf(w.getTimer().getMinutesLeft());
 				}
 			} else {
-				result = "00";
+				return "00";
 			}
-			return result;
 		}
 		if (identifier.equals("clan_war_seconds")) {
-			String result = "";
-			if (ClansAPI.getData().arenaFile().exists()) {
-				CooldownArena arena = Clan.ACTION.ARENA;
-				if (!arena.isComplete()) {
-					result = String.valueOf(arena.getSecondsLeft());
+			War w = ClansAPI.getInstance().getArenaManager().get(associate);
+			if (w != null) {
+				if (!w.getTimer().isComplete()) {
+					return String.valueOf(w.getTimer().getSecondsLeft());
 				}
 			} else {
-				result = "00";
+				return "00";
 			}
-			return result;
 		}
 		if (identifier.equals("clan_balance")) {
 			String result = "0";
@@ -252,7 +249,7 @@ public class ClanPlaceholders extends PlaceholderExpansion {
 		}
 
 		if (identifier.equals("clan_color")) {
-			return c.getColor();
+			return c.getPalette().getStart();
 		}
 
 		if (identifier.equals("member_rank")) {

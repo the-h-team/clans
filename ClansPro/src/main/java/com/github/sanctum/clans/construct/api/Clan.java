@@ -1,22 +1,58 @@
 package com.github.sanctum.clans.construct.api;
 
 import com.github.sanctum.clans.construct.Claim;
-import com.github.sanctum.clans.construct.ClanAssociate;
+import com.github.sanctum.clans.construct.ClanManager;
+import com.github.sanctum.clans.construct.RankPriority;
 import com.github.sanctum.clans.construct.actions.ClanAction;
-import com.github.sanctum.clans.construct.extra.ClanWar;
+import com.github.sanctum.clans.construct.impl.DefaultClan;
+import com.github.sanctum.clans.construct.impl.Resident;
+import com.github.sanctum.labyrinth.data.FileManager;
+import com.github.sanctum.labyrinth.data.JsonAdapter;
+import com.github.sanctum.labyrinth.data.Node;
+import com.github.sanctum.labyrinth.data.NodePointer;
+import com.github.sanctum.labyrinth.data.Primitive;
+import com.github.sanctum.labyrinth.data.Root;
 import com.github.sanctum.labyrinth.formatting.UniformedComponents;
+import com.github.sanctum.labyrinth.formatting.string.GradientColor;
 import com.github.sanctum.labyrinth.library.HUID;
+import com.github.sanctum.labyrinth.library.Message;
+import com.github.sanctum.labyrinth.library.TimeWatch;
+import com.github.sanctum.labyrinth.task.Schedule;
+import com.github.sanctum.skulls.CustomHead;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import java.io.Serializable;
+import java.text.MessageFormat;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
+import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
 import org.bukkit.Location;
+import org.bukkit.OfflinePlayer;
+import org.bukkit.Sound;
+import org.bukkit.Statistic;
+import org.bukkit.boss.BarColor;
+import org.bukkit.boss.BarFlag;
+import org.bukkit.boss.BarStyle;
+import org.bukkit.boss.BossBar;
+import org.bukkit.configuration.serialization.ConfigurationSerializable;
+import org.bukkit.configuration.serialization.SerializableAs;
+import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public interface Clan extends ClanBank, Serializable {
+@NodePointer(value = "com.github.sanctum.Clan", type = DefaultClan.class)
+@SerializableAs("com.github.sanctum.Clan")
+public interface Clan extends Iterable<Clan.Associate>, JsonAdapter<Clan>, ConfigurationSerializable, Comparable<Clan>, Relatable<Clan>, ClanBank, Serializable {
 
 	ClanAction ACTION = new ClanAction();
 
@@ -26,7 +62,7 @@ public interface Clan extends ClanBank, Serializable {
 	 * @param target The target to collect.
 	 * @return A valid clan associate or null.
 	 */
-	@Nullable ClanAssociate accept(UUID target);
+	@Nullable Clan.Associate accept(UUID target);
 
 	/**
 	 * Claim the target chunk for this clan if possible.
@@ -73,6 +109,11 @@ public interface Clan extends ClanBank, Serializable {
 	boolean kick(UUID target);
 
 	/**
+	 * @return true if this clan is valid.
+	 */
+	boolean isValid();
+
+	/**
 	 * Check the clans pvp-mode
 	 *
 	 * @return false if war mode
@@ -89,7 +130,7 @@ public interface Clan extends ClanBank, Serializable {
 	/**
 	 * Check if this clan owns the provided chunk.
 	 *
-	 * @param chunk The chunk to check
+	 * @param chunk The chunk to call
 	 * @return true if the provided chunk is owned by this clan.
 	 */
 	boolean isOwner(@NotNull Chunk chunk);
@@ -185,7 +226,7 @@ public interface Clan extends ClanBank, Serializable {
 	 *
 	 * @param message String to broadcast.
 	 */
-	void broadcast(Predicate<ClanAssociate> predicate, String message);
+	void broadcast(Predicate<Associate> predicate, String message);
 
 	/**
 	 * Give the clan some power
@@ -290,8 +331,17 @@ public interface Clan extends ClanBank, Serializable {
 	 * Get the color theme for the clan
 	 *
 	 * @return Gets the clan objects clan tag color
+	 * @deprecated Use {@link Clan#getPalette()} instead!
 	 */
+	@Deprecated
 	@NotNull String getColor();
+
+	/**
+	 * Get the clans color palette
+	 *
+	 * @return The clans color palette
+	 */
+	@NotNull Clan.Color getPalette();
 
 	/**
 	 * Get the clans description
@@ -312,7 +362,7 @@ public interface Clan extends ClanBank, Serializable {
 	 *
 	 * @return Gets the clan owner.
 	 */
-	@NotNull ClanAssociate getOwner();
+	@NotNull Clan.Associate getOwner();
 
 	/**
 	 * Get a member by specification from the clan.
@@ -320,7 +370,7 @@ public interface Clan extends ClanBank, Serializable {
 	 * @param predicate The operation to use.
 	 * @return The clan associate or null.
 	 */
-	@Nullable ClanAssociate getMember(Predicate<ClanAssociate> predicate);
+	@Nullable Clan.Associate getMember(Predicate<Associate> predicate);
 
 	/**
 	 * Format a given double into different configured language types
@@ -391,7 +441,7 @@ public interface Clan extends ClanBank, Serializable {
 	 *
 	 * @return A set of all clan associates.
 	 */
-	@NotNull Set<ClanAssociate> getMembers();
+	@NotNull Set<Associate> getMembers();
 
 	/**
 	 * Get a full roster of allied clans for this clan.
@@ -422,34 +472,29 @@ public interface Clan extends ClanBank, Serializable {
 	double getPower();
 
 	/**
-	 * {@inheritDoc}
+	 * @return The max amount of chunks this clan can own.
 	 */
 	int getMaxClaims();
 
 	/**
-	 * {@inheritDoc}
+	 * @return The amount of wars this clan has won.
 	 */
 	int getWins();
 
 	/**
-	 * {@inheritDoc}
+	 * @return The amount of wars this clan has lost.
 	 */
 	int getLosses();
 
 	/**
-	 * Get a clans cooldown cache
+	 * Get the clans cooldown cache
 	 *
-	 * @return A collection of cooldown objects for the clan
+	 * @return A collection of cooldown objects for this clan
 	 */
 	@NotNull List<ClanCooldown> getCooldowns();
 
-	/**
-	 * {@inheritDoc}
-	 */
-	@NotNull List<Clan> getWarInvites();
-
-	default ClanWar getCurrentWar() {
-		return null;
+	default String getMotd() {
+		return "Hello! This is a test message. If you're reading this, the message should be formatted!";
 	}
 
 	/**
@@ -459,6 +504,104 @@ public interface Clan extends ClanBank, Serializable {
 		return Implementation.UNKNOWN;
 	}
 
+	@Override
+	default JsonElement write(Clan clan) {
+		JsonObject o = new JsonObject();
+		o.addProperty("id", clan.getId().toString());
+		o.addProperty("name", clan.getName());
+		o.addProperty("description", clan.getDescription());
+		o.addProperty("password", clan.getPassword());
+		JsonObject color = new JsonObject();
+		color.addProperty("start", clan.getPalette().getStart());
+		color.addProperty("end", clan.getPalette().getEnd());
+		o.add("color", color);
+		JsonObject members = new JsonObject();
+		clan.forEach(a -> members.addProperty(a.getPlayer().getUniqueId().toString(), a.getPriority().name()));
+		o.add("members", members);
+		return o;
+	}
+
+	@Override
+	default Clan read(Map<String, Object> o) {
+		ClanManager manager = ClansAPI.getInstance().getClanManager();
+		String id = (String) o.get("id");
+		DefaultClan test = (DefaultClan) ClansAPI.getInstance().getClan(id);
+		if (test != null) {
+			return test;
+		}
+		String name = (String) o.get("name");
+		String password = (String) o.get("password");
+		String description = (String) o.get("description");
+		Map<String, String> members = (Map<String, String>) o.get("members");
+		Map<String, String> color = (Map<String, String>) o.get("color");
+		DefaultClan clan = new DefaultClan(id);
+		clan.setName(name);
+		clan.getPalette().setStart(color.get("start")).setEnd(color.get("end"));
+		clan.setPassword(password);
+		clan.setDescription(description);
+		manager.load(clan);
+		for (Map.Entry<String, String> entry : members.entrySet()) {
+			UUID user = UUID.fromString(entry.getKey());
+			Clan.Associate associate = clan.accept(user);
+			if (associate != null) {
+				associate.setPriority(RankPriority.valueOf(entry.getValue()));
+			}
+		}
+		return clan;
+	}
+
+	@Override
+	default Class<Clan> getClassType() {
+		return Clan.class;
+	}
+
+	@Override
+	default @NotNull Map<String, Object> serialize() {
+		Map<String, Object> o = new HashMap<>();
+		o.put("id", getId().toString());
+		o.put("name", getName());
+		o.put("description", getDescription());
+		o.put("password", getPassword());
+		Map<String, String> color = new HashMap<>();
+		color.put("start", getPalette().getStart());
+		color.put("end", getPalette().getEnd());
+		o.put("color", color);
+		Map<String, String> members = new HashMap<>();
+		for (Associate a : getMembers()) {
+			members.put(a.getPlayer().getUniqueId().toString(), a.getPriority().name());
+		}
+		o.put("members", members);
+		return o;
+	}
+
+	static Clan deserialize(Map<String, Object> o) {
+		ClanManager manager = ClansAPI.getInstance().getClanManager();
+		String id = (String) o.get("id");
+		DefaultClan test = (DefaultClan) ClansAPI.getInstance().getClan(id);
+		if (test != null) {
+			return test;
+		}
+		String name = (String) o.get("name");
+		String password = (String) o.get("password");
+		String description = (String) o.get("description");
+		Map<String, String> members = (Map<String, String>) o.get("members");
+		Map<String, String> color = (Map<String, String>) o.get("color");
+		DefaultClan clan = new DefaultClan(id);
+		clan.setName(name);
+		clan.getPalette().setStart(color.get("start")).setEnd(color.get("end"));
+		clan.setPassword(password);
+		clan.setDescription(description);
+		manager.load(clan);
+		for (Map.Entry<String, String> entry : members.entrySet()) {
+			UUID user = UUID.fromString(entry.getKey());
+			Clan.Associate associate = clan.accept(user);
+			if (associate != null) {
+				associate.setPriority(RankPriority.valueOf(entry.getValue()));
+			}
+		}
+		return clan;
+	}
+
 	void save();
 
 	enum Implementation {
@@ -466,4 +609,438 @@ public interface Clan extends ClanBank, Serializable {
 	}
 
 
+	/**
+	 * Encapsulates player information when a clan id is found linked in file.
+	 */
+	class Associate {
+
+		private final UUID player;
+
+		private final HUID clan;
+
+		private RankPriority rank;
+
+		private String chat;
+
+		private final ItemStack head;
+
+		private final Map<Long, Long> killMap;
+
+		private final BossBar bar = Bukkit.createBossBar("", BarColor.BLUE, BarStyle.SEGMENTED_10, BarFlag.DARKEN_SKY);
+
+		public Associate(UUID uuid, RankPriority priority, HUID clanID) {
+			this.player = uuid;
+			this.rank = priority;
+			this.clan = clanID;
+			this.chat = "GLOBAL";
+			this.head = CustomHead.Manager.get(getPlayer().getName());
+			this.killMap = new HashMap<>();
+		}
+
+		public Associate(OfflinePlayer player, RankPriority priority, HUID clan) {
+			this(player.getUniqueId(), priority, clan);
+		}
+
+		public String getName() {
+			return getPlayer().getName();
+		}
+
+		public Message getMessenger() {
+			return Message.form(getPlayer().getPlayer());
+		}
+
+		/**
+		 * @return Gets the backing player object behind this clan associate.
+		 */
+		public OfflinePlayer getPlayer() {
+			return Bukkit.getOfflinePlayer(player);
+		}
+
+		/**
+		 * @return Gets the players cached head skin.
+		 */
+		public ItemStack getHead() {
+			return head;
+		}
+
+		/**
+		 * @return The chat channel this user resides in.
+		 */
+		public String getChat() {
+			return chat;
+		}
+
+		public BossBar getBar() {
+			return bar;
+		}
+
+		/**
+		 * Change the users chat channel.
+		 *
+		 * @param chat The channel to switch them to.
+		 */
+		public void setChat(String chat) {
+			this.chat = chat;
+		}
+
+		/**
+		 * @return Gets the clan this associate belongs to.
+		 */
+		public Clan getClan() {
+			return ClansAPI.getInstance().getClan(player);
+		}
+
+		/**
+		 * @return Gets the associates possible claim information. If the player is not in a claim this will return empty.
+		 */
+		public Optional<Resident> toResident() {
+			return !getPlayer().isOnline() ? Optional.empty() : Optional.ofNullable(Claim.getResident(getPlayer().getPlayer()));
+		}
+
+		/**
+		 * @return true if the backing clan id for this associate is linked with a cached file.
+		 */
+		public boolean isValid() {
+			return getClanID() != null;
+		}
+
+		/**
+		 * @return Gets the associates clan id or null if an issue has occurred.
+		 */
+		public synchronized @Nullable HUID getClanID() {
+			return this.clan;
+		}
+
+		/**
+		 * @return Gets the associates configured rank tag.
+		 */
+		public synchronized String getRankTag() {
+			String result = "";
+			FileManager main = ClansAPI.getData().getMain();
+			String member = main.getRoot().getString("Formatting.Chat.Styles.Full.Member");
+			String mod = main.getRoot().getString("Formatting.Chat.Styles.Full.Moderator");
+			String admin = main.getRoot().getString("Formatting.Chat.Styles.Full.Admin");
+			String owner = main.getRoot().getString("Formatting.Chat.Styles.Full.Owner");
+			switch (getPriority()) {
+				case NORMAL:
+					result = member;
+					break;
+				case HIGH:
+					result = mod;
+					break;
+				case HIGHER:
+					result = admin;
+					break;
+				case HIGHEST:
+					result = owner;
+					break;
+			}
+			return result;
+		}
+
+		/**
+		 * @return Gets the associates configured wordless rank tag.
+		 */
+		public synchronized String getRankShort() {
+			String result = "";
+			FileManager main = ClansAPI.getData().getMain();
+			String member = main.getRoot().getString("Formatting.Chat.Styles.Wordless.Member");
+			String mod = main.getRoot().getString("Formatting.Chat.Styles.Wordless.Moderator");
+			String admin = main.getRoot().getString("Formatting.Chat.Styles.Wordless.Admin");
+			String owner = main.getRoot().getString("Formatting.Chat.Styles.Wordless.Owner");
+			switch (getPriority()) {
+				case NORMAL:
+					result = member;
+					break;
+				case HIGH:
+					result = mod;
+					break;
+				case HIGHER:
+					result = admin;
+					break;
+				case HIGHEST:
+					result = owner;
+					break;
+			}
+			return result;
+		}
+
+		/**
+		 * @return Gets the associates rank priority.
+		 */
+		public RankPriority getPriority() {
+			return this.rank;
+		}
+
+		/**
+		 * Gets the total amount of kills within x amount of time of the specified
+		 * threshold.
+		 *
+		 * @param threshold The time unit threshold to use for conversion
+		 * @param time      The amount of time to call elapsed
+		 * @return The amount of kills within x amount of time.
+		 */
+		public long getKilled(TimeUnit threshold, long time) {
+			long amount = 0;
+			for (Map.Entry<Long, Long> entry : killMap.entrySet()) {
+				if (TimeWatch.start(entry.getKey()).isBetween(threshold, time)) {
+					amount += entry.getValue();
+				}
+			}
+			return amount;
+		}
+
+		/**
+		 * Calling this method invokes +1 kill added to this users cache (Resets after the configured amount & penalizes)
+		 */
+		public void countKill() {
+			long time = System.currentTimeMillis();
+			if (killMap.containsKey(time)) {
+				killMap.put(time, killMap.get(time) + 1L);
+			} else {
+				killMap.put(time, 1L);
+			}
+			if (ClansAPI.getData().isTrue("Clans.war.killstreak.penalize")) {
+				if (getKilled(TimeUnit.valueOf(ClansAPI.getData().getConfigString("Clans.war.killstreak.threshold")), Long.parseLong(ClansAPI.getData().getConfigString("Clans.war.killstreak.time-span"))) >= Long.parseLong(ClansAPI.getData().getConfigString("Clans.war.killstreak.amount"))) {
+					killMap.clear();
+					getClan().broadcast("&4Camping detected, penalizing power gain.");
+					getClan().takePower(Double.parseDouble(ClansAPI.getData().getConfigString("Clans.war.killstreak.deduction")));
+				}
+			}
+		}
+
+		/**
+		 * Update the associates rank priority.
+		 *
+		 * @param priority The rank priority to update the associate with.
+		 */
+		public void setPriority(RankPriority priority) {
+			this.rank = priority;
+		}
+
+		/**
+		 * @return Gets the associates clan nick-name, if one is not present their full user-name will be returned.
+		 */
+		public synchronized String getNickname() {
+			FileManager clan = ClansAPI.getData().getClanFile(getClan());
+			Node user_data = clan.getRoot().getNode("user-data");
+			Node user = user_data.getNode(player.toString());
+			Node nickname = user.getNode("nickname");
+			Primitive n = nickname.toPrimitive();
+			return n.isString() ? n.getString() : getName();
+		}
+
+		/**
+		 * @return Gets the associates clan biography.
+		 */
+		public synchronized String getBiography() {
+			FileManager clan = ClansAPI.getData().getClanFile(getClan());
+			Node user_data = clan.getRoot().getNode("user-data");
+			Node user = user_data.getNode(player.toString());
+			Node bio = user.getNode("bio");
+			Primitive b = bio.toPrimitive();
+			return b.isString() ? b.getString() : "I much like other's, enjoy long walks on the beach.";
+		}
+
+		/**
+		 * @return Gets the associates clan join date.
+		 */
+		public synchronized Date getJoinDate() {
+			FileManager clan = ClansAPI.getData().getClanFile(getClan());
+			Node user_data = clan.getRoot().getNode("user-data");
+			Node user = user_data.getNode(player.toString());
+			Node date = user.getNode("join-date");
+			Primitive d = date.toPrimitive();
+			return d.isLong() ? new Date(d.getLong()) : new Date();
+		}
+
+		/**
+		 * @return Gets the associates kill/death ratio.
+		 */
+		public synchronized double getKD() {
+			OfflinePlayer player = Bukkit.getOfflinePlayer(this.player);
+			if (!Bukkit.getVersion().contains("1.14") || !Bukkit.getVersion().contains("1.15") || !Bukkit.getVersion().contains("1.16")
+					|| !Bukkit.getVersion().contains("1.17")) {
+				return 0.0;
+			}
+			int kills = player.getStatistic(Statistic.PLAYER_KILLS);
+			int deaths = player.getStatistic(Statistic.DEATHS);
+			double result;
+			if (deaths == 0) {
+				result = kills;
+			} else {
+				double value = (double) kills / deaths;
+				result = Math.round(value);
+			}
+			return result;
+		}
+
+		/**
+		 * Update the associates clan biography.
+		 *
+		 * @param newBio The new biography to set to the associate
+		 */
+		public synchronized void setBio(String newBio) {
+			FileManager clan = ClansAPI.getData().getClanFile(getClan());
+			Node user_data = clan.getRoot().getNode("user-data");
+			Node user = user_data.getNode(player.toString());
+			Node bio = user.getNode("bio");
+			bio.set(newBio);
+			((Root) bio).save();
+			if (getPlayer().isOnline()) {
+				Claim.ACTION.sendMessage(getPlayer().getPlayer(), MessageFormat.format(ClansAPI.getData().getMessageResponse("member-bio"), newBio));
+			}
+		}
+
+		/**
+		 * Update the associates clan nick-name;
+		 *
+		 * @param newName The new nick name
+		 */
+		public synchronized void setNickname(String newName) {
+			FileManager clan = ClansAPI.getData().getClanFile(getClan());
+			Node user_data = clan.getRoot().getNode("user-data");
+			Node user = user_data.getNode(player.toString());
+			Node bio = user.getNode("nickname");
+			if (newName.equals("empty")) {
+				bio.set(getName());
+				newName = getPlayer().getName();
+			} else {
+				bio.set(newName);
+			}
+			((Root) bio).save();
+			if (getPlayer().isOnline()) {
+				ACTION.sendMessage(getPlayer().getPlayer(), MessageFormat.format(ClansAPI.getData().getMessageResponse("nickname"), newName));
+			}
+		}
+
+		public synchronized void kick() {
+			ACTION.kickPlayer(getPlayer().getUniqueId());
+		}
+
+		public abstract static class Teleport {
+
+			private static final Set<Teleport> REQUESTS = new HashSet<>();
+
+			private final Player target;
+
+			private final Date date;
+
+			private Date accepted;
+
+			private State state;
+
+			private final Associate associate;
+
+			protected Teleport(Associate teleporter, Player target) {
+				this.target = target;
+				this.associate = teleporter;
+				this.date = new Date();
+				this.state = State.INITIALIZED;
+				REQUESTS.add(this);
+			}
+
+			public Associate getAssociate() {
+				return associate;
+			}
+
+			public TimeWatch.Recording getRecording() {
+				return TimeWatch.Recording.subtract(date.getTime());
+			}
+
+			public TimeWatch.Recording getAccepted() {
+				return TimeWatch.Recording.subtract(accepted.getTime());
+			}
+
+			public Player getTarget() {
+				return target;
+			}
+
+			public void setState(State state) {
+				this.state = state;
+			}
+
+			public State getState() {
+				return this.state;
+			}
+
+			public void teleport() {
+				Message.form(getAssociate().getPlayer().getPlayer()).setPrefix(ClansAPI.getInstance().getPrefix().joined()).send("&aTeleporting in 10 seconds, don't move.");
+				Message.form(getTarget()).setPrefix(ClansAPI.getInstance().getPrefix().joined()).send("&a" + associate.getPlayer().getName() + " is teleporting to you.");
+				this.state = State.TELEPORTING;
+				this.accepted = new Date();
+				Schedule.sync(() -> {
+					if (getState() == State.TELEPORTING) {
+						associate.getPlayer().getPlayer().teleport(getTarget());
+						cancel();
+						associate.getPlayer().getPlayer().getWorld().playSound(associate.getPlayer().getPlayer().getLocation(), Sound.ENTITY_VILLAGER_AMBIENT, 10, 1);
+					} else {
+						cancel();
+					}
+				}).waitReal(20 * 10);
+			}
+
+			public void cancel() {
+				REQUESTS.remove(this);
+			}
+
+			public static Teleport get(Associate associate) {
+				return REQUESTS.stream().filter(r -> r.getAssociate().equals(associate)).findFirst().orElse(null);
+			}
+
+			public static class Impl extends Teleport {
+				public Impl(Associate teleporter, Player target) {
+					super(teleporter, target);
+				}
+			}
+
+			public enum State {
+				INITIALIZED, TELEPORTING, EXPIRED;
+			}
+
+		}
+	}
+
+	class Color {
+
+		private final Clan parent;
+		private String start;
+		private String end;
+
+		public Color(Clan c) {
+			this.parent = c;
+		}
+
+		public Color setStart(String start) {
+			this.start = start;
+			return this;
+		}
+
+		public Color setEnd(String end) {
+			this.end = end;
+			return this;
+		}
+
+		public boolean isGradient() {
+			return end != null;
+		}
+
+		@Override
+		public String toString() {
+			return isGradient() ? toGradient().context(parent.getName()).translate() : this.start;
+		}
+
+		public String getStart() {
+			return start;
+		}
+
+		public String getEnd() {
+			return end;
+		}
+
+		public GradientColor toGradient() {
+			return new GradientColor(this.start, this.end);
+		}
+
+	}
 }

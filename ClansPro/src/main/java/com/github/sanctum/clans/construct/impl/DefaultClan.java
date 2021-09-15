@@ -1,22 +1,25 @@
 package com.github.sanctum.clans.construct.impl;
 
 import com.github.sanctum.clans.construct.Claim;
-import com.github.sanctum.clans.construct.ClanAssociate;
 import com.github.sanctum.clans.construct.DataManager;
 import com.github.sanctum.clans.construct.RankPriority;
 import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClanBank;
 import com.github.sanctum.clans.construct.api.ClanCooldown;
 import com.github.sanctum.clans.construct.api.ClansAPI;
-import com.github.sanctum.clans.construct.extra.ClanWar;
+import com.github.sanctum.clans.construct.api.PermissionLog;
 import com.github.sanctum.clans.construct.extra.ClanWrapper;
 import com.github.sanctum.clans.events.command.OtherInformationAdaptEvent;
 import com.github.sanctum.clans.events.core.LandClaimedEvent;
 import com.github.sanctum.labyrinth.LabyrinthProvider;
+import com.github.sanctum.labyrinth.api.Service;
+import com.github.sanctum.labyrinth.data.DataTable;
 import com.github.sanctum.labyrinth.data.EconomyProvision;
 import com.github.sanctum.labyrinth.data.FileManager;
+import com.github.sanctum.labyrinth.data.Node;
 import com.github.sanctum.labyrinth.event.custom.Vent;
 import com.github.sanctum.labyrinth.formatting.UniformedComponents;
+import com.github.sanctum.labyrinth.formatting.string.RandomHex;
 import com.github.sanctum.labyrinth.formatting.string.RandomID;
 import com.github.sanctum.labyrinth.library.HUID;
 import com.github.sanctum.labyrinth.library.NamespacedKey;
@@ -27,12 +30,15 @@ import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.Spliterator;
 import java.util.UUID;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import org.bukkit.Bukkit;
@@ -48,7 +54,6 @@ public class DefaultClan implements Clan {
 
 	private static final long serialVersionUID = 427254537180595211L;
 	private final String clanID;
-	private ClanWar clanWar = null;
 	private boolean peaceful;
 	private boolean friendlyfire;
 	private double powerBonus;
@@ -57,9 +62,8 @@ public class DefaultClan implements Clan {
 	private String name;
 	private String description;
 	private Location base;
-	private String color;
 	transient NamespacedKey key;
-	private final Set<ClanAssociate> associates = new HashSet<>();
+	private final Set<Associate> associates = new HashSet<>();
 	private final List<Clan> warInvites = new ArrayList<>();
 	private final Set<Claim> claims = new HashSet<>();
 	private final List<String> allies = new ArrayList<>();
@@ -67,136 +71,142 @@ public class DefaultClan implements Clan {
 	protected final List<String> requests = new ArrayList<>();
 	private final UniformedComponents<Clan> allyList;
 	private final UniformedComponents<Clan> enemyList;
+	private final Color palette;
 
 	/**
-	 * Create a clan object using a clanID
-	 * See ClanAction for getting id.
-	 * If using a player object it is recommended to
-	 * use the clanManager from main class HempfestClans.java
-	 *
-	 * @param clanID The id to store in the object.
+	 * @deprecated for internal use only!!!
 	 */
+	@Deprecated
+	public DefaultClan() {
+		this.clanID = "dummy";
+		this.allyList = UniformedComponents.accept(new ArrayList<>());
+		this.enemyList = UniformedComponents.accept(new ArrayList<>());
+		this.palette = null;
+	}
+
 	public DefaultClan(String clanID) {
 		this.clanID = clanID;
 		this.key = new NamespacedKey(ClansAPI.getInstance().getPlugin(), clanID);
 		this.allyList = new ClanWrapper(this, ClanWrapper.RelationType.Ally);
 		this.enemyList = new ClanWrapper(this, ClanWrapper.RelationType.Enemy);
-
+		boolean isNew = LabyrinthProvider.getService(Service.LEGACY).isNew();
+		this.palette = new Color(this).setStart(isNew ? "#" + new RandomHex().getStart() : "&f");
 		FileManager c = DataManager.FileType.CLAN_FILE.get(clanID);
 
-		if (c.exists() && c.getConfig().getString("name") != null) {
-			this.name = c.readValue(f -> f.getString("name"));
-
-			if (c.readValue(f -> f.isString("name-color"))) {
-				this.color = c.getConfig().getString("name-color");
+		if (c.read(f -> f.exists() && f.getString("name") != null)) {
+			this.name = c.read(f -> f.getString("name"));
+			if (c.read(f -> f.isString("name-color"))) {
+				getPalette().setStart(c.getRoot().getString("name-color"));
+				c.write(t -> t.set("name-color", null)
+						.set("color.start", getPalette().getStart()));
 			}
 
-			if (c.readValue(f -> f.isString("password"))) {
-				this.password = c.getConfig().getString("password");
+			if (c.read(f -> f.isString("color.start"))) {
+				getPalette().setStart(c.getRoot().getString("color.start"));
+				if (c.read(f -> f.isString("color.end"))) {
+					getPalette().setEnd(c.getRoot().getString("color.end"));
+				}
 			}
 
-			if (c.readValue(f -> f.isDouble("bonus"))) {
-				this.powerBonus = c.getConfig().getDouble("bonus");
+			if (c.read(f -> f.isString("password"))) {
+				this.password = c.getRoot().getString("password");
 			}
 
-			if (c.readValue(f -> f.isDouble("claim-bonus"))) {
-				this.claimBonus = c.getConfig().getDouble("claim-bonus");
+			if (c.read(f -> f.isDouble("bonus"))) {
+				this.powerBonus = c.getRoot().getDouble("bonus");
 			}
 
-			if (c.readValue(f -> f.isString("description"))) {
-				this.description = c.getConfig().getString("description");
+			if (c.read(f -> f.isDouble("claim-bonus"))) {
+				this.claimBonus = c.getRoot().getDouble("claim-bonus");
 			}
 
-			allies.addAll(c.readValue(f -> f.getStringList("allies")));
+			if (c.read(f -> f.isString("description"))) {
+				this.description = c.getRoot().getString("description");
+			}
 
-			enemies.addAll(c.readValue(f -> f.getStringList("enemies")));
+			allies.addAll(c.read(f -> f.getStringList("allies")));
 
-			requests.addAll(c.readValue(f -> f.getStringList("ally-requests")));
+			enemies.addAll(c.read(f -> f.getStringList("enemies")));
 
-			if (c.readValue(f -> f.isConfigurationSection("base"))) {
-				if (c.getLegacySafeLocation("base") == null) {
-					double x = c.getConfig().getDouble("base.x");
-					double y = c.getConfig().getDouble("base.y");
-					double z = c.getConfig().getDouble("base.z");
-					float yaw = c.getConfig().getFloatList("base.float").get(0);
-					float pitch = c.getConfig().getFloatList("base.float").get(1);
-					World w = Bukkit.getWorld(Objects.requireNonNull(c.getConfig().getString("base.world")));
+			requests.addAll(c.read(f -> f.getStringList("ally-requests")));
+
+			if (c.read(f -> f.isNode("base"))) {
+				if (!c.read(f -> f.isLocation("base"))) {
+					Node base = c.getRoot().getNode("base");
+
+					double x = base.getNode("x").toPrimitive().getDouble();
+					double y = base.getNode("y").toPrimitive().getDouble();
+					double z = base.getNode("z").toPrimitive().getDouble();
+					float yaw = base.getNode("float").toPrimitive().getFloatList().get(0);
+					float pitch = base.getNode("float").toPrimitive().getFloatList().get(1);
+					World w = Bukkit.getWorld(Objects.requireNonNull(c.getRoot().getString("base.world")));
 					if (w == null) {
-						w = Bukkit.getWorld(Objects.requireNonNull(ClansAPI.getData().getMain().getConfig().getString("Clans.raid-shield.main-world")));
+						w = Bukkit.getWorld(Objects.requireNonNull(ClansAPI.getData().getMain().getRoot().getString("Clans.raid-shield.main-world")));
 					}
 					this.base = new Location(w, x, y, z, yaw, pitch);
-					c.getConfig().set("base", this.base);
-					c.saveConfig();
+					c.write(t -> t.set("base", this.base));
 				} else {
-					this.base = c.getLegacySafeLocation("base");
+					this.base = c.read(f -> f.getLocation("base"));
 				}
 
 			} else {
-				if (c.getLegacySafeLocation("base") != null) {
-					this.base = c.getLegacySafeLocation("base");
+				if (c.read(f -> f.isLocation("base"))) {
+					this.base = c.read(f -> f.getLocation("base"));
 				}
 			}
-			if (c.readValue(f -> f.isConfigurationSection("members"))) {
+			if (c.read(f -> f.isNode("members"))) {
 				// Look how simple the new format is...
-				for (String rank : c.readValue(f -> f.getConfigurationSection("members").getKeys(false))) {
+				for (String rank : c.read(f -> f.getNode("members").getKeys(false))) {
+
 					RankPriority priority = RankPriority.valueOf(rank);
-					for (String mem : c.readValue(f -> f.getStringList("members." + rank))) {
-						associates.add(new ClanAssociate(UUID.fromString(mem), priority, getId()));
+					for (String mem : c.read(f -> f.getStringList("members." + rank))) {
+						associates.add(new Associate(UUID.fromString(mem), priority, getId()));
 					}
 				}
 			} else {
 				// Cleaning up old format.
 				Map<UUID, RankPriority> map = new HashMap<>();
-				for (String m : c.readValue(f -> f.getStringList("members"))) {
+				for (String m : c.read(f -> f.getStringList("members"))) {
 					map.put(UUID.fromString(m), RankPriority.NORMAL);
 				}
-				Schedule.sync(() -> {
-					c.getConfig().set("members", null);
-					c.saveConfig();
-				}).run();
-				for (String m : c.readValue(f -> f.getStringList("moderators"))) {
+				Schedule.sync(() -> c.write(t -> t.set("members", null))).run();
+				for (String m : c.read(f -> f.getStringList("moderators"))) {
 					map.put(UUID.fromString(m), RankPriority.HIGH);
 				}
-				Schedule.sync(() -> {
-					c.getConfig().set("moderators", null);
-					c.saveConfig();
-				}).run();
-				for (String m : c.readValue(f -> f.getStringList("admins"))) {
+				Schedule.sync(() -> c.write(t -> t.set("moderators", null))).run();
+				for (String m : c.read(f -> f.getStringList("admins"))) {
 					map.put(UUID.fromString(m), RankPriority.HIGHER);
 				}
-				Schedule.sync(() -> {
-					c.getConfig().set("admins", null);
-					c.saveConfig();
-				}).run();
-				if (c.readValue(f -> f.isString("owner"))) {
-					map.put(UUID.fromString(c.readValue(f -> f.getString("owner"))), RankPriority.HIGHEST);
-					Schedule.sync(() -> {
-						c.getConfig().set("owner", null);
-						c.saveConfig();
-					}).run();
+				Schedule.sync(() -> c.write(t -> t.set("admins", null))).run();
+				if (c.read(f -> f.isString("owner"))) {
+					map.put(UUID.fromString(c.read(f -> f.getString("owner"))), RankPriority.HIGHEST);
+					Schedule.sync(() -> c.write(t -> t.set("owner", null))).run();
 				}
 				for (Map.Entry<UUID, RankPriority> entry : map.entrySet()) {
-					associates.add(new ClanAssociate(entry.getKey(), entry.getValue(), getId()));
+					associates.add(new Associate(entry.getKey(), entry.getValue(), getId()));
 				}
 
 			}
 
-			this.powerBonus = c.getConfig().getDouble("bonus");
+			this.powerBonus = c.read(f -> f.getDouble("bonus"));
 
-			this.peaceful = c.getConfig().getBoolean("peaceful");
+			this.peaceful = c.read(f -> f.getBoolean("peaceful"));
 
-			this.friendlyfire = c.getConfig().getBoolean("friendly-fire");
+			this.friendlyfire = c.read(f -> f.getBoolean("friendlyfire"));
 
+		}
+
+		PermissionLog log = getValue(PermissionLog.class, "permissions");
+		if (log == null) {
+			PermissionLog newLog = new PermissionLog();
+			setValue("permissions", newLog, false);
 		}
 
 	}
 
 	@Override
-	public synchronized ClanAssociate accept(UUID target) {
-		if (ClansAPI.getInstance().getAssociate(target).orElse(null) != null) {
-			return null;
-		}
-		if (ClansAPI.getInstance().getClanID(target) != null) {
+	public synchronized @Nullable Associate accept(UUID target) {
+		if (ClansAPI.getInstance().isInClan(target)) {
 			return null;
 		}
 		ACTION.joinClan(target, getName(), getPassword());
@@ -214,6 +224,11 @@ public class DefaultClan implements Clan {
 				}
 			});
 		return true;
+	}
+
+	@Override
+	public boolean isValid() {
+		return this.clanID != null && this.name != null;
 	}
 
 	@Override
@@ -240,9 +255,10 @@ public class DefaultClan implements Clan {
 	@Override
 	public boolean transferOwnership(UUID target) {
 		if (Objects.equals(ClansAPI.getInstance().getClan(target), this)) {
-			ClanAssociate owner = getOwner();
+			Associate owner = getOwner();
+			Associate mem = getMember(m -> m.getPlayer().getUniqueId().equals(target));
+			if (mem == null) return false;
 			owner.setPriority(RankPriority.NORMAL);
-			ClanAssociate mem = getMember(m -> m.getPlayer().getUniqueId().equals(target));
 			mem.setPriority(RankPriority.HIGHEST);
 			save();
 			return true;
@@ -264,7 +280,7 @@ public class DefaultClan implements Clan {
 	@Override
 	public void setName(String newTag) {
 		this.name = newTag;
-		String format = MessageFormat.format(ClansAPI.getData().getMessage("tag-change"), newTag);
+		String format = MessageFormat.format(ClansAPI.getData().getMessageResponse("tag-change"), newTag);
 		broadcast(format);
 	}
 
@@ -282,12 +298,12 @@ public class DefaultClan implements Clan {
 			return;
 		}
 		this.password = newPassword;
-		broadcast(MessageFormat.format(ClansAPI.getData().getMessage("password-change"), newPassword));
+		broadcast(MessageFormat.format(ClansAPI.getData().getMessageResponse("password-change"), newPassword));
 	}
 
 	@Override
 	public void setColor(String newColor) {
-		this.color = newColor;
+		getPalette().setStart(newColor);
 		broadcast(newColor + "The clan name color has been changed.");
 	}
 
@@ -301,14 +317,10 @@ public class DefaultClan implements Clan {
 		this.friendlyfire = friendlyFire;
 	}
 
-	public void setCurrentWar(ClanWar war) {
-		this.clanWar = war;
-	}
-
 	@Override
 	public void setBase(@NotNull Location loc) {
 		this.base = loc;
-		String format = MessageFormat.format(ClansAPI.getData().getMessage("base-changed"), loc.getWorld().getName());
+		String format = MessageFormat.format(ClansAPI.getData().getMessageResponse("base-changed"), loc.getWorld().getName());
 		broadcast(format);
 	}
 
@@ -328,12 +340,12 @@ public class DefaultClan implements Clan {
 	}
 
 	@Override
-	public synchronized @NotNull ClanAssociate getOwner() {
+	public synchronized @NotNull Clan.Associate getOwner() {
 		return associates.stream().filter(a -> a.getPriority() == RankPriority.HIGHEST).findFirst().get();
 	}
 
 	@Override
-	public ClanAssociate getMember(Predicate<ClanAssociate> predicate) {
+	public Associate getMember(Predicate<Associate> predicate) {
 		return associates.stream().filter(predicate).findFirst().orElse(null);
 	}
 
@@ -344,54 +356,64 @@ public class DefaultClan implements Clan {
 
 	@Override
 	public synchronized @NotNull String getColor() {
-		return this.color != null ? this.color : "&f";
+		return palette.getStart();
+	}
+
+	@Override
+	public @NotNull Clan.Color getPalette() {
+		return this.palette;
 	}
 
 	@Override
 	public synchronized String[] getMemberIds() {
-		return getMembers().stream().map(ClanAssociate::getPlayer).map(OfflinePlayer::getUniqueId).map(UUID::toString).toArray(String[]::new);
+		return getMembers().stream().map(Associate::getPlayer).map(OfflinePlayer::getUniqueId).map(UUID::toString).toArray(String[]::new);
 	}
 
 	@Override
-	public @NotNull Set<ClanAssociate> getMembers() {
+	public @NotNull Set<Associate> getMembers() {
 		return this.associates;
 	}
 
 	@Override
 	public void save() {
-
 		FileManager file = ClansAPI.getData().getClanFile(this);
-		file.getConfig().set("name", getName());
-		file.getConfig().set("base", getBase());
-		file.getConfig().set("name-color", getColor());
-		file.getConfig().set("description", getDescription());
-		file.getConfig().set("password", getPassword());
-		file.getConfig().set("bonus", this.powerBonus);
-		file.getConfig().set("claim-bonus", this.claimBonus);
-		file.getConfig().set("peaceful", this.peaceful);
-		file.getConfig().set("friendlyfire", this.friendlyfire);
-		file.getConfig().set("allies", allies);
-		file.getConfig().set("enemies", enemies);
-		if (!getAllyRequests().isEmpty()) {
-			file.getConfig().set("ally-requests", getAllyRequests());
+		DataTable table = DataTable.newTable();
+		table.set("name", getName());
+		table.set("base", getBase());
+		if (getPalette().isGradient()) {
+			table.set("color.start", getPalette().getStart());
+			table.set("color.end", getPalette().getEnd());
+		} else {
+			table.set("color.start", getPalette().getStart());
 		}
-		Map<RankPriority, List<ClanAssociate>> map = new HashMap<>();
+		table.set("description", getDescription());
+		table.set("password", getPassword());
+		table.set("bonus", this.powerBonus);
+		table.set("claim-bonus", this.claimBonus);
+		table.set("peaceful", this.peaceful);
+		table.set("friendlyfire", this.friendlyfire);
+		table.set("allies", allies);
+		table.set("enemies", enemies);
+		if (!getAllyRequests().isEmpty()) {
+			table.set("ally-requests", getAllyRequests());
+		}
+		Map<RankPriority, List<Associate>> map = new HashMap<>();
 
 		for (RankPriority v : RankPriority.values()) {
 			map.put(v, new ArrayList<>());
 		}
 
-		for (ClanAssociate ass : getMembers()) {
-			List<ClanAssociate> list = map.get(ass.getPriority());
+		for (Associate ass : getMembers()) {
+			List<Associate> list = map.get(ass.getPriority());
 			list.add(ass);
 			map.put(ass.getPriority(), list);
 		}
 
-		for (Map.Entry<RankPriority, List<ClanAssociate>> entry : map.entrySet()) {
-			file.getConfig().set("members." + entry.getKey().name(), entry.getValue().stream().map(ClanAssociate::getPlayer).map(OfflinePlayer::getUniqueId).map(UUID::toString).collect(Collectors.toList()));
+		for (Map.Entry<RankPriority, List<Associate>> entry : map.entrySet()) {
+			table.set("members." + entry.getKey().name(), entry.getValue().stream().map(Associate::getPlayer).map(OfflinePlayer::getUniqueId).map(UUID::toString).collect(Collectors.toList()));
 		}
 
-		file.saveConfig();
+		file.write(table);
 
 	}
 
@@ -411,8 +433,8 @@ public class DefaultClan implements Clan {
 		int claimAmount = getOwnedClaims().length;
 		result = result + add + (claimAmount * multiplier);
 		double bonus = this.powerBonus;
-		if (ClansAPI.getData().getEnabled("Clans.banks.influence")) {
-			if (Bukkit.getPluginManager().isPluginEnabled("Vault") || Bukkit.getPluginManager().isPluginEnabled("Enterprise")) {
+		if (ClansAPI.getData().isTrue("Clans.banks.influence")) {
+			if (EconomyProvision.getInstance().isValid()) {
 				double bal = getBalance().doubleValue();
 				if (bal != 0) {
 					bonus += bal / 48.94;
@@ -450,10 +472,10 @@ public class DefaultClan implements Clan {
 
 	@Override
 	public synchronized int getMaxClaims() {
-		if (!ClansAPI.getData().getEnabled("Clans.land-claiming.claim-influence.allow")) {
+		if (!ClansAPI.getData().isTrue("Clans.land-claiming.claim-influence.allow")) {
 			return 0;
 		}
-		if (ClansAPI.getData().getString("Clans.land-claiming.claim-influence.dependence").equalsIgnoreCase("LOW")) {
+		if (ClansAPI.getData().getConfigString("Clans.land-claiming.claim-influence.dependence").equalsIgnoreCase("LOW")) {
 			this.claimBonus += 13.33;
 		}
 		if (getBalance() != null) {
@@ -508,29 +530,25 @@ public class DefaultClan implements Clan {
 		return this.requests;
 	}
 
-	public @Nullable ClanWar getCurrentWar() {
-		return clanWar;
-	}
-
 	@Override
 	public synchronized int getWins() {
 		FileManager c = DataManager.FileType.CLAN_FILE.get(clanID);
-		return c.getConfig().getInt("wars-won");
+		return c.getRoot().getInt("wars-won");
 	}
 
 	@Override
 	public synchronized int getLosses() {
 		FileManager c = DataManager.FileType.CLAN_FILE.get(clanID);
-		return c.getConfig().getInt("wars-lost");
+		return c.getRoot().getInt("wars-lost");
 	}
 
 	@Override
 	public synchronized String[] getClanInfo() {
 		List<String> array = new ArrayList<>();
 		String password = this.password;
-		List<String> members = getMembers().stream().filter(m -> m.getPriority().toInt() == 0).map(ClanAssociate::getPlayer).map(OfflinePlayer::getName).collect(Collectors.toList());
-		List<String> mods = getMembers().stream().filter(m -> m.getPriority().toInt() == 1).map(ClanAssociate::getPlayer).map(OfflinePlayer::getName).collect(Collectors.toList());
-		List<String> admins = getMembers().stream().filter(m -> m.getPriority().toInt() == 2).map(ClanAssociate::getPlayer).map(OfflinePlayer::getName).collect(Collectors.toList());
+		List<String> members = getMembers().stream().filter(m -> m.getPriority().toInt() == 0).map(Associate::getPlayer).map(OfflinePlayer::getName).collect(Collectors.toList());
+		List<String> mods = getMembers().stream().filter(m -> m.getPriority().toInt() == 1).map(Associate::getPlayer).map(OfflinePlayer::getName).collect(Collectors.toList());
+		List<String> admins = getMembers().stream().filter(m -> m.getPriority().toInt() == 2).map(Associate::getPlayer).map(OfflinePlayer::getName).collect(Collectors.toList());
 		List<String> allies = getAllies().map(Clan::getId).map(HUID::toString).collect(Collectors.toList());
 		List<String> enemies = getEnemies().map(Clan::getId).map(HUID::toString).collect(Collectors.toList());
 		String status = "LOCKED";
@@ -551,8 +569,8 @@ public class DefaultClan implements Clan {
 			array.add("&2Mode: &f&lPEACE");
 		if (!isPeaceful())
 			array.add("&2Mode: &4&lWAR");
-		array.add("&2" + ClansAPI.getData().getMain().getConfig().getString("Formatting.Chat.Styles.Full.Admin") + "s [&b" + admins.size() + "&2]");
-		array.add("&2" + ClansAPI.getData().getMain().getConfig().getString("Formatting.Chat.Styles.Full.Moderator") + "s [&e" + mods.size() + "&2]");
+		array.add("&2" + ClansAPI.getData().getMain().getRoot().getString("Formatting.Chat.Styles.Full.Admin") + "s [&b" + admins.size() + "&2]");
+		array.add("&2" + ClansAPI.getData().getMain().getRoot().getString("Formatting.Chat.Styles.Full.Moderator") + "s [&e" + mods.size() + "&2]");
 		array.add("&2Claims [&e" + getOwnedClaimsList().length + "&2]");
 		array.add("&f&m---------------------------");
 		if (allies.isEmpty())
@@ -572,7 +590,7 @@ public class DefaultClan implements Clan {
 			}
 		}
 		array.add("&f&m---------------------------");
-		array.add("&n" + ClansAPI.getData().getMain().getConfig().getString("Formatting.Chat.Styles.Full.Member") + "s&r [&7" + members.size() + "&r] - " + members.toString());
+		array.add("&n" + ClansAPI.getData().getMain().getRoot().getString("Formatting.Chat.Styles.Full.Member") + "s&r [&7" + members.size() + "&r] - " + members.toString());
 		array.add(" ");
 		OtherInformationAdaptEvent event = new Vent.Call<>(Vent.Runtime.Synchronous, new OtherInformationAdaptEvent(array, clanID)).run();
 		return event.getInsertions().toArray(new String[0]);
@@ -644,7 +662,7 @@ public class DefaultClan implements Clan {
 	}
 
 	@Override
-	public void broadcast(Predicate<ClanAssociate> predicate, String message) {
+	public void broadcast(Predicate<Associate> predicate, String message) {
 		for (Player p : Bukkit.getOnlinePlayers()) {
 			ClansAPI.getInstance().getAssociate(p).ifPresent(a -> {
 				if (equals(a.getClan())) {
@@ -684,7 +702,7 @@ public class DefaultClan implements Clan {
 					chunkCount++;
 				}
 			}
-			if (ClansAPI.getData().getEnabled("Clans.land-claiming.claim-connections")) {
+			if (ClansAPI.getData().isTrue("Clans.land-claiming.claim-connections")) {
 				if (getOwnedClaimsList().length >= 1 && chunkCount == 0) {
 					return null;
 				}
@@ -695,10 +713,11 @@ public class DefaultClan implements Clan {
 			int z = c.getZ();
 			String world = c.getWorld().getName();
 			FileManager d = ClansAPI.getInstance().getClaimManager().getFile();
-			d.getConfig().set(getId().toString() + ".Claims." + claimID + ".X", x);
-			d.getConfig().set(getId().toString() + ".Claims." + claimID + ".Z", z);
-			d.getConfig().set(getId().toString() + ".Claims." + claimID + ".World", world);
-			d.saveConfig();
+			DataTable table = DataTable.newTable();
+			table.set(getId().toString() + ".Claims." + claimID + ".X", x);
+			table.set(getId().toString() + ".Claims." + claimID + ".Z", z);
+			table.set(getId().toString() + ".Claims." + claimID + ".World", world);
+			d.write(table);
 			claim = new Claim(x, z, clanID, claimID, world, true);
 			ClansAPI.getInstance().getClaimManager().load(claim);
 			broadcast(Claim.ACTION.claimed(x, z, world));
@@ -710,53 +729,49 @@ public class DefaultClan implements Clan {
 	@Override
 	public synchronized void givePower(double amount) {
 		this.powerBonus += amount;
-		broadcast("&a&oNew power was gained. The clan grows stronger..");
+		broadcast("&fPower: &a+" + amount);
 		ClansAPI.getInstance().getPlugin().getLogger().info("- Gave " + '"' + amount + '"' + " power to clan " + '"' + clanID + '"');
 	}
 
 	@Override
 	public synchronized void takePower(double amount) {
 		this.powerBonus -= amount;
-		broadcast("&c&oPower was stolen from us.. we need to earn it back");
+		broadcast("&fPower: &c-" + amount);
 		ClansAPI.getInstance().getPlugin().getLogger().info("- Took " + '"' + amount + '"' + " power from clan " + '"' + clanID + '"');
 	}
 
 	@Override
 	public synchronized void addMaxClaim(int amount) {
 		this.claimBonus += amount;
-		broadcast("&a&oNew power was gained. The clan grows stronger..");
+		broadcast("&fClaims: &a+" + amount);
 		ClansAPI.getInstance().getPlugin().getLogger().info("- Gave " + '"' + amount + '"' + " claim(s) to clan " + '"' + clanID + '"');
 	}
 
 	@Override
 	public synchronized void takeMaxClaim(int amount) {
 		this.claimBonus -= amount;
-		broadcast("&c&oPower was stolen from us.. we need to earn it back");
+		broadcast("&fClaims: &c-" + amount);
 		ClansAPI.getInstance().getPlugin().getLogger().info("- Took " + '"' + amount + '"' + " claim(s) from clan " + '"' + clanID + '"');
 	}
 
 	@Override
 	public synchronized void addWin(int amount) {
 		FileManager c = DataManager.FileType.CLAN_FILE.get(clanID);
-		if (!c.getConfig().isInt("wars-won")) {
-			c.getConfig().set("wars-won", 0.0);
-			c.refreshConfig();
+		if (!c.getRoot().isInt("wars-won")) {
+			c.write(t -> t.set("wars-won", 0.0));
 		}
-		int current = c.getConfig().getInt("wars-won");
-		c.getConfig().set("wars-won", (current + amount));
-		c.refreshConfig();
+		int current = c.getRoot().getInt("wars-won");
+		c.write(t -> t.set("wars-won", (current + amount)));
 	}
 
 	@Override
 	public synchronized void addLoss(int amount) {
 		FileManager c = DataManager.FileType.CLAN_FILE.get(clanID);
-		if (!c.getConfig().isInt("wars-lost")) {
-			c.getConfig().set("wars-lost", 0.0);
-			c.saveConfig();
+		if (!c.getRoot().isInt("wars-lost")) {
+			c.write(f -> f.set("wars-lost", 0.0));
 		}
-		int current = c.getConfig().getInt("wars-lost");
-		c.getConfig().set("wars-lost", (current - amount));
-		c.saveConfig();
+		int current = c.getRoot().getInt("wars-lost");
+		c.write(f -> f.set("wars-lost", (current - amount)));
 	}
 
 	@Override
@@ -898,5 +913,46 @@ public class DefaultClan implements Clan {
 	@Override
 	public Implementation getImplementation() {
 		return Implementation.DEFAULT;
+	}
+
+	@Override
+	public int compareTo(@NotNull Clan o) {
+		return Double.compare(getPower(), o.getPower());
+	}
+
+	@NotNull
+	@Override
+	public Iterator<Associate> iterator() {
+		return getMembers().iterator();
+	}
+
+	@Override
+	public void forEach(Consumer<? super Associate> action) {
+		getMembers().forEach(action);
+	}
+
+	@Override
+	public Spliterator<Associate> spliterator() {
+		return getMembers().spliterator();
+	}
+
+	@Override
+	public String relate(Clan b) {
+		String result = "&f&o";
+		if (ACTION.getAllClanIDs().contains(b.getId().toString())) {
+			if (isNeutral(b.getId().toString())) {
+				result = "&f";
+			}
+			if (getId().equals(b.getId())) {
+				result = "&6";
+			}
+			if (getAllyList().contains(b.getId().toString())) {
+				result = "&a";
+			}
+			if (getEnemyList().contains(b.getId().toString())) {
+				result = "&c";
+			}
+		}
+		return result;
 	}
 }
