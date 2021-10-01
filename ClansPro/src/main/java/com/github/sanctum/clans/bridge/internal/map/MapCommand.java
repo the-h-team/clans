@@ -318,16 +318,16 @@ public class MapCommand implements Listener {
 
         if (ec != null) {
 
-            boolean enhanced = ec.getServiceManager().getRegistration(Boolean.class, ec).getService();
+            boolean enhanced = ec.getServicesManager().getRegistration(Boolean.class, ec).getService();
 
             if (enhanced) {
 
                 if (LabyrinthProvider.getInstance().isLegacy()) {
-	                Clan.ACTION.sendMessage(e.getPlayer(), "&cLegacy detected! Enhanced map view requires 1.14+");
-	                ClansAPI.getInstance().getPlugin().getLogger().warning("- Legacy detected enhanced map view not available until 1.14+");
-	                ec.getServiceManager().unregisterAll(ec);
-	                ec.getServiceManager().register(false, ec, ServicePriority.Highest);
-	                return;
+                    Clan.ACTION.sendMessage(e.getPlayer(), "&cLegacy detected! Enhanced map view requires 1.14+");
+                    ClansAPI.getInstance().getPlugin().getLogger().warning("- Legacy detected enhanced map view not available until 1.14+");
+                    ec.getServicesManager().unregisterAll(ec);
+                    ec.getServicesManager().register(false, ec, ServicePriority.Highest);
+                    return;
                 }
 
                 List<String> top_new = new LinkedList<>();

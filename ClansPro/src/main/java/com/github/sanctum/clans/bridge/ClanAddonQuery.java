@@ -147,55 +147,59 @@ public class ClanAddonQuery {
 		return true;
 	}
 
-	public static void register(Class<? extends ClanAddon> cycle) {
+	public static void register(ClanAddon addon) {
 
-		ClanException.call(ClanAddonRegistrationException::new).check(getAddon(cycle.getName())).run("Addon's can only be registered one time!", true);
+		ClanException.call(ClanAddonRegistrationException::new).check(getAddon(addon.getName())).run("Addon's can only be registered one time!", true);
 
 		Plugin PRO = ClansAPI.getInstance().getPlugin();
 		Logger l = PRO.getLogger();
+		load(addon);
+		adjust(addon);
+		for (String precursor : addon.getContext().getDependencies()) {
+			ClanAddon a = ClanAddonQuery.getAddon(precursor);
+			ClanException.call(ClanAddonDependencyException::new).check(a).run("Missing dependency " + precursor + " for addon " + addon.getName() + ". Please install the missing dependency for this addon.");
+		}
+		addon.onEnable();
+		if (addon.isStaged()) {
+
+			l.info(" ");
+			l.info("▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬");
+			l.info("- Addon: " + addon.getName());
+			l.info("- Description: " + addon.getDescription());
+			l.info("- Persistent: (" + addon.isStaged() + ")");
+			l.info("▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬");
+			l.info(" ");
+			l.info("- Listeners: (" + addon.getContext().getListeners().length + ")");
+			for (Listener addition : addon.getContext().getListeners()) {
+				String format = addition.getClass().getSimpleName().isEmpty() ? "{REDACTED}" : addition.getClass().getSimpleName();
+				boolean registered = HandlerList.getRegisteredListeners(PRO).stream().anyMatch(r -> r.getListener().equals(addition));
+				if (!registered) {
+					l.info("- [" + addon.getName() + "] (+1) Listener " + format + " loaded");
+					LabyrinthProvider.getService(Service.VENT).subscribe(PRO, addition);
+				} else {
+					l.info("- [" + addon.getName() + "] (-1) Listener " + format + " already loaded. Skipping.");
+				}
+			}
+		} else {
+			l.info(" ");
+			l.info("- Addon: " + addon.getName());
+			l.info("- Description: " + addon.getDescription());
+			l.info("- Persistent: (" + addon.isStaged() + ")");
+			addon.remove();
+			l.info(" ");
+			l.info("- Listeners: (" + addon.getContext().getListeners().length + ")");
+			for (Listener addition : addon.getContext().getListeners()) {
+				l.info("- [" + addition.getClass().getSimpleName() + "] (+1) Listener failed to load due to no persistence.");
+			}
+		}
+	}
+
+	public static void register(Class<? extends ClanAddon> cycle) {
 		try {
 			ClanAddon c = cycle.newInstance();
-			load(c);
-			adjust(c);
-			for (String precursor : c.getContext().getDependencies()) {
-				ClanAddon addon = ClanAddonQuery.getAddon(precursor);
-				ClanException.call(ClanAddonDependencyException::new).check(addon).run("Missing dependency " + precursor + " for addon " + c.getName() + ". Please install the missing dependency for this addon.");
-			}
-			c.onEnable();
-			if (c.isStaged()) {
-
-				l.info(" ");
-				l.info("▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬");
-				l.info("- Addon: " + c.getName());
-				l.info("- Description: " + c.getDescription());
-				l.info("- Persistent: (" + c.isStaged() + ")");
-				l.info("▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬");
-				l.info(" ");
-				l.info("- Listeners: (" + c.getContext().getListeners().length + ")");
-				for (Listener addition : c.getContext().getListeners()) {
-					String format = addition.getClass().getSimpleName().isEmpty() ? "{REDACTED}" : addition.getClass().getSimpleName();
-					boolean registered = HandlerList.getRegisteredListeners(PRO).stream().anyMatch(r -> r.getListener().equals(addition));
-					if (!registered) {
-						l.info("- [" + c.getName() + "] (+1) Listener " + format + " loaded");
-						LabyrinthProvider.getService(Service.VENT).subscribe(PRO, addition);
-					} else {
-						l.info("- [" + c.getName() + "] (-1) Listener " + format + " already loaded. Skipping.");
-					}
-				}
-			} else {
-				l.info(" ");
-				l.info("- Addon: " + c.getName());
-				l.info("- Description: " + c.getDescription());
-				l.info("- Persistent: (" + c.isStaged() + ")");
-				c.remove();
-				l.info(" ");
-				l.info("- Listeners: (" + c.getContext().getListeners().length + ")");
-				for (Listener addition : c.getContext().getListeners()) {
-					l.info("- [" + addition.getClass().getSimpleName() + "] (+1) Listener failed to load due to no persistence.");
-				}
-			}
+			register(c);
 		} catch (InstantiationException | IllegalAccessException e) {
-			l.severe("- Unable to cast Addon to the class " + cycle.getName() + ". This likely means you are not implementing the Addon interface for your event class properly.");
+			ClansAPI.getInstance().getPlugin().getLogger().severe("- Unable to cast Addon to the class " + cycle.getName() + ". This likely means you are not implementing the Addon interface for your event class properly.");
 			e.printStackTrace();
 		}
 	}

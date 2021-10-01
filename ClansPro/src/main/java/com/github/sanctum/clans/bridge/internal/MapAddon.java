@@ -54,9 +54,9 @@ public class MapAddon extends ClanAddon {
 	@Override
 	public void onEnable() {
 
-		getServiceManager().unregisterAll(this);
+		getServicesManager().unregisterAll(this);
 
-		getServiceManager().register(ClansAPI.getData().isTrue("Addon.Map.enhanced"), this, ServicePriority.High);
+		getServicesManager().register(ClansAPI.getData().isTrue("Addon.Map.enhanced"), this, ServicePriority.High);
 
 		ClanVentBus.subscribe(CommandHelpInsertEvent.class, Vent.Priority.HIGH, (e, subscription) -> {
 
@@ -138,9 +138,9 @@ public class MapAddon extends ClanAddon {
 	@Override
 	public void onDisable() {
 
-		getServiceManager().unregisterAll(this);
+		getServicesManager().unregisterAll(this);
 
-		getServiceManager().register(false, this, ServicePriority.High);
+		getServicesManager().register(false, this, ServicePriority.High);
 
 	}
 }

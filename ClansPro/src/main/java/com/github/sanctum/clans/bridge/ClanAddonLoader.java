@@ -2,16 +2,14 @@ package com.github.sanctum.clans.bridge;
 
 import com.github.sanctum.labyrinth.library.Deployable;
 import java.io.File;
+import java.io.IOException;
 
 public interface ClanAddonLoader {
 
-	Class<?> forName(String name);
+	ClanAddon loadAddon(File jar) throws IOException, InvalidAddonException;
 
-	ClanAddon loadAddon(File jar);
+	Deployable<Void> enableAddon(ClanAddon addon);
 
-	Deployable<Void> loadJar(File jar);
-
-	Deployable<Void> loadFolder(File folder);
-
+	Deployable<Void> disableAddon(ClanAddon addon);
 
 }

@@ -3,6 +3,7 @@ package com.github.sanctum.clans;
 import com.github.sanctum.clans.bridge.ClanAddon;
 import com.github.sanctum.clans.bridge.ClanAddonDependencyException;
 import com.github.sanctum.clans.bridge.ClanAddonQuery;
+import com.github.sanctum.clans.bridge.ClanAddonRegistrationException;
 import com.github.sanctum.clans.bridge.ClanVentBus;
 import com.github.sanctum.clans.bridge.external.BountyAddon;
 import com.github.sanctum.clans.bridge.external.DynmapAddon;
@@ -26,7 +27,6 @@ import com.github.sanctum.labyrinth.LabyrinthProvider;
 import com.github.sanctum.labyrinth.api.Service;
 import com.github.sanctum.labyrinth.command.CommandRegistration;
 import com.github.sanctum.labyrinth.data.EconomyProvision;
-import com.github.sanctum.labyrinth.data.FileList;
 import com.github.sanctum.labyrinth.data.FileManager;
 import com.github.sanctum.labyrinth.data.Registry;
 import com.github.sanctum.labyrinth.event.custom.Vent;
@@ -35,8 +35,6 @@ import com.github.sanctum.labyrinth.library.Message;
 import com.github.sanctum.labyrinth.library.Metrics;
 import com.github.sanctum.labyrinth.task.Schedule;
 import com.github.sanctum.labyrinth.task.Synchronous;
-import java.io.File;
-import java.io.IOException;
 import java.text.MessageFormat;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -52,9 +50,9 @@ import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
 import org.bukkit.permissions.Permission;
 
-final class Beginning extends StartProcedure {
+final class Start extends StartProcedure {
 
-	public Beginning(ClansJavaPlugin clansJavaPlugin) {
+	Start(ClansJavaPlugin clansJavaPlugin) {
 		super(clansJavaPlugin);
 		then((start, instance) -> {
 			instance.getLogger().info("▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬");
@@ -69,22 +67,7 @@ final class Beginning extends StartProcedure {
 			instance.dataManager.copyDefaults();
 			new Registry<>(Listener.class).source(ClansAPI.getInstance().getPlugin()).pick("com.github.sanctum.clans.listener").operate(listener -> LabyrinthProvider.getService(Service.VENT).subscribe(instance, listener));
 			new Registry<>(Command.class).source(ClansAPI.getInstance().getPlugin()).pick("com.github.sanctum.clans.commands").operate(CommandRegistration::use);
-			File file = FileList.search(instance).get("dummy", "Addons").getRoot().getParent().getParentFile();
-			int amount = 0;
-			for (File f : file.listFiles()) {
-				if (f.isDirectory()) continue;
-				try {
-					ClanAddon addon = new ClanAddonClassLoader(f).addon;
-					ClanAddonQuery.load(addon);
-					sendBorder();
-					instance.getLogger().info("- Injected: " + addon.getName() + " v" + addon.getVersion());
-					sendBorder();
-					amount++;
-				} catch (IOException | InvalidAddonException e) {
-					e.printStackTrace();
-				}
-			}
-			instance.getLogger().info("- (" + amount + ") clan addon(s) were injected into cache.");
+			ClanAddonRegistrationException.getLoadingProcedure().run(instance).deploy();
 		}).then((start, instance) -> start.sendBorder()).then((start, instance) -> {
 			instance.getLogger().info("- Cleaning misc files.");
 			for (String id : Clan.ACTION.getAllClanIDs()) {

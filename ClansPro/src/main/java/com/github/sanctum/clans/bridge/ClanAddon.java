@@ -3,26 +3,26 @@ package com.github.sanctum.clans.bridge;
 import com.github.sanctum.clans.construct.api.ClanSubCommand;
 import com.github.sanctum.clans.construct.api.ClansAPI;
 import com.github.sanctum.labyrinth.LabyrinthProvider;
-import com.github.sanctum.labyrinth.data.AddonLoader;
 import com.github.sanctum.labyrinth.data.FileExtension;
 import com.github.sanctum.labyrinth.data.FileList;
 import com.github.sanctum.labyrinth.data.FileManager;
 import com.github.sanctum.labyrinth.data.FileType;
 import com.github.sanctum.labyrinth.data.container.KeyedServiceManager;
 import com.github.sanctum.labyrinth.data.service.AnnotationDiscovery;
+import com.github.sanctum.labyrinth.data.service.Check;
 import com.github.sanctum.labyrinth.event.custom.Subscribe;
 import com.github.sanctum.labyrinth.library.Deployable;
 import com.github.sanctum.labyrinth.library.HUID;
 import com.github.sanctum.labyrinth.library.Mailer;
 import com.github.sanctum.labyrinth.task.Schedule;
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -42,7 +42,10 @@ public abstract class ClanAddon {
 	private final ClassLoader classLoader;
 
 	protected ClanAddon() {
-		this.classLoader = this.getClass().getClassLoader();
+		ClassLoader loader = this.getClass().getClassLoader();
+		if (!(loader instanceof ClanAddonClassLoader) && !ClansAPI.class.getClassLoader().equals(loader))
+			throw new InvalidAddonStateException("Addon not provided by " + ClanAddonClassLoader.class);
+		this.classLoader = loader;
 		this.logger = new ClanAddonLogger() {
 			private final Logger LOG = Logger.getLogger("Minecraft");
 			private final String addon;
@@ -81,39 +84,39 @@ public abstract class ClanAddon {
 		};
 		this.loader = new ClanAddonLoader() {
 
-			private final AddonLoader loader;
-			private final Set<Class<?>> classes = new HashSet<>();
-
-			{
-				this.loader = AddonLoader.forPlugin(getPlugin());
+			@Override
+			public ClanAddon loadAddon(File jar) throws IOException, InvalidAddonException {
+				return new ClanAddonClassLoader(jar, ClanAddon.this).addon;
 			}
 
 			@Override
-			public Class<?> forName(String name) {
-				return classes.stream().filter(c -> c.getName().equals(name)).findFirst().orElse(null);
-			}
-
-			@Override
-			public ClanAddon loadAddon(File jar) {
-				List<Class<?>> classes = loader.loadFile(jar);
-				for (Class<?> c : classes) {
-					if (ClanAddon.class.isAssignableFrom(c)) {
-						ClanAddonQuery.register((Class<? extends ClanAddon>) c);
-						return getProvidingAddon(c);
+			public Deployable<Void> enableAddon(ClanAddon addon) {
+				return Deployable.of(null, unused -> {
+					if (addon.classLoader.getParent().equals(getClassLoader())) {
+						if (ClanAddonQuery.getAddon(addon.getName()) == null) {
+							ClanAddonQuery.register(addon);
+							return;
+						} else
+							throw new ClanAddonRegistrationException("Addon " + addon + " is already registered and running!");
 					}
-				}
-				return null;
+					throw new InvalidAddonStateException("The provided addon doesn't belong to this loader's " + ClanAddonClassLoader.class);
+				});
 			}
 
 			@Override
-			public Deployable<Void> loadJar(File jar) {
-				return Deployable.of(null, unused -> classes.addAll(loader.loadFile(jar)));
+			public Deployable<Void> disableAddon(ClanAddon addon) {
+				return Deployable.of(null, unused -> {
+					if (addon.classLoader.getParent().equals(getClassLoader())) {
+						if (ClanAddonQuery.getAddon(addon.getName()) != null) {
+							ClanAddonQuery.remove(addon);
+							return;
+						} else throw new ClanAddonRegistrationException("Addon " + addon + " isn't registered!");
+					}
+					throw new InvalidAddonStateException("The provided addon doesn't belong to this loader's " + ClanAddonClassLoader.class);
+				});
 			}
 
-			@Override
-			public Deployable<Void> loadFolder(File folder) {
-				return Deployable.of(null, unused -> classes.addAll(loader.loadFolder(folder)));
-			}
+
 		};
 		this.context = new ClanAddonContext() {
 
@@ -192,7 +195,10 @@ public abstract class ClanAddon {
 	}
 
 	protected ClanAddon(ClanAddonContext context) {
-		this.classLoader = this.getClass().getClassLoader();
+		ClassLoader loader = this.getClass().getClassLoader();
+		if (!(loader instanceof ClanAddonClassLoader) && !ClansAPI.class.getClassLoader().equals(loader))
+			throw new InvalidAddonStateException("Addon not provided by " + ClanAddonClassLoader.class);
+		this.classLoader = loader;
 		this.logger = new ClanAddonLogger() {
 			private final Logger LOG = Logger.getLogger("Minecraft");
 			private final String addon;
@@ -231,42 +237,39 @@ public abstract class ClanAddon {
 		};
 		this.loader = new ClanAddonLoader() {
 
-			private final AddonLoader loader;
-			private final Set<Class<?>> classes = new HashSet<>();
-
-			{
-				this.loader = AddonLoader.forPlugin(getPlugin());
+			@Override
+			public ClanAddon loadAddon(File jar) throws IOException, InvalidAddonException {
+				return new ClanAddonClassLoader(jar, ClanAddon.this).addon;
 			}
 
 			@Override
-			public Class<?> forName(String name) {
-				return classes.stream().filter(c -> c.getName().equals(name)).findFirst().orElse(null);
-			}
-
-			@Override
-			public ClanAddon loadAddon(File jar) {
-				List<Class<?>> classes = loader.loadFile(jar);
-				for (Class<?> c : classes) {
-					if (ClanAddon.class.isAssignableFrom(c)) {
-						try {
-							Object o = c.getDeclaredConstructor().newInstance();
-							return (ClanAddon) o;
-						} catch (Exception ignored) {
-						}
+			public Deployable<Void> enableAddon(ClanAddon addon) {
+				return Deployable.of(null, unused -> {
+					if (addon.classLoader.getParent().equals(getClassLoader())) {
+						if (ClanAddonQuery.getAddon(addon.getName()) == null) {
+							ClanAddonQuery.register(addon);
+							return;
+						} else
+							throw new ClanAddonRegistrationException("Addon " + addon + " is already registered and running!");
 					}
-				}
-				return null;
+					throw new InvalidAddonStateException("The provided addon doesn't belong to this loader's " + ClanAddonClassLoader.class);
+				});
 			}
 
 			@Override
-			public Deployable<Void> loadJar(File jar) {
-				return Deployable.of(null, unused -> classes.addAll(loader.loadFile(jar)));
+			public Deployable<Void> disableAddon(ClanAddon addon) {
+				return Deployable.of(null, unused -> {
+					if (addon.classLoader.getParent().equals(getClassLoader())) {
+						if (ClanAddonQuery.getAddon(addon.getName()) != null) {
+							ClanAddonQuery.remove(addon);
+							return;
+						} else throw new ClanAddonRegistrationException("Addon " + addon + " isn't registered!");
+					}
+					throw new InvalidAddonStateException("The provided addon doesn't belong to this loader's " + ClanAddonClassLoader.class);
+				});
 			}
 
-			@Override
-			public Deployable<Void> loadFolder(File folder) {
-				return Deployable.of(null, unused -> classes.addAll(loader.loadFolder(folder)));
-			}
+
 		};
 		this.context = context;
 	}
@@ -276,23 +279,24 @@ public abstract class ClanAddon {
 	 *
 	 * @return A keyed service manager using clan addons for keys.
 	 */
-	public static KeyedServiceManager<ClanAddon> getServiceManager() {
+	public static KeyedServiceManager<ClanAddon> getServicesManager() {
 		return ClansAPI.getInstance().getServiceManager();
 	}
 
 	public static ClanAddon getProvidingAddon(Class<?> c) {
-		for (ClanAddon addon : ClanAddonQuery.getRegisteredAddons()) {
-
-			if (addon.getClass().isAssignableFrom(c)) {
-				return addon;
-			}
-
-			Class<?> match = addon.getLoader().forName(c.getName());
-			if (match != null) {
-				return addon;
-			}
+		Class<?> clazz = Check.forNull(c, "Null classes cannot be attached to an addon");
+		final ClassLoader cl = clazz.getClassLoader();
+		if (!(cl instanceof ClanAddonClassLoader) && !cl.equals(ClansAPI.class.getClassLoader())) {
+			throw new InvalidAddonStateException(clazz + " is not provided by " + ClanAddonClassLoader.class);
 		}
-		return null;
+		if (cl instanceof ClanAddonClassLoader) {
+			ClanAddon addon = ((ClanAddonClassLoader) cl).addon;
+			if (addon == null) {
+				throw new InvalidAddonStateException("Cannot get addon for " + clazz + " from a static initializer");
+			}
+			return addon;
+		}
+		throw new InvalidAddonStateException("Plugin provided addon detected, invalid retrieval.");
 	}
 
 	public static <T extends ClanAddon> T getAddon(Class<T> c) {
@@ -413,7 +417,7 @@ public abstract class ClanAddon {
 		return getClassLoader().getResourceAsStream(resource);
 	}
 
-	public ClassLoader getClassLoader() {
+	protected final ClassLoader getClassLoader() {
 		return this.classLoader;
 	}
 

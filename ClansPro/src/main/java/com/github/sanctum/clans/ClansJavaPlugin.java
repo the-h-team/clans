@@ -137,7 +137,7 @@ public class ClansJavaPlugin extends JavaPlugin implements ClansAPI {
 				prefix.getNode("text").toPrimitive().getString(),
 				prefix.getNode("suffix").toPrimitive().getString());
 
-		StartProcedure start = new Beginning(this).then((s, instance) -> {
+		StartProcedure start = new Start(this).then((s, instance) -> {
 			if (instance.dataManager.assertDefaults()) {
 				instance.getLogger().info("- The configuration has been updated to the latest version.");
 			}
