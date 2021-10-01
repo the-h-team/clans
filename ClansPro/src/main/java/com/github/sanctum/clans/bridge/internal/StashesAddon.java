@@ -3,8 +3,7 @@ package com.github.sanctum.clans.bridge.internal;
 import com.github.sanctum.clans.bridge.ClanAddon;
 import com.github.sanctum.clans.bridge.ClanAddonQuery;
 import com.github.sanctum.clans.bridge.ClanVentBus;
-import com.github.sanctum.clans.bridge.internal.stashes.StashContainer;
-import com.github.sanctum.clans.bridge.internal.stashes.StashListener;
+import com.github.sanctum.clans.bridge.internal.stashes.StashMenu;
 import com.github.sanctum.clans.bridge.internal.stashes.events.StashOpenEvent;
 import com.github.sanctum.clans.construct.Claim;
 import com.github.sanctum.clans.construct.api.Clan;
@@ -15,14 +14,15 @@ import com.github.sanctum.clans.events.command.CommandHelpInsertEvent;
 import com.github.sanctum.clans.events.command.CommandInsertEvent;
 import com.github.sanctum.clans.events.command.TabInsertEvent;
 import com.github.sanctum.labyrinth.event.custom.Vent;
+import com.github.sanctum.labyrinth.gui.unity.construct.Menu;
+import com.github.sanctum.labyrinth.gui.unity.impl.MenuType;
 import com.github.sanctum.labyrinth.library.HUID;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.Inventory;
 
 public class StashesAddon extends ClanAddon {
 
 	@Override
-	public boolean persist() {
+	public boolean isStaged() {
 		return ClansAPI.getData().isTrue("Addon." + getName() + ".enabled");
 	}
 
@@ -53,7 +53,7 @@ public class StashesAddon extends ClanAddon {
 
 	@Override
 	public void onLoad() {
-		register(new StashListener());
+
 	}
 
 	@Override
@@ -63,7 +63,7 @@ public class StashesAddon extends ClanAddon {
 
 			ClanAddon cycle = ClanAddonQuery.getAddon("Stashes");
 
-			if (cycle != null && !cycle.isActive()) {
+			if (cycle != null && !cycle.getContext().isActive()) {
 				subscription.remove();
 				return;
 			}
@@ -99,8 +99,8 @@ public class StashesAddon extends ClanAddon {
 								return;
 							}
 							String name = clan.getName();
-							Inventory s = StashContainer.getStash(name);
-							StashOpenEvent event = new StashOpenEvent(clan, p, s, s.getViewers());
+							Menu s = getStash(name);
+							StashOpenEvent event = new StashOpenEvent(clan, p, s, s.getInventory().getElement().getViewers());
 							if (!event.isCancelled()) {
 								event.open();
 							}
@@ -124,7 +124,7 @@ public class StashesAddon extends ClanAddon {
 
 			ClanAddon cycle = ClanAddonQuery.getAddon("Stashes");
 
-			if (cycle != null && !cycle.isActive()) {
+			if (cycle != null && !cycle.getContext().isActive()) {
 				subscription.remove();
 				return;
 			}
@@ -138,7 +138,7 @@ public class StashesAddon extends ClanAddon {
 		ClanVentBus.subscribe(CommandHelpInsertEvent.class, Vent.Priority.HIGH, (e, subscription) -> {
 			ClanAddon cycle = ClanAddonQuery.getAddon("Stashes");
 
-			if (cycle != null && !cycle.isActive()) {
+			if (cycle != null && !cycle.getContext().isActive()) {
 				subscription.remove();
 				return;
 			}
@@ -152,6 +152,10 @@ public class StashesAddon extends ClanAddon {
 	@Override
 	public void onDisable() {
 
+	}
+
+	public static Menu getStash(String clanName) {
+		return MenuType.SINGULAR.get(m -> m.getKey().map((clanName + "-stash")::equals).orElse(false)) != null ? MenuType.SINGULAR.get(m -> m.getKey().map((clanName + "-stash")::equals).orElse(false)) : new StashMenu(clanName);
 	}
 
 }

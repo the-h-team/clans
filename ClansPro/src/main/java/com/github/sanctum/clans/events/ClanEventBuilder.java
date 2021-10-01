@@ -2,6 +2,7 @@ package com.github.sanctum.clans.events;
 
 import com.github.sanctum.clans.construct.actions.ClanAction;
 import com.github.sanctum.clans.construct.api.Clan;
+import com.github.sanctum.clans.construct.api.ClansAPI;
 import com.github.sanctum.clans.construct.extra.StringLibrary;
 import com.github.sanctum.labyrinth.event.custom.Vent;
 
@@ -16,6 +17,10 @@ public abstract class ClanEventBuilder extends Vent {
 
 	public ClanAction getUtil() {
 		return Clan.ACTION;
+	}
+
+	public ClansAPI getApi() {
+		return ClansAPI.getInstance();
 	}
 
 	public StringLibrary stringLibrary() {

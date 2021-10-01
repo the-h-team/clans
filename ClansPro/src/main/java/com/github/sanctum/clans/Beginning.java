@@ -26,15 +26,17 @@ import com.github.sanctum.labyrinth.LabyrinthProvider;
 import com.github.sanctum.labyrinth.api.Service;
 import com.github.sanctum.labyrinth.command.CommandRegistration;
 import com.github.sanctum.labyrinth.data.EconomyProvision;
+import com.github.sanctum.labyrinth.data.FileList;
 import com.github.sanctum.labyrinth.data.FileManager;
 import com.github.sanctum.labyrinth.data.Registry;
-import com.github.sanctum.labyrinth.data.RegistryData;
 import com.github.sanctum.labyrinth.event.custom.Vent;
 import com.github.sanctum.labyrinth.library.HUID;
 import com.github.sanctum.labyrinth.library.Message;
 import com.github.sanctum.labyrinth.library.Metrics;
 import com.github.sanctum.labyrinth.task.Schedule;
 import com.github.sanctum.labyrinth.task.Synchronous;
+import java.io.File;
+import java.io.IOException;
 import java.text.MessageFormat;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -65,19 +67,24 @@ final class Beginning extends StartProcedure {
 		}).then((start, instance) -> {
 			instance.getLogger().info("- Starting registry procedures.");
 			instance.dataManager.copyDefaults();
-			new Registry<>(Listener.class).source(ClansAPI.getInstance().getPlugin()).pick("com.github.sanctum.clans.listener").operate(listener -> LabyrinthProvider.getService(Service.VENT).register(instance, listener));
+			new Registry<>(Listener.class).source(ClansAPI.getInstance().getPlugin()).pick("com.github.sanctum.clans.listener").operate(listener -> LabyrinthProvider.getService(Service.VENT).subscribe(instance, listener));
 			new Registry<>(Command.class).source(ClansAPI.getInstance().getPlugin()).pick("com.github.sanctum.clans.commands").operate(CommandRegistration::use);
-			RegistryData<ClanAddon> data = new Registry
-					.Loader<>(ClanAddon.class)
-					.source(instance)
-					.from("Addons")
-					.confine(ClanAddonQuery::load);
-			for (ClanAddon e : data.getData()) {
-				sendBorder();
-				instance.getLogger().info("- Injected: " + e.getName() + " v" + e.getVersion());
-				sendBorder();
+			File file = FileList.search(instance).get("dummy", "Addons").getRoot().getParent().getParentFile();
+			int amount = 0;
+			for (File f : file.listFiles()) {
+				if (f.isDirectory()) continue;
+				try {
+					ClanAddon addon = new ClanAddonClassLoader(f).addon;
+					ClanAddonQuery.load(addon);
+					sendBorder();
+					instance.getLogger().info("- Injected: " + addon.getName() + " v" + addon.getVersion());
+					sendBorder();
+					amount++;
+				} catch (IOException | InvalidAddonException e) {
+					e.printStackTrace();
+				}
 			}
-			instance.getLogger().info("- (" + data.getData().size() + ") clan addon(s) were injected into cache.");
+			instance.getLogger().info("- (" + amount + ") clan addon(s) were injected into cache.");
 		}).then((start, instance) -> start.sendBorder()).then((start, instance) -> {
 			instance.getLogger().info("- Cleaning misc files.");
 			for (String id : Clan.ACTION.getAllClanIDs()) {
@@ -217,10 +224,10 @@ final class Beginning extends StartProcedure {
 			}).wait(5);
 			instance.getLogger().info("- Found (" + ClanAddonQuery.getRegisteredAddons().size() + ") clan addon(s)");
 			ClanAddonQuery.getRegisteredAddons().forEach(ClanAddonQuery::adjust);
-			for (ClanAddon e : ClanAddonQuery.getRegisteredAddons().stream().sorted(Comparator.comparingInt(ClanAddon::getLevel)).collect(Collectors.toCollection(LinkedHashSet::new))) {
-				if (e.persist()) {
+			for (ClanAddon e : ClanAddonQuery.getRegisteredAddons().stream().sorted(Comparator.comparingInt(value -> value.getContext().getLevel())).collect(Collectors.toCollection(LinkedHashSet::new))) {
+				if (e.isStaged()) {
 					try {
-						for (String precursor : e.getDependencies()) {
+						for (String precursor : e.getContext().getDependencies()) {
 							ClanAddon addon = ClanAddonQuery.getAddon(precursor);
 							ClanException.call(ClanAddonDependencyException::new).check(addon).run("Missing dependency " + precursor + " for addon " + e.getName() + ". Please install the missing dependency for this addon.");
 						}
@@ -228,33 +235,35 @@ final class Beginning extends StartProcedure {
 						sendBorder();
 						instance.getLogger().info("- Addon: " + e.getName());
 						instance.getLogger().info("- Description: " + e.getDescription());
-						instance.getLogger().info("- Persistent: (" + e.persist() + ")");
+						instance.getLogger().info("- Persistent: (" + e.isStaged() + ")");
 						sendBorder();
 
-						instance.getLogger().info("- Listeners: (" + e.getAdditions().size() + ")");
-						for (Listener addition : e.getAdditions()) {
-							boolean registered = HandlerList.getRegisteredListeners(instance).stream().anyMatch(r -> r.getListener().equals(addition));
+						instance.getLogger().info("- Listeners: (" + e.getContext().getListeners().length + ")");
+						for (Listener listener : e.getContext().getListeners()) {
+							boolean registered = HandlerList.getRegisteredListeners(instance).stream().anyMatch(r -> r.getListener().equals(listener));
 							if (!registered) {
-								instance.getLogger().info("- [" + e.getName() + "] (+1) Listener " + addition.getClass().getSimpleName() + " loaded.");
-								Bukkit.getPluginManager().registerEvents(addition, instance);
+								instance.getLogger().info("- [" + e.getName() + "] (+1) Listener " + listener.getClass().getSimpleName() + " loaded.");
+								LabyrinthProvider.getInstance().getEventMap().subscribe(instance, listener);
 							} else {
-								instance.getLogger().info("- [" + e.getName() + "] (-1) Listener " + addition.getClass().getSimpleName() + " already loaded. Skipping.");
+								instance.getLogger().info("- [" + e.getName() + "] (-1) Listener " + listener.getClass().getSimpleName() + " already loaded. Skipping.");
 							}
 						}
 					} catch (NoClassDefFoundError | NoSuchMethodError ex) {
 						instance.getLogger().severe("- An issue occurred while enabling addon " + e.getName());
 						ex.printStackTrace();
-						e.remove();
+						ClanAddonQuery.remove(e);
 					}
 				} else {
 					sendBorder();
 					instance.getLogger().info("- Addon: " + e.getName());
 					instance.getLogger().info("- Description: " + e.getDescription());
-					instance.getLogger().info("- Persistent: (" + e.persist() + ")");
+					instance.getLogger().info("- Persistent: (" + e.isStaged() + ")");
 					sendBorder();
-					instance.getLogger().info("- Listeners: (" + e.getAdditions().size() + ")");
-					e.remove();
-					instance.getLogger().info("- [" + e.getName() + "] (+1) Addon failed to load due to no persistence.");
+					instance.getLogger().info("- Listeners: (" + e.getContext().getListeners().length + ")");
+					ClanAddonQuery.remove(e);
+					for (Listener l : e.getContext().getListeners()) {
+						instance.getLogger().info("- [" + l.getClass().getSimpleName() + "] (+1) Listener failed to load due to no persistence.");
+					}
 				}
 
 			}
@@ -301,7 +310,7 @@ final class Beginning extends StartProcedure {
 					Map<String, Map<String, Integer>> map = new HashMap<>();
 					Map<String, Integer> entry = new HashMap<>();
 					for (ClanAddon cycle : ClanAddonQuery.getRegisteredAddons()) {
-						if (cycle.persist()) {
+						if (cycle.isStaged()) {
 							entry.put(Bukkit.getServer().getName(), 1);
 							map.put(cycle.getName(), entry);
 						}

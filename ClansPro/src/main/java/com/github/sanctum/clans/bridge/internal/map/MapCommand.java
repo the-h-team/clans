@@ -207,7 +207,7 @@ public class MapCommand implements Listener {
             final StringBuilder sb = new StringBuilder();
             for (String clanId : clanIds) {
 	            sb.append(", ").append(colors.get(clanId)).append(representations.get(clanId)).append(" = ")
-			            .append(ClansAPI.getInstance().getClan(clanId).getColor())
+                        .append(ClansAPI.getInstance().getClan(clanId).getPalette().getStart())
 			            .append(ClansAPI.getInstance().getClanName(clanId)).append(ChatColor.RESET);
             }
             return sb.toString();
@@ -457,11 +457,11 @@ public class MapCommand implements Listener {
                                 }
                             } else {
                                 Clan c = p.getClan();
-                                if (!clans.contains(StringUtils.use(c.getColor() + c.getName()).translate())) {
-                                    clans.add(StringUtils.use(c.getColor() + c.getName()).translate());
+                                if (!clans.contains(StringUtils.use(c.getPalette().getStart() + c.getName()).translate())) {
+                                    clans.add(StringUtils.use(c.getPalette().getStart() + c.getName()).translate());
                                 }
                                 p.setRepresentation('⬛');
-                                p.setColor(c.getColor().replace("&l", ""));
+                                p.setColor(c.getPalette().getStart().replace("&l", ""));
                             }
                         } else {
                             p.setRepresentation('❤');

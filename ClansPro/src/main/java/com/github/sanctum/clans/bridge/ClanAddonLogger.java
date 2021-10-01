@@ -1,31 +1,22 @@
 package com.github.sanctum.clans.bridge;
 
+import java.util.function.Supplier;
 import java.util.logging.Level;
-import java.util.logging.Logger;
 
-public class ClanAddonLogger {
+public interface ClanAddonLogger {
 
-	private final Logger LOG = Logger.getLogger("Minecraft");
-	private final String cycle;
+	public void log(Level level, String info);
 
-	protected ClanAddonLogger(String cycle) {
-		this.cycle = "ClansPro:" + cycle;
-	}
+	public void info(Supplier<String> info);
 
-	public void log(Level level, String info) {
-		this.LOG.log(level, "[" + cycle + "]: " + info);
-	}
+	public void warn(Supplier<String> info);
 
-	public void info(String info) {
-		log(Level.INFO, info);
-	}
+	public void error(Supplier<String> info);
 
-	public void warn(String info) {
-		log(Level.WARNING, info);
-	}
+	public void info(String info);
 
-	public void error(String info) {
-		log(Level.SEVERE, info);
-	}
+	public void warn(String info);
+
+	public void error(String info);
 
 }

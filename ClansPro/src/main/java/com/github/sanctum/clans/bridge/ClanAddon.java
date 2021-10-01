@@ -2,16 +2,30 @@ package com.github.sanctum.clans.bridge;
 
 import com.github.sanctum.clans.construct.api.ClanSubCommand;
 import com.github.sanctum.clans.construct.api.ClansAPI;
+import com.github.sanctum.labyrinth.LabyrinthProvider;
+import com.github.sanctum.labyrinth.data.AddonLoader;
 import com.github.sanctum.labyrinth.data.FileExtension;
 import com.github.sanctum.labyrinth.data.FileList;
 import com.github.sanctum.labyrinth.data.FileManager;
+import com.github.sanctum.labyrinth.data.FileType;
 import com.github.sanctum.labyrinth.data.container.KeyedServiceManager;
+import com.github.sanctum.labyrinth.data.service.AnnotationDiscovery;
+import com.github.sanctum.labyrinth.event.custom.Subscribe;
+import com.github.sanctum.labyrinth.library.Deployable;
 import com.github.sanctum.labyrinth.library.HUID;
-import com.github.sanctum.labyrinth.library.Message;
+import com.github.sanctum.labyrinth.library.Mailer;
 import com.github.sanctum.labyrinth.task.Schedule;
+import java.io.File;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.function.Supplier;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.bukkit.entity.Player;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
@@ -21,55 +35,280 @@ import org.jetbrains.annotations.Nullable;
 
 public abstract class ClanAddon {
 
-	private boolean ACTIVE;
-	private int importance;
-	private final ClanAddonLogger LOGGER;
-	private final Collection<String> DEPEND;
-	private final Collection<String> LOADBEFORE;
-	private final Collection<Listener> LISTENERS;
-	private final Collection<ClanSubCommand> COMMANDS;
+	private final HUID id = HUID.randomID();
+	private final ClanAddonLogger logger;
+	private final ClanAddonContext context;
+	private final ClanAddonLoader loader;
+	private final ClassLoader classLoader;
 
-	public ClanAddon() {
-		this.LISTENERS = new HashSet<>();
-		this.COMMANDS = new HashSet<>();
-		this.DEPEND = new HashSet<>();
-		this.LOADBEFORE = new HashSet<>();
-		this.LOGGER = new ClanAddonLogger(getName());
-		this.ACTIVE = true;
-		this.importance = ClanAddonQuery.COUNT + 1;
+	protected ClanAddon() {
+		this.classLoader = this.getClass().getClassLoader();
+		this.logger = new ClanAddonLogger() {
+			private final Logger LOG = Logger.getLogger("Minecraft");
+			private final String addon;
+
+			{
+				this.addon = "ClansPro:" + getName();
+			}
+
+			public void log(Level level, String info) {
+				this.LOG.log(level, "[" + addon + "]: " + info);
+			}
+
+			public void info(Supplier<String> info) {
+				log(Level.INFO, info.get());
+			}
+
+			public void warn(Supplier<String> info) {
+				log(Level.WARNING, info.get());
+			}
+
+			public void error(Supplier<String> info) {
+				log(Level.SEVERE, info.get());
+			}
+
+			public void info(String info) {
+				log(Level.INFO, info);
+			}
+
+			public void warn(String info) {
+				log(Level.WARNING, info);
+			}
+
+			public void error(String info) {
+				log(Level.SEVERE, info);
+			}
+		};
+		this.loader = new ClanAddonLoader() {
+
+			private final AddonLoader loader;
+			private final Set<Class<?>> classes = new HashSet<>();
+
+			{
+				this.loader = AddonLoader.forPlugin(getPlugin());
+			}
+
+			@Override
+			public Class<?> forName(String name) {
+				return classes.stream().filter(c -> c.getName().equals(name)).findFirst().orElse(null);
+			}
+
+			@Override
+			public ClanAddon loadAddon(File jar) {
+				List<Class<?>> classes = loader.loadFile(jar);
+				for (Class<?> c : classes) {
+					if (ClanAddon.class.isAssignableFrom(c)) {
+						ClanAddonQuery.register((Class<? extends ClanAddon>) c);
+						return getProvidingAddon(c);
+					}
+				}
+				return null;
+			}
+
+			@Override
+			public Deployable<Void> loadJar(File jar) {
+				return Deployable.of(null, unused -> classes.addAll(loader.loadFile(jar)));
+			}
+
+			@Override
+			public Deployable<Void> loadFolder(File folder) {
+				return Deployable.of(null, unused -> classes.addAll(loader.loadFolder(folder)));
+			}
+		};
+		this.context = new ClanAddonContext() {
+
+			private final List<String> depend = new ArrayList<>();
+			private final List<String> load = new ArrayList<>();
+			private final Collection<Listener> listeners = new HashSet<>();
+			private final Collection<ClanSubCommand> commands = new HashSet<>();
+			private boolean active = true;
+			private int level;
+
+			{
+				this.level = ClanAddonQuery.COUNT + 1;
+				InputStream resource = getResource(getName() + ".yml");
+				if (resource != null) {
+					FileManager temp = getFile(getName());
+					FileList.copy(resource, temp.getRoot().getParent());
+					temp.getRoot().reload();
+					depend.addAll(temp.read(f -> f.getStringList("depend")));
+					load.addAll(temp.read(f -> f.getStringList("load-before")));
+					temp.getRoot().delete();
+				} else {
+					getLogger().info("- No dependencies provided.");
+				}
+			}
+
+			@Override
+			public Listener[] getListeners() {
+				return listeners.toArray(new Listener[0]);
+			}
+
+			@Override
+			public ClanSubCommand[] getCommands() {
+				return commands.toArray(new ClanSubCommand[0]);
+			}
+
+			@Override
+			public String[] getDependencies() {
+				return depend.toArray(new String[0]);
+			}
+
+			@Override
+			public String[] getLoadBefore() {
+				return load.toArray(new String[0]);
+			}
+
+			@Override
+			public int getLevel() {
+				return this.level;
+			}
+
+			@Override
+			public boolean isActive() {
+				return this.active;
+			}
+
+			@Override
+			public void setActive(boolean active) {
+				this.active = active;
+			}
+
+			@Override
+			public void setLevel(int importance) {
+				this.level = importance;
+			}
+
+			@Override
+			public void stage(ClanSubCommand command) {
+				commands.add(command);
+			}
+
+			@Override
+			public void stage(Listener listener) {
+				listeners.add(listener);
+			}
+		};
 	}
 
-	protected final void loadDepends() {
-		if (DEPEND.isEmpty()) {
-			InputStream resource = getResource(getName().toLowerCase() + ".yml");
-			if (resource != null) {
-				FileManager temp = getFile(getName());
-				FileList.copy(resource, temp.getRoot().getParent());
-				temp.getRoot().reload();
-				DEPEND.addAll(temp.read(f -> f.getStringList("depend")));
-				LOADBEFORE.addAll(temp.read(f -> f.getStringList("loadbefore")));
-				temp.getRoot().delete();
-			} else {
-				getLogger().warn("Addon dependency list not found!");
+	protected ClanAddon(ClanAddonContext context) {
+		this.classLoader = this.getClass().getClassLoader();
+		this.logger = new ClanAddonLogger() {
+			private final Logger LOG = Logger.getLogger("Minecraft");
+			private final String addon;
+
+			{
+				this.addon = "ClansPro:" + getName();
+			}
+
+			public void log(Level level, String info) {
+				this.LOG.log(level, "[" + addon + "]: " + info);
+			}
+
+			public void info(Supplier<String> info) {
+				log(Level.INFO, info.get());
+			}
+
+			public void warn(Supplier<String> info) {
+				log(Level.WARNING, info.get());
+			}
+
+			public void error(Supplier<String> info) {
+				log(Level.SEVERE, info.get());
+			}
+
+			public void info(String info) {
+				log(Level.INFO, info);
+			}
+
+			public void warn(String info) {
+				log(Level.WARNING, info);
+			}
+
+			public void error(String info) {
+				log(Level.SEVERE, info);
+			}
+		};
+		this.loader = new ClanAddonLoader() {
+
+			private final AddonLoader loader;
+			private final Set<Class<?>> classes = new HashSet<>();
+
+			{
+				this.loader = AddonLoader.forPlugin(getPlugin());
+			}
+
+			@Override
+			public Class<?> forName(String name) {
+				return classes.stream().filter(c -> c.getName().equals(name)).findFirst().orElse(null);
+			}
+
+			@Override
+			public ClanAddon loadAddon(File jar) {
+				List<Class<?>> classes = loader.loadFile(jar);
+				for (Class<?> c : classes) {
+					if (ClanAddon.class.isAssignableFrom(c)) {
+						try {
+							Object o = c.getDeclaredConstructor().newInstance();
+							return (ClanAddon) o;
+						} catch (Exception ignored) {
+						}
+					}
+				}
+				return null;
+			}
+
+			@Override
+			public Deployable<Void> loadJar(File jar) {
+				return Deployable.of(null, unused -> classes.addAll(loader.loadFile(jar)));
+			}
+
+			@Override
+			public Deployable<Void> loadFolder(File folder) {
+				return Deployable.of(null, unused -> classes.addAll(loader.loadFolder(folder)));
+			}
+		};
+		this.context = context;
+	}
+
+	/**
+	 * Get and manage services using clan addon objects instead of plugin as the key.
+	 *
+	 * @return A keyed service manager using clan addons for keys.
+	 */
+	public static KeyedServiceManager<ClanAddon> getServiceManager() {
+		return ClansAPI.getInstance().getServiceManager();
+	}
+
+	public static ClanAddon getProvidingAddon(Class<?> c) {
+		for (ClanAddon addon : ClanAddonQuery.getRegisteredAddons()) {
+
+			if (addon.getClass().isAssignableFrom(c)) {
+				return addon;
+			}
+
+			Class<?> match = addon.getLoader().forName(c.getName());
+			if (match != null) {
+				return addon;
 			}
 		}
+		return null;
 	}
 
-	protected final void setLevel(int importance) {
-		this.importance = importance;
+	public static <T extends ClanAddon> T getAddon(Class<T> c) {
+		for (ClanAddon addon : ClanAddonQuery.getRegisteredAddons()) {
+			if (c.isAssignableFrom(addon.getClass())) {
+				return c.cast(addon);
+			}
+		}
+		return null;
 	}
 
-	/**
-	 * @return true if the addon is enabled.
-	 */
-	public final boolean isActive() {
-		return this.ACTIVE;
-	}
+	public abstract void onLoad();
 
-	/**
-	 * @return true if the plugin should persist on enable.
-	 */
-	public abstract boolean persist();
+	public abstract void onEnable();
+
+	public abstract void onDisable();
 
 	/**
 	 * Get the unique id for this addon.
@@ -77,7 +316,7 @@ public abstract class ClanAddon {
 	 * @return The id for this addon.
 	 */
 	public HUID getId() {
-		return HUID.randomID();
+		return this.id;
 	}
 
 	/**
@@ -108,11 +347,12 @@ public abstract class ClanAddon {
 	 */
 	public abstract String[] getAuthors();
 
-	public abstract void onLoad();
-
-	public abstract void onEnable();
-
-	public abstract void onDisable();
+	/**
+	 * @return true if the plugin should persist on enable.
+	 */
+	public boolean isStaged() {
+		return true;
+	}
 
 	/**
 	 * Translate placeholders for this given addon.
@@ -122,52 +362,7 @@ public abstract class ClanAddon {
 	 * @return The placeholder converted string.
 	 */
 	public String onPlaceholder(Player player, String param) {
-		if (param.equals(getName())) return getName() + " " + getVersion();
-		return "";
-	}
-
-	/**
-	 * Get all addon dependencies for this addon.
-	 *
-	 * @return An array of addon names.
-	 */
-	public String[] getDependencies() {
-		return DEPEND.toArray(new String[0]);
-	}
-
-	/**
-	 * Get all addons to be loaded before this addon.
-	 *
-	 * @return An array of addon names.
-	 */
-	public String[] getLoadBefore() {
-		return LOADBEFORE.toArray(new String[0]);
-	}
-
-	/**
-	 * Get all registered listeners to this addon.
-	 *
-	 * @return A collection of listeners.
-	 */
-	public Collection<Listener> getAdditions() {
-		return this.LISTENERS;
-	}
-
-	/**
-	 * Get all clans sub commands.
-	 *
-	 * @return A collection of registered sub commands.
-	 */
-	public Collection<ClanSubCommand> getCommands() {
-		return this.COMMANDS;
-	}
-
-	public final Plugin getPlugin() {
-		return getApi().getPlugin();
-	}
-
-	public final int getLevel() {
-		return importance;
+		return param.equals(getName()) ? getName() + " " + getVersion() : "";
 	}
 
 	/**
@@ -178,19 +373,11 @@ public abstract class ClanAddon {
 	 * @return A cached file manager.
 	 */
 	public final FileManager getFile(String name, String... directory) {
-		String dir = null;
-		StringBuilder builder = new StringBuilder();
-		if (directory.length > 0) {
-			for (String d : directory) {
-				builder.append(d).append("/");
-			}
+		if (directory == null) {
+			return getFile(FileType.YAML, name);
+		} else {
+			return getFile(FileType.YAML, name, directory);
 		}
-		if (builder.length() > 0) {
-			dir = builder.toString().trim().substring(0, builder.length() - 1);
-		}
-
-		if (dir == null) return getApi().getFileList().get(name, "Addons/" + getName() + "/");
-		return getApi().getFileList().get(name, "Addons/" + getName() + "/" + dir + "/");
 	}
 
 	/**
@@ -223,14 +410,36 @@ public abstract class ClanAddon {
 	 * @return The resource or null if not found.
 	 */
 	public @Nullable InputStream getResource(String resource) {
-		return getClass().getClassLoader().getResourceAsStream(resource);
+		return getClassLoader().getResourceAsStream(resource);
+	}
+
+	public ClassLoader getClassLoader() {
+		return this.classLoader;
+	}
+
+	public final ClanAddonContext getContext() {
+		return context;
+	}
+
+	public final ClanAddonLoader getLoader() {
+		return loader;
 	}
 
 	/**
-	 * @return The default messenger
+	 * Get the console logger for this addon.
+	 *
+	 * @return A console logger for this addon.
 	 */
-	public final Message getMessenger() {
-		return Message.loggedFor(getPlugin());
+	public final ClanAddonLogger getLogger() {
+		return this.logger;
+	}
+
+	public final Plugin getPlugin() {
+		return getApi().getPlugin();
+	}
+
+	public final Mailer getMailer() {
+		return Mailer.empty(getPlugin());
 	}
 
 	/**
@@ -240,65 +449,25 @@ public abstract class ClanAddon {
 		return ClansAPI.getInstance();
 	}
 
-	/**
-	 * Get and manage services using clan addon objects instead of plugin as the key.
-	 *
-	 * @return A keyed service manager using clan addons for keys.
-	 */
-	public final KeyedServiceManager<ClanAddon> getServiceManager() {
-		return ClansAPI.getInstance().getServiceManager();
-	}
-
-	/**
-	 * Get the console logger for this addon.
-	 *
-	 * @return A console logger for this addon.
-	 */
-	public final ClanAddonLogger getLogger() {
-		return this.LOGGER;
-	}
-
-	/**
-	 * Register a listener within this addons {@linkplain ClanAddon#onLoad()} ()}
-	 *
-	 * @param listener The listener to register.
-	 */
-	protected final void register(Listener listener) {
-		if (!this.LISTENERS.contains(listener)) {
-			this.LISTENERS.add(listener);
-		}
-	}
-
-	/**
-	 * Register a command within this addons {@linkplain ClanAddon#onLoad()} ()}
-	 *
-	 * @param command The command to register.
-	 */
-	protected final void register(ClanSubCommand command) {
-		if (!this.COMMANDS.contains(command)) {
-			this.COMMANDS.add(command);
-		}
-	}
-
-	protected final void setActive(boolean active) {
-		this.ACTIVE = active;
-	}
-
-	protected final void register() {
+	final void register() {
 		ClanAddonQuery.COUNT += 1;
-		ClanAddonQuery.getRegisteredAddons().add(this);
+		ClanAddonQuery.CLAN_ADDONS.add(this);
 	}
 
-	public final void remove() {
+	final void remove() {
 		ClanAddonQuery.COUNT -= 1;
 		ClansAPI.getInstance().getPlugin().getLogger().info("- Disabling addon " + '"' + getName() + '"' + " v" + getVersion());
 		for (RegisteredListener l : HandlerList.getRegisteredListeners(ClansAPI.getInstance().getPlugin())) {
-			if (getAdditions().contains(l.getListener())) {
-				HandlerList.unregisterAll(l.getListener());
+			if (Arrays.asList(getContext().getListeners()).contains(l.getListener())) {
+				if (AnnotationDiscovery.of(Subscribe.class, l.getListener()).isPresent()) {
+					LabyrinthProvider.getInstance().getEventMap().unsubscribe(l.getListener());
+				} else {
+					HandlerList.unregisterAll(l.getListener());
+				}
 			}
 		}
 		onDisable();
-		Schedule.sync(() -> ClanAddonQuery.getRegisteredAddons().removeIf(c -> c.getName().equals(getName()))).wait(1);
+		Schedule.sync(() -> ClanAddonQuery.CLAN_ADDONS.removeIf(c -> c.getName().equals(getName()))).wait(1);
 	}
 
 }

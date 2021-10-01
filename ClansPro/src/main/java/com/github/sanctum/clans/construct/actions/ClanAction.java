@@ -1,8 +1,9 @@
 package com.github.sanctum.clans.construct.actions;
 
 import com.github.sanctum.clans.bridge.ClanAddon;
-import com.github.sanctum.clans.bridge.ClanAddonQuery;
 import com.github.sanctum.clans.bridge.ClanVentBus;
+import com.github.sanctum.clans.bridge.internal.StashesAddon;
+import com.github.sanctum.clans.bridge.internal.VaultsAddon;
 import com.github.sanctum.clans.construct.DataManager;
 import com.github.sanctum.clans.construct.RankPriority;
 import com.github.sanctum.clans.construct.api.Clan;
@@ -15,11 +16,11 @@ import com.github.sanctum.clans.events.command.ClanInformationAdaptEvent;
 import com.github.sanctum.clans.events.core.ClanCreateEvent;
 import com.github.sanctum.clans.events.core.ClanCreatedEvent;
 import com.github.sanctum.clans.events.core.ClanLeaveEvent;
+import com.github.sanctum.labyrinth.LabyrinthProvider;
 import com.github.sanctum.labyrinth.data.EconomyProvision;
 import com.github.sanctum.labyrinth.data.FileManager;
+import com.github.sanctum.labyrinth.data.LabyrinthUser;
 import com.github.sanctum.labyrinth.formatting.PaginatedList;
-import com.github.sanctum.labyrinth.formatting.string.Paragraph;
-import com.github.sanctum.labyrinth.library.HFEncoded;
 import com.github.sanctum.labyrinth.library.HUID;
 import com.github.sanctum.labyrinth.library.Message;
 import com.github.sanctum.labyrinth.library.TextLib;
@@ -79,7 +80,7 @@ public class ClanAction extends StringLibrary {
 				API.getClanManager().load(instance);
 				ClansAPI.getData().getClanFile(instance).write(t -> t.set("user-data." + owner.toString() + ".join-date", new Date().getTime()));
 				if (ClansAPI.getData().prefixedTagsAllowed()) {
-					ClanDisplayName.set(Bukkit.getPlayer(owner), ClansAPI.getData().prefixedTag(instance.getColor(), clanName));
+					ClanDisplayName.set(Bukkit.getPlayer(owner), ClansAPI.getData().prefixedTag(instance.getPalette().getStart(), clanName));
 				}
 				ClanVentBus.call(new ClanCreatedEvent(owner, clanName));
 			}
@@ -117,9 +118,9 @@ public class ClanAction extends StringLibrary {
 			}
 
 			FileManager clan = ClansAPI.getData().getClanFile(clanIndex);
-			if (associate.getPlayer().isOnline()) {
+			if (associate.getUser().toBukkit().isOnline()) {
 				if (ClansAPI.getData().prefixedTagsAllowed()) {
-					ClanDisplayName.remove(associate.getPlayer().getPlayer());
+					ClanDisplayName.remove(associate.getUser().toBukkit().getPlayer());
 				}
 			}
 			switch (associate.getPriority()) {
@@ -178,7 +179,7 @@ public class ClanAction extends StringLibrary {
 				clanIndex.broadcast(MessageFormat.format(ClansAPI.getData().getMessageResponse("member-join"), Bukkit.getOfflinePlayer(target).getName()));
 				if (ClansAPI.getData().prefixedTagsAllowed()) {
 					if (Bukkit.getOfflinePlayer(target).isOnline()) {
-						ClanDisplayName.set(Bukkit.getOfflinePlayer(target).getPlayer(), ClansAPI.getData().prefixedTag(API.getClan(API.getClanID(clanName)).getColor(), clanName));
+						ClanDisplayName.set(Bukkit.getOfflinePlayer(target).getPlayer(), ClansAPI.getData().prefixedTag(API.getClan(API.getClanID(clanName)).getPalette().getStart(), clanName));
 					}
 				}
 				return;
@@ -190,7 +191,7 @@ public class ClanAction extends StringLibrary {
 				clanIndex.broadcast(MessageFormat.format(ClansAPI.getData().getMessageResponse("member-join"), Bukkit.getOfflinePlayer(target).getName()));
 				if (ClansAPI.getData().prefixedTagsAllowed()) {
 					if (Bukkit.getOfflinePlayer(target).isOnline()) {
-						ClanDisplayName.set(Bukkit.getOfflinePlayer(target).getPlayer(), ClansAPI.getData().prefixedTag(API.getClan(API.getClanID(clanName)).getColor(), clanName));
+						ClanDisplayName.set(Bukkit.getOfflinePlayer(target).getPlayer(), ClansAPI.getData().prefixedTag(API.getClan(API.getClanID(clanName)).getPalette().getStart(), clanName));
 					}
 				}
 			} else {
@@ -206,16 +207,15 @@ public class ClanAction extends StringLibrary {
 	}
 
 	public UUID getUserID(String playerName) {
-		for (OfflinePlayer player : Bukkit.getOfflinePlayers()) {
-			if (playerName.equals(player.getName())) {
-				return player.getUniqueId();
-			}
+		LabyrinthUser user = LabyrinthUser.get(playerName);
+		if (user.isValid()) {
+			return user.getId();
 		}
 		return null;
 	}
 
 	public List<UUID> getAllUsers() {
-		return Arrays.stream(Bukkit.getOfflinePlayers()).map(OfflinePlayer::getUniqueId).collect(Collectors.toList());
+		return LabyrinthProvider.getOfflinePlayers().stream().map(LabyrinthUser::getId).collect(Collectors.toList());
 	}
 
 	public void demotePlayer(UUID target) {
@@ -253,7 +253,7 @@ public class ClanAction extends StringLibrary {
 				}
 			}
 			Clan clanIndex = API.getClan(API.getClanID(target).toString());
-			String format = MessageFormat.format(ClansAPI.getData().getMessageResponse("demotion"), Bukkit.getOfflinePlayer(target).getName(), associate.getRankTag());
+			String format = MessageFormat.format(ClansAPI.getData().getMessageResponse("promotion"), Bukkit.getOfflinePlayer(target).getName(), associate.getRankTag());
 			clanIndex.broadcast(format);
 		}
 	}
@@ -427,6 +427,7 @@ public class ClanAction extends StringLibrary {
 		return time <= on || time >= off;
 	}
 
+	/*
 	public String[] getMotd(List<String> logo, Clan clan) {
 		String[] ar = logo.toArray(new String[0]);
 		String[] motd = new Paragraph(clan.getMotd()).setRegex(Paragraph.COMMA_AND_PERIOD).get();
@@ -440,6 +441,8 @@ public class ClanAction extends StringLibrary {
 		}
 		return ar;
 	}
+
+	 */
 
 	public List<Clan> getMostPowerful() {
 		List<Clan> c = ClansAPI.getInstance().getClanManager().getClans().list();
@@ -457,12 +460,12 @@ public class ClanAction extends StringLibrary {
 
 		List<String> array = new ArrayList<>();
 
-		String owner = clan.getOwner().getPlayer().getName();
+		String owner = clan.getOwner().getUser().getName();
 		String password = clan.getPassword();
 
-		List<String> members = clan.getMembers().stream().filter(a -> a.getPriority().toInt() != 3).map(Clan.Associate::getPlayer).map(OfflinePlayer::getUniqueId).map(UUID::toString).collect(Collectors.toList());
-		List<String> mods = clan.getMembers().stream().filter(a -> a.getPriority().toInt() == 1).map(Clan.Associate::getPlayer).map(OfflinePlayer::getName).collect(Collectors.toList());
-		List<String> admins = clan.getMembers().stream().filter(a -> a.getPriority().toInt() == 2).map(Clan.Associate::getPlayer).map(OfflinePlayer::getName).collect(Collectors.toList());
+		List<String> members = clan.getMembers().stream().filter(a -> a.getPriority().toInt() != 3).map(Clan.Associate::getUser).map(LabyrinthUser::getId).map(UUID::toString).collect(Collectors.toList());
+		List<String> mods = clan.getMembers().stream().filter(a -> a.getPriority().toInt() == 1).map(Clan.Associate::getUser).map(LabyrinthUser::getName).collect(Collectors.toList());
+		List<String> admins = clan.getMembers().stream().filter(a -> a.getPriority().toInt() == 2).map(Clan.Associate::getUser).map(LabyrinthUser::getName).collect(Collectors.toList());
 		List<String> allies = clan.getAllies().map(Clan::getId).map(HUID::toString).collect(Collectors.toList());
 		List<String> allyRequests = clan.getAllyRequests();
 		List<String> enemies = clan.getEnemies().map(Clan::getId).map(HUID::toString).collect(Collectors.toList());
@@ -475,12 +478,16 @@ public class ClanAction extends StringLibrary {
 		array.add("&6&lClan&7: &f" + (clan.getPalette().isGradient() ? clan.getPalette().toGradient().context(clan.getName()).translate() : clan.getPalette().toString() + clan.getName()));
 		array.add("&f&m---------------------------");
 		array.add("&6Description: &7" + clan.getDescription());
+		/*
 		List<String> logo = (List<String>) new HFEncoded("rO0ABXNyABNqYXZhLnV0aWwuQXJyYXlMaXN0eIHSHZnHYZ0DAAFJAARzaXpleHAAAAAGdwQAAAAGdABswqc04paRwqd4wqcywqcxwqcwwqc5wqc0wqdG4paRwqd4wqcywqcxwqcwwqc5wqc0wqdG4paRwqd4wqcywqcxwqcwwqc5wqc0wqdG4paRwqd4wqcywqcxwqcwwqc5wqc0wqdG4paRwqc04paRdACQwqd4wqcywqcxwqcwwqc5wqc0wqdG4paRwqd4wqcywqcxwqcwwqc5wqc0wqdG4paSwqd4wqdBwqc2wqcxwqcywqc4wqdE4paRwqd4wqdBwqc2wqcxwqcywqc4wqdE4paRwqd4wqcywqcxwqcwwqc5wqc0wqdG4paSwqd4wqcywqcxwqcwwqc5wqc0wqdG4paRdACQwqd4wqcywqcxwqcwwqc5wqc0wqdG4paRwqd4wqdBwqc2wqcxwqcywqc4wqdE4paRwqd4wqdBwqc2wqcxwqcywqc4wqdE4paTwqd4wqdBwqc2wqcxwqcywqc4wqdE4paTwqd4wqdBwqc2wqcxwqcywqc4wqdE4paRwqd4wqcywqcxwqcwwqc5wqc0wqdG4paRdACQwqd4wqcywqcxwqcwwqc5wqc0wqdG4paRwqd4wqdBwqc2wqcxwqcywqc4wqdE4paRwqd4wqdBwqc2wqcxwqcywqc4wqdE4paTwqd4wqdBwqc2wqcxwqcywqc4wqdE4paTwqd4wqdBwqc2wqcxwqcywqc4wqdE4paRwqd4wqcywqcxwqcwwqc5wqc0wqdG4paRdACQwqd4wqcywqcxwqcwwqc5wqc0wqdG4paRwqd4wqcywqcxwqcwwqc5wqc0wqdG4paSwqd4wqdBwqc2wqcxwqcywqc4wqdE4paRwqd4wqdBwqc2wqcxwqcywqc4wqdE4paRwqd4wqcywqcxwqcwwqc5wqc0wqdG4paSwqd4wqcywqcxwqcwwqc5wqc0wqdG4paRdABswqc04paRwqd4wqcywqcxwqcwwqc5wqc0wqdG4paRwqd4wqcywqcxwqcwwqc5wqc0wqdG4paRwqd4wqcywqcxwqcwwqc5wqc0wqdG4paRwqd4wqcywqcxwqcwwqc5wqc0wqdG4paRwqc04paReA").deserialize(List.class);
 		if (logo != null) {
 			array.add("&f&m---------------------------");
 			array.addAll(Arrays.asList(getMotd(logo, clan)));
 			array.add("&f&m---------------------------");
 		}
+		 */
+
+
 		array.add("&6" + clan.getOwner().getRankTag() + ": &f" + owner);
 		if (password == null)
 			password = "NO PASS";
@@ -495,7 +502,7 @@ public class ClanAction extends StringLibrary {
 		if (clan.getPalette().isGradient()) {
 			array.add("&6Color: " + (clan.getPalette().getStart() + clan.getPalette().getEnd()).replace("&", "").replace("#", "&f»" + c));
 		} else {
-			array.add("&6Color: " + c + c.replace("&", "&f»" + c));
+			array.add("&6Color: " + c + c.replace("&", "&f»" + c).replace("#", "&f»" + c));
 		}
 		if (Permission.MANAGE_PASSWORD.test(associate)) {
 			array.add("&6Password: &f" + password);
@@ -538,12 +545,12 @@ public class ClanAction extends StringLibrary {
 			target.sendMessage(color(l));
 		}
 		sendComponent(target, TextLib.getInstance().textRunnable("&fPerms &7(", "&bClick", "&7)", "&b&oClick to view clan permissions.", "clan perms"));
-		ClanAddon stashes = ClanAddonQuery.getAddon("Stashes");
-		ClanAddon vaults = ClanAddonQuery.getAddon("Vaults");
-		if (stashes != null && stashes.isActive()) {
+		StashesAddon stashes = ClanAddon.getAddon(StashesAddon.class);
+		VaultsAddon vaults = ClanAddon.getAddon(VaultsAddon.class);
+		if (stashes != null && stashes.getContext().isActive()) {
 			sendComponent(target, TextLib.getInstance().textRunnable("&eStash &7(", "&bClick", "&7)", "&b&oClick to view the clan stash.", "clan stash"));
 		}
-		if (vaults != null && vaults.isActive()) {
+		if (vaults != null && vaults.getContext().isActive()) {
 			sendComponent(target, TextLib.getInstance().textRunnable("&6Vault &7(", "&bClick", "&7)", "&b&oClick to view the clan vault.", "clan vault"));
 		}
 		target.sendMessage(color("&f&m---------------------------"));

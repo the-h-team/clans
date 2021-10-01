@@ -15,6 +15,7 @@ public class ClanRosterElement extends UniformedComponents<Clan> {
 	private List<Clan> clans;
 
 	public ClanRosterElement(List<Clan> clans) {
+		super();
 		this.clans = new LinkedList<>(clans);
 	}
 

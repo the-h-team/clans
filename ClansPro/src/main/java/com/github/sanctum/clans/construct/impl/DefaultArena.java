@@ -4,6 +4,8 @@ import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClansAPI;
 import com.github.sanctum.clans.construct.api.War;
 import com.github.sanctum.clans.construct.extra.ClanDisplayName;
+import com.github.sanctum.labyrinth.data.service.AccessibleConstants;
+import com.github.sanctum.labyrinth.data.service.Constant;
 import com.github.sanctum.labyrinth.library.Cooldown;
 import com.github.sanctum.labyrinth.task.Schedule;
 import java.util.Comparator;
@@ -56,7 +58,7 @@ public class DefaultArena implements War {
 			getQueue().forEach(a -> {
 				Team t = roster.get(a.getClan());
 				Schedule.sync(() -> {
-					Player p = a.getPlayer().getPlayer();
+					Player p = a.getUser().toBukkit().getPlayer();
 					if (p != null) {
 						getQueue().updateReturnLocation(a);
 						ClanDisplayName.set(a, "&7[&a" + t.name() + "&7]");
@@ -183,18 +185,8 @@ public class DefaultArena implements War {
 
 	@Override
 	public Vote getVote(Team team) {
-		switch (team) {
-			case A:
-				return A;
-			case B:
-				return B;
-			case C:
-				return C;
-			case D:
-				return D;
-			default:
-				throw new IllegalArgumentException("Invalid team provided.");
-		}
+		Constant<?> constant = AccessibleConstants.collect(this).get(team.name());
+		return constant != null ? (Vote) constant.getValue() : null;
 	}
 
 	@Override

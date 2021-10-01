@@ -29,7 +29,7 @@ public class BlockEventListener implements Listener {
 	@Subscribe
 	public void onBreak(DefaultEvent.BlockBreak event) {
 		final Block b = event.getBlock();
-		ClaimInteractEvent e = ClanVentBus.call(new ClaimInteractEvent(event.getPlayer(), b, b.getLocation(), ClaimInteractEvent.InteractionType.BREAK));
+		ClaimInteractEvent e = ClanVentBus.call(new ClaimInteractEvent(event.getPlayer(), b, b.getLocation(), ClaimInteractEvent.Type.BREAK));
 		if (e.isCancelled()) {
 			event.setCancelled(e.isCancelled());
 		} else {
@@ -43,7 +43,7 @@ public class BlockEventListener implements Listener {
 
 	@Subscribe
 	public void onBuild(DefaultEvent.BlockPlace event) {
-		ClaimInteractEvent e = ClanVentBus.call(new ClaimInteractEvent(event.getPlayer(), event.getBlock(), event.getBlock().getLocation(), ClaimInteractEvent.InteractionType.BUILD));
+		ClaimInteractEvent e = ClanVentBus.call(new ClaimInteractEvent(event.getPlayer(), event.getBlock(), event.getBlock().getLocation(), ClaimInteractEvent.Type.BUILD));
 		if (e.isCancelled()) {
 			event.setCancelled(e.isCancelled());
 		} else {
@@ -109,7 +109,7 @@ public class BlockEventListener implements Listener {
 						}
 					}
 				} else {
-					if (e.getInteraction() == ClaimInteractEvent.InteractionType.USE) {
+					if (e.getInteraction() == ClaimInteractEvent.Type.USE) {
 						if (!Permission.LAND_USE_INTRACTABLE.test(associate)) {
 							Clan.ACTION.sendMessage(e.getPlayer(), Clan.ACTION.noClearance());
 							e.setCancelled(true);
@@ -134,7 +134,7 @@ public class BlockEventListener implements Listener {
 	public void onProjectileHit(ProjectileHitEvent event) {
 		if (event.getEntity().getShooter() instanceof Player) {
 			Player p = (Player) event.getEntity().getShooter();
-			ClaimInteractEvent e = new Vent.Call<>(Vent.Runtime.Synchronous, new ClaimInteractEvent(p, event.getEntity().getLocation(), ClaimInteractEvent.InteractionType.USE)).run();
+			ClaimInteractEvent e = new Vent.Call<>(Vent.Runtime.Synchronous, new ClaimInteractEvent(p, event.getEntity().getLocation(), ClaimInteractEvent.Type.USE)).run();
 			if (e.isCancelled()) {
 				if (event.getEntity().getType() != EntityType.TRIDENT) {
 					e.stringLibrary().sendMessage(e.getPlayer(), MessageFormat.format(e.stringLibrary().notClaimOwner(e.getClaim().getClan().getName()), e.getClaim().getClan().getName()));

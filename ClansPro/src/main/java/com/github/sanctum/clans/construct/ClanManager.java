@@ -59,7 +59,7 @@ public class ClanManager {
 	public synchronized boolean delete(Clan c) {
 		try {
 			for (Clan.Associate associate : c.getMembers()) {
-				if (!associate.getPlayer().getUniqueId().equals(c.getOwner().getPlayer().getUniqueId())) {
+				if (!associate.getUser().getId().equals(c.getOwner().getUser().getId())) {
 					associate.kick();
 				}
 			}

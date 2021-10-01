@@ -37,11 +37,11 @@ public class Resident {
 		return claim;
 	}
 
-	public void updateJoinTime(long time) {
+	public void setTimeEntered(long time) {
 		this.joinTime = time;
 	}
 
-	public void updateLastKnown(Claim claim) {
+	public void setLastKnownClaim(Claim claim) {
 		this.claim = claim;
 	}
 
@@ -70,7 +70,7 @@ public class Resident {
 	 *
 	 * @return The amount of time spent.
 	 */
-	public long timeActiveInMillis() {
+	public long getTimeActive() {
 		return (System.currentTimeMillis() - joinTime);
 	}
 

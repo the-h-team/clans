@@ -17,7 +17,7 @@ import org.bukkit.plugin.ServicePriority;
 public class MapAddon extends ClanAddon {
 
 	@Override
-	public boolean persist() {
+	public boolean isStaged() {
 		return ClansAPI.getData().isTrue("Addon." + getName() + ".enabled");
 	}
 
@@ -48,7 +48,7 @@ public class MapAddon extends ClanAddon {
 
 	@Override
 	public void onLoad() {
-		register(new MapCommand());
+		getContext().stage(new MapCommand());
 	}
 
 	@Override
@@ -62,7 +62,7 @@ public class MapAddon extends ClanAddon {
 
 			ClanAddon cycle = ClanAddonQuery.getAddon("Map");
 
-			if (cycle != null && !cycle.isActive()) {
+			if (cycle != null && !cycle.getContext().isActive()) {
 				subscription.remove();
 				return;
 			}
@@ -73,7 +73,7 @@ public class MapAddon extends ClanAddon {
 
 			ClanAddon cycle = ClanAddonQuery.getAddon("Map");
 
-			if (cycle != null && !cycle.isActive()) {
+			if (cycle != null && !cycle.getContext().isActive()) {
 				subscription.remove();
 				return;
 			}
@@ -97,7 +97,7 @@ public class MapAddon extends ClanAddon {
 
 			ClanAddon cycle = ClanAddonQuery.getAddon("Map");
 
-			if (cycle != null && !cycle.isActive()) {
+			if (cycle != null && !cycle.getContext().isActive()) {
 				subscription.remove();
 				return;
 			}

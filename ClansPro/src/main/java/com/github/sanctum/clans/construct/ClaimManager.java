@@ -80,8 +80,8 @@ public class ClaimManager {
 								if (r.hasProperty(Resident.Property.NOTIFIED)) {
 									if (!lastKnown.getOwner().equals(r.getCurrent().getOwner())) {
 										r.setProperty(Resident.Property.TRAVERSED, true);
-										r.updateLastKnown(event.getClaim());
-										r.updateJoinTime(System.currentTimeMillis());
+										r.setLastKnownClaim(event.getClaim());
+										r.setTimeEntered(System.currentTimeMillis());
 									}
 								}
 							}
@@ -91,7 +91,7 @@ public class ClaimManager {
 							} else {
 								if (r.hasProperty(Resident.Property.TRAVERSED)) {
 									r.setProperty(Resident.Property.TRAVERSED, false);
-									r.updateJoinTime(System.currentTimeMillis());
+									r.setTimeEntered(System.currentTimeMillis());
 									event.sendNotification();
 								}
 							}

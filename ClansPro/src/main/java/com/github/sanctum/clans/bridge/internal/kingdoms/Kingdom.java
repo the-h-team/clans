@@ -3,39 +3,40 @@ package com.github.sanctum.clans.bridge.internal.kingdoms;
 import com.github.sanctum.clans.bridge.ClanAddon;
 import com.github.sanctum.clans.bridge.ClanAddonQuery;
 import com.github.sanctum.clans.bridge.internal.KingdomAddon;
-import com.github.sanctum.clans.bridge.internal.kingdoms.achievement.KingdomAchievement;
 import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClansAPI;
 import com.github.sanctum.labyrinth.data.FileManager;
 import com.github.sanctum.labyrinth.data.FileType;
+import com.github.sanctum.labyrinth.data.Node;
 import com.github.sanctum.labyrinth.library.HUID;
+import com.github.sanctum.labyrinth.library.Items;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.Spliterator;
 import java.util.function.Consumer;
-import java.util.logging.Level;
 import java.util.stream.Collectors;
+import org.bukkit.Material;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class Kingdom extends Progressable implements Iterable<Clan> {
+public class Kingdom extends Progressive implements Iterable<Clan> {
 
 	private final List<Clan> members;
 
 	private String name;
 
-	private final List<KingdomAchievement> achievements;
+	private final List<Quest> quests;
 
-	public Kingdom(String name, KingdomAddon cycle) {
+	public Kingdom(String name, KingdomAddon addon) {
 		this.name = name;
-		this.achievements = new LinkedList<>();
+		this.quests = new LinkedList<>();
 		this.members = new LinkedList<>();
 
 		ClansAPI API = ClansAPI.getInstance();
 
-		FileManager section = cycle.getFile(FileType.JSON, "kingdoms", "data");
+		FileManager section = addon.getFile(FileType.JSON, "kingdoms", "data");
 
 		if (section.getRoot().exists()) {
 
@@ -48,14 +49,22 @@ public class Kingdom extends Progressable implements Iterable<Clan> {
 					}
 				}
 
-				FileManager data = cycle.getFile(FileType.JSON, "achievements", "data");
+				FileManager data = addon.getFile(FileType.JSON, "achievements", "data");
 
 				if (data.getRoot().exists()) {
 					if (data.getRoot().isNode("memory.kingdom." + name)) {
 						for (String a : data.getRoot().getNode("memory.kingdom." + name).getKeys(false)) {
-							if (!loadAchievement(KingdomAchievement.newInstance(a, data.getRoot().getString("memory.kingdom." + name + "." + a + ".info"), data.getRoot().getDouble("memory.kingdom." + name + "." + a + ".progression"), data.getRoot().getDouble("memory.kingdom." + name + "." + a + ".requirement")))) {
-								cycle.getLogger().log(Level.SEVERE, "- Unable to load achievement " + a);
+							Quest achievement = Quest.newQuest(a, data.getRoot().getString("memory.kingdom." + name + "." + a + ".info"), data.getRoot().getDouble("memory.kingdom." + name + "." + a + ".progression"), data.getRoot().getDouble("memory.kingdom." + name + "." + a + ".requirement"));
+							if (data.getRoot().isNode("memory.kingdom." + name + "." + a + ".reward")) {
+								Node reward = data.getRoot().getNode("memory.kingdom." + name + "." + a + ".reward");
+								boolean money = reward.getNode("type").toPrimitive().getString().equals("MONEY");
+								if (money) {
+									achievement.setReward(Reward.MONEY, reward.getNode("value").toPrimitive().getDouble());
+								} else {
+									achievement.setReward(Reward.ITEM, reward.getNode("value").toBukkit().getItemStack());
+								}
 							}
+							loadQuest(achievement);
 						}
 					}
 				}
@@ -64,25 +73,35 @@ public class Kingdom extends Progressable implements Iterable<Clan> {
 
 		}
 
-		if (this.achievements.isEmpty()) {
-			loadAchievement(getDefaultAchievements());
+		if (this.quests.isEmpty()) {
+			loadQuest(getDefaults());
 		}
-		PROGRESSABLES.add(this);
+		PROGRESSIVES.add(this);
 
 	}
 
-	public static KingdomAchievement[] getDefaultAchievements() {
-		KingdomAchievement walls = KingdomAchievement.newInstance("Walls", "Build a wall to contain your kingdom.", 0, 2480);
+	public static Quest[] getDefaults() {
+		Quest walls = Quest.newQuest("Walls", "Build a wall to contain your kingdom.", 0, 2480);
 		walls.setReward(Reward.MONEY, 48.50);
-		KingdomAchievement gate = KingdomAchievement.newInstance("Gate", "Build a gate for your kingdom.", 0, 120);
+		Quest gate = Quest.newQuest("Gate", "Build a gate for your kingdom.", 0, 120);
 		walls.setReward(Reward.MONEY, 24.15);
-		KingdomAchievement kills = KingdomAchievement.newInstance("Killer", "Kill at-least 12 enemies within their own land.", 0, 12);
+		Quest kills = Quest.newQuest("Killer", "Kill at-least 12 enemies within their own land.", 0, 12);
 		walls.setReward(Reward.MONEY, 88.95);
-		return new KingdomAchievement[]{walls, gate, kills};
+		Quest spawner = Quest.newQuest("Monsters Box", "Locate a spawner", 0, 1);
+		spawner.setReward(Reward.ITEM, Items.edit().setType(Material.SPAWNER).setAmount(1).build());
+		Quest farmer = Quest.newQuest("The Farmer", "Make a stack of bread or obtain all sorts of crops", 0, 4);
+		farmer.setReward(Reward.MONEY, 114.95);
+		Quest beef = Quest.newQuest("Tainted Beef", "Crucially murder a baby pigmen", 0, 1);
+		beef.setReward(Reward.ITEM, Items.edit().setType(Material.ZOMBIE_SPAWN_EGG).setAmount(1).build());
+		Quest sky = Quest.newQuest("Skylight", "Launch fireworks in the sky", 0, 12);
+		sky.setReward(Reward.ITEM, Items.edit().setType(Material.GUNPOWDER).setAmount(32).build());
+		Quest color = Quest.newQuest("Colorful Child", "Breed colored sheeps", 0, 1);
+		Quest miner = Quest.newQuest("The Miner", "Obtain 32 obsidian", 0, 32);
+		return new Quest[]{walls, gate, kills, spawner, farmer, beef, sky, color, miner};
 	}
 
 	public static Kingdom getKingdom(String name) {
-		return Progressable.getProgressables().stream().filter(p -> p.getName().equalsIgnoreCase(name)).map(p -> (Kingdom) p).findFirst().orElse(null);
+		return Progressive.getProgressives().stream().filter(p -> p.getName().equalsIgnoreCase(name)).map(p -> (Kingdom) p).findFirst().orElse(null);
 	}
 
 	public void setName(String name) {
@@ -93,7 +112,7 @@ public class Kingdom extends Progressable implements Iterable<Clan> {
 
 		section.getRoot().set(getName(), null);
 
-		for (KingdomAchievement achievement : achievements) {
+		for (Quest achievement : quests) {
 			achievement.delete("memory.kingdom." + getName());
 		}
 
@@ -114,7 +133,7 @@ public class Kingdom extends Progressable implements Iterable<Clan> {
 	@Override
 	public int getLevel() {
 		int level = 1;
-		for (KingdomAchievement achievement : achievements) {
+		for (Quest achievement : quests) {
 			if (achievement.isComplete()) {
 				level += 1;
 			}
@@ -127,33 +146,24 @@ public class Kingdom extends Progressable implements Iterable<Clan> {
 	}
 
 	@Override
-	public @Nullable KingdomAchievement getAchievement(String title) {
-		return getAchievements().stream().filter(a -> a.getTitle().equalsIgnoreCase(title)).findFirst().orElse(null);
+	public @Nullable Quest getQuest(String title) {
+		return getQuests().stream().filter(a -> a.getTitle().equalsIgnoreCase(title)).findFirst().orElse(null);
 	}
 
 	@Override
-	public @NotNull List<KingdomAchievement> getAchievements() {
-		return this.achievements;
+	public @NotNull List<Quest> getQuests() {
+		return this.quests;
 	}
 
 	@Override
-	public void loadAchievement(KingdomAchievement... achievement) {
+	public void loadQuest(Quest... quests) {
 
-		for (KingdomAchievement achiev : achievement) {
-			loadAchievement(achiev);
+		for (Quest q : quests) {
+			if (getQuests().stream().noneMatch(a -> a.getTitle().equalsIgnoreCase(q.getTitle()))) {
+				q.setParent(this);
+				this.quests.add(q);
+			}
 		}
-
-	}
-
-	@Override
-	public boolean loadAchievement(KingdomAchievement achievement) {
-
-		if (getAchievements().stream().noneMatch(a -> a.getTitle().equalsIgnoreCase(achievement.getTitle()))) {
-			achievement.setParent(this);
-			return this.achievements.add(achievement);
-		}
-
-		return false;
 
 	}
 
@@ -166,7 +176,7 @@ public class Kingdom extends Progressable implements Iterable<Clan> {
 
 		section.getRoot().set(getName() + ".members", ids);
 
-		for (KingdomAchievement achievement : getAchievements()) {
+		for (Quest achievement : getQuests()) {
 			achievement.saveProgress("memory.kingdom." + getName());
 		}
 
@@ -180,17 +190,17 @@ public class Kingdom extends Progressable implements Iterable<Clan> {
 
 		section.getRoot().set(getName(), null);
 
-		for (KingdomAchievement achievement : achievements) {
+		for (Quest achievement : quests) {
 			achievement.delete("memory.kingdom." + getName());
 		}
 
 		section.getRoot().save();
 
-		Progressable.PROGRESSABLES.remove(this);
+		Progressive.PROGRESSIVES.remove(this);
 	}
 
 	public static Set<Kingdom> entrySet() {
-		return Progressable.PROGRESSABLES.stream().filter(p -> p instanceof Kingdom).map(p -> (Kingdom) p).collect(Collectors.toSet());
+		return Progressive.PROGRESSIVES.stream().filter(p -> p instanceof Kingdom).map(p -> (Kingdom) p).collect(Collectors.toSet());
 	}
 
 	@NotNull

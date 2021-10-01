@@ -2,11 +2,7 @@ package com.github.sanctum.clans.construct.extra;
 
 import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClansAPI;
-import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
-import org.bukkit.scoreboard.Criterias;
-import org.bukkit.scoreboard.DisplaySlot;
-import org.bukkit.scoreboard.Objective;
 import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.scoreboard.Team;
 
@@ -23,23 +19,17 @@ public class ClanDisplayName {
 	}
 
 	public static void set(Clan.Associate associate, String prefix) {
-		Scoreboard scoreboard = associate.getPlayer().getPlayer().getScoreboard();
-		Team team = getTeam(associate.getPlayer().getPlayer());
+		Scoreboard scoreboard = associate.getUser().toBukkit().getPlayer().getScoreboard();
+		Team team = getTeam(associate.getUser().toBukkit().getPlayer());
 		if (team == null) {
 			scoreboard.registerNewTeam(associate.getClan().getId().toString());
 			set(associate, prefix);
 		} else {
-			Team t = getTeam(associate.getPlayer().getPlayer());
+			Team t = getTeam(associate.getUser().toBukkit().getPlayer());
 			t.setPrefix(Clan.ACTION.color(prefix));
 			t.setDisplayName(associate.getClan().getName());
 			t.setOption(Team.Option.NAME_TAG_VISIBILITY, Team.OptionStatus.ALWAYS);
 			t.addEntry(associate.getName());
-			if (scoreboard.getObjective("showhealth") == null) {
-				if (ClansAPI.getData().isTrue("Clans.nametag-prefix.show-health")) {
-					Objective h = scoreboard.registerNewObjective("showhealth", Criterias.HEALTH, ChatColor.DARK_RED + "❤");
-					h.setDisplaySlot(DisplaySlot.BELOW_NAME);
-				}
-			}
 		}
 	}
 
@@ -60,12 +50,6 @@ public class ClanDisplayName {
 			team.setDisplayName(associate.getClan().getName());
 			team.setOption(Team.Option.NAME_TAG_VISIBILITY, Team.OptionStatus.ALWAYS);
 			team.addEntry(player.getName());
-			if (scoreboard.getObjective("showhealth") == null) {
-				if (ClansAPI.getData().isTrue("Clans.nametag-prefix.show-health")) {
-					Objective h = scoreboard.registerNewObjective("showhealth", Criterias.HEALTH, ChatColor.DARK_RED + "❤");
-					h.setDisplaySlot(DisplaySlot.BELOW_NAME);
-				}
-			}
 		}
 	}
 
@@ -88,9 +72,9 @@ public class ClanDisplayName {
 
 		if (!associate.isValid()) return;
 
-		Scoreboard scoreboard = associate.getPlayer().getPlayer().getScoreboard();
+		Scoreboard scoreboard = associate.getUser().toBukkit().getPlayer().getScoreboard();
 		try {
-			Team team = getTeam(associate.getPlayer().getPlayer());
+			Team team = getTeam(associate.getUser().toBukkit().getPlayer());
 			if (team != null) {
 				if (!team.getEntries().isEmpty()) {
 					if (team.getEntries().contains(associate.getName())) {

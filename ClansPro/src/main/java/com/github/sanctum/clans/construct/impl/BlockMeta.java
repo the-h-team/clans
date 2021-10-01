@@ -4,7 +4,7 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 
-class BlockMeta {
+public final class BlockMeta {
 
 	private final Material type;
 	protected final long time;
@@ -24,11 +24,11 @@ class BlockMeta {
 		return parent;
 	}
 
-	public Location getOriginalLocation() {
+	public Location getLocationInteracted() {
 		return location;
 	}
 
-	public Material getOriginalType() {
+	public Material getTypeFromInteraction() {
 		return type;
 	}
 }

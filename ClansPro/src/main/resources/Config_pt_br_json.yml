@@ -182,8 +182,8 @@ Clans:
       message: '&7Você está entrando agora {0}''s terra'
     wilderness:
       title: 'Deixando &6{0}'
-      sub-title: 'Deixando {0}''s land'
-      message: '&7Agora saindo {0}''s land'
+      sub-title: 'Deixando {0}''s terra'
+      message: '&7Agora saindo {0}''s terra'
 
   #################################
   ##                             ##
@@ -300,7 +300,7 @@ Clans:
       - 'clan base'
       - 'spawn'
       - 'home'
-    # Change the max amount clans allowed within a clan war. Hard-cap = 4
+    # Change the max amount of clans allowed within a clan war. Hard-cap = 4
     max-clans: 2
     # The amount of members queued required to start a war.
     que-needed: 4

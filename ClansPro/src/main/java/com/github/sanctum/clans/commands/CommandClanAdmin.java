@@ -1,8 +1,8 @@
 package com.github.sanctum.clans.commands;
 
 import com.github.sanctum.clans.bridge.ClanAddonQuery;
-import com.github.sanctum.clans.bridge.internal.stashes.StashContainer;
-import com.github.sanctum.clans.bridge.internal.vaults.VaultContainer;
+import com.github.sanctum.clans.bridge.internal.StashesAddon;
+import com.github.sanctum.clans.bridge.internal.VaultsAddon;
 import com.github.sanctum.clans.construct.DataManager;
 import com.github.sanctum.clans.construct.GUI;
 import com.github.sanctum.clans.construct.api.Clan;
@@ -390,7 +390,7 @@ public class CommandClanAdmin extends Command {
 					for (Clan.Associate id : target.getMembers()) {
 						if (id.getPriority().toInt() == 3) {
 							target.broadcast("&8(&e!&8) &4&oOur clan has been forcibly closed by a staff member.");
-							Clan.ACTION.removePlayer(id.getPlayer().getUniqueId());
+							Clan.ACTION.removePlayer(id.getUser().getId());
 							break;
 						}
 					}
@@ -622,7 +622,7 @@ public class CommandClanAdmin extends Command {
 						if (id != null) {
 							Clan target = ClansAPI.getInstance().getClan(id);
 							if (ClanAddonQuery.getUsedNames().contains("Vaults")) {
-								p.openInventory(VaultContainer.getVault(target.getName()));
+								VaultsAddon.getVault(target.getName()).open(p);
 								return true;
 							} else {
 								lib.sendMessage(p, "&c&oAddon not installed.");
@@ -638,7 +638,7 @@ public class CommandClanAdmin extends Command {
 						if (id != null) {
 							Clan target = ClansAPI.getInstance().getClan(id);
 							if (ClanAddonQuery.getUsedNames().contains("Stashes")) {
-								p.openInventory(StashContainer.getStash(target.getName()));
+								StashesAddon.getStash(target.getName()).open(p);
 								return true;
 							} else {
 								lib.sendMessage(p, "&c&oAddon not installed.");

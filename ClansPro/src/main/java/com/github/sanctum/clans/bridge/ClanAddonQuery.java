@@ -6,9 +6,8 @@ import com.github.sanctum.labyrinth.LabyrinthProvider;
 import com.github.sanctum.labyrinth.api.Service;
 import com.github.sanctum.labyrinth.data.Registry;
 import com.github.sanctum.labyrinth.data.service.AnnotationDiscovery;
-import com.github.sanctum.labyrinth.event.custom.LabeledAs;
+import com.github.sanctum.labyrinth.data.service.Check;
 import com.github.sanctum.labyrinth.event.custom.Subscribe;
-import com.github.sanctum.labyrinth.event.custom.Vent;
 import com.google.common.collect.Sets;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
@@ -33,29 +32,32 @@ import org.bukkit.plugin.RegisteredListener;
 
 public class ClanAddonQuery {
 	protected static int COUNT = 0;
-	private static final Set<ClanAddon> CLAN_ADDONS = new HashSet<>();
+	protected static final Set<ClanAddon> CLAN_ADDONS = new HashSet<>();
 
 	private static final List<String> DATA_LOG = new ArrayList<>();
 
 	public static Set<ClanAddon> getRegisteredAddons() {
-		return CLAN_ADDONS;
+		return Collections.unmodifiableSet(CLAN_ADDONS);
 	}
 
 	public static boolean disable(ClanAddon e) {
-		if (!e.isActive()) return false;
-		e.setActive(false);
+		Check.argument(getRegisteredAddons().contains(e), "To disable addons they must first be properly loaded!");
+		if (!e.getContext().isActive()) return false;
+		e.getContext().setActive(false);
 		e.onDisable();
 		DATA_LOG.clear();
 		ClansAPI.getInstance().getPlugin().getLogger().info("- Queueing removal of " + '"' + e.getName() + '"' + " addon information.");
 		DATA_LOG.add("Clans [Pro] - Queueing removal of " + '"' + e.getName() + '"' + " addon information.");
-		List<Listener> a = HandlerList.getRegisteredListeners(ClansAPI.getInstance().getPlugin()).stream().sequential().filter(r -> e.getAdditions().contains(r.getListener())).map(RegisteredListener::getListener).collect(Collectors.toList());
+		List<Listener> a = HandlerList.getRegisteredListeners(ClansAPI.getInstance().getPlugin()).stream().sequential().filter(r -> Arrays.asList(e.getContext().getListeners()).contains(r.getListener())).map(RegisteredListener::getListener).collect(Collectors.toList());
 		int count = 0;
 		if (!a.isEmpty()) {
 			DATA_LOG.add(" - Unregistering addon from cache.");
 			for (Listener l : a) {
-				HandlerList.unregisterAll(l);
-				LabeledAs an = l.getClass().getAnnotation(LabeledAs.class);
-				LabyrinthProvider.getInstance().getEventMap().unregister(e.getPlugin(), an != null ? an.value() : null, l);
+				if (AnnotationDiscovery.of(Subscribe.class, l).isPresent()) {
+					LabyrinthProvider.getInstance().getEventMap().unsubscribe(l);
+				} else {
+					HandlerList.unregisterAll(l);
+				}
 				count++;
 			}
 			if (count > 0) {
@@ -70,27 +72,27 @@ public class ClanAddonQuery {
 	}
 
 	public static boolean enable(ClanAddon e) {
-		if (e.isActive()) return false;
-		for (String precursor : e.getDependencies()) {
+		Check.argument(getRegisteredAddons().contains(e), "To enable addons they must first be properly loaded! Usage of ClanAddonQuery#load(ClanAddon) expected first!");
+		if (e.getContext().isActive()) return false;
+		for (String precursor : e.getContext().getDependencies()) {
 			ClanAddon addon = getAddon(precursor);
 			ClanException.call(ClanAddonDependencyException::new).check(addon).run("Missing dependency " + precursor + " for addon " + e.getName() + ". Please install the missing dependency for this addon.");
 		}
 
-		e.setActive(true);
+		e.getContext().setActive(true);
 		e.onEnable();
 		DATA_LOG.clear();
 		ClansAPI.getInstance().getPlugin().getLogger().info("- Queueing pickup for " + '"' + e.getName() + '"' + " addon information.");
 		DATA_LOG.add("Clans [Pro] - Queueing pickup for " + '"' + e.getName() + '"' + " addon information.");
-		List<Listener> a = HandlerList.getRegisteredListeners(ClansAPI.getInstance().getPlugin()).stream().sequential().filter(r -> e.getAdditions().contains(r.getListener())).map(RegisteredListener::getListener).collect(Collectors.toList());
+		List<Listener> a = HandlerList.getRegisteredListeners(ClansAPI.getInstance().getPlugin()).stream().sequential().filter(r -> Arrays.asList(e.getContext().getListeners()).contains(r.getListener())).map(RegisteredListener::getListener).collect(Collectors.toList());
 		int count = 0;
-		for (Listener add : e.getAdditions()) {
+		for (Listener add : e.getContext().getListeners()) {
 			if (a.contains(add)) {
 				ClansAPI.getInstance().getPlugin().getLogger().info("- (+1) Listener failed to register. Already registered and skipping.");
 				DATA_LOG.add(" - (+1) Listener failed to register. Already registered and skipping.");
 			} else {
-				AnnotationDiscovery<Subscribe, Object> discovery = AnnotationDiscovery.of(Subscribe.class, add);
-				if (discovery.filter(m -> m.getParameters().length == 1 && m.getParameters()[0].getType().isAssignableFrom(Vent.class) && m.isAnnotationPresent(Subscribe.class)).count() > 0) {
-					LabyrinthProvider.getService(Service.VENT).register(ClansAPI.getInstance().getPlugin(), add);
+				if (AnnotationDiscovery.of(Subscribe.class, add).isPresent()) {
+					LabyrinthProvider.getService(Service.VENT).subscribe(ClansAPI.getInstance().getPlugin(), add);
 				} else {
 					Bukkit.getPluginManager().registerEvents(add, ClansAPI.getInstance().getPlugin());
 				}
@@ -111,7 +113,7 @@ public class ClanAddonQuery {
 	public static List<String> getUnusedNames() {
 		List<String> array = new ArrayList<>();
 		for (ClanAddon e : CLAN_ADDONS) {
-			if (!e.isActive()) {
+			if (!e.getContext().isActive()) {
 				array.add(e.getName());
 			}
 		}
@@ -121,7 +123,7 @@ public class ClanAddonQuery {
 	public static List<String> getUsedNames() {
 		List<String> array = new ArrayList<>();
 		for (ClanAddon e : CLAN_ADDONS) {
-			if (e.isActive()) {
+			if (e.getContext().isActive()) {
 				array.add(e.getName());
 			}
 		}
@@ -129,14 +131,20 @@ public class ClanAddonQuery {
 	}
 
 	public static void adjust(ClanAddon addon) {
-		for (String load : addon.getLoadBefore()) {
-			ClanAddon a = ClanAddonQuery.getAddon(load);
+		for (String load : addon.getContext().getLoadBefore()) {
+			ClanAddon a = getAddon(load);
 			if (a != null) {
-				if (a.getLevel() <= addon.getLevel()) {
-					a.setLevel(addon.getLevel() + 1);
+				if (a.getContext().getLevel() <= addon.getContext().getLevel()) {
+					a.getContext().setLevel(addon.getContext().getLevel() + 1);
 				}
 			}
 		}
+	}
+
+	public static boolean remove(ClanAddon addon) {
+		if (!CLAN_ADDONS.contains(addon)) return false;
+		addon.remove();
+		return true;
 	}
 
 	public static void register(Class<? extends ClanAddon> cycle) {
@@ -147,31 +155,29 @@ public class ClanAddonQuery {
 		Logger l = PRO.getLogger();
 		try {
 			ClanAddon c = cycle.newInstance();
-			c.loadDepends();
-			c.onLoad();
-			c.register();
+			load(c);
 			adjust(c);
-			for (String precursor : c.getDependencies()) {
+			for (String precursor : c.getContext().getDependencies()) {
 				ClanAddon addon = ClanAddonQuery.getAddon(precursor);
 				ClanException.call(ClanAddonDependencyException::new).check(addon).run("Missing dependency " + precursor + " for addon " + c.getName() + ". Please install the missing dependency for this addon.");
 			}
 			c.onEnable();
-			if (c.persist()) {
+			if (c.isStaged()) {
 
 				l.info(" ");
 				l.info("▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬");
 				l.info("- Addon: " + c.getName());
 				l.info("- Description: " + c.getDescription());
-				l.info("- Persistent: (" + c.persist() + ")");
+				l.info("- Persistent: (" + c.isStaged() + ")");
 				l.info("▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬");
 				l.info(" ");
-				l.info("- Listeners: (" + c.getAdditions().size() + ")");
-				for (Listener addition : c.getAdditions()) {
+				l.info("- Listeners: (" + c.getContext().getListeners().length + ")");
+				for (Listener addition : c.getContext().getListeners()) {
 					String format = addition.getClass().getSimpleName().isEmpty() ? "{REDACTED}" : addition.getClass().getSimpleName();
 					boolean registered = HandlerList.getRegisteredListeners(PRO).stream().anyMatch(r -> r.getListener().equals(addition));
 					if (!registered) {
 						l.info("- [" + c.getName() + "] (+1) Listener " + format + " loaded");
-						Bukkit.getPluginManager().registerEvents(addition, PRO);
+						LabyrinthProvider.getService(Service.VENT).subscribe(PRO, addition);
 					} else {
 						l.info("- [" + c.getName() + "] (-1) Listener " + format + " already loaded. Skipping.");
 					}
@@ -180,12 +186,62 @@ public class ClanAddonQuery {
 				l.info(" ");
 				l.info("- Addon: " + c.getName());
 				l.info("- Description: " + c.getDescription());
-				l.info("- Persistent: (" + c.persist() + ")");
+				l.info("- Persistent: (" + c.isStaged() + ")");
 				c.remove();
 				l.info(" ");
-				l.info("- Listeners: (" + c.getAdditions().size() + ")");
-				for (Listener addition : c.getAdditions()) {
-					l.info("- [" + c.getName() + "] (+1) Addon failed to load due to no persistence.");
+				l.info("- Listeners: (" + c.getContext().getListeners().length + ")");
+				for (Listener addition : c.getContext().getListeners()) {
+					l.info("- [" + addition.getClass().getSimpleName() + "] (+1) Listener failed to load due to no persistence.");
+				}
+			}
+		} catch (InstantiationException | IllegalAccessException e) {
+			l.severe("- Unable to cast Addon to the class " + cycle.getName() + ". This likely means you are not implementing the Addon interface for your event class properly.");
+			e.printStackTrace();
+		}
+	}
+
+	public static void register(Plugin plugin, Class<? extends ClanAddon> cycle) {
+		ClanException.call(ClanAddonRegistrationException::new).check(getAddon(cycle.getName())).run("Addon's can only be registered one time!", true);
+		Logger l = plugin.getLogger();
+		try {
+			ClanAddon c = cycle.newInstance();
+			load(c);
+			adjust(c);
+			for (String precursor : c.getContext().getDependencies()) {
+				ClanAddon addon = ClanAddonQuery.getAddon(precursor);
+				ClanException.call(ClanAddonDependencyException::new).check(addon).run("Missing dependency " + precursor + " for addon " + c.getName() + ". Please install the missing dependency for this addon.");
+			}
+			c.onEnable();
+			if (c.isStaged()) {
+
+				l.info(" ");
+				l.info("▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬");
+				l.info("- Addon: " + c.getName());
+				l.info("- Description: " + c.getDescription());
+				l.info("- Persistent: (" + c.isStaged() + ")");
+				l.info("▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬");
+				l.info(" ");
+				l.info("- Listeners: (" + c.getContext().getListeners().length + ")");
+				for (Listener addition : c.getContext().getListeners()) {
+					String format = addition.getClass().getSimpleName().isEmpty() ? "{REDACTED}" : addition.getClass().getSimpleName();
+					boolean registered = HandlerList.getRegisteredListeners(plugin).stream().anyMatch(r -> r.getListener().equals(addition));
+					if (!registered) {
+						l.info("- [" + c.getName() + "] (+1) Listener " + format + " loaded");
+						LabyrinthProvider.getService(Service.VENT).subscribe(plugin, addition);
+					} else {
+						l.info("- [" + c.getName() + "] (-1) Listener " + format + " already loaded. Skipping.");
+					}
+				}
+			} else {
+				l.info(" ");
+				l.info("- Addon: " + c.getName());
+				l.info("- Description: " + c.getDescription());
+				l.info("- Persistent: (" + c.isStaged() + ")");
+				c.remove();
+				l.info(" ");
+				l.info("- Listeners: (" + c.getContext().getListeners().length + ")");
+				for (Listener addition : c.getContext().getListeners()) {
+					l.info("- [" + addition.getClass().getSimpleName() + "] (+1) Listener failed to load due to no persistence.");
 				}
 			}
 		} catch (InstantiationException | IllegalAccessException e) {
@@ -202,22 +258,20 @@ public class ClanAddonQuery {
 				.pick(packageName)
 				.operate(e -> {
 					ClanException.call(ClanAddonRegistrationException::new).check(e).run("Addon's can only be registered one time!", true);
-					e.loadDepends();
-					e.onLoad();
-					e.register();
+					load(e);
 				}).getData();
 
 		l.info("- Found (" + data.size() + ") clan addon(s)");
 
 		data.forEach(ClanAddonQuery::adjust);
 
-		for (ClanAddon e : data.stream().sorted(Comparator.comparingInt(ClanAddon::getLevel)).collect(Collectors.toCollection(LinkedHashSet::new))) {
-			for (String precursor : e.getDependencies()) {
+		for (ClanAddon e : data.stream().sorted(Comparator.comparingInt(value -> value.getContext().getLevel())).collect(Collectors.toCollection(LinkedHashSet::new))) {
+			for (String precursor : e.getContext().getDependencies()) {
 				ClanAddon addon = ClanAddonQuery.getAddon(precursor);
 				ClanException.call(ClanAddonDependencyException::new).check(addon).run("Missing dependency " + precursor + " for addon " + e.getName() + ". Please install the missing dependency for this addon.");
 			}
 			e.onEnable();
-			if (e.persist()) {
+			if (e.isStaged()) {
 
 				l.info(" ");
 				l.info("▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬");
@@ -225,16 +279,16 @@ public class ClanAddonQuery {
 				l.info("- Version: " + e.getVersion());
 				l.info("- Author(s): " + Arrays.toString(e.getAuthors()));
 				l.info("- Description: " + e.getDescription());
-				l.info("- Persistent: (" + e.persist() + ")");
+				l.info("- Persistent: (" + e.isStaged() + ")");
 				l.info("▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬");
 				l.info(" ");
-				l.info("- Listeners: (" + e.getAdditions().size() + ")");
-				for (Listener addition : e.getAdditions()) {
+				l.info("- Listeners: (" + e.getContext().getListeners().length + ")");
+				for (Listener addition : e.getContext().getListeners()) {
 					String format = addition.getClass().getSimpleName().isEmpty() ? "{REDACTED}" : addition.getClass().getSimpleName();
 					boolean registered = HandlerList.getRegisteredListeners(PRO).stream().anyMatch(r -> r.getListener().equals(addition));
 					if (!registered) {
 						l.info("- [" + e.getName() + "] (+1) Class " + format + " loaded");
-						Bukkit.getPluginManager().registerEvents(addition, PRO);
+						LabyrinthProvider.getService(Service.VENT).subscribe(PRO, addition);
 					} else {
 						l.info("- [" + e.getName() + "] (-1) Class " + format + " already loaded. Skipping.");
 					}
@@ -243,12 +297,12 @@ public class ClanAddonQuery {
 				l.info(" ");
 				l.info("- Addon: " + e.getName());
 				l.info("- Description: " + e.getDescription());
-				l.info("- Persistent: (" + e.persist() + ")");
+				l.info("- Persistent: (" + e.isStaged() + ")");
 				e.remove();
 				l.info(" ");
-				l.info("- Listeners: (" + e.getAdditions().size() + ")");
-				for (Listener addition : e.getAdditions()) {
-					l.info("- [" + e.getName() + "] (+1) Addon failed to load due to no persistence.");
+				l.info("- Listeners: (" + e.getContext().getListeners().length + ")");
+				for (Listener addition : e.getContext().getListeners()) {
+					l.info("- [" + addition.getClass().getSimpleName() + "] (+1) Listener failed to load due to no persistence.");
 				}
 			}
 		}
@@ -257,7 +311,6 @@ public class ClanAddonQuery {
 	public static void load(ClanAddon addon) {
 		ClanException.call(ClanAddonRegistrationException::new).check(getAddon(addon.getName())).run("Addon's can only be loaded one time!", true);
 		try {
-			addon.loadDepends();
 			addon.onLoad();
 			addon.register();
 		} catch (NoClassDefFoundError e) {
@@ -269,15 +322,7 @@ public class ClanAddonQuery {
 	public static void load(Class<? extends ClanAddon> addon) {
 		try {
 			ClanAddon c = addon.newInstance();
-			ClanException.call(ClanAddonRegistrationException::new).check(getAddon(c.getName())).run("Addon's can only be loaded one time!", true);
-			try {
-				c.loadDepends();
-				c.onLoad();
-				c.register();
-			} catch (NoClassDefFoundError e) {
-				LabyrinthProvider.getInstance().getLogger().warning("- Your Labyrinth core is out-dated. Additions for addon " + c.getName() + " will not work.");
-				LabyrinthProvider.getInstance().getLogger().warning("- It's possible this has no effect to you as of this moment so you may be safe to ignore this message.");
-			}
+			load(c);
 		} catch (InstantiationException | IllegalAccessException e) {
 			ClansAPI.getInstance().getPlugin().getLogger().severe("- Unable to cast ClanAddon to the class " + addon.getName() + ". This likely means you are not extending the ClanAddon abstraction for your addon class properly.");
 			e.printStackTrace();
@@ -314,7 +359,6 @@ public class ClanAddonQuery {
 				ClanException.call(ClanAddonRegistrationException::new).check(getAddon(cycle.getName())).run("Addon's can only be loaded one time!", true);
 				try {
 					plugin.getLogger().info("- loading addon " + cycle.getName() + " version " + cycle.getVersion());
-					cycle.loadDepends();
 					cycle.onLoad();
 					cycle.register();
 				} catch (NoClassDefFoundError e) {

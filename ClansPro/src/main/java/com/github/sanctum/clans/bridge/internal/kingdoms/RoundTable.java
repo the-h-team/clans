@@ -2,7 +2,6 @@ package com.github.sanctum.clans.bridge.internal.kingdoms;
 
 import com.github.sanctum.clans.bridge.ClanAddon;
 import com.github.sanctum.clans.bridge.internal.KingdomAddon;
-import com.github.sanctum.clans.bridge.internal.kingdoms.achievement.KingdomAchievement;
 import com.github.sanctum.clans.construct.Claim;
 import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClansAPI;
@@ -16,19 +15,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
-import java.util.logging.Level;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class RoundTable extends Progressable {
+public class RoundTable extends Progressive {
 
 	private final String name;
-
-	private final Map<UUID, Rank> USERS = new HashMap<>();
-
-	private final Set<UUID> INVITES = new HashSet<>();
-
-	private final List<KingdomAchievement> ACHIEVEMENTS = new LinkedList<>();
+	private final Map<UUID, Rank> users = new HashMap<>();
+	private final Set<UUID> invites = new HashSet<>();
+	private final List<Quest> quests = new LinkedList<>();
 
 	public RoundTable(KingdomAddon cycle) {
 
@@ -41,9 +36,7 @@ public class RoundTable extends Progressable {
 		if (data.getRoot().exists()) {
 			if (data.getRoot().isNode("memory.table")) {
 				for (String name : data.getRoot().getNode("memory.table").getKeys(false)) {
-					if (!loadAchievement(KingdomAchievement.newInstance(name, data.getRoot().getString("memory.table." + name + ".info"), data.getRoot().getDouble("memory.table." + name + ".progression"), data.getRoot().getDouble("memory.table." + name + ".requirement")))) {
-						cycle.getLogger().log(Level.SEVERE, "- Unable to load achievement " + name);
-					}
+					loadQuest(Quest.newQuest(name, data.getRoot().getString("memory.table." + name + ".info"), data.getRoot().getDouble("memory.table." + name + ".progression"), data.getRoot().getDouble("memory.table." + name + ".requirement")));
 				}
 			}
 		}
@@ -53,17 +46,17 @@ public class RoundTable extends Progressable {
 			if (!users.getRoot().getKeys(false).isEmpty()) {
 				for (String user : users.getRoot().getKeys(false)) {
 					UUID id = UUID.fromString(user);
-					this.USERS.put(id, Rank.valueOf(users.getRoot().getString(user + ".rank")));
+					this.users.put(id, Rank.valueOf(users.getRoot().getString(user + ".rank")));
 				}
 			}
 
 		}
 
-		if (ACHIEVEMENTS.isEmpty()) {
-			loadAchievement(Kingdom.getDefaultAchievements());
+		if (quests.isEmpty()) {
+			loadQuest(Kingdom.getDefaults());
 		}
 
-		PROGRESSABLES.add(this);
+		PROGRESSIVES.add(this);
 	}
 
 	public enum Permission {
@@ -109,37 +102,37 @@ public class RoundTable extends Progressable {
 	}
 
 	public boolean isMember(UUID target) {
-		return USERS.containsKey(target);
+		return users.containsKey(target);
 	}
 
 	public boolean isInvited(UUID target) {
-		return this.INVITES.contains(target);
+		return this.invites.contains(target);
 	}
 
 	public boolean invite(UUID target) {
 		if (isMember(target)) return false;
-		if (this.INVITES.contains(target)) return false;
-		return this.INVITES.add(target);
+		if (this.invites.contains(target)) return false;
+		return this.invites.add(target);
 	}
 
 	public boolean join(UUID target) {
-		if (!this.INVITES.contains(target)) return false;
+		if (!this.invites.contains(target)) return false;
 
 		if (isMember(target)) return false;
 
 		take(target, Rank.LOW);
-		this.INVITES.remove(target);
+		this.invites.remove(target);
 
 		return true;
 	}
 
 	public void take(UUID target, Rank rank) {
-		this.USERS.put(target, rank);
+		this.users.put(target, rank);
 	}
 
 	public boolean leave(UUID target) {
 		if (!isMember(target)) return false;
-		USERS.remove(target);
+		users.remove(target);
 		return true;
 	}
 
@@ -151,7 +144,7 @@ public class RoundTable extends Progressable {
 	@Override
 	public int getLevel() {
 		int level = 1;
-		for (KingdomAchievement achievement : ACHIEVEMENTS) {
+		for (Quest achievement : quests) {
 			if (achievement.isComplete()) {
 				level += 1;
 			}
@@ -160,28 +153,28 @@ public class RoundTable extends Progressable {
 	}
 
 	@Override
-	public @Nullable KingdomAchievement getAchievement(String title) {
-		return getAchievements().stream().filter(a -> a.getTitle().equalsIgnoreCase(title)).findFirst().orElse(null);
+	public @Nullable Quest getQuest(String title) {
+		return getQuests().stream().filter(a -> a.getTitle().equalsIgnoreCase(title)).findFirst().orElse(null);
 	}
 
 	public Set<UUID> getUsers() {
 
-		return this.USERS.keySet();
+		return this.users.keySet();
 
 	}
 
 	public Rank getRank(UUID user) {
-		return this.USERS.get(user);
+		return this.users.get(user);
 	}
 
 	@Override
-	public @NotNull List<KingdomAchievement> getAchievements() {
-		return ACHIEVEMENTS;
+	public @NotNull List<Quest> getQuests() {
+		return quests;
 	}
 
 	public List<Claim> getLandPool() {
 		List<Claim> list = new LinkedList<>();
-		for (UUID id : this.USERS.keySet()) {
+		for (UUID id : this.users.keySet()) {
 			Clan c = ClansAPI.getInstance().getClan(id);
 			if (c != null) {
 				list.addAll(Arrays.asList(c.getOwnedClaims()));
@@ -197,23 +190,14 @@ public class RoundTable extends Progressable {
 	}
 
 	@Override
-	public void loadAchievement(KingdomAchievement... achievement) {
+	public void loadQuest(Quest... quests) {
 
-		for (KingdomAchievement achiev : achievement) {
-			loadAchievement(achiev);
+		for (Quest q : quests) {
+			if (this.quests.stream().noneMatch(a -> a.getTitle().equalsIgnoreCase(q.getTitle()))) {
+				q.setParent(this);
+				this.quests.add(q);
+			}
 		}
-
-	}
-
-	@Override
-	public boolean loadAchievement(KingdomAchievement achievement) {
-
-		if (this.ACHIEVEMENTS.stream().noneMatch(a -> a.getTitle().equalsIgnoreCase(achievement.getTitle()))) {
-			achievement.setParent(this);
-			return this.ACHIEVEMENTS.add(achievement);
-		}
-
-		return false;
 
 	}
 
@@ -222,13 +206,13 @@ public class RoundTable extends Progressable {
 
 		FileManager users = cycle.getFile(FileType.JSON, "users", "data");
 
-		for (Map.Entry<UUID, Rank> entry : this.USERS.entrySet()) {
+		for (Map.Entry<UUID, Rank> entry : this.users.entrySet()) {
 			users.getRoot().set(entry.getKey().toString() + ".rank", entry.getValue().name());
 		}
 
 		users.getRoot().save();
 
-		for (KingdomAchievement achievement : getAchievements()) {
+		for (Quest achievement : getQuests()) {
 			achievement.saveProgress("memory.table");
 		}
 

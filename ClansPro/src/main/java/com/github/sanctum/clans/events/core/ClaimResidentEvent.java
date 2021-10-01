@@ -34,7 +34,7 @@ public class ClaimResidentEvent extends ClanEventBuilder {
 		this.claim = Claim.from(p.getLocation());
 		if (ClansAPI.getData().RESIDENTS.stream().noneMatch(r -> r.getPlayer().getName().equals(p.getName()))) {
 			Resident res = new Resident(p);
-			res.updateLastKnown(this.claim);
+			res.setLastKnownClaim(this.claim);
 			r = res;
 			ClansAPI.getData().RESIDENTS.add(r);
 		} else {

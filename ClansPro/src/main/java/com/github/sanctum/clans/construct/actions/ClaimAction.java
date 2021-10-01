@@ -185,7 +185,7 @@ public class ClaimAction extends StringLibrary {
 				return false;
 			}
 			LandUnClaimEvent event = ClanVentBus.call(new LandUnClaimEvent(p, claim));
-			if (claim.getClan().getMembers().stream().anyMatch(a -> p.getName().equals(a.getPlayer().getName()))) {
+			if (claim.getClan().getMembers().stream().anyMatch(a -> p.getName().equals(a.getUser().getName()))) {
 				if (!event.isCancelled()) {
 
 					if (ClansAPI.getInstance().getAssociate(p).get().getPriority().toInt() < Clan.ACTION.claimingClearance()) {
@@ -332,7 +332,7 @@ public class ClaimAction extends StringLibrary {
 				return false;
 			}
 			LandUnClaimEvent event = ClanVentBus.call(new LandUnClaimEvent(p, claim));
-			if (claim.getClan().getMembers().stream().anyMatch(a -> p.getName().equals(a.getPlayer().getName()))) {
+			if (claim.getClan().getMembers().stream().anyMatch(a -> p.getName().equals(a.getUser().getName()))) {
 				if (!event.isCancelled()) {
 
 					if (ClansAPI.getInstance().getAssociate(p).get().getPriority().toInt() < Clan.ACTION.claimingClearance()) {

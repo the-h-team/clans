@@ -403,7 +403,7 @@ public class StringLibrary {
 		if (page <= totalPageCount) {
 
 			if (memberids.isEmpty()) {
-				sendMessage(p, color("&fThe list is empty!"));
+				p.sendMessage(color("&f- Just you."));
 			} else {
 				int i = 0, k = 0;
 				page--;
@@ -414,7 +414,7 @@ public class StringLibrary {
 						UUID id = UUID.fromString(entry);
 						Clan.Associate associate = ClansAPI.getInstance().getAssociate(id).orElse(null);
 						if (associate != null) {
-							sendComponent(p, TextLib.getInstance().textRunnable("&f- ", "&b&l" + Bukkit.getOfflinePlayer(UUID.fromString(entry)).getName(), "", "&rRank: " + '"' + "&b" + associate.getRankTag() + "&r" + '"' + "\nK/D: &b&o" + associate.getKD(), "c i " + associate.getPlayer().getName()));
+							sendComponent(p, TextLib.getInstance().textRunnable("&f- ", "&b&l" + Bukkit.getOfflinePlayer(UUID.fromString(entry)).getName(), "", "&rRank: " + '"' + "&b" + associate.getRankTag() + "&r" + '"' + "\nK/D: &b&o" + associate.getKD(), "c i " + associate.getUser().getName()));
 						}
 					}
 				}

@@ -1,33 +1,36 @@
-package com.github.sanctum.clans.bridge.internal.kingdoms.achievement;
+package com.github.sanctum.clans.bridge.internal.kingdoms;
 
 import com.github.sanctum.clans.bridge.ClanAddon;
 import com.github.sanctum.clans.bridge.ClanAddonQuery;
 import com.github.sanctum.clans.bridge.ClanVentBus;
-import com.github.sanctum.clans.bridge.internal.kingdoms.Kingdom;
-import com.github.sanctum.clans.bridge.internal.kingdoms.Progressable;
-import com.github.sanctum.clans.bridge.internal.kingdoms.Reward;
-import com.github.sanctum.clans.bridge.internal.kingdoms.RoundTable;
-import com.github.sanctum.clans.bridge.internal.kingdoms.event.KingdomJobCompleteEvent;
+import com.github.sanctum.clans.bridge.internal.kingdoms.event.KingdomQuestCompletionEvent;
+import com.github.sanctum.clans.bridge.internal.kingdoms.event.RoundTableQuestCompletionEvent;
 import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.labyrinth.data.EconomyProvision;
 import com.github.sanctum.labyrinth.data.FileManager;
 import com.github.sanctum.labyrinth.data.FileType;
+import com.github.sanctum.labyrinth.data.Node;
+import com.github.sanctum.labyrinth.formatting.ComponentChunk;
+import com.github.sanctum.labyrinth.formatting.Message;
 import java.math.BigDecimal;
 import java.util.HashSet;
 import java.util.Optional;
+import java.util.Random;
 import java.util.Set;
+import net.md_5.bungee.api.chat.BaseComponent;
+import org.bukkit.Color;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public final class PersistentAchievement implements KingdomAchievement {
+public final class LocalFileQuest implements Quest, Message.Factory {
 
 	private double progression;
 
 	private boolean complete;
 
-	private Progressable parent;
+	private Progressive parent;
 
 	private Reward<?> reward;
 
@@ -39,7 +42,7 @@ public final class PersistentAchievement implements KingdomAchievement {
 
 	private final String description;
 
-	public PersistentAchievement(String title, String description, double progression, double requirement) {
+	LocalFileQuest(String title, String description, double progression, double requirement) {
 		this.title = title;
 		this.players = new HashSet<>();
 		this.description = description;
@@ -58,7 +61,7 @@ public final class PersistentAchievement implements KingdomAchievement {
 	}
 
 	@Override
-	public @Nullable Progressable getParent() {
+	public @Nullable Progressive getParent() {
 		return parent;
 	}
 
@@ -75,6 +78,11 @@ public final class PersistentAchievement implements KingdomAchievement {
 	@Override
 	public Reward<?> getReward() {
 		return reward;
+	}
+
+	@Override
+	public Set<Player> getActiveUsers() {
+		return players;
 	}
 
 	@Override
@@ -102,6 +110,20 @@ public final class PersistentAchievement implements KingdomAchievement {
 		file.getRoot().set(path + "." + getTitle() + ".progression", this.getProgression());
 
 		file.getRoot().set(path + "." + getTitle() + ".requirement", this.getRequirement());
+
+		if (this.reward != null) {
+			Node rew = file.getRoot().getNode(path + "." + getTitle() + ".reward");
+			Node type = rew.getNode("type");
+			Node value = rew.getNode("value");
+			Node message = rew.getNode("message");
+			String t = Double.class.isAssignableFrom(reward.get().getClass()) ? "MONEY" : "ITEM";
+			type.set(t);
+			value.set(reward.get());
+			message.set(message().append(new ComponentChunk(reward.getMessage())).toJson());
+			type.save();
+			value.save();
+			message.save();
+		}
 
 		file.getRoot().save();
 
@@ -148,10 +170,10 @@ public final class PersistentAchievement implements KingdomAchievement {
 			if (!this.complete) {
 				if (this.parent != null) {
 					if (Kingdom.class.isAssignableFrom(this.parent.getClass())) {
-						ClanVentBus.call(new KingdomJobCompleteEvent((Kingdom) this.parent, this));
+						ClanVentBus.call(new KingdomQuestCompletionEvent((Kingdom) this.parent, this));
 					}
 					if (RoundTable.class.isAssignableFrom(this.parent.getClass())) {
-						//ClanVentBus.call(new KingdomJobCompleteEvent((Kingdom)this.parent, this));
+						ClanVentBus.call(new RoundTableQuestCompletionEvent((RoundTable) this.parent, this));
 					}
 				}
 
@@ -174,6 +196,11 @@ public final class PersistentAchievement implements KingdomAchievement {
 					}
 
 					@Override
+					public BaseComponent[] getMessage() {
+						return message().append(text("[").color(Color.BLUE)).append(text("Money").color(Color.GREEN)).append(text("]").color(Color.BLUE)).append(text(" ")).append(text(get() + " has been received.").color(Color.ORANGE)).build();
+					}
+
+					@Override
 					public void give(Kingdom kingdom) {
 						kingdom.getMembers().forEach(this::give);
 					}
@@ -185,10 +212,12 @@ public final class PersistentAchievement implements KingdomAchievement {
 
 					@Override
 					public void give(Clan.Associate associate) {
-						Optional.ofNullable(associate.getPlayer().getPlayer()).ifPresent(p -> {
+						Optional.ofNullable(associate.getUser().toBukkit().getPlayer()).ifPresent(p -> {
 							if (EconomyProvision.getInstance().isValid()) {
 								EconomyProvision.getInstance().deposit(BigDecimal.valueOf(get()), p, p.getWorld().getName());
 							}
+							int random = new Random().nextInt(1427);
+							p.giveExp(random);
 						});
 					}
 				};
@@ -200,6 +229,11 @@ public final class PersistentAchievement implements KingdomAchievement {
 					}
 
 					@Override
+					public BaseComponent[] getMessage() {
+						return message().append(text("[").color(Color.BLUE)).append(text("Item").color(Color.GREEN).bind(hover(get()))).append(text("]").color(Color.BLUE)).append(text(" ")).append(text(get().getType() + " has been received.").color(Color.ORANGE)).build();
+					}
+
+					@Override
 					public void give(Kingdom kingdom) {
 						kingdom.getMembers().forEach(this::give);
 					}
@@ -211,18 +245,20 @@ public final class PersistentAchievement implements KingdomAchievement {
 
 					@Override
 					public void give(Clan.Associate associate) {
-						Optional.ofNullable(associate.getPlayer().getPlayer()).ifPresent(p -> {
+						Optional.ofNullable(associate.getUser().toBukkit().getPlayer()).ifPresent(p -> {
 							p.getWorld().dropItem(p.getLocation(), get());
+							int random = new Random().nextInt(1427);
+							p.giveExp(random);
 						});
 					}
 				};
 			}
 		} else
-			throw new IllegalArgumentException("KingdomAchievement: An invalid reward type was provided, expected [ITEM, MONEY]");
+			throw new IllegalArgumentException("Quest: An invalid reward type was provided, expected [ITEM, MONEY]");
 	}
 
 	@Override
-	public void setParent(Progressable k) {
+	public void setParent(Progressive k) {
 		this.parent = k;
 	}
 

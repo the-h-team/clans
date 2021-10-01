@@ -25,9 +25,13 @@ public class PlacedBlock {
 		if (getMeta().parent.getType() != Material.AIR) {
 			BlockBreakEvent event = new BlockBreakEvent(getMeta().parent, player);
 			Bukkit.getPluginManager().callEvent(event);
-			destroyed = true;
-			getMeta().parent.setType(Material.AIR);
-			return true;
+			if (!event.isCancelled()) {
+				destroyed = true;
+				getMeta().parent.setType(Material.AIR);
+				return true;
+			} else {
+				return false;
+			}
 		}
 		return false;
 	}

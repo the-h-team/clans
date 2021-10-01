@@ -1,30 +1,19 @@
 package com.github.sanctum.clans.listener;
 
 import com.github.sanctum.clans.bridge.ClanVentBus;
+import com.github.sanctum.clans.construct.Claim;
 import com.github.sanctum.clans.construct.actions.ClansUpdate;
 import com.github.sanctum.clans.construct.api.Clan;
-import com.github.sanctum.clans.construct.api.ClanCooldown;
 import com.github.sanctum.clans.construct.api.ClansAPI;
 import com.github.sanctum.clans.construct.api.War;
 import com.github.sanctum.clans.construct.extra.ClanDisplayName;
-import com.github.sanctum.clans.construct.impl.CooldownCreate;
 import com.github.sanctum.clans.construct.impl.CooldownRespawn;
-import com.github.sanctum.clans.construct.impl.DefaultClan;
 import com.github.sanctum.clans.events.core.ClaimInteractEvent;
-import com.github.sanctum.clans.events.core.ClaimResidentEvent;
-import com.github.sanctum.clans.events.core.ClanCreateEvent;
-import com.github.sanctum.clans.events.core.ClanCreatedEvent;
-import com.github.sanctum.clans.events.core.ClanWarActiveEvent;
-import com.github.sanctum.clans.events.core.ClanWarStartEvent;
-import com.github.sanctum.clans.events.core.ClanWarWonEvent;
 import com.github.sanctum.clans.events.core.LandPreClaimEvent;
-import com.github.sanctum.clans.events.core.WildernessInhabitantEvent;
 import com.github.sanctum.clans.events.damage.PlayerKillPlayerEvent;
 import com.github.sanctum.clans.events.damage.PlayerPunchPlayerEvent;
 import com.github.sanctum.clans.events.damage.PlayerShootPlayerEvent;
 import com.github.sanctum.labyrinth.LabyrinthProvider;
-import com.github.sanctum.labyrinth.annotation.Experimental;
-import com.github.sanctum.labyrinth.annotation.Note;
 import com.github.sanctum.labyrinth.api.Service;
 import com.github.sanctum.labyrinth.data.EconomyProvision;
 import com.github.sanctum.labyrinth.event.custom.DefaultEvent;
@@ -33,13 +22,9 @@ import com.github.sanctum.labyrinth.event.custom.Vent;
 import com.github.sanctum.labyrinth.library.Cooldown;
 import com.github.sanctum.labyrinth.library.Message;
 import com.github.sanctum.labyrinth.library.StringUtils;
-import com.github.sanctum.labyrinth.library.TimeWatch;
 import com.github.sanctum.labyrinth.task.Schedule;
 import java.math.BigDecimal;
 import java.text.MessageFormat;
-import java.util.Optional;
-import java.util.Random;
-import java.util.UUID;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -50,12 +35,12 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.player.PlayerAnimationEvent;
 import org.bukkit.event.player.PlayerBucketEmptyEvent;
 import org.bukkit.event.player.PlayerBucketFillEvent;
 import org.bukkit.event.player.PlayerPortalEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.util.Vector;
-import org.jetbrains.annotations.NotNull;
 
 public class PlayerEventListener implements Listener {
 
@@ -81,40 +66,10 @@ public class PlayerEventListener implements Listener {
 		}
 	}
 
-	@Subscribe()
-	@Experimental("This event works but isn't guaranteed legacy safe.")
-	@Note("Its primary purpose is for Cortex [Clans]")
-	public void onBossBar(ClaimResidentEvent e) {
-		Player p = e.getResident().getPlayer();
-		ClansAPI.getInstance().getAssociate(p).ifPresent(a -> {
-			if (!a.getBar().isVisible()) {
-				a.getBar().addPlayer(p);
-				a.getBar().setVisible(true);
-				a.getBar().setProgress(1.0);
-			}
-			if (a.getClan().getPalette().isGradient()) {
-				a.getBar().setTitle(a.getClan().getPalette().toGradient().context(a.getClan().getDescription()).translate());
-			} else {
-				a.getBar().setTitle(StringUtils.use(e.getClaim().getClan().getPalette().getStart() + e.getClaim().getClan().getDescription()).translate());
-			}
-		});
-	}
-
-	@Subscribe
-	public void onWild(WildernessInhabitantEvent e) {
-		Player p = e.getPlayer();
-		ClansAPI.getInstance().getAssociate(p).ifPresent(a -> {
-			if (a.getBar().isVisible()) {
-				a.getBar().removePlayer(p);
-				a.getBar().setVisible(false);
-			}
-		});
-	}
-
 	@Subscribe
 	public void onInteract(DefaultEvent.Interact event) {
 		if (event.getAction() == Action.RIGHT_CLICK_BLOCK && event.getBlock().get().getType().isInteractable()) {
-			ClaimInteractEvent e = new Vent.Call<>(Vent.Runtime.Synchronous, new ClaimInteractEvent(event.getPlayer(), event.getBlock().get().getLocation(), ClaimInteractEvent.InteractionType.USE)).run();
+			ClaimInteractEvent e = new Vent.Call<>(Vent.Runtime.Synchronous, new ClaimInteractEvent(event.getPlayer(), event.getBlock().get().getLocation(), ClaimInteractEvent.Type.USE)).run();
 			if (e.isCancelled()) {
 				e.stringLibrary().sendMessage(e.getPlayer(), MessageFormat.format(e.stringLibrary().notClaimOwner(e.getClaim().getClan().getName()), e.getClaim().getClan().getName()));
 				event.setCancelled(e.isCancelled());
@@ -153,120 +108,6 @@ public class PlayerEventListener implements Listener {
 				});
 			}
 		});
-	}
-
-	@NotNull ClanCooldown creationCooldown(UUID id) {
-		ClanCooldown target = null;
-		for (ClanCooldown c : ClansAPI.getData().COOLDOWNS) {
-			if (c.getAction().equals("Clans:create-limit") && c.getId().equals(id.toString())) {
-				target = c;
-				break;
-			}
-		}
-		if (target == null) {
-			target = new CooldownCreate(id);
-			if (!ClansAPI.getData().COOLDOWNS.contains(target)) {
-				target.save();
-			}
-		}
-		return target;
-	}
-
-	@Subscribe
-	public void onClanCreate(ClanCreateEvent event) {
-		if (event.getMaker().isOnline()) {
-			Player p = event.getMaker().getPlayer();
-			if (ClansAPI.getInstance().isNameBlackListed(event.getClanName())) {
-				String command = ClansAPI.getData().getMain().getRoot().getString("Clans.name-blacklist." + event.getClanName() + ".action");
-				event.getUtil().sendMessage(p, "&c&oThis name is not allowed!");
-				Bukkit.dispatchCommand(Bukkit.getConsoleSender(), Clan.ACTION.format(command, "{PLAYER}", p.getName()));
-				event.setCancelled(true);
-			}
-			if (p != null && ClansAPI.getData().isTrue("Clans.creation.cooldown.enabled")) {
-				if (creationCooldown(p.getUniqueId()).isComplete()) {
-					creationCooldown(p.getUniqueId()).setCooldown();
-				} else {
-					event.setCancelled(true);
-					event.stringLibrary().sendMessage(p, "&c&oYou can't do this right now.");
-					event.stringLibrary().sendMessage(p, creationCooldown(p.getUniqueId()).fullTimeLeft());
-					return;
-				}
-			}
-			if (ClansAPI.getData().isTrue("Clans.creation.charge")) {
-				double amount = ClansAPI.getData().getMain().getRoot().getDouble("Clans.creation.amount");
-				Optional<Boolean> opt = EconomyProvision.getInstance().withdraw(BigDecimal.valueOf(amount), p, p.getWorld().getName());
-
-				boolean success = opt.orElse(false);
-				if (!success) {
-					event.setCancelled(true);
-					event.stringLibrary().sendMessage(p, "&c&oYou don't have enough money. Amount needed: &6" + amount);
-				}
-			}
-		}
-	}
-
-	private String calc(long i) {
-		String val = String.valueOf(i);
-		int size = String.valueOf(i).length();
-		if (size == 1) {
-			val = "0" + i;
-		}
-		return val;
-	}
-
-	@Subscribe
-	public void onWarStart(ClanWarStartEvent e) {
-		War w = e.getWar();
-		TimeWatch.Recording r = e.getRecording();
-		Cooldown test = LabyrinthProvider.getService(Service.COOLDOWNS).getCooldown("war-" + w.getId() + "-start");
-		if (test != null) {
-			String time = calc(r.getMinutes()) + ":" + calc(r.getSeconds());
-			if (time.equals("01:00")) {
-				e.start();
-				Cooldown.remove(test);
-			} else {
-				Message m = LabyrinthProvider.getService(Service.MESSENGER).getNewMessage();
-				String t = calc(test.getMinutesLeft()) + ":" + calc(test.getSecondsLeft());
-				w.forEach(a -> {
-					Player p = a.getPlayer().getPlayer();
-					if (p != null) {
-						m.setPlayer(p).action("&2War start&f: &e" + t);
-					}
-				});
-			}
-		}
-	}
-
-	@Subscribe
-	public void onWarWatch(ClanWarActiveEvent e) {
-		Cooldown timer = e.getWar().getTimer();
-		Message msg = LabyrinthProvider.getService(Service.MESSENGER).getNewMessage();
-		e.getWar().forEach(a -> {
-			Player p = a.getPlayer().getPlayer();
-			if (p != null) {
-				War.Team t = e.getWar().getTeam(a.getClan());
-				int points = e.getWar().getPoints(t);
-				String time = calc(timer.getMinutesLeft()) + ":" + calc(timer.getSecondsLeft());
-				msg.setPlayer(p).action("&3Points&f:&b " + points + " &6| &3Time left&f:&e " + time);
-			}
-		});
-	}
-
-	@Subscribe
-	public void onWarWin(ClanWarWonEvent e) {
-		double reward = new Random().nextInt(e.getWinner().getValue()) + 0.17;
-		e.getWinner().getKey().givePower(reward);
-		e.getLosers().forEach((clan, integer) -> clan.takePower(reward));
-	}
-
-	@Subscribe
-	public void onClanCreated(ClanCreatedEvent e) {
-		DefaultClan c = e.getClan();
-		if (ClansAPI.getData().isTrue("Clans.land-claiming.claim-influence.allow")) {
-			if (ClansAPI.getData().getConfigString("Clans.land-claiming.claim-influence.dependence").equalsIgnoreCase("LOW")) {
-				c.addMaxClaim(12);
-			}
-		}
 	}
 
 	@Subscribe(priority = Vent.Priority.HIGH)
@@ -389,6 +230,16 @@ public class PlayerEventListener implements Listener {
 				event.setCancelled(e.canHurt());
 			}
 
+		}
+	}
+
+	@EventHandler
+	public void onAnimate(PlayerAnimationEvent e) {
+		Claim claim = Claim.from(e.getPlayer().getLocation());
+		if (claim != null) {
+			if (claim.getClan().getMember(m -> m.getName().equals(e.getPlayer().getName())) == null) {
+				e.setCancelled(true);
+			}
 		}
 	}
 
@@ -639,7 +490,7 @@ public class PlayerEventListener implements Listener {
 
 	@EventHandler(priority = EventPriority.HIGHEST)
 	public void onBucketRelease(PlayerBucketEmptyEvent event) {
-		ClaimInteractEvent e = new Vent.Call<>(Vent.Runtime.Synchronous, new ClaimInteractEvent(event.getPlayer(), event.getBlock().getLocation(), ClaimInteractEvent.InteractionType.USE)).run();
+		ClaimInteractEvent e = new Vent.Call<>(Vent.Runtime.Synchronous, new ClaimInteractEvent(event.getPlayer(), event.getBlock().getLocation(), ClaimInteractEvent.Type.USE)).run();
 		if (e.isCancelled()) {
 			e.stringLibrary().sendMessage(e.getPlayer(), MessageFormat.format(e.stringLibrary().notClaimOwner(e.getClaim().getClan().getName()), e.getClaim().getClan().getName()));
 			final Material bucketType = event.getBucket();
@@ -656,7 +507,7 @@ public class PlayerEventListener implements Listener {
 
 	@EventHandler(priority = EventPriority.HIGHEST)
 	public void onBucketFill(PlayerBucketFillEvent event) {
-		ClaimInteractEvent e = new Vent.Call<>(Vent.Runtime.Synchronous, new ClaimInteractEvent(event.getPlayer(), event.getBlock().getLocation(), ClaimInteractEvent.InteractionType.USE)).run();
+		ClaimInteractEvent e = new Vent.Call<>(Vent.Runtime.Synchronous, new ClaimInteractEvent(event.getPlayer(), event.getBlock().getLocation(), ClaimInteractEvent.Type.USE)).run();
 		if (e.isCancelled()) {
 			e.stringLibrary().sendMessage(e.getPlayer(), MessageFormat.format(e.stringLibrary().notClaimOwner(e.getClaim().getClan().getName()), e.getClaim().getClan().getName()));
 			final Material bucketType = event.getBucket();

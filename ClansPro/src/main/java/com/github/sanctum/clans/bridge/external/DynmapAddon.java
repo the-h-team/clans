@@ -3,17 +3,12 @@ package com.github.sanctum.clans.bridge.external;
 import com.github.sanctum.clans.bridge.ClanAddon;
 import com.github.sanctum.clans.bridge.external.dynmap.DynmapSubscription;
 import com.github.sanctum.labyrinth.library.HUID;
-import java.util.Collection;
-import java.util.HashSet;
 import org.bukkit.Bukkit;
-import org.bukkit.event.Listener;
 
 public class DynmapAddon extends ClanAddon {
 
-	private final Collection<Listener> additions = new HashSet<>();
-
 	@Override
-	public boolean persist() {
+	public boolean isStaged() {
 		return Bukkit.getPluginManager().isPluginEnabled("dynmap");
 	}
 
@@ -43,13 +38,8 @@ public class DynmapAddon extends ClanAddon {
 	}
 
 	@Override
-	public Collection<Listener> getAdditions() {
-		return additions;
-	}
-
-	@Override
 	public void onLoad() {
-		additions.add(new DynmapSubscription());
+		getContext().stage(new DynmapSubscription());
 	}
 
 	@Override

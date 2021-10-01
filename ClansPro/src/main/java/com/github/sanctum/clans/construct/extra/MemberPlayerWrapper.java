@@ -25,7 +25,7 @@ public class MemberPlayerWrapper extends UniformedComponents<OfflinePlayer> impl
 	public List<OfflinePlayer> list() {
 		List<OfflinePlayer> list = new ArrayList<>();
 		for (Clan.Associate a : wrapper.list()) {
-			list.add(a.getPlayer());
+			list.add(a.getUser().toBukkit());
 		}
 		return list;
 	}

@@ -14,7 +14,7 @@ import com.github.sanctum.labyrinth.library.HUID;
 public class BorderAddon extends ClanAddon {
 
 	@Override
-	public boolean persist() {
+	public boolean isStaged() {
 		return ClansAPI.getData().isTrue("Addon." + getName() + ".enabled");
 	}
 
@@ -45,9 +45,9 @@ public class BorderAddon extends ClanAddon {
 
 	@Override
 	public void onLoad() {
-		register(new BorderListener());
-		register(new FlagsCommand());
-		register(new TerritoryCommand());
+		getContext().stage(new BorderListener());
+		getContext().stage(new FlagsCommand());
+		getContext().stage(new TerritoryCommand());
 	}
 
 	@Override
@@ -57,7 +57,7 @@ public class BorderAddon extends ClanAddon {
 
 			ClanAddon cycle = ClanAddonQuery.getAddon("Borders");
 
-			if (cycle != null && !cycle.isActive()) {
+			if (cycle != null && !cycle.getContext().isActive()) {
 				subscription.remove();
 				return;
 			}

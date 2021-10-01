@@ -1,43 +1,24 @@
 package com.github.sanctum.clans.bridge.internal.stashes.events;
 
 import com.github.sanctum.clans.construct.api.Clan;
+import com.github.sanctum.clans.events.ClanEventBuilder;
+import com.github.sanctum.labyrinth.gui.unity.construct.Menu;
 import java.util.List;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Player;
-import org.bukkit.event.Cancellable;
-import org.bukkit.event.Event;
-import org.bukkit.event.HandlerList;
-import org.bukkit.inventory.Inventory;
-import org.jetbrains.annotations.NotNull;
 
-public class StashOpenEvent extends Event implements Cancellable {
-
-	private static final HandlerList handlers = new HandlerList();
+public class StashOpenEvent extends ClanEventBuilder {
 
 	private final Clan owner;
-
 	private final Player opener;
-
-	private final Inventory inventory;
-
+	private final Menu inventory;
 	private final List<HumanEntity> viewers;
 
-	private boolean cancelled;
-
-	public StashOpenEvent(Clan owner, Player opener, Inventory inventory, List<HumanEntity> viewers) {
+	public StashOpenEvent(Clan owner, Player opener, Menu inventory, List<HumanEntity> viewers) {
 		this.owner = owner;
 		this.opener = opener;
 		this.inventory = inventory;
 		this.viewers = viewers;
-	}
-
-	@Override
-	public @NotNull HandlerList getHandlers() {
-		return handlers;
-	}
-
-	public static HandlerList getHandlerList() {
-		return handlers;
 	}
 
 	public Clan getOwner() {
@@ -48,7 +29,7 @@ public class StashOpenEvent extends Event implements Cancellable {
 		return viewers;
 	}
 
-	public Inventory getInventory() {
+	public Menu getInventory() {
 		return inventory;
 	}
 
@@ -56,18 +37,8 @@ public class StashOpenEvent extends Event implements Cancellable {
 		return opener;
 	}
 
-	@Override
-	public boolean isCancelled() {
-		return cancelled;
-	}
-
-	@Override
-	public void setCancelled(boolean cancel) {
-		this.cancelled = cancel;
-	}
-
 	public void open() {
-		opener.openInventory(inventory);
+		getInventory().open(opener);
 	}
 
 }

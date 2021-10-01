@@ -26,7 +26,7 @@ public class ClanPlaceholders extends PlaceholderExpansion {
 	 * you must override this method to let PlaceholderAPI know to not unregister your expansion class when
 	 * PlaceholderAPI is reloaded
 	 *
-	 * @return true to persist through reloads
+	 * @return true to isStaged through reloads
 	 */
 	@Override
 	public boolean persist() {
@@ -134,7 +134,7 @@ public class ClanPlaceholders extends PlaceholderExpansion {
 					return "&r";
 				}
 				Clan target = Clan.ACTION.getMostPowerful().get(i - 1);
-				return target != null ? target.getColor() + "" : "&r";
+				return target != null ? target.getPalette().getStart() + "" : "&r";
 			}
 		}
 

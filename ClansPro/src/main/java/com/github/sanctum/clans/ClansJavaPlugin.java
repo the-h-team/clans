@@ -46,10 +46,11 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 
 /**
- * MIT License
- * <p>
+ * <pre>
+ * <h3>MIT License</h2>
  * Copyright (c) 2021 Sanctum
- * <p>
+ *
+ * <pre>
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
@@ -57,13 +58,13 @@ import org.bukkit.plugin.java.JavaPlugin;
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
  *
- * <p>You will be <strong>required</strong> to publicly display credit to the original authors in any postings regarding both "remastering" or
+ * <strong>You will be required to publicly display credit to the original authors in any postings regarding both "remastering" or
  * forking of this project. While not enforced what so ever, if you decide on forking + re-selling under
- * modified circumstances that you pay us a royalty fee of $4.50 USD to respect our side of the work involved.</p>
- * <p>
+ * modified circumstances that you pay us a royalty fee of $4.50 USD per sale to respect our side of the work involved.</strong>
+ * <pre>
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * <p>
+ * <pre>
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -112,7 +113,7 @@ public class ClansJavaPlugin extends JavaPlugin implements ClansAPI {
 			getLogger().severe("      ╚═╝");
 			getLogger().severe("- (You are not supported in the case of corrupt data)");
 			getLogger().severe("- (Reloading is NEVER safe and you should always restart instead.)");
-			FileManager file = origin.find("ignore", FileType.JSON);
+			FileManager file = origin.get("ignore", FileType.JSON);
 			String location = new Date().toInstant().atZone(ZoneId.systemDefault()).format(DateTimeFormatter.ISO_LOCAL_DATE);
 			List<String> toAdd = new ArrayList<>(file.getRoot().getStringList(location));
 			toAdd.add("RELOAD DETECTED! Shutting down...");
@@ -161,8 +162,8 @@ public class ClansJavaPlugin extends JavaPlugin implements ClansAPI {
 	public void onDisable() {
 		try {
 
-			for (ClanAddon cycle : ClanAddonQuery.getRegisteredAddons()) {
-				cycle.remove();
+			for (ClanAddon addon : ClanAddonQuery.getRegisteredAddons()) {
+				ClanAddonQuery.remove(addon);
 			}
 
 			BankMeta.clearManagerCache();
@@ -193,7 +194,7 @@ public class ClansJavaPlugin extends JavaPlugin implements ClansAPI {
 	@Override
 	public Clan getClan(UUID target) {
 		for (Clan c : getClanManager().getClans().list()) {
-			if (c.getMember(m -> m.getPlayer().getUniqueId().equals(target)) != null) {
+			if (c.getMember(m -> m.getUser().getId().equals(target)) != null) {
 				return c;
 			}
 		}
@@ -221,17 +222,17 @@ public class ClansJavaPlugin extends JavaPlugin implements ClansAPI {
 
 	@Override
 	public Optional<Clan.Associate> getAssociate(OfflinePlayer player) {
-		return getClanManager().getClans().filter(c -> c.getMember(m -> Objects.equals(m.getPlayer().getName(), player.getName())) != null).map(c -> c.getMember(m -> Objects.equals(m.getPlayer().getName(), player.getName()))).findFirst();
+		return getClanManager().getClans().filter(c -> c.getMember(m -> Objects.equals(m.getUser().getName(), player.getName())) != null).map(c -> c.getMember(m -> Objects.equals(m.getUser().getName(), player.getName()))).findFirst();
 	}
 
 	@Override
 	public Optional<Clan.Associate> getAssociate(UUID uuid) {
-		return getClanManager().getClans().filter(c -> c.getMember(m -> Objects.equals(m.getPlayer().getUniqueId(), uuid)) != null).map(c -> c.getMember(m -> Objects.equals(m.getPlayer().getUniqueId(), uuid))).findFirst();
+		return getClanManager().getClans().filter(c -> c.getMember(m -> Objects.equals(m.getUser().getId(), uuid)) != null).map(c -> c.getMember(m -> Objects.equals(m.getUser().getId(), uuid))).findFirst();
 	}
 
 	@Override
 	public Optional<Clan.Associate> getAssociate(String playerName) {
-		return getClanManager().getClans().filter(c -> c.getMember(m -> Objects.equals(m.getPlayer().getName(), playerName)) != null).map(c -> c.getMember(m -> Objects.equals(m.getPlayer().getName(), playerName))).findFirst();
+		return getClanManager().getClans().filter(c -> c.getMember(m -> Objects.equals(m.getUser().getName(), playerName)) != null).map(c -> c.getMember(m -> Objects.equals(m.getUser().getName(), playerName))).findFirst();
 	}
 
 	@Override
@@ -266,7 +267,7 @@ public class ClansJavaPlugin extends JavaPlugin implements ClansAPI {
 				return true;
 			}
 		} catch (Exception e) {
-			getPlugin().getLogger().info("- Couldn't connect to servers, unable to call for updates.");
+			getPlugin().getLogger().info("- Couldn't connect to servers, unable to check for updates.");
 		}
 		return false;
 	}
@@ -324,7 +325,7 @@ public class ClansJavaPlugin extends JavaPlugin implements ClansAPI {
 
 		associate.setPriority(priority);
 		Clan clanIndex = associate.getClan();
-		String format = MessageFormat.format(ClansAPI.getData().getMessageResponse("promotion"), Bukkit.getOfflinePlayer(associate.getPlayer().getUniqueId()).getName(), associate.getRankTag());
+		String format = MessageFormat.format(ClansAPI.getData().getMessageResponse("promotion"), associate.getName(), associate.getRankTag());
 		clanIndex.broadcast(format);
 
 	}
@@ -342,7 +343,7 @@ public class ClansJavaPlugin extends JavaPlugin implements ClansAPI {
 	@Override
 	public boolean kickUser(UUID uuid) {
 		boolean success = false;
-		if (isInClan(uuid) && !getClan(uuid).getOwner().getPlayer().getUniqueId().equals(uuid)) {
+		if (isInClan(uuid) && !getClan(uuid).getOwner().getUser().getId().equals(uuid)) {
 			success = true;
 			Clan.ACTION.removePlayer(uuid);
 		}
@@ -373,7 +374,7 @@ public class ClansJavaPlugin extends JavaPlugin implements ClansAPI {
 	}
 
 	@Override
-	public ClanAddon getEventCycleByAddon(String name) {
+	public ClanAddon getAddon(String name) {
 		return ClanAddonQuery.getAddon(name);
 	}
 

@@ -22,12 +22,11 @@ import java.util.UUID;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
-import org.bukkit.event.Listener;
 
 public class BountyAddon extends ClanAddon {
 
 	@Override
-	public boolean persist() {
+	public boolean isStaged() {
 		return EconomyProvision.getInstance().isValid();
 	}
 
@@ -58,8 +57,7 @@ public class BountyAddon extends ClanAddon {
 
 	@Override
 	public void onLoad() {
-		register(new Listener() {
-		});
+
 	}
 
 	@Override
@@ -69,7 +67,7 @@ public class BountyAddon extends ClanAddon {
 
 			ClanAddon cycle = ClanAddonQuery.getAddon("Bounty");
 
-			if (cycle != null && !cycle.isActive()) {
+			if (cycle != null && !cycle.getContext().isActive()) {
 				subscription.remove();
 				return;
 			}

@@ -76,10 +76,10 @@ Commands:
     permission: 'color'
   info:
     text: '&7|&e) &6/clan &finfo'
-    permission: 'run'
+    permission: 'info'
   info-other:
     text: '&7|&e) &6/clan &finfo <&7playerName/clanName&f>'
-    permission: 'run.other'
+    permission: 'info.other'
   promote:
     text: '&7|&e) &6/clan &fpromote <&7playerName&f>'
     permission: 'promote'

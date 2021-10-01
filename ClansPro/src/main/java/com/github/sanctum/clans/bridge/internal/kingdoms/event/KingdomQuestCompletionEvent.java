@@ -1,15 +1,15 @@
 package com.github.sanctum.clans.bridge.internal.kingdoms.event;
 
 import com.github.sanctum.clans.bridge.internal.kingdoms.Kingdom;
-import com.github.sanctum.clans.bridge.internal.kingdoms.achievement.KingdomAchievement;
+import com.github.sanctum.clans.bridge.internal.kingdoms.Quest;
 import com.github.sanctum.clans.events.ClanEventBuilder;
 
-public class KingdomJobCompleteEvent extends ClanEventBuilder {
+public class KingdomQuestCompletionEvent extends ClanEventBuilder {
 
 	private final Kingdom kingdom;
-	private final KingdomAchievement achievement;
+	private final Quest achievement;
 
-	public KingdomJobCompleteEvent(Kingdom kingdom, KingdomAchievement achievement) {
+	public KingdomQuestCompletionEvent(Kingdom kingdom, Quest achievement) {
 		this.kingdom = kingdom;
 		this.achievement = achievement;
 	}
@@ -18,7 +18,7 @@ public class KingdomJobCompleteEvent extends ClanEventBuilder {
 		return kingdom;
 	}
 
-	public KingdomAchievement getAchievement() {
+	public Quest getQuest() {
 		return achievement;
 	}
 }

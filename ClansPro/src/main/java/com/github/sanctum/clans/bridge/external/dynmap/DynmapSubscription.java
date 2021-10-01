@@ -32,7 +32,7 @@ public final class DynmapSubscription implements Listener {
 
 			ClanAddon cycle = ClanAddonQuery.getAddon("Dynmap");
 
-			if (cycle != null && !cycle.isActive()) {
+			if (cycle != null && !cycle.getContext().isActive()) {
 				subscription.remove();
 				return;
 			}
@@ -46,7 +46,7 @@ public final class DynmapSubscription implements Listener {
 
 			ClanAddon cycle = ClanAddonQuery.getAddon("Dynmap");
 
-			if (cycle != null && !cycle.isActive()) {
+			if (cycle != null && !cycle.getContext().isActive()) {
 				subscription.remove();
 				return;
 			}
@@ -64,7 +64,7 @@ public final class DynmapSubscription implements Listener {
 
 			ClanAddon cycle = ClanAddonQuery.getAddon("Dynmap");
 
-			if (cycle != null && !cycle.isActive()) {
+			if (cycle != null && !cycle.getContext().isActive()) {
 				subscription.remove();
 				return;
 			}

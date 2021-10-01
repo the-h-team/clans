@@ -293,7 +293,7 @@ Clans:
       - 'clan base'
       - 'spawn'
       - 'home'
-    # Change the max amount clans allowed within a clan war. Hard-cap = 4
+    # Change the max amount of clans allowed within a clan war. Hard-cap = 4
     max-clans: 2
     # The amount of members queued required to start a war.
     que-needed: 4

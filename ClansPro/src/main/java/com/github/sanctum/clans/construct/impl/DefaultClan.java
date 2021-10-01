@@ -16,6 +16,7 @@ import com.github.sanctum.labyrinth.api.Service;
 import com.github.sanctum.labyrinth.data.DataTable;
 import com.github.sanctum.labyrinth.data.EconomyProvision;
 import com.github.sanctum.labyrinth.data.FileManager;
+import com.github.sanctum.labyrinth.data.LabyrinthUser;
 import com.github.sanctum.labyrinth.data.Node;
 import com.github.sanctum.labyrinth.event.custom.Vent;
 import com.github.sanctum.labyrinth.formatting.UniformedComponents;
@@ -35,16 +36,17 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.Spliterator;
 import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import net.md_5.bungee.api.chat.BaseComponent;
 import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
 import org.bukkit.Location;
-import org.bukkit.OfflinePlayer;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
@@ -90,9 +92,8 @@ public class DefaultClan implements Clan {
 		this.allyList = new ClanWrapper(this, ClanWrapper.RelationType.Ally);
 		this.enemyList = new ClanWrapper(this, ClanWrapper.RelationType.Enemy);
 		boolean isNew = LabyrinthProvider.getService(Service.LEGACY).isNew();
-		this.palette = new Color(this).setStart(isNew ? "#" + new RandomHex().getStart() : "&f");
+		this.palette = new Color(this).setStart(isNew ? new RandomHex().getStart() : "&f");
 		FileManager c = DataManager.FileType.CLAN_FILE.get(clanID);
-
 		if (c.read(f -> f.exists() && f.getString("name") != null)) {
 			this.name = c.read(f -> f.getString("name"));
 			if (c.read(f -> f.isString("name-color"))) {
@@ -215,11 +216,11 @@ public class DefaultClan implements Clan {
 
 	@Override
 	public synchronized boolean kick(UUID target) {
-		if (getMembers().stream().noneMatch(c -> c.getPlayer().getUniqueId().equals(target))) {
+		if (getMembers().stream().noneMatch(c -> c.getUser().getId().equals(target))) {
 			return false;
 		} else
 			getMembers().forEach(c -> {
-				if (c.getPlayer().getUniqueId().equals(target)) {
+				if (c.getUser().getId().equals(target)) {
 					c.kick();
 				}
 			});
@@ -256,7 +257,7 @@ public class DefaultClan implements Clan {
 	public boolean transferOwnership(UUID target) {
 		if (Objects.equals(ClansAPI.getInstance().getClan(target), this)) {
 			Associate owner = getOwner();
-			Associate mem = getMember(m -> m.getPlayer().getUniqueId().equals(target));
+			Associate mem = getMember(m -> m.getUser().getId().equals(target));
 			if (mem == null) return false;
 			owner.setPriority(RankPriority.NORMAL);
 			mem.setPriority(RankPriority.HIGHEST);
@@ -330,7 +331,7 @@ public class DefaultClan implements Clan {
 	}
 
 	@Override
-	public synchronized @NotNull String getName() {
+	public synchronized @NotNull("Check that the correct file type is selected in Config.yml/Formatting#file-type") String getName() {
 		return this.name;
 	}
 
@@ -355,18 +356,13 @@ public class DefaultClan implements Clan {
 	}
 
 	@Override
-	public synchronized @NotNull String getColor() {
-		return palette.getStart();
-	}
-
-	@Override
 	public @NotNull Clan.Color getPalette() {
 		return this.palette;
 	}
 
 	@Override
 	public synchronized String[] getMemberIds() {
-		return getMembers().stream().map(Associate::getPlayer).map(OfflinePlayer::getUniqueId).map(UUID::toString).toArray(String[]::new);
+		return getMembers().stream().map(Associate::getUser).map(LabyrinthUser::getId).map(UUID::toString).toArray(String[]::new);
 	}
 
 	@Override
@@ -410,7 +406,7 @@ public class DefaultClan implements Clan {
 		}
 
 		for (Map.Entry<RankPriority, List<Associate>> entry : map.entrySet()) {
-			table.set("members." + entry.getKey().name(), entry.getValue().stream().map(Associate::getPlayer).map(OfflinePlayer::getUniqueId).map(UUID::toString).collect(Collectors.toList()));
+			table.set("members." + entry.getKey().name(), entry.getValue().stream().map(Associate::getUser).map(LabyrinthUser::getId).map(UUID::toString).collect(Collectors.toList()));
 		}
 
 		file.write(table);
@@ -546,19 +542,19 @@ public class DefaultClan implements Clan {
 	public synchronized String[] getClanInfo() {
 		List<String> array = new ArrayList<>();
 		String password = this.password;
-		List<String> members = getMembers().stream().filter(m -> m.getPriority().toInt() == 0).map(Associate::getPlayer).map(OfflinePlayer::getName).collect(Collectors.toList());
-		List<String> mods = getMembers().stream().filter(m -> m.getPriority().toInt() == 1).map(Associate::getPlayer).map(OfflinePlayer::getName).collect(Collectors.toList());
-		List<String> admins = getMembers().stream().filter(m -> m.getPriority().toInt() == 2).map(Associate::getPlayer).map(OfflinePlayer::getName).collect(Collectors.toList());
+		List<String> members = getMembers().stream().filter(m -> m.getPriority().toInt() == 0).map(Associate::getUser).map(LabyrinthUser::getName).collect(Collectors.toList());
+		List<String> mods = getMembers().stream().filter(m -> m.getPriority().toInt() == 1).map(Associate::getUser).map(LabyrinthUser::getName).collect(Collectors.toList());
+		List<String> admins = getMembers().stream().filter(m -> m.getPriority().toInt() == 2).map(Associate::getUser).map(LabyrinthUser::getName).collect(Collectors.toList());
 		List<String> allies = getAllies().map(Clan::getId).map(HUID::toString).collect(Collectors.toList());
 		List<String> enemies = getEnemies().map(Clan::getId).map(HUID::toString).collect(Collectors.toList());
 		String status = "LOCKED";
 		if (password == null)
 			status = "OPEN";
 		array.add(" ");
-		array.add("&2&lClan&7: " + getColor() + ClansAPI.getInstance().getClanName(clanID));
+		array.add("&2&lClan&7: " + getPalette().getStart() + ClansAPI.getInstance().getClanName(clanID));
 		array.add("&f&m---------------------------");
 		array.add("&2Description: &7" + getDescription());
-		array.add("&2" + getOwner().getRankTag() + ": &f" + getOwner().getPlayer().getName());
+		array.add("&2" + getOwner().getRankTag() + ": &f" + getOwner().getUser().getName());
 		array.add("&2Status: &f" + status);
 		array.add("&2&lPower [&e" + format(String.valueOf(getPower())) + "&2&l]");
 		if (getBase() != null)
@@ -654,31 +650,28 @@ public class DefaultClan implements Clan {
 
 	@Override
 	public void broadcast(String message) {
-		for (Player p : Bukkit.getOnlinePlayers()) {
-			if (ClansAPI.getInstance().isInClan(p.getUniqueId()) && ClansAPI.getInstance().getClanID(p.getUniqueId()).equals(getId())) {
-				p.sendMessage(ACTION.color("&7[&6&l" + getName() + "&7] " + message));
-			}
-		}
+		forEach(a -> Optional.ofNullable(a.getUser().toBukkit().getPlayer()).ifPresent(pl -> pl.sendMessage(ACTION.color("&7[&6&l" + getName() + "&7] " + message))));
+	}
+
+	@Override
+	public void broadcast(BaseComponent... message) {
+		forEach(a -> Optional.ofNullable(a.getUser().toBukkit().getPlayer()).ifPresent(pl -> pl.spigot().sendMessage(message)));
 	}
 
 	@Override
 	public void broadcast(Predicate<Associate> predicate, String message) {
-		for (Player p : Bukkit.getOnlinePlayers()) {
-			ClansAPI.getInstance().getAssociate(p).ifPresent(a -> {
-				if (equals(a.getClan())) {
-					if (predicate.test(a)) {
-						p.sendMessage(ACTION.color(message));
-					}
-				}
-			});
-		}
+		forEach(a -> {
+			if (predicate.test(a)) {
+				Optional.ofNullable(a.getUser().toBukkit().getPlayer()).ifPresent(pl -> pl.sendMessage(ACTION.color(message)));
+			}
+		});
 	}
 
 	@Override
 	public synchronized @NotNull String format(String amount) {
 		BigDecimal b1 = new BigDecimal(amount);
 		Locale loc = Locale.US;
-		switch (ClansAPI.getData().getMain().getConfig().getString("Formatting.locale")) {
+		switch (ClansAPI.getData().getMain().getRoot().getString("Formatting.locale")) {
 			case "fr":
 				loc = Locale.FRANCE;
 				break;

@@ -6,6 +6,7 @@ import com.github.sanctum.clans.events.core.bank.BankPreTransactionEvent;
 import com.github.sanctum.clans.events.core.bank.BankSetBalanceEvent;
 import com.github.sanctum.clans.events.core.bank.BankTransactionEvent;
 import com.github.sanctum.clans.events.core.bank.messaging.Messages;
+import com.github.sanctum.labyrinth.LabyrinthProvider;
 import com.github.sanctum.labyrinth.data.EconomyProvision;
 import com.github.sanctum.labyrinth.event.custom.Vent;
 import java.math.BigDecimal;
@@ -21,7 +22,7 @@ public class BankListener implements Listener {
 
 	public BankListener() {
 		// onCreate
-		Vent.subscribe(new Vent.Subscription<>(AsyncNewBankEvent.class, p, Vent.Priority.HIGHEST, (e, listener) -> {
+		LabyrinthProvider.getInstance().getEventMap().subscribe(new Vent.Subscription<>(AsyncNewBankEvent.class, p, Vent.Priority.HIGHEST, (e, listener) -> {
 			final ClanBank bank = e.getClanBank();
 			if (!(bank instanceof Bank)) return; // Only react on our ClanBank implementation
 			new BukkitRunnable() {
@@ -32,7 +33,7 @@ public class BankListener implements Listener {
 			}.runTask(p);
 		}));
 		// onPreTransactionMonitor
-		Vent.subscribe(new Vent.Subscription<>(BankPreTransactionEvent.class, p, Vent.Priority.HIGHEST, (event, listener) -> {
+		LabyrinthProvider.getInstance().getEventMap().subscribe(new Vent.Subscription<>(BankPreTransactionEvent.class, p, Vent.Priority.HIGHEST, (event, listener) -> {
 			switch (ClanBank.API.defaultImpl.logToConsole()) {
 				case SILENT:
 					return;
@@ -47,7 +48,7 @@ public class BankListener implements Listener {
 			}
 		}));
 		// onTransaction (original priority = MONITOR), conformed to new priority ordinance
-		Vent.subscribe(new Vent.Subscription<>(BankTransactionEvent.class, p, Vent.Priority.HIGHEST, (e, listener) -> {
+		LabyrinthProvider.getInstance().getEventMap().subscribe(new Vent.Subscription<>(BankTransactionEvent.class, p, Vent.Priority.HIGHEST, (e, listener) -> {
 			if (e instanceof BankPreTransactionEvent) return;
 			new BukkitRunnable() {
 				@Override
@@ -71,7 +72,7 @@ public class BankListener implements Listener {
 			}.runTask(p);
 		}));
 		// onDeposit (HIGHEST, ignoreCancelled = true)
-		Vent.subscribe(new Vent.Subscription<>(BankPreTransactionEvent.class, p, Vent.Priority.HIGHEST, (event, listener) -> {
+		LabyrinthProvider.getInstance().getEventMap().subscribe(new Vent.Subscription<>(BankPreTransactionEvent.class, p, Vent.Priority.HIGHEST, (event, listener) -> {
 			if (event.getTransactionType() != BankTransactionEvent.Type.DEPOSIT) return;
 			if (!(event.getClanBank() instanceof Bank)) return; // Only react on our ClanBank implementation
 			if (!event.isSuccess()) {
@@ -99,7 +100,7 @@ public class BankListener implements Listener {
 			new Vent.Call<>(Vent.Runtime.Synchronous, new BankTransactionEvent(player, bank, amount, bank.clanId, success, BankTransactionEvent.Type.DEPOSIT)).run();
 		}));
 		// onWithdrawal (HIGHEST, ignoreCancelled = true)
-		Vent.subscribe(new Vent.Subscription<>(BankPreTransactionEvent.class, p, Vent.Priority.HIGHEST, (event, listener) -> {
+		LabyrinthProvider.getInstance().getEventMap().subscribe(new Vent.Subscription<>(BankPreTransactionEvent.class, p, Vent.Priority.HIGHEST, (event, listener) -> {
 			if (event.getTransactionType() != BankTransactionEvent.Type.WITHDRAWAL) return;
 			if (!(event.getClanBank() instanceof Bank)) return; // Only react on our ClanBank implementation
 			if (!event.isSuccess()) {
@@ -118,7 +119,7 @@ public class BankListener implements Listener {
 			new Vent.Call<>(Vent.Runtime.Synchronous, new BankTransactionEvent(player, bank, amount, bank.clanId, success, BankTransactionEvent.Type.WITHDRAWAL)).run();
 		}));
 		// onSetBalance (ignoreCancelled = true)
-		Vent.subscribe(new Vent.Subscription<>(BankSetBalanceEvent.class, p, Vent.Priority.MEDIUM, (event, listener) -> {
+		LabyrinthProvider.getInstance().getEventMap().subscribe(new Vent.Subscription<>(BankSetBalanceEvent.class, p, Vent.Priority.MEDIUM, (event, listener) -> {
 			if (!(event.getClanBank() instanceof Bank)) return; // Only react on our ClanBank implementation
 			final BigDecimal maxBalance = ClanBank.API.defaultImpl.maxBalance();
 			if (maxBalance != null && event.getNewBalance().compareTo(maxBalance) > 0) {
@@ -126,7 +127,7 @@ public class BankListener implements Listener {
 			}
 		}));
 		// onSetBalanceMonitor (MONITOR, ignoreCancelled = true) TODO: this needs to happen last!!
-		Vent.subscribe(new Vent.Subscription<>(BankSetBalanceEvent.class, p, Vent.Priority.HIGHEST, (event, listener) -> {
+		LabyrinthProvider.getInstance().getEventMap().subscribe(new Vent.Subscription<>(BankSetBalanceEvent.class, p, Vent.Priority.HIGHEST, (event, listener) -> {
 			if (!(event.getClanBank() instanceof Bank)) return; // Only react on our ClanBank implementation
 			final Bank bank = (Bank) event.getClanBank();
 			bank.balance = event.getNewBalance();

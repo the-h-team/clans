@@ -33,7 +33,7 @@ import org.bukkit.inventory.ItemStack;
 public class MailAddon extends ClanAddon {
 
 	@Override
-	public boolean persist() {
+	public boolean isStaged() {
 		return ClansAPI.getData().isTrue("Addon." + getName() + ".enabled");
 	}
 
@@ -65,7 +65,7 @@ public class MailAddon extends ClanAddon {
 	@Override
 	public void onLoad() {
 
-		register(new MailListener());
+		getContext().stage(new MailListener());
 
 	}
 
@@ -80,7 +80,7 @@ public class MailAddon extends ClanAddon {
 
 			ClanAddon cycle = ClanAddonQuery.getAddon("Mail");
 
-			if (cycle != null && !cycle.isActive()) {
+			if (cycle != null && !cycle.getContext().isActive()) {
 				subscription.remove();
 				return;
 			}
@@ -94,7 +94,7 @@ public class MailAddon extends ClanAddon {
 
 			ClanAddon cycle = ClanAddonQuery.getAddon("Mail");
 
-			if (cycle != null && !cycle.isActive()) {
+			if (cycle != null && !cycle.getContext().isActive()) {
 				subscription.remove();
 				return;
 			}
@@ -698,7 +698,7 @@ public class MailAddon extends ClanAddon {
 
 			ClanAddon cycle = ClanAddonQuery.getAddon("Mail");
 
-			if (cycle != null && !cycle.isActive()) {
+			if (cycle != null && !cycle.getContext().isActive()) {
 				subscription.remove();
 				return;
 			}

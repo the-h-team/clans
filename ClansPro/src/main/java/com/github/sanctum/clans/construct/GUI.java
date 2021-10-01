@@ -301,7 +301,7 @@ public enum GUI {
 
 									List<String> result = new LinkedList<>();
 									for (String a : ClansAPI.getData().CLAN_GUI_FORMAT) {
-										result.add(MessageFormat.format(a, color.replace("&", "&f»" + color), (c.getPalette().isGradient() ? c.getPalette().toGradient().context(par[0]).join() : c.getPalette().getStart() + par[0]), (c.getPalette().isGradient() ? c.getPalette().toGradient().context(c.format(String.valueOf(c.getPower()))).join() : c.getPalette().getStart() + c.format(String.valueOf(c.getPower()))), baseSet, c.getPalette().getStart() + ownedLand, pvp, memlist, allylist, enemylist, color));
+										result.add(MessageFormat.format(a, color.replace("&", "&f»" + color).replace("#", "&f»" + color), (c.getPalette().isGradient() ? c.getPalette().toGradient().context(par[0]).join() : c.getPalette().getStart() + par[0]), (c.getPalette().isGradient() ? c.getPalette().toGradient().context(c.format(String.valueOf(c.getPower()))).join() : c.getPalette().getStart() + c.format(String.valueOf(c.getPower()))), baseSet, c.getPalette().getStart() + ownedLand, pvp, memlist, allylist, enemylist, color));
 									}
 									meta.setLore(color(result.toArray(new String[0])));
 
@@ -610,7 +610,7 @@ public enum GUI {
 
 									List<String> result = new LinkedList<>();
 									for (String a : ClansAPI.getData().CLAN_GUI_FORMAT) {
-										result.add(MessageFormat.format(a, color.replace("&", "&f»" + color), (c.getPalette().isGradient() ? c.getPalette().toGradient().context(par[0]).join() : c.getPalette().getStart() + par[0]), (c.getPalette().isGradient() ? c.getPalette().toGradient().context(c.format(String.valueOf(c.getPower()))).join() : c.getPalette().getStart() + c.format(String.valueOf(c.getPower()))), baseSet, c.getPalette().getStart() + ownedLand, pvp, memlist, allylist, enemylist, color));
+										result.add(MessageFormat.format(a, color.replace("&", "&f»" + color).replace("#", "&f»" + color), (c.getPalette().isGradient() ? c.getPalette().toGradient().context(par[0]).join() : c.getPalette().getStart() + par[0]), (c.getPalette().isGradient() ? c.getPalette().toGradient().context(c.format(String.valueOf(c.getPower()))).join() : c.getPalette().getStart() + c.format(String.valueOf(c.getPower()))), baseSet, c.getPalette().getStart() + ownedLand, pvp, memlist, allylist, enemylist, color));
 									}
 									meta.setLore(color(result.toArray(new String[0])));
 
@@ -971,7 +971,7 @@ public enum GUI {
 
 								ItemMeta meta = stack.getItemMeta();
 
-								meta.setLore(color("&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬", "&2&oPersistent: &f" + addon.persist(), "&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬", "&2&oDescription: &f" + addon.getDescription(), "&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬", "&2&oVersion: &f" + addon.getVersion(), "&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬", "&2&oAuthors: &f" + Arrays.toString(addon.getAuthors()), "&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬", "&2&oActive: &6&o" + ClanAddonQuery.getUsedNames().contains(addon.getName())));
+								meta.setLore(color("&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬", "&2&oPersistent: &f" + addon.isStaged(), "&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬", "&2&oDescription: &f" + addon.getDescription(), "&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬", "&2&oVersion: &f" + addon.getVersion(), "&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬", "&2&oAuthors: &f" + Arrays.toString(addon.getAuthors()), "&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬", "&2&oActive: &6&o" + ClanAddonQuery.getUsedNames().contains(addon.getName())));
 
 								meta.setDisplayName(StringUtils.use("&3&o " + addon.getName() + " &8&l»").translate());
 
@@ -980,9 +980,10 @@ public enum GUI {
 								item.setClick(click -> {
 									click.setCancelled(true);
 									Player p = click.getElement();
-									ClanAddonQuery.disable(addon);
-									for (String d : ClanAddonQuery.getDataLog()) {
-										p.sendMessage(Clan.ACTION.color("&b" + d.replace("Clans [Pro]", "&3Clans &7[&6Pro&7]&b")));
+									if (ClanAddonQuery.disable(addon)) {
+										for (String d : ClanAddonQuery.getDataLog()) {
+											p.sendMessage(Clan.ACTION.color("&b" + d.replace("Clans [Pro]", "&3Clans &7[&6Pro&7]&b")));
+										}
 									}
 									ADDONS_ACTIVATED.get().open(p);
 								});
@@ -1045,7 +1046,7 @@ public enum GUI {
 
 								ItemMeta meta = stack.getItemMeta();
 
-								meta.setLore(color("&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬", "&2&oPersistent: &f" + addon.persist(), "&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬", "&2&oDescription: &f" + addon.getDescription(), "&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬", "&2&oVersion: &f" + addon.getVersion(), "&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬", "&2&oAuthors: &f" + Arrays.toString(addon.getAuthors()), "&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬", "&2&oActive: &6&o" + ClanAddonQuery.getUsedNames().contains(addon.getName())));
+								meta.setLore(color("&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬", "&2&oPersistent: &f" + addon.isStaged(), "&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬", "&2&oDescription: &f" + addon.getDescription(), "&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬", "&2&oVersion: &f" + addon.getVersion(), "&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬", "&2&oAuthors: &f" + Arrays.toString(addon.getAuthors()), "&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬", "&2&oActive: &6&o" + ClanAddonQuery.getUsedNames().contains(addon.getName())));
 
 								meta.setDisplayName(StringUtils.use("&3&o " + addon.getName() + " &8&l»").translate());
 
@@ -1054,9 +1055,10 @@ public enum GUI {
 								item.setClick(click -> {
 									click.setCancelled(true);
 									Player p = click.getElement();
-									ClanAddonQuery.enable(addon);
-									for (String d : ClanAddonQuery.getDataLog()) {
-										p.sendMessage(Clan.ACTION.color("&b" + Clan.ACTION.format(d, "Clans [Pro]", "&3Clans &7[&6Pro&7]&b")));
+									if (ClanAddonQuery.enable(addon)) {
+										for (String d : ClanAddonQuery.getDataLog()) {
+											p.sendMessage(Clan.ACTION.color("&b" + Clan.ACTION.format(d, "Clans [Pro]", "&3Clans &7[&6Pro&7]&b")));
+										}
 									}
 									ADDONS_ACTIVATED.get().open(p);
 								});
@@ -1119,7 +1121,7 @@ public enum GUI {
 
 								ItemMeta meta = stack.getItemMeta();
 
-								meta.setLore(color("&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬", "&2&oPersistent: &f" + addon.persist(), "&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬", "&2&oDescription: &f" + addon.getDescription(), "&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬", "&2&oVersion: &f" + addon.getVersion(), "&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬", "&2&oAuthors: &f" + Arrays.toString(addon.getAuthors()), "&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬", "&2&oActive: &6&o" + ClanAddonQuery.getUsedNames().contains(addon.getName()), "&7Clicking these icons won't do anything."));
+								meta.setLore(color("&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬", "&2&oPersistent: &f" + addon.isStaged(), "&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬", "&2&oDescription: &f" + addon.getDescription(), "&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬", "&2&oVersion: &f" + addon.getVersion(), "&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬", "&2&oAuthors: &f" + Arrays.toString(addon.getAuthors()), "&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬", "&2&oActive: &6&o" + ClanAddonQuery.getUsedNames().contains(addon.getName()), "&7Clicking these icons won't do anything."));
 
 								meta.setDisplayName(StringUtils.use("&3&o " + addon.getName() + " &8&l»").translate());
 
@@ -1179,7 +1181,7 @@ public enum GUI {
 		String o = cl.getPalette().getStart();
 		String balance;
 		try {
-			balance = cl.format(String.valueOf(EconomyProvision.getInstance().balance(associate.getPlayer()).orElse(0.0)));
+			balance = cl.format(String.valueOf(EconomyProvision.getInstance().balance(associate.getUser().toBukkit()).orElse(0.0)));
 		} catch (NoClassDefFoundError | NullPointerException e) {
 			balance = "Un-Known";
 		}
@@ -1189,7 +1191,7 @@ public enum GUI {
 		String bio = associate.getBiography();
 		String kd = "" + associate.getKD();
 		if (Bukkit.getVersion().contains("1.16") || Bukkit.getVersion().contains("1.15")) {
-			OfflinePlayer p = associate.getPlayer();
+			OfflinePlayer p = associate.getUser().toBukkit();
 			stats = o + "Banners washed: &f" + p.getStatistic(Statistic.BANNER_CLEANED) + "|" +
 					o + "Bell's rang: &f" + p.getStatistic(Statistic.BELL_RING) + "|" +
 					o + "Chest's opened: &f" + p.getStatistic(Statistic.CHEST_OPENED) + "|" +
@@ -1206,7 +1208,7 @@ public enum GUI {
 		String test = MessageFormat.format(ClansAPI.getData().getMenuTitle("member-information"), associate.getName());
 
 		if (test.length() > 32)
-			test = "&0&l» " + associate.getClan().getPalette().getStart() + associate.getPlayer().getName() + " &7Info";
+			test = "&0&l» " + associate.getClan().getPalette().getStart() + associate.getUser().getName() + " &7Info";
 		switch (this) {
 			case MEMBER_INFO:
 				String finalBalance = balance;
@@ -1234,21 +1236,21 @@ public enum GUI {
 								click.setHotbarAllowed(false);
 								click.setCancelled(true);
 								Player p = click.getElement();
-								p.performCommand("c run " + cl.getName());
+								p.performCommand("c info " + cl.getName());
 							}));
 							i.addItem(b -> b.setElement(it -> it.setItem(associate.getHead()).setTitle(" ").setLore(new Paragraph(bio + " - " + associate.getNickname()).setRegex(Paragraph.COMMA_AND_PERIOD).get()).build()).setSlot(4).setClick(click -> {
 								click.setCancelled(true);
-								if (associate.getPlayer().isOnline()) {
+								if (associate.getUser().toBukkit().isOnline()) {
 									Clan.Associate a = ClansAPI.getInstance().getAssociate(click.getElement()).orElse(null);
 
 									if (a != null) {
 										Clan.Associate.Teleport request = Clan.Associate.Teleport.get(a);
 										if (request == null) {
-											if (Objects.equals(associate.getPlayer().getName(), a.getPlayer().getName()))
+											if (Objects.equals(associate.getUser().getName(), a.getUser().getName()))
 												return;
 											if (!associate.getClan().getMembers().contains(a)) return;
 
-											Clan.Associate.Teleport r = new Clan.Associate.Teleport.Impl(a, associate.getPlayer().getPlayer());
+											Clan.Associate.Teleport r = new Clan.Associate.Teleport.Impl(a, associate.getUser().toBukkit().getPlayer());
 											r.teleport();
 										} else {
 											click.getElement().closeInventory();
@@ -1369,7 +1371,7 @@ public enum GUI {
 								Player p = click.getElement();
 								ClansAPI.getInstance().getAssociate(p).ifPresent(a -> {
 									if (Permission.MANAGE_POSITIONS.test(a)) {
-										Clan.ACTION.promotePlayer(associate.getPlayer().getUniqueId());
+										Clan.ACTION.promotePlayer(associate.getUser().getId());
 									}
 								});
 							}));
@@ -1377,7 +1379,7 @@ public enum GUI {
 								Player p = click.getElement();
 								ClansAPI.getInstance().getAssociate(p).ifPresent(a -> {
 									if (Permission.MANAGE_POSITIONS.test(a)) {
-										Clan.ACTION.demotePlayer(associate.getPlayer().getUniqueId());
+										Clan.ACTION.demotePlayer(associate.getUser().getId());
 									}
 								});
 							}));
@@ -1465,7 +1467,7 @@ public enum GUI {
 											c.setHotbarAllowed(false);
 											if (c.getSlot() == 2) {
 												String id = ClansAPI.getInstance().getClanID(c.getParent().getName());
-												final UUID uid = associate.getPlayer().getUniqueId();
+												final UUID uid = associate.getUser().getId();
 												if (id != null) {
 													Clan clan = ClansAPI.getInstance().getClan(id);
 													Clan.ACTION.removePlayer(uid);
@@ -1486,11 +1488,11 @@ public enum GUI {
 							}));
 							i.addItem(b -> b.setElement(it -> it.setType(Material.DIAMOND).setTitle("&7[&aPromotion&7]").setLore("&5Click to promote me.").build()).setSlot(14).setClick(click -> {
 								Player p = click.getElement();
-								Clan.ACTION.promotePlayer(associate.getPlayer().getUniqueId());
+								Clan.ACTION.promotePlayer(associate.getUser().getId());
 							}));
 							i.addItem(b -> b.setElement(it -> it.setType(Material.REDSTONE).setTitle("&7[&cDemotion&7]").setLore("&5Click to demote me.").build()).setSlot(15).setClick(click -> {
 								Player p = click.getElement();
-								Clan.ACTION.demotePlayer(associate.getPlayer().getUniqueId());
+								Clan.ACTION.demotePlayer(associate.getUser().getId());
 							}));
 
 						}).orGet(m -> m instanceof SingularMenu && m.getKey().isPresent() && m.getKey().get().equals("ClansPro:member-" + associate.getName() + "-edit-settings")).addAction(c -> c.setCancelled(true));
@@ -1784,7 +1786,7 @@ public enum GUI {
 										.setTitle("&01 for &aYES &02 for &cNO")
 										.setSize(Menu.Rows.ONE)
 										.setHost(ClansAPI.getInstance().getPlugin())
-										.setStock(inv -> inv.addItem(be -> be.setElement(it -> it.setItem(SkullType.ARROW_BLUE_RIGHT.get()).setTitle(" ").build()).setSlot(0).setClick(c -> {
+										.setStock(inv -> inv.addItem(be -> be.setElement(it -> it.setItem(SkullType.ARROW_BLUE_RIGHT.get()).setTitle("0").build()).setSlot(0).setClick(c -> {
 											c.setCancelled(true);
 											c.setHotbarAllowed(false);
 										}))).join()
@@ -1793,7 +1795,8 @@ public enum GUI {
 											c.setHotbarAllowed(false);
 											if (c.getSlot() == 2) {
 												if (c.getParent().getName().equals("1")) {
-													Clan.ACTION.removePlayer(clan.getOwner().getPlayer().getUniqueId());
+													Clan.ACTION.removePlayer(clan.getOwner().getUser().getId());
+													p.closeInventory();
 												} else {
 													p.closeInventory();
 													Clan.ACTION.sendMessage(p, "&cFailed to confirm deletion.");

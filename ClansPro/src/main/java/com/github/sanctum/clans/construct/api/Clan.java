@@ -6,12 +6,13 @@ import com.github.sanctum.clans.construct.RankPriority;
 import com.github.sanctum.clans.construct.actions.ClanAction;
 import com.github.sanctum.clans.construct.impl.DefaultClan;
 import com.github.sanctum.clans.construct.impl.Resident;
+import com.github.sanctum.labyrinth.LabyrinthProvider;
 import com.github.sanctum.labyrinth.data.FileManager;
 import com.github.sanctum.labyrinth.data.JsonAdapter;
+import com.github.sanctum.labyrinth.data.LabyrinthUser;
 import com.github.sanctum.labyrinth.data.Node;
 import com.github.sanctum.labyrinth.data.NodePointer;
 import com.github.sanctum.labyrinth.data.Primitive;
-import com.github.sanctum.labyrinth.data.Root;
 import com.github.sanctum.labyrinth.formatting.UniformedComponents;
 import com.github.sanctum.labyrinth.formatting.string.GradientColor;
 import com.github.sanctum.labyrinth.library.HUID;
@@ -33,16 +34,13 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
+import net.md_5.bungee.api.chat.BaseComponent;
 import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
 import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.Sound;
 import org.bukkit.Statistic;
-import org.bukkit.boss.BarColor;
-import org.bukkit.boss.BarFlag;
-import org.bukkit.boss.BarStyle;
-import org.bukkit.boss.BossBar;
 import org.bukkit.configuration.serialization.ConfigurationSerializable;
 import org.bukkit.configuration.serialization.SerializableAs;
 import org.bukkit.entity.Player;
@@ -222,6 +220,13 @@ public interface Clan extends Iterable<Clan.Associate>, JsonAdapter<Clan>, Confi
 	void broadcast(String message);
 
 	/**
+	 * Send a message to the clan
+	 *
+	 * @param message components to broadcast.
+	 */
+	void broadcast(BaseComponent... message);
+
+	/**
 	 * Send a message to specific clan members.
 	 *
 	 * @param message String to broadcast.
@@ -326,15 +331,6 @@ public interface Clan extends Iterable<Clan.Associate>, JsonAdapter<Clan>, Confi
 	 * @return Gets the clan objects clan tag
 	 */
 	@NotNull String getName();
-
-	/**
-	 * Get the color theme for the clan
-	 *
-	 * @return Gets the clan objects clan tag color
-	 * @deprecated Use {@link Clan#getPalette()} instead!
-	 */
-	@Deprecated
-	@NotNull String getColor();
 
 	/**
 	 * Get the clans color palette
@@ -493,9 +489,11 @@ public interface Clan extends Iterable<Clan.Associate>, JsonAdapter<Clan>, Confi
 	 */
 	@NotNull List<ClanCooldown> getCooldowns();
 
+	/*
 	default String getMotd() {
 		return "Hello! This is a test message. If you're reading this, the message should be formatted!";
 	}
+	 */
 
 	/**
 	 * {@inheritDoc}
@@ -516,7 +514,7 @@ public interface Clan extends Iterable<Clan.Associate>, JsonAdapter<Clan>, Confi
 		color.addProperty("end", clan.getPalette().getEnd());
 		o.add("color", color);
 		JsonObject members = new JsonObject();
-		clan.forEach(a -> members.addProperty(a.getPlayer().getUniqueId().toString(), a.getPriority().name()));
+		clan.forEach(a -> members.addProperty(a.getUser().getId().toString(), a.getPriority().name()));
 		o.add("members", members);
 		return o;
 	}
@@ -568,7 +566,7 @@ public interface Clan extends Iterable<Clan.Associate>, JsonAdapter<Clan>, Confi
 		o.put("color", color);
 		Map<String, String> members = new HashMap<>();
 		for (Associate a : getMembers()) {
-			members.put(a.getPlayer().getUniqueId().toString(), a.getPriority().name());
+			members.put(a.getUser().getId().toString(), a.getPriority().name());
 		}
 		o.put("members", members);
 		return o;
@@ -614,7 +612,7 @@ public interface Clan extends Iterable<Clan.Associate>, JsonAdapter<Clan>, Confi
 	 */
 	class Associate {
 
-		private final UUID player;
+		private final String player;
 
 		private final HUID clan;
 
@@ -626,34 +624,25 @@ public interface Clan extends Iterable<Clan.Associate>, JsonAdapter<Clan>, Confi
 
 		private final Map<Long, Long> killMap;
 
-		private final BossBar bar = Bukkit.createBossBar("", BarColor.BLUE, BarStyle.SEGMENTED_10, BarFlag.DARKEN_SKY);
-
 		public Associate(UUID uuid, RankPriority priority, HUID clanID) {
-			this.player = uuid;
+			this.player = LabyrinthProvider.getOfflinePlayers().stream().filter(p -> p.getId().equals(uuid)).map(LabyrinthUser::getName).findFirst().get();
 			this.rank = priority;
 			this.clan = clanID;
 			this.chat = "GLOBAL";
-			this.head = CustomHead.Manager.get(getPlayer().getName());
+			this.head = CustomHead.Manager.get(player);
 			this.killMap = new HashMap<>();
 		}
 
-		public Associate(OfflinePlayer player, RankPriority priority, HUID clan) {
-			this(player.getUniqueId(), priority, clan);
-		}
-
 		public String getName() {
-			return getPlayer().getName();
+			return this.player;
 		}
 
-		public Message getMessenger() {
-			return Message.form(getPlayer().getPlayer());
+		public UUID getId() {
+			return getUser().getId();
 		}
 
-		/**
-		 * @return Gets the backing player object behind this clan associate.
-		 */
-		public OfflinePlayer getPlayer() {
-			return Bukkit.getOfflinePlayer(player);
+		public LabyrinthUser getUser() {
+			return LabyrinthUser.get(getName());
 		}
 
 		/**
@@ -670,10 +659,6 @@ public interface Clan extends Iterable<Clan.Associate>, JsonAdapter<Clan>, Confi
 			return chat;
 		}
 
-		public BossBar getBar() {
-			return bar;
-		}
-
 		/**
 		 * Change the users chat channel.
 		 *
@@ -687,14 +672,14 @@ public interface Clan extends Iterable<Clan.Associate>, JsonAdapter<Clan>, Confi
 		 * @return Gets the clan this associate belongs to.
 		 */
 		public Clan getClan() {
-			return ClansAPI.getInstance().getClan(player);
+			return ClansAPI.getInstance().getClan(getId());
 		}
 
 		/**
 		 * @return Gets the associates possible claim information. If the player is not in a claim this will return empty.
 		 */
 		public Optional<Resident> toResident() {
-			return !getPlayer().isOnline() ? Optional.empty() : Optional.ofNullable(Claim.getResident(getPlayer().getPlayer()));
+			return !getUser().toBukkit().isOnline() ? Optional.empty() : Optional.ofNullable(Claim.getResident(getUser().toBukkit().getPlayer()));
 		}
 
 		/**
@@ -824,7 +809,7 @@ public interface Clan extends Iterable<Clan.Associate>, JsonAdapter<Clan>, Confi
 		public synchronized String getNickname() {
 			FileManager clan = ClansAPI.getData().getClanFile(getClan());
 			Node user_data = clan.getRoot().getNode("user-data");
-			Node user = user_data.getNode(player.toString());
+			Node user = user_data.getNode(getId().toString());
 			Node nickname = user.getNode("nickname");
 			Primitive n = nickname.toPrimitive();
 			return n.isString() ? n.getString() : getName();
@@ -836,7 +821,7 @@ public interface Clan extends Iterable<Clan.Associate>, JsonAdapter<Clan>, Confi
 		public synchronized String getBiography() {
 			FileManager clan = ClansAPI.getData().getClanFile(getClan());
 			Node user_data = clan.getRoot().getNode("user-data");
-			Node user = user_data.getNode(player.toString());
+			Node user = user_data.getNode(getId().toString());
 			Node bio = user.getNode("bio");
 			Primitive b = bio.toPrimitive();
 			return b.isString() ? b.getString() : "I much like other's, enjoy long walks on the beach.";
@@ -848,7 +833,7 @@ public interface Clan extends Iterable<Clan.Associate>, JsonAdapter<Clan>, Confi
 		public synchronized Date getJoinDate() {
 			FileManager clan = ClansAPI.getData().getClanFile(getClan());
 			Node user_data = clan.getRoot().getNode("user-data");
-			Node user = user_data.getNode(player.toString());
+			Node user = user_data.getNode(getId().toString());
 			Node date = user.getNode("join-date");
 			Primitive d = date.toPrimitive();
 			return d.isLong() ? new Date(d.getLong()) : new Date();
@@ -858,7 +843,7 @@ public interface Clan extends Iterable<Clan.Associate>, JsonAdapter<Clan>, Confi
 		 * @return Gets the associates kill/death ratio.
 		 */
 		public synchronized double getKD() {
-			OfflinePlayer player = Bukkit.getOfflinePlayer(this.player);
+			OfflinePlayer player = getUser().toBukkit();
 			if (!Bukkit.getVersion().contains("1.14") || !Bukkit.getVersion().contains("1.15") || !Bukkit.getVersion().contains("1.16")
 					|| !Bukkit.getVersion().contains("1.17")) {
 				return 0.0;
@@ -883,12 +868,12 @@ public interface Clan extends Iterable<Clan.Associate>, JsonAdapter<Clan>, Confi
 		public synchronized void setBio(String newBio) {
 			FileManager clan = ClansAPI.getData().getClanFile(getClan());
 			Node user_data = clan.getRoot().getNode("user-data");
-			Node user = user_data.getNode(player.toString());
+			Node user = user_data.getNode(getId().toString());
 			Node bio = user.getNode("bio");
 			bio.set(newBio);
-			((Root) bio).save();
-			if (getPlayer().isOnline()) {
-				Claim.ACTION.sendMessage(getPlayer().getPlayer(), MessageFormat.format(ClansAPI.getData().getMessageResponse("member-bio"), newBio));
+			bio.save();
+			if (getUser().toBukkit().isOnline()) {
+				Claim.ACTION.sendMessage(getUser().toBukkit().getPlayer(), MessageFormat.format(ClansAPI.getData().getMessageResponse("member-bio"), newBio));
 			}
 		}
 
@@ -900,22 +885,22 @@ public interface Clan extends Iterable<Clan.Associate>, JsonAdapter<Clan>, Confi
 		public synchronized void setNickname(String newName) {
 			FileManager clan = ClansAPI.getData().getClanFile(getClan());
 			Node user_data = clan.getRoot().getNode("user-data");
-			Node user = user_data.getNode(player.toString());
+			Node user = user_data.getNode(getId().toString());
 			Node bio = user.getNode("nickname");
 			if (newName.equals("empty")) {
 				bio.set(getName());
-				newName = getPlayer().getName();
+				newName = getUser().getName();
 			} else {
 				bio.set(newName);
 			}
-			((Root) bio).save();
-			if (getPlayer().isOnline()) {
-				ACTION.sendMessage(getPlayer().getPlayer(), MessageFormat.format(ClansAPI.getData().getMessageResponse("nickname"), newName));
+			bio.save();
+			if (getUser().toBukkit().isOnline()) {
+				ACTION.sendMessage(getUser().toBukkit().getPlayer(), MessageFormat.format(ClansAPI.getData().getMessageResponse("nickname"), newName));
 			}
 		}
 
 		public synchronized void kick() {
-			ACTION.kickPlayer(getPlayer().getUniqueId());
+			ACTION.kickPlayer(getUser().getId());
 		}
 
 		public abstract static class Teleport {
@@ -965,15 +950,15 @@ public interface Clan extends Iterable<Clan.Associate>, JsonAdapter<Clan>, Confi
 			}
 
 			public void teleport() {
-				Message.form(getAssociate().getPlayer().getPlayer()).setPrefix(ClansAPI.getInstance().getPrefix().joined()).send("&aTeleporting in 10 seconds, don't move.");
-				Message.form(getTarget()).setPrefix(ClansAPI.getInstance().getPrefix().joined()).send("&a" + associate.getPlayer().getName() + " is teleporting to you.");
+				Message.form(getAssociate().getUser().toBukkit().getPlayer()).setPrefix(ClansAPI.getInstance().getPrefix().joined()).send("&aTeleporting in 10 seconds, don't move.");
+				Message.form(getTarget()).setPrefix(ClansAPI.getInstance().getPrefix().joined()).send("&a" + associate.getUser().getName() + " is teleporting to you.");
 				this.state = State.TELEPORTING;
 				this.accepted = new Date();
 				Schedule.sync(() -> {
 					if (getState() == State.TELEPORTING) {
-						associate.getPlayer().getPlayer().teleport(getTarget());
+						associate.getUser().toBukkit().getPlayer().teleport(getTarget());
 						cancel();
-						associate.getPlayer().getPlayer().getWorld().playSound(associate.getPlayer().getPlayer().getLocation(), Sound.ENTITY_VILLAGER_AMBIENT, 10, 1);
+						associate.getUser().toBukkit().getPlayer().getWorld().playSound(associate.getUser().toBukkit().getPlayer().getLocation(), Sound.ENTITY_VILLAGER_AMBIENT, 10, 1);
 					} else {
 						cancel();
 					}

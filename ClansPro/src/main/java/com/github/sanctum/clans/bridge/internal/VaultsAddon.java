@@ -3,8 +3,7 @@ package com.github.sanctum.clans.bridge.internal;
 import com.github.sanctum.clans.bridge.ClanAddon;
 import com.github.sanctum.clans.bridge.ClanAddonQuery;
 import com.github.sanctum.clans.bridge.ClanVentBus;
-import com.github.sanctum.clans.bridge.internal.vaults.VaultContainer;
-import com.github.sanctum.clans.bridge.internal.vaults.VaultsListener;
+import com.github.sanctum.clans.bridge.internal.vaults.VaultMenu;
 import com.github.sanctum.clans.bridge.internal.vaults.events.VaultOpenEvent;
 import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClansAPI;
@@ -13,15 +12,15 @@ import com.github.sanctum.clans.events.command.CommandHelpInsertEvent;
 import com.github.sanctum.clans.events.command.CommandInsertEvent;
 import com.github.sanctum.clans.events.command.TabInsertEvent;
 import com.github.sanctum.labyrinth.event.custom.Vent;
+import com.github.sanctum.labyrinth.gui.unity.construct.Menu;
+import com.github.sanctum.labyrinth.gui.unity.impl.MenuType;
 import com.github.sanctum.labyrinth.library.HUID;
-import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.Inventory;
 
 public class VaultsAddon extends ClanAddon {
 
 	@Override
-	public boolean persist() {
+	public boolean isStaged() {
 		return ClansAPI.getData().isTrue("Addon." + getName() + ".enabled");
 	}
 
@@ -52,7 +51,7 @@ public class VaultsAddon extends ClanAddon {
 
 	@Override
 	public void onLoad() {
-		register(new VaultsListener());
+
 	}
 
 	@Override
@@ -62,7 +61,7 @@ public class VaultsAddon extends ClanAddon {
 
 			ClanAddon cycle = ClanAddonQuery.getAddon("Vaults");
 
-			if (cycle != null && !cycle.isActive()) {
+			if (cycle != null && !cycle.getContext().isActive()) {
 				subscription.remove();
 				return;
 			}
@@ -75,7 +74,7 @@ public class VaultsAddon extends ClanAddon {
 
 			ClanAddon cycle = ClanAddonQuery.getAddon("Vaults");
 
-			if (cycle != null && !cycle.isActive()) {
+			if (cycle != null && !cycle.getContext().isActive()) {
 				subscription.remove();
 				return;
 			}
@@ -90,7 +89,7 @@ public class VaultsAddon extends ClanAddon {
 
 			ClanAddon cycle = ClanAddonQuery.getAddon("Vaults");
 
-			if (cycle != null && !cycle.isActive()) {
+			if (cycle != null && !cycle.getContext().isActive()) {
 				subscription.remove();
 				return;
 			}
@@ -115,9 +114,8 @@ public class VaultsAddon extends ClanAddon {
 							return;
 						}
 						Clan clan = ClansAPI.getInstance().getClan(p.getUniqueId());
-						Inventory pull = VaultContainer.getVault(clan.getName());
-						VaultOpenEvent event = new VaultOpenEvent(clan, p, pull, pull.getViewers());
-						Bukkit.getPluginManager().callEvent(event);
+						Menu pull = getVault(clan.getName());
+						VaultOpenEvent event = ClanVentBus.call(new VaultOpenEvent(clan, p, pull, pull.getInventory().getElement().getViewers()));
 						if (!event.isCancelled()) {
 							event.open();
 						}
@@ -135,6 +133,10 @@ public class VaultsAddon extends ClanAddon {
 	@Override
 	public void onDisable() {
 
+	}
+
+	public static Menu getVault(String clanName) {
+		return MenuType.SINGULAR.get(m -> m.getKey().map(clanName::equals).orElse(false)) != null ? MenuType.SINGULAR.get(m -> m.getKey().map(clanName::equals).orElse(false)) : new VaultMenu(clanName);
 	}
 
 }

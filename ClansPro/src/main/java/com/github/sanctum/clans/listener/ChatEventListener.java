@@ -5,6 +5,7 @@ import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClansAPI;
 import com.github.sanctum.clans.construct.extra.StringLibrary;
 import com.github.sanctum.clans.events.core.ClanChatEvent;
+import com.github.sanctum.labyrinth.data.LabyrinthUser;
 import com.github.sanctum.labyrinth.event.custom.Subscribe;
 import com.github.sanctum.labyrinth.event.custom.Vent;
 import com.github.sanctum.labyrinth.library.Message;
@@ -77,7 +78,7 @@ public class ChatEventListener implements Listener {
 			}
 
 			if (associate.getChat().equalsIgnoreCase("CLAN")) {
-				Set<Player> players = associate.getClan().getMembers().stream().filter(m -> m.getPlayer().isOnline()).map(Clan.Associate::getPlayer).map(OfflinePlayer::getPlayer).collect(Collectors.toSet());
+				Set<Player> players = associate.getClan().getMembers().stream().filter(m -> m.getUser().toBukkit().isOnline()).map(Clan.Associate::getUser).map(LabyrinthUser::toBukkit).map(OfflinePlayer::getPlayer).collect(Collectors.toSet());
 				players.addAll(ClansAPI.getData().CHAT_SPY);
 				ClanChatEvent e = ClanVentBus.queue(new ClanChatEvent(associate, players, event.getMessage())).get();
 				if (!e.isCancelled()) {
@@ -95,7 +96,7 @@ public class ChatEventListener implements Listener {
 			if (associate.getChat().equalsIgnoreCase("ALLY")) {
 				Set<Player> players = new HashSet<>(ClansAPI.getData().CHAT_SPY);
 				for (Clan c : associate.getClan().getAllies().list()) {
-					players.addAll(c.getMembers().stream().filter(m -> m.getPlayer().isOnline()).map(Clan.Associate::getPlayer).map(OfflinePlayer::getPlayer).collect(Collectors.toSet()));
+					players.addAll(c.getMembers().stream().filter(m -> m.getUser().toBukkit().isOnline()).map(Clan.Associate::getUser).map(LabyrinthUser::toBukkit).map(OfflinePlayer::getPlayer).collect(Collectors.toSet()));
 				}
 				players.add(p);
 				ClanChatEvent e = ClanVentBus.queue(new ClanChatEvent(associate, players, event.getMessage())).get();

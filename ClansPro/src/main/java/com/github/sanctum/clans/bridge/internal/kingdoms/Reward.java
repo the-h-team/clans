@@ -3,6 +3,7 @@ package com.github.sanctum.clans.bridge.internal.kingdoms;
 import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.labyrinth.library.Items;
 import com.github.sanctum.labyrinth.library.StringUtils;
+import net.md_5.bungee.api.chat.BaseComponent;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.Nullable;
 
@@ -12,6 +13,11 @@ public interface Reward<T> {
 		@Override
 		public ItemStack get() {
 			return Items.edit().build();
+		}
+
+		@Override
+		public BaseComponent[] getMessage() {
+			return new BaseComponent[0];
 		}
 
 		@Override
@@ -37,6 +43,11 @@ public interface Reward<T> {
 		}
 
 		@Override
+		public BaseComponent[] getMessage() {
+			return new BaseComponent[0];
+		}
+
+		@Override
 		public void give(Kingdom kingdom) {
 
 		}
@@ -53,6 +64,8 @@ public interface Reward<T> {
 	};
 
 	T get();
+
+	BaseComponent[] getMessage();
 
 	void give(Kingdom kingdom);
 

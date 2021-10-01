@@ -32,13 +32,14 @@ import com.github.sanctum.labyrinth.LabyrinthProvider;
 import com.github.sanctum.labyrinth.api.Service;
 import com.github.sanctum.labyrinth.data.EconomyProvision;
 import com.github.sanctum.labyrinth.data.FileManager;
-import com.github.sanctum.labyrinth.formatting.Bulletin;
+import com.github.sanctum.labyrinth.data.LabyrinthUser;
+import com.github.sanctum.labyrinth.formatting.Message;
 import com.github.sanctum.labyrinth.formatting.PaginatedList;
 import com.github.sanctum.labyrinth.formatting.component.OldComponent;
 import com.github.sanctum.labyrinth.formatting.string.ColoredString;
 import com.github.sanctum.labyrinth.library.HUID;
 import com.github.sanctum.labyrinth.library.Item;
-import com.github.sanctum.labyrinth.library.Message;
+import com.github.sanctum.labyrinth.library.Mailer;
 import com.github.sanctum.labyrinth.library.StringUtils;
 import com.github.sanctum.labyrinth.library.TextLib;
 import com.google.common.collect.MapMaker;
@@ -70,7 +71,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
-public class CommandClan extends Command implements Bulletin.Factory {
+public class CommandClan extends Command implements Message.Factory {
 
 	private final ConcurrentMap<Player, List<UUID>> blockedUsers = new MapMaker().
 			weakKeys().
@@ -119,8 +120,8 @@ public class CommandClan extends Command implements Bulletin.Factory {
 		List<String> result = new ArrayList<>();
 
 		for (ClanAddon cycle : ClanAddonQuery.getRegisteredAddons()) {
-			if (cycle.isActive()) {
-				for (ClanSubCommand subCommand : cycle.getCommands()) {
+			if (cycle.getContext().isActive()) {
+				for (ClanSubCommand subCommand : cycle.getContext().getCommands()) {
 					if (subCommand.tab(p, alias, args) != null) {
 						result.addAll(subCommand.tab(p, alias, args));
 					}
@@ -130,7 +131,7 @@ public class CommandClan extends Command implements Bulletin.Factory {
 
 		if (args.length == 1) {
 			arguments.clear();
-			List<String> add = Arrays.asList("create", "war", "logo", "permit", "permissions", "invite", "block", "peace", "forfeit", "surrender", "truce", "mode", "bio", "players", "description", "friendlyfire", "color", "password", "kick", "leave", "message", "chat", "run", "promote", "demote", "tag", "nickname", "list", "base", "setbase", "top", "claim", "unclaim", "passowner", "ally", "enemy", "bank");
+			List<String> add = Arrays.asList("create", "war", "logo", "permit", "permissions", "invite", "block", "peace", "forfeit", "surrender", "truce", "mode", "bio", "players", "description", "friendlyfire", "color", "password", "kick", "leave", "message", "chat", "info", "promote", "demote", "tag", "nickname", "list", "base", "setbase", "top", "claim", "unclaim", "passowner", "ally", "enemy", "bank");
 			for (String a : add) {
 				if (p.hasPermission(this.getPermission() + "." + DataManager.Security.getPermission(a))) {
 					arguments.add(a);
@@ -220,7 +221,7 @@ public class CommandClan extends Command implements Bulletin.Factory {
 						return result;
 					}
 					arguments.clear();
-					arguments.addAll(c.getMembers().stream().map(Clan.Associate::getPlayer).map(OfflinePlayer::getName).collect(Collectors.toList()));
+					arguments.addAll(c.getMembers().stream().map(Clan.Associate::getUser).map(LabyrinthUser::getName).collect(Collectors.toList()));
 					for (String a : arguments) {
 						if (a.toLowerCase().startsWith(args[1].toLowerCase()))
 							result.add(a);
@@ -235,7 +236,7 @@ public class CommandClan extends Command implements Bulletin.Factory {
 						return result;
 					}
 					arguments.clear();
-					arguments.addAll(c.getMembers().stream().map(Clan.Associate::getPlayer).map(OfflinePlayer::getName).collect(Collectors.toList()));
+					arguments.addAll(c.getMembers().stream().map(Clan.Associate::getUser).map(LabyrinthUser::getName).collect(Collectors.toList()));
 					for (String a : arguments) {
 						if (a.toLowerCase().startsWith(args[1].toLowerCase()))
 							result.add(a);
@@ -451,8 +452,8 @@ public class CommandClan extends Command implements Bulletin.Factory {
 			if (sender instanceof ConsoleCommandSender) {
 
 				for (ClanAddon cycle : ClanAddonQuery.getRegisteredAddons()) {
-					if (cycle.isActive()) {
-						for (ClanSubCommand subCommand : cycle.getCommands()) {
+					if (cycle.getContext().isActive()) {
+						for (ClanSubCommand subCommand : cycle.getContext().getCommands()) {
 							if (subCommand.getLabel() != null) {
 								if (args.length > 0) {
 									if (subCommand.getAliases().contains(args[0]) || subCommand.getLabel().equalsIgnoreCase(args[0])) {
@@ -489,8 +490,8 @@ public class CommandClan extends Command implements Bulletin.Factory {
          */
 
 		for (ClanAddon cycle : ClanAddonQuery.getRegisteredAddons()) {
-			if (cycle.isActive()) {
-				for (ClanSubCommand subCommand : cycle.getCommands()) {
+			if (cycle.getContext().isActive()) {
+				for (ClanSubCommand subCommand : cycle.getContext().getCommands()) {
 					if (subCommand.getLabel() != null) {
 						if (length > 0) {
 							if (subCommand.getAliases().contains(args[0]) || subCommand.getLabel().equalsIgnoreCase(args[0])) {
@@ -516,8 +517,8 @@ public class CommandClan extends Command implements Bulletin.Factory {
 					.limit(lib.menuSize())
 					.start((pagination, page, max) -> {
 						lib.sendMessage(p, lib.menuTitle());
-						Message.form(p).send(lib.menuBorder());
-					}).finish(builder -> builder.setPlayer(p).setPrefix(lib.menuBorder())).decorate((pagination, string, page, max, placement) -> Message.form(p).send(string)).get(1);
+						Mailer.empty(p).chat(lib.menuBorder()).deploy();
+					}).finish(builder -> builder.setPlayer(p).setPrefix(lib.menuBorder())).decorate((pagination, string, page, max, placement) -> Mailer.empty(p).chat(string).deploy()).get(1);
 
 			return true;
 		}
@@ -555,6 +556,7 @@ public class CommandClan extends Command implements Bulletin.Factory {
 					return true;
 				}
 				final Clan clan = associate.getClan();
+
 				final String clan_name = clan.getName();
 				final String[] split = Messages.BANKS_GREETING.toString().split("\\{0}");
 				final String greetingHover = Messages.BANKS_GREETING_HOVER.toString();
@@ -713,20 +715,20 @@ public class CommandClan extends Command implements Bulletin.Factory {
 				if (associate != null) {
 					PermissionLog log = associate.getClan().getValue(PermissionLog.class, "permissions");
 					lib.sendMessage(p, "&eOur clan permission list:");
-					Message m = Message.form(p);
-					m.send("&f&l▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬");
+					Mailer m = Mailer.empty(p);
+					m.chat("&f&l▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬").deploy();
 					for (Map.Entry<Permission, Integer> e : log.getMap().entrySet().stream().sorted(Map.Entry.comparingByKey()).collect(Collectors.toList())) {
 						Permission perm = e.getKey();
 						int required = e.getValue();
-						m.build(TextLib.getInstance().textSuggestable("&e" + String.join(" ", clean(perm.name().split("_"))), " &f= {&a" + required + "&f}", "&eClick to edit this permission.", "c permit " + perm.name() + " "));
+						m.chat(TextLib.getInstance().textSuggestable("&e" + String.join(" ", clean(perm.name().split("_"))), " &f= {&a" + required + "&f}", "&eClick to edit this permission.", "c permit " + perm.name() + " ")).deploy();
 					}
-					m.send("&f&l▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬");
+					m.chat("&f&l▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬").deploy();
 					FileManager main = ClansAPI.getData().getMain();
 					String member = main.getRoot().getString("Formatting.Chat.Styles.Full.Member");
 					String mod = main.getRoot().getString("Formatting.Chat.Styles.Full.Moderator");
 					String admin = main.getRoot().getString("Formatting.Chat.Styles.Full.Admin");
 					String owner = main.getRoot().getString("Formatting.Chat.Styles.Full.Owner");
-					m.send("&e0 &f= &2" + member + "&b, &e1 &f= &2" + mod + "&b, &e2 &f= &2" + admin + "&b, &e3 &f= &2" + owner);
+					m.chat("&e0 &f= &2" + member + "&b, &e1 &f= &2" + mod + "&b, &e2 &f= &2" + admin + "&b, &e3 &f= &2" + owner).deploy();
 				} else {
 					lib.sendMessage(p, lib.notInClan());
 				}
@@ -1160,8 +1162,8 @@ public class CommandClan extends Command implements Bulletin.Factory {
 						.limit(lib.menuSize())
 						.start((pagination, page, max) -> {
 							lib.sendMessage(p, lib.menuTitle());
-							Message.form(p).send(lib.menuBorder());
-						}).finish(builder -> builder.setPlayer(p).setPrefix(lib.menuBorder())).decorate((pagination, string, page, max, placement) -> Message.form(p).send(string)).get(Math.max(pa, 1));
+							Mailer.empty(p).chat(lib.menuBorder()).deploy();
+						}).finish(builder -> builder.setPlayer(p).setPrefix(lib.menuBorder())).decorate((pagination, string, page, max, placement) -> Mailer.empty(p).chat(string).deploy()).get(Math.max(pa, 1));
 				return true;
 			} catch (Exception ignored) {
 			}
@@ -1530,7 +1532,7 @@ public class CommandClan extends Command implements Bulletin.Factory {
 									.append(text("&4[&nDENY&4]")
 											.bind(hover("&3Click to deny the request from '" + p.getName() + "'."))
 											.bind(command("msg " + p.getName() + " No thank you.")))
-									.send(p);
+									.send(p).deploy();
 						} else {
 							message().append(text("&3|&7> &3Click a button to respond. "))
 									.append(text("&b[&nACCEPT&b]")
@@ -1539,7 +1541,7 @@ public class CommandClan extends Command implements Bulletin.Factory {
 									.append(text("&4[&nDENY&4]")
 											.bind(hover("&3Click to deny the request from '" + p.getName() + "'."))
 											.bind(command("msg " + p.getName() + " No thank you.")))
-									.send(p);
+									.send(p).deploy();
 						}
 					} else {
 						lib.sendMessage(p, "&c&oYou do not have clan clearance.");
@@ -1565,7 +1567,12 @@ public class CommandClan extends Command implements Bulletin.Factory {
 					return true;
 				}
 
-				Clan.ACTION.create(p.getUniqueId(), args1, null);
+				LabyrinthUser user = LabyrinthUser.get(p.getName());
+				if (user.isValid()) {
+					Clan.ACTION.create(p.getUniqueId(), args1, null);
+				} else {
+					lib.sendMessage(p, "&cYou appear to not be a valid mojang user, enable to proceed.");
+				}
 				return true;
 			}
 			if (args0.equalsIgnoreCase("mode")) {
@@ -1747,7 +1754,12 @@ public class CommandClan extends Command implements Bulletin.Factory {
 					lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("join")));
 					return true;
 				}
-				Clan.ACTION.joinClan(p.getUniqueId(), args1, "none");
+				LabyrinthUser user = LabyrinthUser.get(p.getName());
+				if (user.isValid()) {
+					Clan.ACTION.joinClan(p.getUniqueId(), args1, "none");
+				} else {
+					lib.sendMessage(p, "&cYou appear to not be a valid mojang user, enable to proceed.");
+				}
 				return true;
 			}
 			if (args0.equalsIgnoreCase("tag")) {
@@ -1806,7 +1818,7 @@ public class CommandClan extends Command implements Bulletin.Factory {
 					Clan clan = associate.getClan();
 					if (Permission.MANAGE_COLOR.test(associate)) {
 
-						if (!args1.matches("(&#[a-zA-Z0-9]{6})+(&[a-zA-Z0-9])+") && !args1.matches("(&#[a-zA-Z0-9]{6})+|(&[a-zA-Z0-9])+")) {
+						if (!args1.matches("(&#[a-zA-Z0-9]{6})+(&[a-zA-Z0-9])+") && !args1.matches("(&[a-zA-Z0-9])+") && !args1.matches("(&#[a-zA-Z0-9])+") && !args1.matches("(#[a-zA-Z0-9])+")) {
 							lib.sendMessage(p, "&c&oInvalid color format.");
 							return true;
 						}
@@ -1838,6 +1850,7 @@ public class CommandClan extends Command implements Bulletin.Factory {
 								ClansAPI.getInstance().getPlugin().getLogger().severe("- Failed to updated name tags for user " + op.getName() + ".");
 							}
 						}
+						clan.broadcast(args1 + "Our color was changed.");
 					} else {
 						lib.sendMessage(p, lib.noClearance());
 					}
@@ -1862,7 +1875,7 @@ public class CommandClan extends Command implements Bulletin.Factory {
 							lib.sendMessage(p, lib.playerUnknown(args1));
 							return true;
 						}
-						Clan.Associate member = associate.getClan().getMember(m -> m.getPlayer().getUniqueId().equals(tid));
+						Clan.Associate member = associate.getClan().getMember(m -> m.getUser().getId().equals(tid));
 						if (member == null) return true;
 						if (member.getPriority().toInt() >= 2) {
 							lib.sendMessage(p, lib.alreadyMax(adminRank, ownerRank));
@@ -1891,7 +1904,7 @@ public class CommandClan extends Command implements Bulletin.Factory {
 							lib.sendMessage(p, lib.playerUnknown(args1));
 							return true;
 						}
-						Clan.Associate member = associate.getClan().getMember(m -> m.getPlayer().getUniqueId().equals(tid));
+						Clan.Associate member = associate.getClan().getMember(m -> m.getUser().getId().equals(tid));
 						if (member == null) return true;
 						if (member.getPriority().toInt() >= associate.getPriority().toInt()) {
 							lib.sendMessage(p, lib.noClearance());
@@ -1975,7 +1988,7 @@ public class CommandClan extends Command implements Bulletin.Factory {
 							lib.sendMessage(p, lib.playerUnknown(args1));
 							return true;
 						}
-						Clan.Associate member = associate.getClan().getMember(m -> m.getPlayer().getUniqueId().equals(tid));
+						Clan.Associate member = associate.getClan().getMember(m -> m.getUser().getId().equals(tid));
 						if (member == null) return true;
 						if (member.getPriority().toInt() > associate.getPriority().toInt()) {
 							lib.sendMessage(p, lib.noClearance());
@@ -2039,6 +2052,7 @@ public class CommandClan extends Command implements Bulletin.Factory {
 					}
 					Clan clan = ClansAPI.getInstance().getClan(ClansAPI.getInstance().getClanID(args1));
 					for (String info : clan.getClanInfo()) {
+
 						if (ClansAPI.getInstance().isInClan(p.getUniqueId())) {
 							sendMessage(p, info.replace(ClansAPI.getInstance().getClan(p.getUniqueId()).getName(), "&6&lUS"));
 						} else {
@@ -2182,7 +2196,12 @@ public class CommandClan extends Command implements Bulletin.Factory {
 					Clan clan = associate.getClan();
 					if (Permission.MANAGE_COLOR.test(associate)) {
 
-						if (!args1.matches("(&#[a-zA-Z0-9]{6})+")) {
+						if (!args1.matches("(&#[a-zA-Z0-9]{6})+") && !args1.matches("(#[a-zA-Z0-9]{6})+")) {
+							lib.sendMessage(p, "&c&oInvalid color format. Only hex is allowed for gradients.");
+							return true;
+						}
+
+						if (!args2.matches("(&#[a-zA-Z0-9]{6})+") && !args2.matches("(#[a-zA-Z0-9]{6})+")) {
 							lib.sendMessage(p, "&c&oInvalid color format. Only hex is allowed for gradients.");
 							return true;
 						}
@@ -2195,7 +2214,13 @@ public class CommandClan extends Command implements Bulletin.Factory {
 							}
 						}
 
-						clan.getPalette().setStart(args1);
+						if (args2.equalsIgnoreCase("empty") || args2.equalsIgnoreCase("reset")) {
+							clan.getPalette().setStart(null);
+							clan.getPalette().setEnd(null);
+							lib.sendMessage(p, "&aGradient color removed.");
+						} else {
+							clan.getPalette().setStart(args1);
+						}
 						if (args2.equalsIgnoreCase("empty") || args2.equalsIgnoreCase("reset")) {
 							clan.getPalette().setEnd(null);
 							lib.sendMessage(p, "&aGradient color removed.");
@@ -2281,7 +2306,7 @@ public class CommandClan extends Command implements Bulletin.Factory {
 						return true;
 					}
 
-					if (!args2.matches("(&#[a-zA-Z0-9]{6})+(&[a-zA-Z0-9])+") && !args2.matches("(&#[a-zA-Z0-9]{6})+|(&[a-zA-Z0-9])+")) {
+					if (!args2.matches("(&#[a-zA-Z0-9]{6})+(&[a-zA-Z0-9])+") && !args2.matches("(&[a-zA-Z0-9])+") && !args2.matches("(&#[a-zA-Z0-9])+") && !args2.matches("(#[a-zA-Z0-9])+")) {
 						lib.sendMessage(p, "&c&oInvalid color format.");
 						return true;
 					}
@@ -2290,15 +2315,15 @@ public class CommandClan extends Command implements Bulletin.Factory {
 
 					if (i != null) {
 
-						Message msg = Message.form(p);
+						Mailer msg = Mailer.empty(p);
 
 						i.setSelection(args2);
 
-						msg.send("&f&l&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬");
+						msg.chat("&f&l&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬").deploy();
 						for (BaseComponent[] components : i.get()) {
 							p.spigot().sendMessage(components);
 						}
-						msg.send("&f&l&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬");
+						msg.chat("&f&l&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬").deploy();
 
 						lib.sendMessage(p, "&aColor pallet updated to " + args2 + "TEST");
 					} else {
@@ -2323,7 +2348,12 @@ public class CommandClan extends Command implements Bulletin.Factory {
 					lib.sendMessage(p, lib.alreadyMade(args1));
 					return true;
 				}
-				Clan.ACTION.create(p.getUniqueId(), args1, args2);
+				LabyrinthUser user = LabyrinthUser.get(p.getName());
+				if (user.isValid()) {
+					Clan.ACTION.create(p.getUniqueId(), args1, args2);
+				} else {
+					lib.sendMessage(p, "&cYou appear to not be a valid mojang user, enable to proceed.");
+				}
 				return true;
 			}
 			if (args0.equalsIgnoreCase("join")) {
@@ -2331,7 +2361,12 @@ public class CommandClan extends Command implements Bulletin.Factory {
 					lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("join")));
 					return true;
 				}
-				Clan.ACTION.joinClan(p.getUniqueId(), args1, args2);
+				LabyrinthUser user = LabyrinthUser.get(p.getName());
+				if (user.isValid()) {
+					Clan.ACTION.joinClan(p.getUniqueId(), args1, args2);
+				} else {
+					lib.sendMessage(p, "&cYou appear to not be a valid mojang user, enable to proceed.");
+				}
 				return true;
 			}
 			if (args0.equalsIgnoreCase("message")) {
@@ -2405,13 +2440,13 @@ public class CommandClan extends Command implements Bulletin.Factory {
 							case "withdraw":
 							case "viewlog":
 								message().append(text(Messages.BANK_HELP_PREFIX + " setperm " + args2.toLowerCase() + " "))
-										.append(text("&7<&clevel&7>").bind(hover("Valid levels [0-3]"))).send(p);
+										.append(text("&7<&clevel&7>").bind(hover("Valid levels [0-3]"))).send(p).deploy();
 								break;
 							default:
 								message().append(text(Messages.BANK_HELP_PREFIX + " setperm "))
 										.append(text("&7<&cperm&7>").bind(hover("&6Valid options:&7\n&o*&f balance&7\n&o*&f deposit&7\n&o*&f withdraw&7\n&o*&f viewlog")))
 										.append(text(" &7<&flevel&7>"))
-										.send(p);
+										.send(p).deploy();
 						}
 						return true;
 					default: // receive subcommand usage message

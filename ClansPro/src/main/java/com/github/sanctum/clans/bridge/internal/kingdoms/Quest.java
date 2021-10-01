@@ -1,24 +1,25 @@
-package com.github.sanctum.clans.bridge.internal.kingdoms.achievement;
+package com.github.sanctum.clans.bridge.internal.kingdoms;
 
-import com.github.sanctum.clans.bridge.internal.kingdoms.Progressable;
-import com.github.sanctum.clans.bridge.internal.kingdoms.Reward;
+import java.util.Set;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public interface KingdomAchievement {
+public interface Quest {
 
 	@NotNull String getTitle();
 
 	@NotNull String getDescription();
 
-	@Nullable Progressable getParent();
+	@Nullable Progressive getParent();
 
 	double getRequirement();
 
 	double getProgression();
 
 	Reward<?> getReward();
+
+	Set<Player> getActiveUsers();
 
 	double progress(double amount);
 
@@ -40,7 +41,7 @@ public interface KingdomAchievement {
 
 	void setReward(Reward<?> type, Object reward);
 
-	void setParent(Progressable k);
+	void setParent(Progressive k);
 
 	default double limit(int add) {
 		if (getProgression() + add > getRequirement()) {
@@ -49,8 +50,8 @@ public interface KingdomAchievement {
 		return add;
 	}
 
-	static KingdomAchievement newInstance(String name, String description, double a, double b) {
-		return new PersistentAchievement(name, description, a, b);
+	static Quest newQuest(String name, String description, double initialProgress, double requirement) {
+		return new LocalFileQuest(name, description, initialProgress, requirement);
 	}
 
 }

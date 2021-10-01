@@ -13,17 +13,17 @@ public class ClaimInteractEvent extends ClanEventBuilder {
 
 	private final Player p;
 
-	private final InteractionType type;
+	private final Type type;
 
 	private final Location location;
 
-	public ClaimInteractEvent(Player p, Location location, InteractionType type) {
+	public ClaimInteractEvent(Player p, Location location, Type type) {
 		this.p = p;
 		this.location = location;
 		this.type = type;
 	}
 
-	public ClaimInteractEvent(Player p, Block block, Location location, InteractionType type) {
+	public ClaimInteractEvent(Player p, Block block, Location location, Type type) {
 		this.p = p;
 		this.b = block;
 		this.location = location;
@@ -34,7 +34,7 @@ public class ClaimInteractEvent extends ClanEventBuilder {
 		return location;
 	}
 
-	public InteractionType getInteraction() {
+	public Type getInteraction() {
 		return type;
 	}
 
@@ -59,7 +59,7 @@ public class ClaimInteractEvent extends ClanEventBuilder {
 		return getClass().getSimpleName();
 	}
 
-	public enum InteractionType {
+	public enum Type {
 
 		BUILD, BREAK, USE
 
