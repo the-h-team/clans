@@ -39,7 +39,10 @@ public class StashMenu extends Menu {
 				getInventory().getElement().addItem(it);
 			}
 		}
-
+		try {
+			registerController();
+		} catch (Exception ignored) {
+		}
 	}
 
 	ItemStack[] getInventoryContents(String clanID) {

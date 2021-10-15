@@ -10,15 +10,19 @@ import com.github.sanctum.labyrinth.data.FileType;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Spliterator;
 import java.util.UUID;
+import java.util.function.Consumer;
+import java.util.stream.Collectors;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class RoundTable extends Progressive {
+public class RoundTable extends Progressive implements Iterable<Clan.Associate> {
 
 	private final String name;
 	private final Map<UUID, Rank> users = new HashMap<>();
@@ -57,6 +61,22 @@ public class RoundTable extends Progressive {
 		}
 
 		PROGRESSIVES.add(this);
+	}
+
+	@NotNull
+	@Override
+	public Iterator<Clan.Associate> iterator() {
+		return users.keySet().stream().map(u -> ClansAPI.getInstance().getAssociate(u).get()).collect(Collectors.toList()).iterator();
+	}
+
+	@Override
+	public void forEach(Consumer<? super Clan.Associate> action) {
+		users.keySet().stream().map(u -> ClansAPI.getInstance().getAssociate(u).get()).collect(Collectors.toList()).forEach(action);
+	}
+
+	@Override
+	public Spliterator<Clan.Associate> spliterator() {
+		return users.keySet().stream().map(u -> ClansAPI.getInstance().getAssociate(u).get()).collect(Collectors.toList()).spliterator();
 	}
 
 	public enum Permission {
@@ -213,7 +233,7 @@ public class RoundTable extends Progressive {
 		users.getRoot().save();
 
 		for (Quest achievement : getQuests()) {
-			achievement.saveProgress("memory.table");
+			achievement.save();
 		}
 
 	}

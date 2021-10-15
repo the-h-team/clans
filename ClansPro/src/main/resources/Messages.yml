@@ -45,7 +45,7 @@ Commands:
     text: '&7|&e) &6/clan &4war&f <&7clanName&f>'
     permission: 'war'
   war-set:
-    text: '&7|&e) &6/clan &4war&f <&7clanName&f> <timeInSeconds>'
+    text: '&7|&e) &6/clan &4war'
     permission: 'war'
   forfeit:
     text: '&7|&e) &6/clan &fforfeit,surrender'

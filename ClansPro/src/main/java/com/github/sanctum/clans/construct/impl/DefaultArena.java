@@ -19,18 +19,18 @@ import org.jetbrains.annotations.NotNull;
 
 public class DefaultArena implements War {
 
-	private final String id;
-	private final Queue queue;
-	private final Vote G = new Vote();
-	private final Vote A = new Vote();
-	private final Vote B = new Vote();
-	private final Vote C = new Vote();
-	private final Vote D = new Vote();
-	private long time;
-	private boolean pre;
-	private Cooldown timer;
-	private final Map<Clan, Team> roster;
-	private final Map<Team, Integer> pointMap;
+	protected final String id;
+	protected final Queue queue;
+	protected final Vote G = new Vote();
+	protected final Vote A = new Vote();
+	protected final Vote B = new Vote();
+	protected final Vote C = new Vote();
+	protected final Vote D = new Vote();
+	protected long time;
+	protected boolean pre;
+	protected Cooldown timer;
+	protected final Map<Clan, Team> roster;
+	protected final Map<Team, Integer> pointMap;
 
 	public DefaultArena(String id) {
 		this.id = id;

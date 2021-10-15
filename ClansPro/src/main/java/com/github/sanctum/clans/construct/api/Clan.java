@@ -4,12 +4,17 @@ import com.github.sanctum.clans.construct.Claim;
 import com.github.sanctum.clans.construct.ClanManager;
 import com.github.sanctum.clans.construct.RankPriority;
 import com.github.sanctum.clans.construct.actions.ClanAction;
+import com.github.sanctum.clans.construct.extra.PrivateContainer;
 import com.github.sanctum.clans.construct.impl.DefaultClan;
 import com.github.sanctum.clans.construct.impl.Resident;
 import com.github.sanctum.labyrinth.LabyrinthProvider;
+import com.github.sanctum.labyrinth.annotation.Ordinal;
+import com.github.sanctum.labyrinth.data.Atlas;
+import com.github.sanctum.labyrinth.data.AtlasMap;
 import com.github.sanctum.labyrinth.data.FileManager;
 import com.github.sanctum.labyrinth.data.JsonAdapter;
 import com.github.sanctum.labyrinth.data.LabyrinthUser;
+import com.github.sanctum.labyrinth.data.MemorySpace;
 import com.github.sanctum.labyrinth.data.Node;
 import com.github.sanctum.labyrinth.data.NodePointer;
 import com.github.sanctum.labyrinth.data.Primitive;
@@ -42,6 +47,7 @@ import org.bukkit.OfflinePlayer;
 import org.bukkit.Sound;
 import org.bukkit.Statistic;
 import org.bukkit.configuration.serialization.ConfigurationSerializable;
+import org.bukkit.configuration.serialization.DelegateDeserialization;
 import org.bukkit.configuration.serialization.SerializableAs;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -50,7 +56,8 @@ import org.jetbrains.annotations.Nullable;
 
 @NodePointer(value = "com.github.sanctum.Clan", type = DefaultClan.class)
 @SerializableAs("com.github.sanctum.Clan")
-public interface Clan extends Iterable<Clan.Associate>, JsonAdapter<Clan>, ConfigurationSerializable, Comparable<Clan>, Relatable<Clan>, ClanBank, Serializable {
+@DelegateDeserialization(DefaultClan.class)
+public interface Clan extends Iterable<Clan.Associate>, JsonAdapter<Clan>, ConfigurationSerializable, Comparable<Clan>, Relatable<Clan>, ClanBank, MemorySpace, Serializable {
 
 	ClanAction ACTION = new ClanAction();
 
@@ -613,19 +620,45 @@ public interface Clan extends Iterable<Clan.Associate>, JsonAdapter<Clan>, Confi
 	class Associate {
 
 		private final String player;
-
 		private final HUID clan;
-
 		private RankPriority rank;
-
 		private String chat;
-
 		private final ItemStack head;
-
+		private final Object data;
 		private final Map<Long, Long> killMap;
 
 		public Associate(UUID uuid, RankPriority priority, HUID clanID) {
 			this.player = LabyrinthProvider.getOfflinePlayers().stream().filter(p -> p.getId().equals(uuid)).map(LabyrinthUser::getName).findFirst().get();
+			this.data = new Object() {
+				final PrivateContainer container;
+
+				{
+					container = new PrivateContainer() {
+
+						final Atlas map = new AtlasMap();
+
+						@Override
+						public <T> T get(Class<T> clazz, String key) {
+							return map.getNode(key).get(clazz);
+						}
+
+						@Override
+						public void set(String key, Object o) {
+							map.put(key, o);
+						}
+
+						@Override
+						public Set<Map.Entry<String, Object>> entrySet() {
+							return map.entrySet();
+						}
+					};
+				}
+
+				@Ordinal(32)
+				protected PrivateContainer getContainer() {
+					return container;
+				}
+			};
 			this.rank = priority;
 			this.clan = clanID;
 			this.chat = "GLOBAL";
@@ -687,6 +720,14 @@ public interface Clan extends Iterable<Clan.Associate>, JsonAdapter<Clan>, Confi
 		 */
 		public boolean isValid() {
 			return getClanID() != null;
+		}
+
+		@Ordinal(1)
+		private Object getData(int key) {
+			if ((((70 * 5) + 84) - 14) == key) {
+				return data;
+			}
+			throw new RuntimeException("You are not permitted to use this object!");
 		}
 
 		/**
@@ -824,7 +865,7 @@ public interface Clan extends Iterable<Clan.Associate>, JsonAdapter<Clan>, Confi
 			Node user = user_data.getNode(getId().toString());
 			Node bio = user.getNode("bio");
 			Primitive b = bio.toPrimitive();
-			return b.isString() ? b.getString() : "I much like other's, enjoy long walks on the beach.";
+			return b.isString() ? b.getString() : "&fI much like other's, &fenjoy long walks on the beach.";
 		}
 
 		/**
@@ -906,15 +947,11 @@ public interface Clan extends Iterable<Clan.Associate>, JsonAdapter<Clan>, Confi
 		public abstract static class Teleport {
 
 			private static final Set<Teleport> REQUESTS = new HashSet<>();
-
 			private final Player target;
-
 			private final Date date;
-
 			private Date accepted;
-
 			private State state;
-
+			private Location start;
 			private final Associate associate;
 
 			protected Teleport(Associate teleporter, Player target) {
@@ -923,6 +960,10 @@ public interface Clan extends Iterable<Clan.Associate>, JsonAdapter<Clan>, Confi
 				this.date = new Date();
 				this.state = State.INITIALIZED;
 				REQUESTS.add(this);
+			}
+
+			public Location getStartingLocation() {
+				return start;
 			}
 
 			public Associate getAssociate() {
@@ -950,6 +991,7 @@ public interface Clan extends Iterable<Clan.Associate>, JsonAdapter<Clan>, Confi
 			}
 
 			public void teleport() {
+				start = associate.getUser().toBukkit().getPlayer().getLocation();
 				Message.form(getAssociate().getUser().toBukkit().getPlayer()).setPrefix(ClansAPI.getInstance().getPrefix().joined()).send("&aTeleporting in 10 seconds, don't move.");
 				Message.form(getTarget()).setPrefix(ClansAPI.getInstance().getPrefix().joined()).send("&a" + associate.getUser().getName() + " is teleporting to you.");
 				this.state = State.TELEPORTING;

@@ -42,17 +42,17 @@ import org.bukkit.plugin.ServicePriority;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 
-public class MapCommand implements Listener {
+public class MapController implements Listener {
 
-    static class Rose {
-        private static final String[][] NORTH = new String[][]{{"N"}, {"W", "E"}, {"S"}};
-        private static final String[][] EAST = new String[][]{{"E"}, {"N", "S"}, {"W"}};
-        private static final String[][] SOUTH = new String[][]{{"S"}, {"E", "W"}, {"N"}};
-        private static final String[][] WEST = new String[][]{{"W"}, {"S", "N"}, {"E"}};
+	static class Rose {
+		private static final String[][] NORTH = new String[][]{{"N"}, {"W", "E"}, {"S"}};
+		private static final String[][] EAST = new String[][]{{"E"}, {"N", "S"}, {"W"}};
+		private static final String[][] SOUTH = new String[][]{{"S"}, {"E", "W"}, {"N"}};
+		private static final String[][] WEST = new String[][]{{"W"}, {"S", "N"}, {"E"}};
 
-        static String[][] getForFacing(BlockFace facing) {
-            switch (facing) {
-                case NORTH:
+		static String[][] getForFacing(BlockFace facing) {
+			switch (facing) {
+				case NORTH:
                     return NORTH;
                 case EAST:
                     return EAST;
@@ -68,9 +68,9 @@ public class MapCommand implements Listener {
 
     protected static final int CHUNK_RADIUS = 16;
     protected static final int UI_HORIZONTAL = 14;
-    protected static final int UI_VERTICAL = 21;
-    private final Plugin PLUGIN = JavaPlugin.getProvidingPlugin(MapCommand.class);
-    protected final boolean on1_16 = PLUGIN.getServer().getVersion().contains("1.16");
+	protected static final int UI_VERTICAL = 21;
+	private final Plugin PLUGIN = JavaPlugin.getProvidingPlugin(MapController.class);
+	protected final boolean on1_16 = PLUGIN.getServer().getVersion().contains("1.16");
     private final TextLib textLib = TextLib.getInstance();
     private static final Set<Player> players = new HashSet<>();
 

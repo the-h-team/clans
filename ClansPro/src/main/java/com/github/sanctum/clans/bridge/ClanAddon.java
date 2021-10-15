@@ -31,6 +31,7 @@ import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.RegisteredListener;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public abstract class ClanAddon {
@@ -279,11 +280,11 @@ public abstract class ClanAddon {
 	 *
 	 * @return A keyed service manager using clan addons for keys.
 	 */
-	public static KeyedServiceManager<ClanAddon> getServicesManager() {
+	public static @NotNull KeyedServiceManager<ClanAddon> getServicesManager() {
 		return ClansAPI.getInstance().getServiceManager();
 	}
 
-	public static ClanAddon getProvidingAddon(Class<?> c) {
+	public static @NotNull ClanAddon getProvidingAddon(Class<?> c) throws InvalidAddonStateException {
 		Class<?> clazz = Check.forNull(c, "Null classes cannot be attached to an addon");
 		final ClassLoader cl = clazz.getClassLoader();
 		if (!(cl instanceof ClanAddonClassLoader) && !cl.equals(ClansAPI.class.getClassLoader())) {
@@ -299,7 +300,7 @@ public abstract class ClanAddon {
 		throw new InvalidAddonStateException("Plugin provided addon detected, invalid retrieval.");
 	}
 
-	public static <T extends ClanAddon> T getAddon(Class<T> c) {
+	public static <T extends ClanAddon> @Nullable T getAddon(@NotNull Class<T> c) {
 		for (ClanAddon addon : ClanAddonQuery.getRegisteredAddons()) {
 			if (c.isAssignableFrom(addon.getClass())) {
 				return c.cast(addon);
@@ -319,7 +320,7 @@ public abstract class ClanAddon {
 	 *
 	 * @return The id for this addon.
 	 */
-	public HUID getId() {
+	public @NotNull HUID getId() {
 		return this.id;
 	}
 
@@ -328,33 +329,33 @@ public abstract class ClanAddon {
 	 *
 	 * @return The name of this addon.
 	 */
-	public abstract String getName();
+	public abstract @NotNull String getName();
 
 	/**
 	 * Get the description for this addon.
 	 *
 	 * @return The addon description.
 	 */
-	public abstract String getDescription();
+	public abstract @NotNull String getDescription();
 
 	/**
 	 * Get the version of the addon.
 	 *
 	 * @return The addon version.
 	 */
-	public abstract String getVersion();
+	public abstract @NotNull String getVersion();
 
 	/**
 	 * Get the addon authors.
 	 *
 	 * @return The addon authors.
 	 */
-	public abstract String[] getAuthors();
+	public abstract @NotNull String[] getAuthors();
 
 	/**
 	 * @return true if the plugin should persist on enable.
 	 */
-	public boolean isStaged() {
+	public boolean isPersistent() {
 		return true;
 	}
 
@@ -376,7 +377,7 @@ public abstract class ClanAddon {
 	 * @param directory The directory the file lies within.
 	 * @return A cached file manager.
 	 */
-	public final FileManager getFile(String name, String... directory) {
+	public final @NotNull FileManager getFile(String name, String... directory) {
 		if (directory == null) {
 			return getFile(FileType.YAML, name);
 		} else {
@@ -392,7 +393,7 @@ public abstract class ClanAddon {
 	 * @param directory The directory the file lies within.
 	 * @return A cached file manager.
 	 */
-	public final FileManager getFile(FileExtension extension, String name, String... directory) {
+	public final @NotNull FileManager getFile(FileExtension extension, String name, String... directory) {
 		String dir = null;
 		StringBuilder builder = new StringBuilder();
 		if (directory.length > 0) {
@@ -417,15 +418,15 @@ public abstract class ClanAddon {
 		return getClassLoader().getResourceAsStream(resource);
 	}
 
-	protected final ClassLoader getClassLoader() {
+	protected final @NotNull ClassLoader getClassLoader() {
 		return this.classLoader;
 	}
 
-	public final ClanAddonContext getContext() {
+	public final @NotNull ClanAddonContext getContext() {
 		return context;
 	}
 
-	public final ClanAddonLoader getLoader() {
+	public final @NotNull ClanAddonLoader getLoader() {
 		return loader;
 	}
 
@@ -434,22 +435,22 @@ public abstract class ClanAddon {
 	 *
 	 * @return A console logger for this addon.
 	 */
-	public final ClanAddonLogger getLogger() {
+	public final @NotNull ClanAddonLogger getLogger() {
 		return this.logger;
 	}
 
-	public final Plugin getPlugin() {
+	public final @NotNull Plugin getPlugin() {
 		return getApi().getPlugin();
 	}
 
-	public final Mailer getMailer() {
+	public final @NotNull Mailer getMailer() {
 		return Mailer.empty(getPlugin());
 	}
 
 	/**
 	 * @return The clans api instance.
 	 */
-	protected final ClansAPI getApi() {
+	protected final @NotNull ClansAPI getApi() {
 		return ClansAPI.getInstance();
 	}
 

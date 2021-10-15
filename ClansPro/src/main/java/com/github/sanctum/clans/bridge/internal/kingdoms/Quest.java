@@ -1,11 +1,13 @@
 package com.github.sanctum.clans.bridge.internal.kingdoms;
 
+import com.github.sanctum.labyrinth.data.LabyrinthUser;
+import com.github.sanctum.labyrinth.data.MemorySpace;
 import java.util.Set;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public interface Quest {
+public interface Quest extends MemorySpace {
 
 	@NotNull String getTitle();
 
@@ -17,6 +19,8 @@ public interface Quest {
 
 	double getProgression();
 
+	LabyrinthUser getCompleter();
+
 	Reward<?> getReward();
 
 	Set<Player> getActiveUsers();
@@ -25,9 +29,9 @@ public interface Quest {
 
 	double unprogress(double amount);
 
-	void saveProgress(String path);
+	void save();
 
-	void delete(String path);
+	void delete();
 
 	double getPercentage();
 

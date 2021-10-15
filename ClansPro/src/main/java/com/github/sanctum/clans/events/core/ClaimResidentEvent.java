@@ -44,8 +44,8 @@ public class ClaimResidentEvent extends ClanEventBuilder {
 
 	{
 		if (!titleContext.containsKey("TITLE") || !titleContext.containsKey("SUB-TITLE")) {
-			titleContext.put("TITLE", "&3&oClaimed land");
-			titleContext.put("SUB-TITLE", "&7Owned by: &b%s");
+			titleContext.put("TITLE", ClansAPI.getData().getMain().getRoot().getString("Clans.land-claiming.in-land.title"));
+			titleContext.put("SUB-TITLE", ClansAPI.getData().getMain().getRoot().getString("Clans.land-claiming.in-land.sub-title"));
 		}
 	}
 
@@ -117,12 +117,10 @@ public class ClaimResidentEvent extends ClanEventBuilder {
 			color = "&f&o";
 		}
 		if (titlesAllowed) {
-			titleContext.put("TITLE", MessageFormat.format(ClansAPI.getData().getMain().getConfig().getString("Clans.land-claiming.in-land.title"), clanName, color));
-			titleContext.put("SUB-TITLE", MessageFormat.format(ClansAPI.getData().getMain().getConfig().getString("Clans.land-claiming.in-land.sub-title"), clanName, color));
-			p.sendTitle(getClaimUtil().color(titleContext.get("TITLE")), getClaimUtil().color(titleContext.get("SUB-TITLE")), 10, 25, 10);
+			p.sendTitle(getClaimUtil().color(MessageFormat.format(titleContext.get("TITLE"), clanName, color)), getClaimUtil().color(MessageFormat.format(titleContext.get("SUB-TITLE"), clanName, color)), 10, 25, 10);
 		}
 		if (ClansAPI.getData().isTrue("Clans.land-claiming.send-messages")) {
-			getClaimUtil().sendMessage(p, MessageFormat.format(ClansAPI.getData().getMain().getConfig().getString("Clans.land-claiming.in-land.message"), clanName, color));
+			getClaimUtil().sendMessage(p, MessageFormat.format(ClansAPI.getData().getMain().getRoot().getString("Clans.land-claiming.in-land.message"), clanName, color));
 		}
 	}
 

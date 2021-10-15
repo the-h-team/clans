@@ -26,4 +26,9 @@ public abstract class Progressive {
 	public static List<Progressive> getProgressives() {
 		return Collections.unmodifiableList(PROGRESSIVES);
 	}
+
+	public static void capture(Progressive progressive) {
+		PROGRESSIVES.add(progressive);
+	}
+
 }

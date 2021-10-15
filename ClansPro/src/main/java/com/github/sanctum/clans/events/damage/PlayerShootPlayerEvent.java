@@ -33,6 +33,11 @@ public class PlayerShootPlayerEvent extends ClanEventBuilder {
 		return cancelled;
 	}
 
+	@Override
+	public void setCancelled(boolean cancelled) {
+		setCanHurt(cancelled);
+	}
+
 	public void setCanHurt(boolean b) {
 		if (b)
 			this.cancelled = false;

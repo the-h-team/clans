@@ -2,33 +2,28 @@ package com.github.sanctum.clans.bridge.external;
 
 import com.github.sanctum.clans.bridge.ClanAddon;
 import com.github.sanctum.clans.bridge.external.dynmap.DynmapSubscription;
-import com.github.sanctum.labyrinth.library.HUID;
 import org.bukkit.Bukkit;
+import org.jetbrains.annotations.NotNull;
 
 public class DynmapAddon extends ClanAddon {
 
 	@Override
-	public boolean isStaged() {
+	public boolean isPersistent() {
 		return Bukkit.getPluginManager().isPluginEnabled("dynmap");
 	}
 
 	@Override
-	public HUID getId() {
-		return super.getId();
-	}
-
-	@Override
-	public String getName() {
+	public @NotNull String getName() {
 		return "Dynmap";
 	}
 
 	@Override
-	public String getDescription() {
+	public @NotNull String getDescription() {
 		return "Allows clans to share land publicly on Dynmap renders (Renderings non-persistent).";
 	}
 
 	@Override
-	public String getVersion() {
+	public @NotNull String getVersion() {
 		return "1.0";
 	}
 

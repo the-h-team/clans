@@ -10,7 +10,7 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
-public class ClanRosterElement extends UniformedComponents<Clan> {
+public final class ClanRosterElement extends UniformedComponents<Clan> {
 
 	private List<Clan> clans;
 

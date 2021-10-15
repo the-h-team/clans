@@ -9,34 +9,28 @@ import com.github.sanctum.clans.bridge.internal.kingdoms.listener.KingdomControl
 import com.github.sanctum.clans.construct.api.ClansAPI;
 import com.github.sanctum.labyrinth.data.FileManager;
 import com.github.sanctum.labyrinth.data.FileType;
-import com.github.sanctum.labyrinth.library.HUID;
 import java.io.IOException;
+import org.jetbrains.annotations.NotNull;
 
 public class KingdomAddon extends ClanAddon {
 
-
 	@Override
-	public boolean isStaged() {
+	public boolean isPersistent() {
 		return ClansAPI.getData().isTrue("Addon.Kingdoms.enabled");
 	}
 
 	@Override
-	public HUID getId() {
-		return super.getId();
-	}
-
-	@Override
-	public String getName() {
+	public @NotNull String getName() {
 		return "Kingdoms";
 	}
 
 	@Override
-	public String getDescription() {
+	public @NotNull String getDescription() {
 		return "An addon that adds quests for " + '"' + "clan progression" + '"' + " allowing users to get rewarded for playing the game.";
 	}
 
 	@Override
-	public String getVersion() {
+	public @NotNull String getVersion() {
 		return "1.0";
 	}
 
@@ -61,7 +55,7 @@ public class KingdomAddon extends ClanAddon {
 	@Override
 	public void onEnable() {
 
-		new RoundTable(this);
+		Progressive.capture(new RoundTable(this));
 
 		FileManager kingdoms = getFile(FileType.JSON, "kingdoms", "data");
 		FileManager data = getFile(FileType.JSON, "achievements", "data");
@@ -71,7 +65,7 @@ public class KingdomAddon extends ClanAddon {
 
 			if (!kingdoms.getRoot().getKeys(false).isEmpty()) {
 				for (String name : kingdoms.getRoot().getKeys(false)) {
-					new Kingdom(name, this);
+					Progressive.capture(new Kingdom(name, this));
 				}
 			}
 

@@ -10,6 +10,8 @@ import com.github.sanctum.labyrinth.data.FileType;
 import com.github.sanctum.labyrinth.data.Node;
 import com.github.sanctum.labyrinth.library.HUID;
 import com.github.sanctum.labyrinth.library.Items;
+import com.github.sanctum.labyrinth.library.StringUtils;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -18,6 +20,7 @@ import java.util.Spliterator;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import org.bukkit.Material;
+import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -54,30 +57,36 @@ public class Kingdom extends Progressive implements Iterable<Clan> {
 				if (data.getRoot().exists()) {
 					if (data.getRoot().isNode("memory.kingdom." + name)) {
 						for (String a : data.getRoot().getNode("memory.kingdom." + name).getKeys(false)) {
-							Quest achievement = Quest.newQuest(a, data.getRoot().getString("memory.kingdom." + name + "." + a + ".info"), data.getRoot().getDouble("memory.kingdom." + name + "." + a + ".progression"), data.getRoot().getDouble("memory.kingdom." + name + "." + a + ".requirement"));
+							Quest achievement = new LocalFileQuest(a, data.getRoot().getString("memory.kingdom." + name + "." + a + ".info"), data.getRoot().getDouble("memory.kingdom." + name + "." + a + ".progression"), data.getRoot().getDouble("memory.kingdom." + name + "." + a + ".requirement"), data.getRoot().getBoolean("memory.kingdom." + name + "." + a + ".complete"));
 							if (data.getRoot().isNode("memory.kingdom." + name + "." + a + ".reward")) {
 								Node reward = data.getRoot().getNode("memory.kingdom." + name + "." + a + ".reward");
 								boolean money = reward.getNode("type").toPrimitive().getString().equals("MONEY");
 								if (money) {
 									achievement.setReward(Reward.MONEY, reward.getNode("value").toPrimitive().getDouble());
 								} else {
-									achievement.setReward(Reward.ITEM, reward.getNode("value").toBukkit().getItemStack());
+									if (reward.getNode("value").toBukkit().isItemStack()) {
+										achievement.setReward(Reward.ITEM, reward.getNode("value").toBukkit().getItemStack());
+									} else {
+										List<ItemStack> items = new ArrayList<>();
+										for (String s : reward.getNode("value").getKeys(false)) {
+											Node item = reward.getNode("value").getNode(s);
+											if (item.toBukkit().isItemStack()) {
+												items.add(item.toBukkit().getItemStack());
+											}
+										}
+										achievement.setReward(Reward.ITEM_ARRAY, items.toArray(new ItemStack[0]));
+									}
 								}
 							}
 							loadQuest(achievement);
 						}
 					}
 				}
-
 			}
-
 		}
-
 		if (this.quests.isEmpty()) {
 			loadQuest(getDefaults());
 		}
-		PROGRESSIVES.add(this);
-
 	}
 
 	public static Quest[] getDefaults() {
@@ -91,13 +100,22 @@ public class Kingdom extends Progressive implements Iterable<Clan> {
 		spawner.setReward(Reward.ITEM, Items.edit().setType(Material.SPAWNER).setAmount(1).build());
 		Quest farmer = Quest.newQuest("The Farmer", "Make a stack of bread or obtain all sorts of crops", 0, 4);
 		farmer.setReward(Reward.MONEY, 114.95);
-		Quest beef = Quest.newQuest("Tainted Beef", "Crucially murder a baby pigmen", 0, 1);
+		Quest beef = Quest.newQuest("Tainted Beef", "Brutally murder a baby pigmen", 0, 1);
 		beef.setReward(Reward.ITEM, Items.edit().setType(Material.ZOMBIE_SPAWN_EGG).setAmount(1).build());
 		Quest sky = Quest.newQuest("Skylight", "Launch fireworks in the sky", 0, 12);
 		sky.setReward(Reward.ITEM, Items.edit().setType(Material.GUNPOWDER).setAmount(32).build());
-		Quest color = Quest.newQuest("Colorful Child", "Breed colored sheeps", 0, 1);
+		Quest color = Quest.newQuest("Colorful Child", "Breed colored sheep", 0, 1);
 		Quest miner = Quest.newQuest("The Miner", "Obtain 32 obsidian", 0, 32);
-		return new Quest[]{walls, gate, kills, spawner, farmer, beef, sky, color, miner};
+		Quest breaker = Quest.newQuest("The Back Breaker", "Obtain 16 crying obsidian", 0, 16);
+		return new Quest[]{walls, gate, kills, spawner, farmer, beef, sky, color, miner, breaker};
+	}
+
+	public static Kingdom getKingdom(Clan clan) {
+		String kingdomName = clan.getValue(String.class, "kingdom");
+		if (kingdomName != null) {
+			return getKingdom(kingdomName);
+		}
+		return null;
 	}
 
 	public static Kingdom getKingdom(String name) {
@@ -113,7 +131,7 @@ public class Kingdom extends Progressive implements Iterable<Clan> {
 		section.getRoot().set(getName(), null);
 
 		for (Quest achievement : quests) {
-			achievement.delete("memory.kingdom." + getName());
+			achievement.delete();
 		}
 
 		section.getRoot().save();
@@ -147,7 +165,7 @@ public class Kingdom extends Progressive implements Iterable<Clan> {
 
 	@Override
 	public @Nullable Quest getQuest(String title) {
-		return getQuests().stream().filter(a -> a.getTitle().equalsIgnoreCase(title)).findFirst().orElse(null);
+		return getQuests().stream().filter(a -> StringUtils.use(a.getTitle()).containsIgnoreCase(title)).findFirst().orElse(null);
 	}
 
 	@Override
@@ -177,7 +195,7 @@ public class Kingdom extends Progressive implements Iterable<Clan> {
 		section.getRoot().set(getName() + ".members", ids);
 
 		for (Quest achievement : getQuests()) {
-			achievement.saveProgress("memory.kingdom." + getName());
+			achievement.save();
 		}
 
 		section.getRoot().save();
@@ -191,7 +209,7 @@ public class Kingdom extends Progressive implements Iterable<Clan> {
 		section.getRoot().set(getName(), null);
 
 		for (Quest achievement : quests) {
-			achievement.delete("memory.kingdom." + getName());
+			achievement.delete();
 		}
 
 		section.getRoot().save();

@@ -451,9 +451,6 @@ Addon:
     ###########################################################################
     enabled: false
     required-creation-power: 180.00
-    # These permission settings utilize clan permission levels from the clearance section above.
-    perms:
-      start: 2
     roundtable:
       # The consistent name of the hierarchy of clan users.
       name: 'Roundtable'

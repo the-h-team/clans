@@ -160,13 +160,13 @@ public class ClanAddonQuery {
 			ClanException.call(ClanAddonDependencyException::new).check(a).run("Missing dependency " + precursor + " for addon " + addon.getName() + ". Please install the missing dependency for this addon.");
 		}
 		addon.onEnable();
-		if (addon.isStaged()) {
+		if (addon.isPersistent()) {
 
 			l.info(" ");
 			l.info("▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬");
 			l.info("- Addon: " + addon.getName());
 			l.info("- Description: " + addon.getDescription());
-			l.info("- Persistent: (" + addon.isStaged() + ")");
+			l.info("- Persistent: (" + addon.isPersistent() + ")");
 			l.info("▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬");
 			l.info(" ");
 			l.info("- Listeners: (" + addon.getContext().getListeners().length + ")");
@@ -184,7 +184,7 @@ public class ClanAddonQuery {
 			l.info(" ");
 			l.info("- Addon: " + addon.getName());
 			l.info("- Description: " + addon.getDescription());
-			l.info("- Persistent: (" + addon.isStaged() + ")");
+			l.info("- Persistent: (" + addon.isPersistent() + ")");
 			addon.remove();
 			l.info(" ");
 			l.info("- Listeners: (" + addon.getContext().getListeners().length + ")");
@@ -216,13 +216,13 @@ public class ClanAddonQuery {
 				ClanException.call(ClanAddonDependencyException::new).check(addon).run("Missing dependency " + precursor + " for addon " + c.getName() + ". Please install the missing dependency for this addon.");
 			}
 			c.onEnable();
-			if (c.isStaged()) {
+			if (c.isPersistent()) {
 
 				l.info(" ");
 				l.info("▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬");
 				l.info("- Addon: " + c.getName());
 				l.info("- Description: " + c.getDescription());
-				l.info("- Persistent: (" + c.isStaged() + ")");
+				l.info("- Persistent: (" + c.isPersistent() + ")");
 				l.info("▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬");
 				l.info(" ");
 				l.info("- Listeners: (" + c.getContext().getListeners().length + ")");
@@ -240,7 +240,7 @@ public class ClanAddonQuery {
 				l.info(" ");
 				l.info("- Addon: " + c.getName());
 				l.info("- Description: " + c.getDescription());
-				l.info("- Persistent: (" + c.isStaged() + ")");
+				l.info("- Persistent: (" + c.isPersistent() + ")");
 				c.remove();
 				l.info(" ");
 				l.info("- Listeners: (" + c.getContext().getListeners().length + ")");
@@ -275,7 +275,7 @@ public class ClanAddonQuery {
 				ClanException.call(ClanAddonDependencyException::new).check(addon).run("Missing dependency " + precursor + " for addon " + e.getName() + ". Please install the missing dependency for this addon.");
 			}
 			e.onEnable();
-			if (e.isStaged()) {
+			if (e.isPersistent()) {
 
 				l.info(" ");
 				l.info("▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬");
@@ -283,7 +283,7 @@ public class ClanAddonQuery {
 				l.info("- Version: " + e.getVersion());
 				l.info("- Author(s): " + Arrays.toString(e.getAuthors()));
 				l.info("- Description: " + e.getDescription());
-				l.info("- Persistent: (" + e.isStaged() + ")");
+				l.info("- Persistent: (" + e.isPersistent() + ")");
 				l.info("▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬");
 				l.info(" ");
 				l.info("- Listeners: (" + e.getContext().getListeners().length + ")");
@@ -301,7 +301,7 @@ public class ClanAddonQuery {
 				l.info(" ");
 				l.info("- Addon: " + e.getName());
 				l.info("- Description: " + e.getDescription());
-				l.info("- Persistent: (" + e.isStaged() + ")");
+				l.info("- Persistent: (" + e.isPersistent() + ")");
 				e.remove();
 				l.info(" ");
 				l.info("- Listeners: (" + e.getContext().getListeners().length + ")");

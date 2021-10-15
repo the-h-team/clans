@@ -16,23 +16,22 @@ import com.github.sanctum.clans.construct.bank.BankMeta;
 import com.github.sanctum.clans.construct.extra.MessagePrefix;
 import com.github.sanctum.clans.construct.extra.StartProcedure;
 import com.github.sanctum.clans.construct.impl.DefaultArena;
+import com.github.sanctum.labyrinth.LabyrinthProvider;
+import com.github.sanctum.labyrinth.api.Service;
 import com.github.sanctum.labyrinth.data.Configurable;
 import com.github.sanctum.labyrinth.data.FileList;
 import com.github.sanctum.labyrinth.data.FileManager;
 import com.github.sanctum.labyrinth.data.FileType;
 import com.github.sanctum.labyrinth.data.Node;
 import com.github.sanctum.labyrinth.data.container.KeyedServiceManager;
+import com.github.sanctum.labyrinth.data.container.PersistentContainer;
+import com.github.sanctum.labyrinth.interfacing.OrdinalProcedure;
 import com.github.sanctum.labyrinth.library.HUID;
 import com.github.sanctum.labyrinth.library.StringUtils;
 import com.github.sanctum.skulls.CustomHead;
-import java.io.InputStream;
+import java.io.IOException;
 import java.text.MessageFormat;
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
@@ -78,7 +77,6 @@ public class ClansJavaPlugin extends JavaPlugin implements ClansAPI {
 	public FileType TYPE;
 	private static ClansJavaPlugin PRO;
 	private static FileList origin;
-
 	private MessagePrefix prefix;
 	private ArenaManager arenaManager;
 	private ClaimManager claimManager;
@@ -91,75 +89,37 @@ public class ClansJavaPlugin extends JavaPlugin implements ClansAPI {
 	public String NONCE = "%%__NONCE__%%";
 
 	public void onEnable() {
-		PRO = this;
-		origin = FileList.search(this);
-		Bukkit.getServicesManager().register(ClansAPI.class, this, this, ServicePriority.Normal);
-		dataManager = new DataManager();
-		FileManager main = dataManager.getMain();
-		TYPE = FileType.valueOf(main.read(c -> c.getNode("Formatting").getNode("file-type").toPrimitive().getString()));
-		clanManager = new ClanManager();
-		claimManager = new ClaimManager();
-		shieldManager = new ShieldManager();
-		serviceManager = new KeyedServiceManager<>();
-		arenaManager = new ArenaManager();
-		arenaManager.load(new DefaultArena("PRO"));
-		if (System.getProperty("RELOAD") != null && System.getProperty("RELOAD").equals("TRUE")) {
-			getLogger().severe("- RELOAD DETECTED! Shutting down...");
-			getLogger().severe("      ██╗");
-			getLogger().severe("  ██╗██╔╝");
-			getLogger().severe("  ╚═╝██║ ");
-			getLogger().severe("  ██╗██║ ");
-			getLogger().severe("  ╚═╝╚██╗");
-			getLogger().severe("      ╚═╝");
-			getLogger().severe("- (You are not supported in the case of corrupt data)");
-			getLogger().severe("- (Reloading is NEVER safe and you should always restart instead.)");
-			FileManager file = origin.get("ignore", FileType.JSON);
-			String location = new Date().toInstant().atZone(ZoneId.systemDefault()).format(DateTimeFormatter.ISO_LOCAL_DATE);
-			List<String> toAdd = new ArrayList<>(file.getRoot().getStringList(location));
-			toAdd.add("RELOAD DETECTED! Shutting down...");
-			toAdd.add("      ██╗");
-			toAdd.add("  ██╗██╔╝");
-			toAdd.add("  ╚═╝██║ ");
-			toAdd.add("  ██╗██║ ");
-			toAdd.add("  ╚═╝╚██╗");
-			toAdd.add("      ╚═╝");
-			toAdd.add("(You are not supported in the case of corrupt data)");
-			toAdd.add("(Reloading is NEVER safe and you should always restart instead.)");
-			file.write(t -> t.set(location, toAdd));
-			Bukkit.getPluginManager().disablePlugin(this);
-			return;
-		} else {
-			System.setProperty("RELOAD", "FALSE");
-		}
-		Node formatting = main.read(c -> c.getNode("Formatting"));
-		Node prefix = formatting.getNode("prefix");
-		this.prefix = new MessagePrefix(prefix.getNode("prefix").toPrimitive().getString(),
-				prefix.getNode("text").toPrimitive().getString(),
-				prefix.getNode("suffix").toPrimitive().getString());
+		initialize();
 
-		StartProcedure start = new Start(this).then((s, instance) -> {
-			if (instance.dataManager.assertDefaults()) {
-				instance.getLogger().info("- The configuration has been updated to the latest version.");
-			}
-		});
-		start.run();
+		OrdinalProcedure.process(new StartProcedure(this));
 
 		FileManager config = dataManager.getMessages();
 		dataManager.CLAN_GUI_FORMAT.addAll(config.read(c -> c.getStringList("menu-format.clan")));
-
 		FileManager man = getFileList().get("heads", "Configuration", FileType.JSON);
 		if (!man.getRoot().exists()) {
-			InputStream stream = getResource("heads.data");
-			FileList.copy(stream, man.getRoot().getParent());
+			origin.copy("heads.data", man);
 			man.getRoot().reload();
 		}
+
 		Configurable.registerClass(Clan.class);
 		ConfigurationSerialization.registerClass(Clan.class);
-		CustomHead.Manager.newLoader(man.getRoot()).look("My_heads").complete();
 
+		CustomHead.Manager.newLoader(man.getRoot()).look("My_heads").complete();
 	}
 
 	public void onDisable() {
+
+		for (PersistentContainer component : LabyrinthProvider.getService(Service.DATA).getContainers(this)) {
+			for (String key : component.keySet()) {
+				try {
+					component.save(key);
+				} catch (IOException e) {
+					getLogger().severe("- Unable to save meta '" + key + "' from namespace " + component.getKey().getNamespace() + ":" + component.getKey().getKey());
+					e.printStackTrace();
+				}
+			}
+		}
+
 		try {
 
 			for (ClanAddon addon : ClanAddonQuery.getRegisteredAddons()) {
@@ -320,8 +280,8 @@ public class ClansJavaPlugin extends JavaPlugin implements ClansAPI {
 	@Override
 	public void setRank(Clan.Associate associate, RankPriority priority) {
 		if (associate == null) return;
-
 		if (associate.isValid()) return;
+		if (priority == RankPriority.HIGHEST) return;
 
 		associate.setPriority(priority);
 		Clan clanIndex = associate.getClan();
@@ -386,6 +346,25 @@ public class ClansJavaPlugin extends JavaPlugin implements ClansAPI {
 	@Override
 	public Plugin getPlugin() {
 		return PRO;
+	}
+
+	void initialize() {
+		origin = FileList.search(PRO = this);
+		Bukkit.getServicesManager().register(ClansAPI.class, this, this, ServicePriority.Normal);
+		dataManager = new DataManager();
+		FileManager main = dataManager.getMain();
+		TYPE = FileType.valueOf(main.read(c -> c.getNode("Formatting").getNode("file-type").toPrimitive().getString()));
+		clanManager = new ClanManager();
+		claimManager = new ClaimManager();
+		shieldManager = new ShieldManager();
+		serviceManager = new KeyedServiceManager<>();
+		arenaManager = new ArenaManager();
+		arenaManager.load(new DefaultArena("PRO"));
+		Node formatting = main.read(c -> c.getNode("Formatting"));
+		Node prefix = formatting.getNode("prefix");
+		this.prefix = new MessagePrefix(prefix.getNode("prefix").toPrimitive().getString(),
+				prefix.getNode("text").toPrimitive().getString(),
+				prefix.getNode("suffix").toPrimitive().getString());
 	}
 
 }

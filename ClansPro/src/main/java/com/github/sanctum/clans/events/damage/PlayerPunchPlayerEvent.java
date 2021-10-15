@@ -36,6 +36,11 @@ public class PlayerPunchPlayerEvent extends ClanEventBuilder {
 	}
 
 	@Override
+	public void setCancelled(boolean cancelled) {
+		setCanHurt(cancelled);
+	}
+
+	@Override
 	public String getName() {
 		return getClass().getSimpleName();
 	}

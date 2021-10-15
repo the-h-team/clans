@@ -511,6 +511,7 @@ public class CommandClan extends Command implements Message.Factory {
 		}
 
 		if (length == 0) {
+
 			String ping = ClansAPI.getData().getMessageResponse("Commands.create");
 			List<String> list = new LinkedList<>(helpMenu(label));
 			new PaginatedList<>(list)
@@ -1303,7 +1304,7 @@ public class CommandClan extends Command implements Message.Factory {
 					return true;
 				}
 /*
-				if (args1.equalsIgnoreCase("saveProgress")) {
+				if (args1.equalsIgnoreCase("save")) {
 					Insignia i = Insignia.get("Template:" + p.getUniqueId().toString());
 
 					if (i != null) {
@@ -1532,7 +1533,7 @@ public class CommandClan extends Command implements Message.Factory {
 									.append(text("&4[&nDENY&4]")
 											.bind(hover("&3Click to deny the request from '" + p.getName() + "'."))
 											.bind(command("msg " + p.getName() + " No thank you.")))
-									.send(p).deploy();
+									.send(target).deploy();
 						} else {
 							message().append(text("&3|&7> &3Click a button to respond. "))
 									.append(text("&b[&nACCEPT&b]")
@@ -1541,7 +1542,7 @@ public class CommandClan extends Command implements Message.Factory {
 									.append(text("&4[&nDENY&4]")
 											.bind(hover("&3Click to deny the request from '" + p.getName() + "'."))
 											.bind(command("msg " + p.getName() + " No thank you.")))
-									.send(p).deploy();
+									.send(target).deploy();
 						}
 					} else {
 						lib.sendMessage(p, "&c&oYou do not have clan clearance.");
@@ -1796,7 +1797,13 @@ public class CommandClan extends Command implements Message.Factory {
 							OfflinePlayer op = Bukkit.getOfflinePlayer(UUID.fromString(s));
 							if (op.isOnline()) {
 								if (ClansAPI.getData().prefixedTagsAllowed()) {
-									ClanDisplayName.set(op.getPlayer(), ClansAPI.getData().prefixedTag(ClansAPI.getInstance().getClan(op.getUniqueId()).getPalette().getStart(), ClansAPI.getInstance().getClan(op.getUniqueId()).getName()));
+									if (clan.getPalette().isGradient()) {
+										Clan c = ClansAPI.getInstance().getClan(op.getUniqueId());
+										ClanDisplayName.set(op.getPlayer(), ClansAPI.getData().prefixedTag("", c.getPalette().toGradient().context(c.getName()).translate()));
+									} else {
+										ClanDisplayName.set(op.getPlayer(), ClansAPI.getData().prefixedTag(ClansAPI.getInstance().getClan(op.getUniqueId()).getPalette().toString(), ClansAPI.getInstance().getClan(op.getUniqueId()).getName()));
+
+									}
 								}
 							}
 						}

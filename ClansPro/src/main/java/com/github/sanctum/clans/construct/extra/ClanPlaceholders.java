@@ -26,7 +26,7 @@ public class ClanPlaceholders extends PlaceholderExpansion {
 	 * you must override this method to let PlaceholderAPI know to not unregister your expansion class when
 	 * PlaceholderAPI is reloaded
 	 *
-	 * @return true to isStaged through reloads
+	 * @return true to persist through reloads
 	 */
 	@Override
 	public boolean persist() {

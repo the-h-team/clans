@@ -39,6 +39,10 @@ public class VaultMenu extends Menu {
 				getInventory().getElement().addItem(it);
 			}
 		}
+		try {
+			registerController();
+		} catch (Exception ignored) {
+		}
 
 	}
 

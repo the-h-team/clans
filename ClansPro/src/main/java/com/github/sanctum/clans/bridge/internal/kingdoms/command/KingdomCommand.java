@@ -4,6 +4,7 @@ import com.github.sanctum.clans.bridge.ClanAddonQuery;
 import com.github.sanctum.clans.bridge.ClanVentBus;
 import com.github.sanctum.clans.bridge.internal.KingdomAddon;
 import com.github.sanctum.clans.bridge.internal.kingdoms.Kingdom;
+import com.github.sanctum.clans.bridge.internal.kingdoms.Progressive;
 import com.github.sanctum.clans.bridge.internal.kingdoms.Quest;
 import com.github.sanctum.clans.bridge.internal.kingdoms.RoundTable;
 import com.github.sanctum.clans.bridge.internal.kingdoms.event.KingdomCreatedEvent;
@@ -12,6 +13,7 @@ import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClanSubCommand;
 import com.github.sanctum.clans.construct.api.ClansAPI;
 import com.github.sanctum.clans.construct.extra.MessagePrefix;
+import com.github.sanctum.labyrinth.data.EconomyProvision;
 import com.github.sanctum.labyrinth.formatting.Message;
 import com.github.sanctum.labyrinth.formatting.PaginatedList;
 import com.github.sanctum.labyrinth.formatting.string.DefaultColor;
@@ -20,7 +22,9 @@ import com.github.sanctum.labyrinth.library.Mailer;
 import com.github.sanctum.labyrinth.library.StringUtils;
 import com.github.sanctum.labyrinth.library.TextLib;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Stream;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Color;
@@ -36,6 +40,29 @@ public class KingdomCommand extends ClanSubCommand implements Message.Factory {
 		this.addon = addon;
 	}
 
+	public static String getProgressBar(int currentValue, int maxValue, int maxBars) {
+		int progressBarLength = maxBars;
+		if (progressBarLength < 9 || progressBarLength % 2 == 0) {
+			progressBarLength = 33;
+		}
+		int currentProgressBarIndex = (int) Math.ceil(((double) progressBarLength / maxValue) * currentValue);
+		String formattedPercent = String.format("%5.1f %% ", (100 * currentProgressBarIndex) / (double) progressBarLength);
+		int percentStartIndex = ((progressBarLength - formattedPercent.length()) / 2);
+
+		StringBuilder sb = new StringBuilder();
+		sb.append("[");
+		for (int progressBarIndex = 0; progressBarIndex < progressBarLength; progressBarIndex++) {
+			if (progressBarIndex <= percentStartIndex - 1
+					|| progressBarIndex >= percentStartIndex + formattedPercent.length()) {
+				sb.append(currentProgressBarIndex <= progressBarIndex ? "&7|" : "&a|");
+			} else if (progressBarIndex == percentStartIndex) {
+				sb.append("&r").append(formattedPercent);
+			}
+		}
+		sb.append("&r]");
+		return sb.toString();
+	}
+
 	@Override
 	public boolean player(Player p, String label, String[] args) {
 
@@ -44,7 +71,7 @@ public class KingdomCommand extends ClanSubCommand implements Message.Factory {
 			Clan.Associate associate = ClansAPI.getInstance().getAssociate(p).orElse(null);
 			message()
 					.append(text(" "))
-					.send(p);
+					.send(p).deploy();
 			if (associate != null) {
 				if (associate.getClan().getValue(String.class, "kingdom") != null) {
 					message()
@@ -52,25 +79,27 @@ public class KingdomCommand extends ClanSubCommand implements Message.Factory {
 							.append(text("[").color(Color.OLIVE))
 							.append(text("Start").color(Color.MAROON).style(ChatColor.STRIKETHROUGH).bind(hover("You are already in a kingdom").style(DefaultColor.VELVET)))
 							.append(text("]").color(Color.OLIVE))
-							.send(p);
+							.append(text(" "))
+							.append(text("Level: " + Kingdom.getKingdom(associate.getClan()).getLevel() + " " + getProgressBar(Kingdom.getKingdom(associate.getClan()).getLevel(), Kingdom.getDefaults().length, 73)))
+							.send(p).deploy();
 					message()
 							.append(text(" "))
-							.send(p);
+							.send(p).deploy();
 					message()
 							.append(text(" "))
 							.append(text("[").color(Color.OLIVE))
 							.append(text("Leave").color(Color.FUCHSIA).bind(hover("Click to leave your current kingdom").style(new RandomHex())).bind(command("/c kingdom leave")))
 							.append(text("]").color(Color.OLIVE))
-							.send(p);
+							.send(p).deploy();
 					message()
 							.append(text(" "))
-							.send(p);
+							.send(p).deploy();
 					message()
 							.append(text(" "))
 							.append(text("[").color(Color.OLIVE))
 							.append(text("Jobs").color(Color.FUCHSIA).bind(hover("Click to view the jobs your kingdom has available.").style(new RandomHex())).bind(command("/c kingdom jobs")))
 							.append(text("]").color(Color.OLIVE))
-							.send(p);
+							.send(p).deploy();
 
 				} else {
 					message()
@@ -78,25 +107,25 @@ public class KingdomCommand extends ClanSubCommand implements Message.Factory {
 							.append(text("[").color(Color.OLIVE))
 							.append(text("Start").color(Color.FUCHSIA).bind(hover("Click to start a kingdom").style(new RandomHex())).bind(suggest("/c kingdom start ")))
 							.append(text("]").color(Color.OLIVE))
-							.send(p);
+							.send(p).deploy();
 					message()
 							.append(text(" "))
-							.send(p);
+							.send(p).deploy();
 					message()
 							.append(text(" "))
 							.append(text("[").color(Color.OLIVE))
 							.append(text("Join").style(new RandomHex()).bind(hover("Click to join a kingdom").style(new RandomHex())).bind(suggest("/c kingdom join ")))
 							.append(text("]").color(Color.OLIVE))
-							.send(p);
+							.send(p).deploy();
 				}
 			} else {
 				message()
 						.append(text("You must own a clan to contribute to kingdom services.").style(DefaultColor.VELVET))
-						.send(p);
+						.send(p).deploy();
 			}
 			message()
 					.append(text(" "))
-					.send(p);
+					.send(p).deploy();
 		}
 
 		if (args.length == 1) {
@@ -158,7 +187,8 @@ public class KingdomCommand extends ClanSubCommand implements Message.Factory {
 								.limit(6)
 								.start((pagination, page, max) -> {
 									MessagePrefix prefix = ClansAPI.getInstance().getPrefix();
-									message().append(text(prefix.getPrefix())).append(text(prefix.getText()).style(new RandomHex())).append(text(prefix.getSuffix())).append(text(" ")).append(text("|").style(ChatColor.BOLD)).append(text(" ")).append(text("Jobs").style(DefaultColor.MANGO)).send(p);
+									message().append(text(prefix.getPrefix())).append(text(prefix.getText()).style(new RandomHex())).append(text(prefix.getSuffix())).append(text(" ")).append(text("|").style(ChatColor.BOLD)).append(text(" ")).append(text("Jobs").style(DefaultColor.MANGO)).send(p).deploy();
+									message().append(text("&7&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬")).send(p).deploy();
 								});
 
 						help.finish(builder -> {
@@ -173,32 +203,55 @@ public class KingdomCommand extends ClanSubCommand implements Message.Factory {
 										.append(text(String.valueOf(placement)).color(Color.ORANGE).style(ChatColor.BOLD))
 										.append(text("]").color(Color.MAROON))
 										.append(text(" "))
-										.append(text(quest.getTitle()).style(new RandomHex()))
+										.append(text(quest.getTitle()).style(new RandomHex()).bind(hover(quest.getDescription()).style(new RandomHex())))
 										.append(text(" "))
+										.send(p).deploy();
+								message()
 										.append(text("(").color(Color.MAROON))
-										.append(text(String.valueOf(quest.getPercentage())).color(Color.AQUA).bind(hover("&cClick to quit job &3&l" + quest.getTitle())).bind(command("/c kingdom quit " + quest.getTitle())))
+										.append(text(getProgressBar(((Number) quest.getProgression()).intValue(), ((Number) quest.getRequirement()).intValue(), 73)).bind(hover("&cClick to quit job &3&l" + quest.getTitle())).bind(action(() -> {
+											if (quest.deactivate(p)) {
+												Clan.ACTION.sendMessage(p, "&cYou are no longer working job &e" + quest.getTitle());
+											} else {
+												Clan.ACTION.sendMessage(p, "&cYou aren't currently working job &e" + quest.getTitle());
+
+											}
+										})))
 										.append(text("%"))
 										.append(text(")").color(Color.MAROON))
-										.append(text(":"))
 										.append(text(" "))
-										.append(text(quest.getDescription()).style(new RandomHex()))
-										.send(p);
+										.send(p).deploy();
 							} else {
 								message().append(text("[").color(Color.MAROON))
 										.append(text("#").color(Color.GRAY))
 										.append(text(String.valueOf(placement)).color(Color.ORANGE).style(ChatColor.BOLD))
 										.append(text("]").color(Color.MAROON))
 										.append(text(" "))
-										.append(text(quest.getTitle()).style(new RandomHex()))
+										.append(text(quest.getTitle()).style(new RandomHex()).bind(hover(quest.getDescription()).style(new RandomHex())))
 										.append(text(" "))
+										.send(p).deploy();
+								message()
 										.append(text("(").color(Color.MAROON))
-										.append(text(String.valueOf(quest.getPercentage())).color(Color.AQUA).bind(hover("&aClick to accept job &3&l" + quest.getTitle())).bind(command("/c kingdom work " + quest.getTitle())))
+										.append(text(getProgressBar(((Number) quest.getProgression()).intValue(), ((Number) quest.getRequirement()).intValue(), 73)).bind(hover("&aClick to accept job &3&l" + quest.getTitle())).bind(action(() -> {
+											if (quest.isComplete()) {
+												Clan.ACTION.sendMessage(p, "&cThis quest is already complete!");
+												return;
+											}
+
+											if (quest.activate(p)) {
+
+												p.sendTitle(StringUtils.use(quest.getTitle()).translate(), StringUtils.use(quest.getDescription()).translate(), 60, 10, 60);
+
+
+											} else {
+
+												Clan.ACTION.sendMessage(p, "&cYou are already working job &e" + quest.getTitle());
+
+											}
+										})))
 										.append(text("%"))
 										.append(text(")").color(Color.MAROON))
-										.append(text(":"))
 										.append(text(" "))
-										.append(text(quest.getDescription()).style(new RandomHex()))
-										.send(p);
+										.send(p).deploy();
 							}
 
 						}).get(1);
@@ -213,6 +266,10 @@ public class KingdomCommand extends ClanSubCommand implements Message.Factory {
 
 			if (args[0].equalsIgnoreCase("roundtable")) {
 				// TODO: send rountable help menu
+				if (Bukkit.getVersion().equals(Bukkit.getVersion())) {
+					Clan.ACTION.sendMessage(p, "&6&oRoundtable features not done yet!");
+					return true;
+				}
 			}
 
 		}
@@ -240,6 +297,8 @@ public class KingdomCommand extends ClanSubCommand implements Message.Factory {
 						if (associate.getPriority().toInt() == 3) {
 
 							k.getMembers().add(c);
+
+							k.getMembers().forEach(cl -> cl.broadcast("&2[&b" + k.getName() + "&2]&r " + c.getName() + " vows protection to the kingdom."));
 
 						} else {
 							Clan.ACTION.sendMessage(p, Clan.ACTION.noClearance());
@@ -289,7 +348,7 @@ public class KingdomCommand extends ClanSubCommand implements Message.Factory {
 							ClanVentBus.call(new KingdomCreatedEvent(p, create));
 							c.setValue("kingdom", event.getKingdomName(), false);
 							create.getMembers().add(c);
-
+							Progressive.capture(create);
 							addon.getMailer().prefix().start(Clan.ACTION.getPrefix()).finish().announce(player -> true, p.getName() + " started a new kingdom called &6" + event.getKingdomName()).deploy();
 						}
 
@@ -309,6 +368,11 @@ public class KingdomCommand extends ClanSubCommand implements Message.Factory {
 			}
 
 			if (args[0].equalsIgnoreCase("roundtable")) {
+
+				if (Bukkit.getVersion().equals(Bukkit.getVersion())) {
+					Clan.ACTION.sendMessage(p, "&6&oRoundtable features not done yet!");
+					return true;
+				}
 
 				RoundTable table = KingdomAddon.getRoundTable();
 
@@ -344,8 +408,12 @@ public class KingdomCommand extends ClanSubCommand implements Message.Factory {
 
 					if (table.getUsers().isEmpty()) {
 
-						table.take(p.getUniqueId(), RoundTable.Rank.HIGHEST);
-						addon.getMailer().prefix().start(Clan.ACTION.getPrefix()).finish().announce(player -> true, p.getName() + " is now among the most powerful on the server.").deploy();
+						if (EconomyProvision.getInstance().balance(p).orElse(0.0) >= 10000) {
+							table.take(p.getUniqueId(), RoundTable.Rank.HIGHEST);
+							addon.getMailer().prefix().start(Clan.ACTION.getPrefix()).finish().announce(player -> true, p.getName() + " is now among the most powerful on the server.").deploy();
+						} else {
+							Clan.ACTION.sendMessage(p, "&cYou aren't powerful enough to start the table.");
+						}
 
 					} else {
 
@@ -376,6 +444,11 @@ public class KingdomCommand extends ClanSubCommand implements Message.Factory {
 
 				if (associate != null) {
 
+					if (associate.getPriority().toInt() < 3) {
+						Clan.ACTION.sendMessage(p, Clan.ACTION.noClearance());
+						return true;
+					}
+
 					Clan c = associate.getClan();
 
 					String kingdom = c.getValue(String.class, "kingdom");
@@ -386,7 +459,7 @@ public class KingdomCommand extends ClanSubCommand implements Message.Factory {
 
 						k.setName(args[1]);
 
-						Clan.ACTION.sendMessage(p, "&aKingdom name changed to &b" + args[2]);
+						Clan.ACTION.sendMessage(p, "&aKingdom name changed to &b" + args[1]);
 
 					}
 				}
@@ -414,6 +487,11 @@ public class KingdomCommand extends ClanSubCommand implements Message.Factory {
 						Quest achievement = k.getQuest(args[1]);
 
 						if (achievement != null) {
+
+							if (achievement.isComplete()) {
+								Clan.ACTION.sendMessage(p, "&cThis quest is already complete!");
+								return true;
+							}
 
 							if (achievement.activate(p)) {
 
@@ -467,12 +545,16 @@ public class KingdomCommand extends ClanSubCommand implements Message.Factory {
 						}
 					}
 				}
-
 			}
 		}
 
 		if (args.length == 3) {
 			if (args[0].equalsIgnoreCase("roundtable")) {
+
+				if (Bukkit.getVersion().equals(Bukkit.getVersion())) {
+					Clan.ACTION.sendMessage(p, "&6&oRoundtable features not done yet!");
+					return true;
+				}
 
 				RoundTable table = KingdomAddon.getRoundTable();
 
@@ -489,6 +571,11 @@ public class KingdomCommand extends ClanSubCommand implements Message.Factory {
 						Quest achievement = table.getQuest(args[2]);
 
 						if (achievement != null) {
+
+							if (achievement.isComplete()) {
+								Clan.ACTION.sendMessage(p, "&cThis quest is already complete!");
+								return true;
+							}
 
 							if (achievement.activate(p)) {
 
@@ -531,6 +618,106 @@ public class KingdomCommand extends ClanSubCommand implements Message.Factory {
 
 			}
 		}
+		if (args.length >= 3) {
+			if (args[0].equalsIgnoreCase("work")) {
+
+
+				ClansAPI API = ClansAPI.getInstance();
+
+				Clan.Associate associate = API.getAssociate(p).orElse(null);
+
+				if (associate != null) {
+
+
+					Clan c = associate.getClan();
+
+					String kingdom = c.getValue(String.class, "kingdom");
+
+					if (kingdom != null) {
+
+						Kingdom k = Kingdom.getKingdom(kingdom);
+						StringBuilder builder = new StringBuilder();
+						for (int i = 2; i < args.length; i++) {
+							if (i == args.length - 1) {
+								builder.append(args[i]);
+							} else {
+								builder.append(args[i]).append(" ");
+							}
+						}
+
+						Quest achievement = k.getQuest(builder.toString());
+
+						if (achievement != null) {
+
+							if (achievement.isComplete()) {
+								Clan.ACTION.sendMessage(p, "&cThis quest is already complete!");
+								return true;
+							}
+
+							if (achievement.activate(p)) {
+
+								p.sendTitle(StringUtils.use(achievement.getTitle()).translate(), StringUtils.use(achievement.getDescription()).translate(), 60, 10, 60);
+
+
+							} else {
+
+								Clan.ACTION.sendMessage(p, "&cYou are already working job &e" + achievement.getTitle());
+
+							}
+
+						}
+					}
+				}
+
+			}
+
+			if (args[0].equalsIgnoreCase("quit")) {
+
+				ClansAPI API = ClansAPI.getInstance();
+
+				Clan.Associate associate = API.getAssociate(p).orElse(null);
+
+				if (associate != null) {
+
+
+					Clan c = associate.getClan();
+
+					String kingdom = c.getValue(String.class, "kingdom");
+
+					if (kingdom != null) {
+
+						Kingdom k = Kingdom.getKingdom(kingdom);
+
+						StringBuilder builder = new StringBuilder();
+						for (int i = 2; i < args.length; i++) {
+							if (i == args.length - 1) {
+								builder.append(args[i]);
+							} else {
+								builder.append(args[i]).append(" ");
+							}
+						}
+
+						Quest achievement = k.getQuest(builder.toString());
+
+						if (achievement != null) {
+
+							if (achievement.deactivate(p)) {
+
+								Clan.ACTION.sendMessage(p, "&cYou are no longer working job &e" + achievement.getTitle());
+
+
+							} else {
+
+								Clan.ACTION.sendMessage(p, "&cYou aren't currently working job &e" + achievement.getTitle());
+
+							}
+
+						}
+					}
+				}
+
+			}
+		}
 
 		return true;
 	}
@@ -542,6 +729,21 @@ public class KingdomCommand extends ClanSubCommand implements Message.Factory {
 
 	@Override
 	public List<String> tab(Player player, String label, String[] args) {
+		if (args.length == 1) {
+			return getBaseCompletion(args);
+		}
+		if (args.length == 2) {
+			List<String> list = new ArrayList<>();
+			Stream.of("start", "join", "leave", "work", "quit", "jobs", "name").filter(s -> s.toLowerCase().startsWith(args[1].toLowerCase())).forEach(list::add);
+			return list;
+		}
+		if (args.length == 3) {
+			if (args[1].equalsIgnoreCase("work") || args[1].equalsIgnoreCase("quit")) {
+				List<String> list = new ArrayList<>();
+				Arrays.stream(Kingdom.getDefaults()).map(Quest::getTitle).filter(s -> s.toLowerCase().startsWith(args[2].toLowerCase())).forEach(list::add);
+				return list;
+			}
+		}
 		return null;
 	}
 }

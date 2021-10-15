@@ -13,7 +13,6 @@ import com.github.sanctum.labyrinth.api.Service;
 import com.github.sanctum.labyrinth.data.EconomyProvision;
 import com.github.sanctum.labyrinth.data.FileList;
 import com.github.sanctum.labyrinth.data.FileManager;
-import com.github.sanctum.labyrinth.formatting.string.ColoredString;
 import com.github.sanctum.labyrinth.formatting.string.Paragraph;
 import com.github.sanctum.labyrinth.gui.unity.construct.Menu;
 import com.github.sanctum.labyrinth.gui.unity.construct.PaginatedMenu;
@@ -31,8 +30,10 @@ import com.github.sanctum.labyrinth.library.StringUtils;
 import com.github.sanctum.skulls.SkullType;
 import java.text.MessageFormat;
 import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -301,7 +302,7 @@ public enum GUI {
 
 									List<String> result = new LinkedList<>();
 									for (String a : ClansAPI.getData().CLAN_GUI_FORMAT) {
-										result.add(MessageFormat.format(a, color.replace("&", "&f»" + color).replace("#", "&f»" + color), (c.getPalette().isGradient() ? c.getPalette().toGradient().context(par[0]).join() : c.getPalette().getStart() + par[0]), (c.getPalette().isGradient() ? c.getPalette().toGradient().context(c.format(String.valueOf(c.getPower()))).join() : c.getPalette().getStart() + c.format(String.valueOf(c.getPower()))), baseSet, c.getPalette().getStart() + ownedLand, pvp, memlist, allylist, enemylist, color));
+										result.add(MessageFormat.format(a, color.replace("&", "&f»" + color).replace("#", "&f»" + color + " "), (c.getPalette().isGradient() ? c.getPalette().toGradient().context(par[0]).join() : c.getPalette().getStart() + par[0]), (c.getPalette().isGradient() ? c.getPalette().toGradient().context(c.format(String.valueOf(c.getPower()))).join() : c.getPalette().getStart() + c.format(String.valueOf(c.getPower()))), baseSet, c.getPalette().getStart() + ownedLand, pvp, memlist, allylist, enemylist, color));
 									}
 									meta.setLore(color(result.toArray(new String[0])));
 
@@ -458,7 +459,7 @@ public enum GUI {
 
 									List<String> result = new LinkedList<>();
 									for (String a : ClansAPI.getData().CLAN_GUI_FORMAT) {
-										result.add(MessageFormat.format(a, color.replace("&", "&f»" + color), (c.getPalette().isGradient() ? c.getPalette().toGradient().context(par[0]).join() : c.getPalette().getStart() + par[0]), (c.getPalette().isGradient() ? c.getPalette().toGradient().context(c.format(String.valueOf(c.getPower()))).join() : c.getPalette().getStart() + c.format(String.valueOf(c.getPower()))), baseSet, c.getPalette().getStart() + ownedLand, pvp, memlist, allylist, enemylist, color));
+										result.add(MessageFormat.format(a, color.replace("&", "&f»" + color).replace("#", "&f»" + color + " "), (c.getPalette().isGradient() ? c.getPalette().toGradient().context(par[0]).join() : c.getPalette().getStart() + par[0]), (c.getPalette().isGradient() ? c.getPalette().toGradient().context(c.format(String.valueOf(c.getPower()))).join() : c.getPalette().getStart() + c.format(String.valueOf(c.getPower()))), baseSet, c.getPalette().getStart() + ownedLand, pvp, memlist, allylist, enemylist, color));
 									}
 									return b.setItem(it).setLore(result).setTitle(MessageFormat.format(ClansAPI.getData().getMenuCategory("clan"), color, c.getName(), id)).build();
 								}).setClick(click -> {
@@ -610,7 +611,7 @@ public enum GUI {
 
 									List<String> result = new LinkedList<>();
 									for (String a : ClansAPI.getData().CLAN_GUI_FORMAT) {
-										result.add(MessageFormat.format(a, color.replace("&", "&f»" + color).replace("#", "&f»" + color), (c.getPalette().isGradient() ? c.getPalette().toGradient().context(par[0]).join() : c.getPalette().getStart() + par[0]), (c.getPalette().isGradient() ? c.getPalette().toGradient().context(c.format(String.valueOf(c.getPower()))).join() : c.getPalette().getStart() + c.format(String.valueOf(c.getPower()))), baseSet, c.getPalette().getStart() + ownedLand, pvp, memlist, allylist, enemylist, color));
+										result.add(MessageFormat.format(a, color.replace("&", "&f»" + color).replace("#", "&f»" + color + " "), (c.getPalette().isGradient() ? c.getPalette().toGradient().context(par[0]).join() : c.getPalette().getStart() + par[0]), (c.getPalette().isGradient() ? c.getPalette().toGradient().context(c.format(String.valueOf(c.getPower()))).join() : c.getPalette().getStart() + c.format(String.valueOf(c.getPower()))), baseSet, c.getPalette().getStart() + ownedLand, pvp, memlist, allylist, enemylist, color));
 									}
 									meta.setLore(color(result.toArray(new String[0])));
 
@@ -971,7 +972,7 @@ public enum GUI {
 
 								ItemMeta meta = stack.getItemMeta();
 
-								meta.setLore(color("&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬", "&2&oPersistent: &f" + addon.isStaged(), "&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬", "&2&oDescription: &f" + addon.getDescription(), "&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬", "&2&oVersion: &f" + addon.getVersion(), "&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬", "&2&oAuthors: &f" + Arrays.toString(addon.getAuthors()), "&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬", "&2&oActive: &6&o" + ClanAddonQuery.getUsedNames().contains(addon.getName())));
+								meta.setLore(color("&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬", "&2&oPersistent: &f" + addon.isPersistent(), "&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬", "&2&oDescription: &f" + addon.getDescription(), "&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬", "&2&oVersion: &f" + addon.getVersion(), "&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬", "&2&oAuthors: &f" + Arrays.toString(addon.getAuthors()), "&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬", "&2&oActive: &6&o" + ClanAddonQuery.getUsedNames().contains(addon.getName())));
 
 								meta.setDisplayName(StringUtils.use("&3&o " + addon.getName() + " &8&l»").translate());
 
@@ -1046,7 +1047,7 @@ public enum GUI {
 
 								ItemMeta meta = stack.getItemMeta();
 
-								meta.setLore(color("&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬", "&2&oPersistent: &f" + addon.isStaged(), "&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬", "&2&oDescription: &f" + addon.getDescription(), "&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬", "&2&oVersion: &f" + addon.getVersion(), "&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬", "&2&oAuthors: &f" + Arrays.toString(addon.getAuthors()), "&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬", "&2&oActive: &6&o" + ClanAddonQuery.getUsedNames().contains(addon.getName())));
+								meta.setLore(color("&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬", "&2&oPersistent: &f" + addon.isPersistent(), "&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬", "&2&oDescription: &f" + addon.getDescription(), "&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬", "&2&oVersion: &f" + addon.getVersion(), "&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬", "&2&oAuthors: &f" + Arrays.toString(addon.getAuthors()), "&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬", "&2&oActive: &6&o" + ClanAddonQuery.getUsedNames().contains(addon.getName())));
 
 								meta.setDisplayName(StringUtils.use("&3&o " + addon.getName() + " &8&l»").translate());
 
@@ -1121,7 +1122,7 @@ public enum GUI {
 
 								ItemMeta meta = stack.getItemMeta();
 
-								meta.setLore(color("&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬", "&2&oPersistent: &f" + addon.isStaged(), "&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬", "&2&oDescription: &f" + addon.getDescription(), "&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬", "&2&oVersion: &f" + addon.getVersion(), "&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬", "&2&oAuthors: &f" + Arrays.toString(addon.getAuthors()), "&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬", "&2&oActive: &6&o" + ClanAddonQuery.getUsedNames().contains(addon.getName()), "&7Clicking these icons won't do anything."));
+								meta.setLore(color("&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬", "&2&oPersistent: &f" + addon.isPersistent(), "&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬", "&2&oDescription: &f" + addon.getDescription(), "&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬", "&2&oVersion: &f" + addon.getVersion(), "&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬", "&2&oAuthors: &f" + Arrays.toString(addon.getAuthors()), "&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬", "&2&oActive: &6&o" + ClanAddonQuery.getUsedNames().contains(addon.getName()), "&7Clicking these icons won't do anything."));
 
 								meta.setDisplayName(StringUtils.use("&3&o " + addon.getName() + " &8&l»").translate());
 
@@ -1187,10 +1188,14 @@ public enum GUI {
 		}
 		String stats;
 		String rank = associate.getRankTag();
-		String date = associate.getJoinDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDate().toString();
+		ZonedDateTime time = associate.getJoinDate().toInstant().atZone(ZoneId.systemDefault());
+		Calendar cal = Calendar.getInstance();
+		cal.setTime(associate.getJoinDate());
+		String temporal = cal.get(Calendar.AM_PM) == Calendar.AM ? "am" : "pm";
+		String date = time.getMonthValue() + "/" + time.getDayOfMonth() + "/" + time.getYear() + " @ " + time.getHour() + ":" + time.getMinute() + temporal;
 		String bio = associate.getBiography();
 		String kd = "" + associate.getKD();
-		if (Bukkit.getVersion().contains("1.16") || Bukkit.getVersion().contains("1.15")) {
+		if (Bukkit.getVersion().contains("1.15") || LabyrinthProvider.getInstance().isNew()) {
 			OfflinePlayer p = associate.getUser().toBukkit();
 			stats = o + "Banners washed: &f" + p.getStatistic(Statistic.BANNER_CLEANED) + "|" +
 					o + "Bell's rang: &f" + p.getStatistic(Statistic.BELL_RING) + "|" +
@@ -1238,7 +1243,7 @@ public enum GUI {
 								Player p = click.getElement();
 								p.performCommand("c info " + cl.getName());
 							}));
-							i.addItem(b -> b.setElement(it -> it.setItem(associate.getHead()).setTitle(" ").setLore(new Paragraph(bio + " - " + associate.getNickname()).setRegex(Paragraph.COMMA_AND_PERIOD).get()).build()).setSlot(4).setClick(click -> {
+							i.addItem(b -> b.setElement(it -> it.setItem(associate.getHead()).setTitle("&6Click to teleport.").setLore(new Paragraph(bio + " &r- " + associate.getNickname()).setRegex(Paragraph.COMMA_AND_PERIOD).get()).build()).setSlot(4).setClick(click -> {
 								click.setCancelled(true);
 								if (associate.getUser().toBukkit().isOnline()) {
 									Clan.Associate a = ClansAPI.getInstance().getAssociate(click.getElement()).orElse(null);
@@ -1248,7 +1253,10 @@ public enum GUI {
 										if (request == null) {
 											if (Objects.equals(associate.getUser().getName(), a.getUser().getName()))
 												return;
-											if (!associate.getClan().getMembers().contains(a)) return;
+											if (!associate.getClan().getMembers().contains(a)) {
+												Clan.ACTION.sendMessage(click.getElement(), "&cYou're not in our clan.");
+												return;
+											}
 
 											Clan.Associate.Teleport r = new Clan.Associate.Teleport.Impl(a, associate.getUser().toBukkit().getPlayer());
 											r.teleport();
@@ -2100,11 +2108,7 @@ public enum GUI {
 	protected List<String> color(String... text) {
 		ArrayList<String> convert = new ArrayList<>();
 		for (String t : text) {
-			if (Bukkit.getVersion().contains("1.16")) {
-				convert.add(new ColoredString(t, ColoredString.ColorType.HEX).toString());
-			} else {
-				convert.add(new ColoredString(t, ColoredString.ColorType.MC).toString());
-			}
+			convert.add(StringUtils.use(t).translate());
 		}
 		return convert;
 	}

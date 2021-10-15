@@ -36,6 +36,33 @@ public interface Reward<T> {
 		}
 	};
 
+	Reward<ItemStack[]> ITEM_ARRAY = new Reward<ItemStack[]>() {
+		@Override
+		public ItemStack[] get() {
+			return Items.edit().finish().toArray(new ItemStack[0]);
+		}
+
+		@Override
+		public BaseComponent[] getMessage() {
+			return new BaseComponent[0];
+		}
+
+		@Override
+		public void give(Kingdom kingdom) {
+
+		}
+
+		@Override
+		public void give(Clan clan) {
+
+		}
+
+		@Override
+		public void give(Clan.Associate associate) {
+
+		}
+	};
+
 	Reward<Double> MONEY = new Reward<Double>() {
 		@Override
 		public Double get() {
@@ -74,7 +101,7 @@ public interface Reward<T> {
 	void give(Clan.Associate associate);
 
 	static void assertReward(Reward<?> reward) {
-		if (!ItemStack.class.isAssignableFrom(reward.get().getClass()) && !Double.class.isAssignableFrom(reward.get().getClass())) {
+		if (!ItemStack[].class.isAssignableFrom(reward.get().getClass()) && !ItemStack.class.isAssignableFrom(reward.get().getClass()) && !Double.class.isAssignableFrom(reward.get().getClass())) {
 			throw new IllegalStateException("Reward: An invalid achievement reward was provided.");
 		}
 	}

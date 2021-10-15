@@ -948,4 +948,29 @@ public class DefaultClan implements Clan {
 		}
 		return result;
 	}
+
+	@Override
+	public String getPath() {
+		return getId().toString();
+	}
+
+	@Override
+	public boolean isNode(String key) {
+		return ClansAPI.getData().getClanFile(this).getRoot().isNode(key);
+	}
+
+	@Override
+	public Node getNode(String key) {
+		return ClansAPI.getData().getClanFile(this).getRoot().getNode(key);
+	}
+
+	@Override
+	public Set<String> getKeys(boolean deep) {
+		return ClansAPI.getData().getClanFile(this).getRoot().getKeys(deep);
+	}
+
+	@Override
+	public Map<String, Object> getValues(boolean deep) {
+		return ClansAPI.getData().getClanFile(this).getRoot().getValues(deep);
+	}
 }

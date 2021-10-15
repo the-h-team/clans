@@ -208,7 +208,7 @@ public class ClanAction extends StringLibrary {
 
 	public UUID getUserID(String playerName) {
 		LabyrinthUser user = LabyrinthUser.get(playerName);
-		if (user.isValid()) {
+		if (user != null && user.isValid()) {
 			return user.getId();
 		}
 		return null;

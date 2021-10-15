@@ -1,5 +1,6 @@
 package com.github.sanctum.clans.listener;
 
+import com.github.sanctum.clans.bridge.ClanAddonQuery;
 import com.github.sanctum.clans.bridge.ClanVentBus;
 import com.github.sanctum.clans.construct.Claim;
 import com.github.sanctum.clans.construct.actions.ClansUpdate;
@@ -7,8 +8,10 @@ import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClansAPI;
 import com.github.sanctum.clans.construct.api.War;
 import com.github.sanctum.clans.construct.extra.ClanDisplayName;
+import com.github.sanctum.clans.construct.extra.ReservedLogo;
 import com.github.sanctum.clans.construct.impl.CooldownRespawn;
 import com.github.sanctum.clans.events.core.ClaimInteractEvent;
+import com.github.sanctum.clans.events.core.ClaimResidentEvent;
 import com.github.sanctum.clans.events.core.LandPreClaimEvent;
 import com.github.sanctum.clans.events.damage.PlayerKillPlayerEvent;
 import com.github.sanctum.clans.events.damage.PlayerPunchPlayerEvent;
@@ -19,12 +22,14 @@ import com.github.sanctum.labyrinth.data.EconomyProvision;
 import com.github.sanctum.labyrinth.event.custom.DefaultEvent;
 import com.github.sanctum.labyrinth.event.custom.Subscribe;
 import com.github.sanctum.labyrinth.event.custom.Vent;
+import com.github.sanctum.labyrinth.formatting.string.Paragraph;
 import com.github.sanctum.labyrinth.library.Cooldown;
-import com.github.sanctum.labyrinth.library.Message;
+import com.github.sanctum.labyrinth.library.Mailer;
 import com.github.sanctum.labyrinth.library.StringUtils;
 import com.github.sanctum.labyrinth.task.Schedule;
 import java.math.BigDecimal;
 import java.text.MessageFormat;
+import java.util.List;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -44,9 +49,6 @@ import org.bukkit.util.Vector;
 
 public class PlayerEventListener implements Listener {
 
-	public PlayerEventListener() {
-	}
-
 	@Subscribe(priority = Vent.Priority.HIGHEST)
 	public void onClaim(LandPreClaimEvent e) {
 		EconomyProvision eco = EconomyProvision.getInstance();
@@ -59,11 +61,25 @@ public class PlayerEventListener implements Listener {
 				} else {
 					double amount = eco.balance(e.getClaimer()).orElse(0.0);
 					Clan.ACTION.sendMessage(e.getClaimer(), Clan.ACTION.notEnough(cost - amount));
+					e.setCancelled(true);
 				}
-
 			}
-
 		}
+	}
+
+	@Subscribe
+	public void onClaim(ClaimResidentEvent e) {
+		Player p = e.getResident().getPlayer();
+		ClansAPI.getInstance().getAssociate(p).ifPresent(a -> {
+			Clan.Associate.Teleport teleport = Clan.Associate.Teleport.get(a);
+			if (teleport != null) {
+				if (p.getLocation().distance(teleport.getStartingLocation()) > 0) {
+					teleport.setState(Clan.Associate.Teleport.State.EXPIRED);
+					Clan.ACTION.sendMessage(p, "&cYou moved! Teleportation cancelled.");
+					teleport.cancel();
+				}
+			}
+		});
 	}
 
 	@Subscribe
@@ -280,9 +296,7 @@ public class PlayerEventListener implements Listener {
 	@Subscribe
 	public void onCommandWar(DefaultEvent.Communication e) {
 		if (e.getCommunicationType() == DefaultEvent.Communication.Type.COMMAND) {
-			DefaultEvent.Communication.ChatCommand cmd = e.getCommand().get();
-
-			ClansAPI.getInstance().getAssociate(e.getPlayer()).ifPresent(a -> {
+			e.getCommand().ifPresent(cmd -> ClansAPI.getInstance().getAssociate(e.getPlayer()).ifPresent(a -> {
 
 				War w = ClansAPI.getInstance().getArenaManager().get(a);
 				if (w != null) {
@@ -301,24 +315,49 @@ public class PlayerEventListener implements Listener {
 						}
 					}
 				}
-			});
+			}));
 		}
+	}
+
+	public String[] getMotd(List<String> logo) {
+		String[] ar = logo.toArray(new String[0]);
+		String[] motd = new Paragraph("Kingdoms is here,Try it out using &6/clan kingdom. Have a happy halloween. - &6Sanctum Team").setRegex(Paragraph.COMMA_AND_PERIOD).get();
+		for (int i = 0; i < ar.length; i++) {
+			if (i > 0) {
+				if ((Math.max(0, i - 1)) <= motd.length - 1) {
+					String m = motd[Math.max(0, i - 1)];
+					ar[i] = ar[i] + "   &r" + m;
+				}
+			}
+		}
+		return ar;
 	}
 
 	@Subscribe(priority = Vent.Priority.HIGH, processCancelled = true)
 	public void onPlayerJoin(DefaultEvent.Join e) {
 
-		final Player p = e.getPlayer();
+		Player p = e.getPlayer();
 
-		final ClansAPI API = ClansAPI.getInstance();
-
-		final Clan.Associate associate = API.getAssociate(p.getName()).orElse(null);
+		Clan.Associate associate = ClansAPI.getInstance().getAssociate(p.getName()).orElse(null);
 
 		ClansAPI.getInstance().getClaimManager().getTask().joinTask(p);
+		String[] complete = getMotd(ReservedLogo.HALLOWEEN.get());
 
-		if (associate != null) {
-			if (associate.isValid()) {
-				if (Bukkit.getVersion().contains("1.14") || Bukkit.getVersion().contains("1.15") || Bukkit.getVersion().contains("1.16") || Bukkit.getVersion().contains("1.17")) {
+		if (ClanAddonQuery.getAddon("Kingdoms") != null) {
+			Schedule.sync(() -> {
+				Mailer mail = new Mailer(p);
+				mail.chat("&5&m&l▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬").deploy();
+				for (String s : complete) {
+					mail.chat(s).deploy();
+				}
+				mail.chat("&5&m&l▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬").deploy();
+			}).waitReal(10);
+		}
+
+		boolean scoreboard = Bukkit.getVersion().contains("1.14") || Bukkit.getVersion().contains("1.15") || Bukkit.getVersion().contains("1.16") || Bukkit.getVersion().contains("1.17");
+		if (scoreboard) {
+			if (associate != null) {
+				if (associate.isValid()) {
 					if (ClansAPI.getData().prefixedTagsAllowed()) {
 						if (associate.getClan().getPalette().isGradient()) {
 							Clan c = associate.getClan();
@@ -331,9 +370,7 @@ public class PlayerEventListener implements Listener {
 						ClanDisplayName.remove(associate);
 					}
 				}
-			}
-		} else {
-			if (Bukkit.getVersion().contains("1.14") || Bukkit.getVersion().contains("1.15") || Bukkit.getVersion().contains("1.16") || Bukkit.getVersion().contains("1.17")) {
+			} else {
 				ClanDisplayName.remove(p);
 			}
 		}
@@ -364,13 +401,13 @@ public class PlayerEventListener implements Listener {
 			}
 			War current = ClansAPI.getInstance().getArenaManager().get(associate);
 			if (current != null) {
-				Message m = Message.loggedFor(ClansAPI.getInstance().getPlugin()).setPrefix(ClansAPI.getInstance().getPrefix().joined());
+				Mailer m = Mailer.empty(ClansAPI.getInstance().getPlugin()).prefix().start(ClansAPI.getInstance().getPrefix().joined()).finish();
 				if (current.isRunning()) {
 					if (current.getQueue().unque(associate)) {
-						m.broadcast(associate.getNickname() + "&c has left the battlefield.");
+						m.announce(player -> true, associate.getNickname() + "&c has left the battlefield.").deploy();
 						Schedule.sync(() -> {
 							if (current.getQueue().associates().length == 0) {
-								m.broadcast("&cThere is no one left in the arena. War in &7#&6" + current.getId() + " &chas reset.");
+								m.announce(player -> true, "&cThere is no one left in the arena. War in &7#&6" + current.getId() + " &chas reset.").deploy();
 								current.stop();
 								current.reset();
 								return;
@@ -384,7 +421,7 @@ public class PlayerEventListener implements Listener {
 									}
 								}
 								if (alive <= 1) {
-									m.broadcast("&cEveryone has left the battlefield. War in &7#&6" + current.getId() + " &cconcluded with winning team &b" + current.getMostPoints().getKey().name());
+									m.announce(player -> true, "&cEveryone has left the battlefield. War in &7#&6" + current.getId() + " &cconcluded with winning team &b" + current.getMostPoints().getKey().name()).deploy();
 									current.stop();
 									current.reset();
 								} else {
@@ -397,7 +434,7 @@ public class PlayerEventListener implements Listener {
 					if (current.getQueue().associates().length <= ClansAPI.getData().getInt("Clans.war.que-needed") + 1) {
 						if (current.avoid()) {
 							current.reset();
-							m.broadcast("&cEvery queued member has left the game. War in &7#&6" + current.getId() + " &cfailed to start.");
+							m.announce(player -> true, "&cEvery queued member has left the game. War in &7#&6" + current.getId() + " &cfailed to start.").deploy();
 						}
 					} else {
 						Schedule.sync(() -> current.getQueue().unque(associate)).applyAfter(() -> {
@@ -410,7 +447,7 @@ public class PlayerEventListener implements Listener {
 									}
 								}
 								if (alive <= 1) {
-									m.broadcast("&cEveryone has left the battlefield. War in &7#&6" + current.getId() + " &cconcluded with winning team &b" + current.getMostPoints().getKey().name());
+									m.announce(player -> true, "&cEveryone has left the battlefield. War in &7#&6" + current.getId() + " &cconcluded with winning team &b" + current.getMostPoints().getKey().name()).deploy();
 									current.stop();
 									current.reset();
 								} else {
@@ -466,6 +503,8 @@ public class PlayerEventListener implements Listener {
 						}
 					}
 				} else {
+					Mailer m = Mailer.empty(ClansAPI.getInstance().getPlugin()).prefix().start(ClansAPI.getInstance().getPrefix().joined()).finish();
+					m.announce(player -> player.hasPermission("clanspro.admin"), "The spawn location for team " + t.name() + " is missing!").deploy();
 					Clan.ACTION.sendMessage(p, "&cThe clan arena system isn't properly configured. Contact staff for help.");
 				}
 			}

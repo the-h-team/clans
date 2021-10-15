@@ -1,8 +1,10 @@
 package com.github.sanctum.clans.construct.api;
 
 import com.github.sanctum.labyrinth.library.Message;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Stream;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
@@ -22,6 +24,12 @@ public abstract class ClanSubCommand {
 
 	public String getLabel() {
 		return this.LABEL;
+	}
+
+	protected final List<String> getBaseCompletion(String... args) {
+		List<String> result = new ArrayList<>();
+		Stream.of(getLabel()).filter(s -> s.toLowerCase().startsWith(args[0].toLowerCase())).forEach(result::add);
+		return result;
 	}
 
 	public void setNoPermissionMessage(String message) {

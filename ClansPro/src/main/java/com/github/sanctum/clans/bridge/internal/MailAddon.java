@@ -17,7 +17,6 @@ import com.github.sanctum.clans.events.command.CommandInsertEvent;
 import com.github.sanctum.clans.events.command.TabInsertEvent;
 import com.github.sanctum.labyrinth.event.custom.Vent;
 import com.github.sanctum.labyrinth.formatting.PaginatedList;
-import com.github.sanctum.labyrinth.library.HUID;
 import com.github.sanctum.labyrinth.library.Items;
 import com.github.sanctum.labyrinth.library.Message;
 import com.github.sanctum.labyrinth.library.TextLib;
@@ -29,31 +28,27 @@ import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.jetbrains.annotations.NotNull;
 
 public class MailAddon extends ClanAddon {
 
 	@Override
-	public boolean isStaged() {
+	public boolean isPersistent() {
 		return ClansAPI.getData().isTrue("Addon." + getName() + ".enabled");
 	}
 
 	@Override
-	public HUID getId() {
-		return super.getId();
-	}
-
-	@Override
-	public String getName() {
+	public @NotNull String getName() {
 		return "Mail";
 	}
 
 	@Override
-	public String getDescription() {
+	public @NotNull String getDescription() {
 		return "A new pro addon! Send mail & gifts to other clans!";
 	}
 
 	@Override
-	public String getVersion() {
+	public @NotNull String getVersion() {
 		return "1.0";
 	}
 

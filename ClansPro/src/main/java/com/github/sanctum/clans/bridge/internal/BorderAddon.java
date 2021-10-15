@@ -9,32 +9,27 @@ import com.github.sanctum.clans.bridge.internal.borders.TerritoryCommand;
 import com.github.sanctum.clans.construct.api.ClansAPI;
 import com.github.sanctum.clans.events.command.CommandHelpInsertEvent;
 import com.github.sanctum.labyrinth.event.custom.Vent;
-import com.github.sanctum.labyrinth.library.HUID;
+import org.jetbrains.annotations.NotNull;
 
 public class BorderAddon extends ClanAddon {
 
 	@Override
-	public boolean isStaged() {
+	public boolean isPersistent() {
 		return ClansAPI.getData().isTrue("Addon." + getName() + ".enabled");
 	}
 
 	@Override
-	public HUID getId() {
-		return super.getId();
-	}
-
-	@Override
-	public String getName() {
+	public @NotNull String getName() {
 		return "Borders";
 	}
 
 	@Override
-	public String getDescription() {
+	public @NotNull String getDescription() {
 		return "A Clans [Free] ported addon, allowing users to view chunk borders.";
 	}
 
 	@Override
-	public String getVersion() {
+	public @NotNull String getVersion() {
 		return "1.0";
 	}
 
