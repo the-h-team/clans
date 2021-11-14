@@ -1,7 +1,11 @@
 package com.github.sanctum.clans.bridge.external;
 
 import com.github.sanctum.clans.bridge.ClanAddon;
-import com.github.sanctum.clans.bridge.external.dynmap.DynmapSubscription;
+import com.github.sanctum.clans.bridge.ClanAddonQuery;
+import com.github.sanctum.clans.bridge.ClanVentBus;
+import com.github.sanctum.clans.bridge.external.dynmap.DynmapCommand;
+import com.github.sanctum.clans.event.command.CommandInformationAdaptEvent;
+import com.github.sanctum.labyrinth.event.custom.Vent;
 import org.bukkit.Bukkit;
 import org.jetbrains.annotations.NotNull;
 
@@ -34,11 +38,25 @@ public class DynmapAddon extends ClanAddon {
 
 	@Override
 	public void onLoad() {
-		getContext().stage(new DynmapSubscription());
+		getContext().stage(new DynmapCommand("claim"));
 	}
 
 	@Override
 	public void onEnable() {
+
+		ClanVentBus.subscribe(CommandInformationAdaptEvent.class, Vent.Priority.MEDIUM, (e, subscription) -> {
+
+			ClanAddon cycle = ClanAddonQuery.getAddon("Dynmap");
+
+			if (cycle != null && !cycle.getContext().isActive()) {
+				subscription.remove();
+				return;
+			}
+
+			e.insert("&7|&e) &6/clan &fshowclaims");
+			e.insert("&7|&e) &6/clan &fhideclaim");
+
+		});
 
 	}
 

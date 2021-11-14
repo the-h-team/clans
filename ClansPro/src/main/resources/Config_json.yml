@@ -24,6 +24,15 @@ Clans:
   ############################################################
   lang: 'en-US'
 
+  ############################################################
+  ## A single timer runs the whole show! Decide how frequent##
+  ## the timer runs here!                                   ##
+  ############################################################
+  timer:
+    # Valid thresholds: [ MILLISECONDS, SECONDS, MINUTES, HOURS, DAYS ]
+    threshold: MILLISECONDS
+    time-span: 40
+
   ##############################################
   ##                                          ##
   ## Max amount of clans the server can have. ##
@@ -325,7 +334,7 @@ Formatting:
   # What kind of file type should clans use for clan data?
   # If you are wanting to convert your in game data first go in game, use '/cla copy' after you do that
   # bring your server to a complete stop then change this value to JSON. After doing that delete the old yml files
-  # and start your server!
+  # and start your server! (Json -> Yaml Coming soon)
   #
   # Valid types = [ YAML, JSON ]
   file-type: JSON
@@ -339,8 +348,10 @@ Formatting:
   locale: en
   # Change the max size a clan tag can be.
   tag-size: 15
-  # Allow for tasks to print debug messages in console?
-  console-debug: true
+  # Change the /clan info format to something simpler?
+  pretty-info: true
+  # Do things like debug possible corrupt clans on server start? (Displays info in console & log)
+  console-debug: false
   # Allow console to spy on messages from clan/ally chat channels
   chat-spy-console: true
   # Change the format for the /clan message command
@@ -386,12 +397,21 @@ Formatting:
         divider: '&8: &r'
         highlight: '&8({2}{1}&8)'
         hover: 'My clan rank is: &a{3}'
+        # NEW! Words used from here will be filtered in game!
+        filters:
+          faggot: 'cake'
+          nigger: 'cheese'
+
       ally:
         # {0} = Player name, {1} = Clan name colored, {2} = Clan color, {3} = Player rank, {4} = Clan name colorless
         prefix: '&8(&2&lAC&8) &b{0} '
         divider: '&8: &r'
         highlight: '&8({2}{1}&8)'
         hover: 'My clan rank is: &d{3}'
+        # NEW! Words used from here will be filtered in game!
+        filters:
+          faggot: 'cake'
+          nigger: 'cheese'
 #-------------------------------------------------------------------
 #
 #----------------------------------------------------------------
@@ -501,4 +521,4 @@ Addon:
 ## -- DO NOT EDIT BELOW --
 # Authors: Hempfest, ms5984
 ##------------------------
-Version: 1.3.0
+Version: 1.3.1

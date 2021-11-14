@@ -4,13 +4,14 @@ import com.github.sanctum.clans.bridge.ClanAddon;
 import com.github.sanctum.clans.bridge.ClanAddonQuery;
 import com.github.sanctum.clans.bridge.internal.map.structure.ChunkPosition;
 import com.github.sanctum.clans.bridge.internal.map.structure.MapPoint;
-import com.github.sanctum.clans.construct.Claim;
+import com.github.sanctum.clans.construct.api.Claim;
 import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClansAPI;
 import com.github.sanctum.labyrinth.LabyrinthProvider;
 import com.github.sanctum.labyrinth.data.Region;
 import com.github.sanctum.labyrinth.formatting.string.ColoredString;
 import com.github.sanctum.labyrinth.library.DirectivePoint;
+import com.github.sanctum.labyrinth.library.HUID;
 import com.github.sanctum.labyrinth.library.StringUtils;
 import com.github.sanctum.labyrinth.library.TextLib;
 import com.github.sanctum.labyrinth.task.Schedule;
@@ -167,8 +168,8 @@ public class MapController implements Listener {
                 code -= 10;
                 return ChatColor.getByChar((char)('A' + code));*/
 	            String dummyId = "dummy";
-	            if (ClansAPI.getInstance().getClanID(e.getPlayer().getUniqueId()) != null) {
-		            dummyId = ClansAPI.getInstance().getClanID(e.getPlayer().getUniqueId()).toString();
+	            if (ClansAPI.getInstance().getClanManager().getClanID(e.getPlayer().getUniqueId()) != null) {
+		            dummyId = ClansAPI.getInstance().getClanManager().getClanID(e.getPlayer().getUniqueId()).toString();
 	            }
 	            String finalDummyId = dummyId;
 	            return CompletableFuture.supplyAsync(() -> Clan.ACTION.getRelationColor(clanId, finalDummyId)).join();
@@ -207,8 +208,8 @@ public class MapController implements Listener {
             final StringBuilder sb = new StringBuilder();
             for (String clanId : clanIds) {
 	            sb.append(", ").append(colors.get(clanId)).append(representations.get(clanId)).append(" = ")
-                        .append(ClansAPI.getInstance().getClan(clanId).getPalette().getStart())
-			            .append(ClansAPI.getInstance().getClanName(clanId)).append(ChatColor.RESET);
+                        .append(ClansAPI.getInstance().getClanManager().getClan(HUID.fromString(clanId)).getPalette().toString())
+			            .append(ClansAPI.getInstance().getClanManager().getClanName(HUID.fromString(clanId))).append(ChatColor.RESET);
             }
             return sb.toString();
         }).join();
@@ -318,15 +319,15 @@ public class MapController implements Listener {
 
         if (ec != null) {
 
-            boolean enhanced = ec.getServicesManager().getRegistration(Boolean.class, ec).getService();
+            boolean enhanced = ClanAddon.getServicesManager().getRegistration(Boolean.class, ec).getService();
 
             if (enhanced) {
 
                 if (LabyrinthProvider.getInstance().isLegacy()) {
                     Clan.ACTION.sendMessage(e.getPlayer(), "&cLegacy detected! Enhanced map view requires 1.14+");
                     ClansAPI.getInstance().getPlugin().getLogger().warning("- Legacy detected enhanced map view not available until 1.14+");
-                    ec.getServicesManager().unregisterAll(ec);
-                    ec.getServicesManager().register(false, ec, ServicePriority.Highest);
+                    ClanAddon.getServicesManager().unregisterAll(ec);
+                    ClanAddon.getServicesManager().register(false, ec, ServicePriority.Highest);
                     return;
                 }
 
@@ -374,9 +375,9 @@ public class MapController implements Listener {
                                                 p.setHover(StringUtils.use("&4Wilderness").translate());
 	                                            if (Claim.ACTION.getChunksAroundLocation(location, -1, 0, 1).stream().anyMatch(c -> ClansAPI.getInstance().getClaimManager().isInClaim(c))) {
 		                                            p.setAppliance(() -> {
-			                                            Clan c = ClansAPI.getInstance().getClan(e.getPlayer().getUniqueId());
+			                                            Clan c = ClansAPI.getInstance().getClanManager().getClan(e.getPlayer().getUniqueId());
 			                                            if (c != null) {
-                                                            Claim claim = c.obtain(e.getPlayer().getWorld().getChunkAt(p.chunkPosition.x, p.chunkPosition.z));
+                                                            Claim claim = c.newClaim(e.getPlayer().getWorld().getChunkAt(p.chunkPosition.x, p.chunkPosition.z));
                                                             if (claim != null) {
                                                                 if (actionWait.containsKey(e.getPlayer())) {
                                                                     if (actionWait.get(e.getPlayer())) {
@@ -393,7 +394,7 @@ public class MapController implements Listener {
                                                                 }).wait(2);
                                                                 Clan.ACTION.sendMessage(e.getPlayer(), "&aChunk &6&7(&3X: &f" + claim.getChunk().getX() + " &3Z: &f" + claim.getChunk().getZ() + "&7) &ais now owned by our clan.");
                                                             } else {
-                                                                if (c.getOwnedClaims().length == c.getMaxClaims()) {
+                                                                if (c.getClaims().length == c.getClaimLimit()) {
                                                                     Clan.ACTION.sendMessage(e.getPlayer(), Claim.ACTION.alreadyMaxClaims());
                                                                 }
                                                             }
@@ -422,9 +423,9 @@ public class MapController implements Listener {
                                             try {
 	                                            if (Claim.ACTION.getChunksAroundLocation(location, -1, 0, 1).stream().anyMatch(c -> ClansAPI.getInstance().getClaimManager().isInClaim(c))) {
 		                                            p.setAppliance(() -> {
-			                                            Clan c = ClansAPI.getInstance().getClan(e.getPlayer().getUniqueId());
+			                                            Clan c = ClansAPI.getInstance().getClanManager().getClan(e.getPlayer().getUniqueId());
 			                                            if (c != null) {
-				                                            Claim claim = c.obtain(e.getPlayer().getWorld().getChunkAt(p.chunkPosition.x, p.chunkPosition.z));
+				                                            Claim claim = c.newClaim(e.getPlayer().getWorld().getChunkAt(p.chunkPosition.x, p.chunkPosition.z));
                                                             if (claim != null) {
                                                                 if (actionWait.containsKey(e.getPlayer())) {
                                                                     if (actionWait.get(e.getPlayer())) {
@@ -441,7 +442,7 @@ public class MapController implements Listener {
                                                                 }).wait(2);
                                                                 Clan.ACTION.sendMessage(e.getPlayer(), "&aChunk &6&7(&3X: &f" + claim.getChunk().getX() + " &3Z: &f" + claim.getChunk().getZ() + "&7) &ais now owned by our clan.");
                                                             } else {
-                                                                if (c.getOwnedClaims().length == c.getMaxClaims()) {
+                                                                if (c.getClaims().length == c.getClaimLimit()) {
                                                                     Clan.ACTION.sendMessage(e.getPlayer(), Claim.ACTION.alreadyMaxClaims());
                                                                 }
                                                             }
@@ -457,11 +458,11 @@ public class MapController implements Listener {
                                 }
                             } else {
                                 Clan c = p.getClan();
-                                if (!clans.contains(StringUtils.use(c.getPalette().getStart() + c.getName()).translate())) {
-                                    clans.add(StringUtils.use(c.getPalette().getStart() + c.getName()).translate());
+                                if (!clans.contains(StringUtils.use(c.getPalette().toString() + c.getName()).translate())) {
+                                    clans.add(StringUtils.use(c.getPalette().toString() + c.getName()).translate());
                                 }
                                 p.setRepresentation('⬛');
-                                p.setColor(c.getPalette().getStart().replace("&l", ""));
+                                p.setColor(c.getPalette().toString().replace("&l", ""));
                             }
                         } else {
                             p.setRepresentation('❤');
@@ -508,7 +509,7 @@ public class MapController implements Listener {
 	                if (Math.abs(value[1] - playerChunkZ) >= CHUNK_RADIUS) {
 		                continue;
 	                }
-	                clanChunks.put(new ChunkPosition(value), entry.getOwner());
+	                clanChunks.put(new ChunkPosition(value), entry.getOwner().getTag().getId());
                 }
 	            final Set<String> clanIdStrings = new HashSet<>(clanChunks.values());
 	            final ChunkPosition playerChunk = new ChunkPosition(playerChunkX, playerChunkZ);

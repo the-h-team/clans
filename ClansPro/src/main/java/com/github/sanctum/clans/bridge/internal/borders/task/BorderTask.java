@@ -20,7 +20,7 @@ public class BorderTask {
 				}
 			}
 		}).cancelAbsence(BorderListener.toggled, p.getUniqueId()).cancelAfter(p);
-		if (ClansAPI.getData().isTrue("Formatting.console-debug")) {
+		if (ClansAPI.getDataInstance().isTrue("Formatting.console-debug")) {
 			return sync.debug();
 		} else
 			return sync;

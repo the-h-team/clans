@@ -1,5 +1,7 @@
 package com.github.sanctum.clans.construct.api;
 
+import com.github.sanctum.clans.construct.extra.ClanError;
+import com.github.sanctum.labyrinth.annotation.Note;
 import java.lang.reflect.InvocationTargetException;
 import java.util.function.Function;
 
@@ -29,6 +31,7 @@ public class ClanException<T extends ClanError> {
 		return this;
 	}
 
+	@Note("Reverse the check if you need the value to be not null")
 	public void run(String message, boolean reverse) {
 		try {
 			Error exception = errorClass.getDeclaredConstructor(String.class).newInstance(message);

@@ -8,20 +8,15 @@ import com.github.sanctum.clans.bridge.ClanAddonRegistrationException;
 import com.github.sanctum.clans.bridge.ClanVentBus;
 import com.github.sanctum.clans.bridge.external.BountyAddon;
 import com.github.sanctum.clans.bridge.external.DynmapAddon;
-import com.github.sanctum.clans.construct.Claim;
-import com.github.sanctum.clans.construct.DataManager;
+import com.github.sanctum.clans.construct.api.BanksAPI;
+import com.github.sanctum.clans.construct.api.Claim;
 import com.github.sanctum.clans.construct.api.Clan;
-import com.github.sanctum.clans.construct.api.ClanBank;
-import com.github.sanctum.clans.construct.api.ClanCooldown;
 import com.github.sanctum.clans.construct.api.ClanException;
 import com.github.sanctum.clans.construct.api.ClansAPI;
-import com.github.sanctum.clans.construct.api.War;
 import com.github.sanctum.clans.construct.bank.BankListener;
 import com.github.sanctum.clans.construct.bank.BankPermissions;
-import com.github.sanctum.clans.construct.impl.MapEntry;
-import com.github.sanctum.clans.events.core.ClanWarActiveEvent;
-import com.github.sanctum.clans.events.core.ClanWarWonEvent;
-import com.github.sanctum.clans.events.core.RaidShieldEvent;
+import com.github.sanctum.clans.event.TimerEvent;
+import com.github.sanctum.clans.event.claim.RaidShieldEvent;
 import com.github.sanctum.labyrinth.LabyrinthProvider;
 import com.github.sanctum.labyrinth.annotation.Ordinal;
 import com.github.sanctum.labyrinth.api.Service;
@@ -32,11 +27,10 @@ import com.github.sanctum.labyrinth.data.FileType;
 import com.github.sanctum.labyrinth.data.Registry;
 import com.github.sanctum.labyrinth.event.custom.Vent;
 import com.github.sanctum.labyrinth.library.HUID;
-import com.github.sanctum.labyrinth.library.Message;
+import com.github.sanctum.labyrinth.library.Item;
 import com.github.sanctum.labyrinth.library.Metrics;
+import com.github.sanctum.labyrinth.library.StringUtils;
 import com.github.sanctum.labyrinth.task.Schedule;
-import com.github.sanctum.labyrinth.task.Synchronous;
-import java.text.MessageFormat;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -50,8 +44,8 @@ import java.util.Map;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import org.bukkit.Bukkit;
+import org.bukkit.Material;
 import org.bukkit.command.Command;
-import org.bukkit.entity.Player;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
 import org.bukkit.permissions.Permission;
@@ -125,19 +119,6 @@ public final class StartProcedure {
 		ClanAddonRegistrationException.getLoadingProcedure().run(instance).deploy();
 	}
 
-	@Ordinal(3)
-	void c() {
-		if (bail) return;
-		sendBorder();
-		instance.getLogger().info("- Cleaning misc files.");
-		for (String id : Clan.ACTION.getAllClanIDs()) {
-			if (ClansAPI.getInstance().getClanName(id) == null) {
-				FileManager clan = DataManager.FileType.CLAN_FILE.get(id);
-				clan.getRoot().delete();
-			}
-		}
-	}
-
 	@Ordinal(4)
 	void d() {
 		if (bail) return;
@@ -145,91 +126,16 @@ public final class StartProcedure {
 		instance.getLogger().info("- Loading clans and claims, please be patient...");
 		instance.getLogger().info("- Loaded (" + instance.getClanManager().refresh() + ") clans ");
 		instance.getLogger().info("- Loaded (" + instance.getClaimManager().refresh() + ") claims");
-	}
-
-	@Ordinal(5)
-	void e() {
-		if (bail) return;
-		Synchronous sync = Schedule.sync(() -> {
-
-			if (Bukkit.getOnlinePlayers().size() == 0) return;
-
-			War war = ClansAPI.getInstance().getArenaManager().get("PRO");
-
-			if (war != null) {
-
-				if (war.isRunning()) {
-					if (war.getTimer().isComplete()) {
-						if (war.stop()) {
-							War.Team winner = war.getMostPoints().getKey();
-							int points = war.getMostPoints().getValue();
-							Clan w = war.getClan(winner);
-							Map<Clan, Integer> map = new HashMap<>();
-							for (Clan c : war.getQueue().teams()) {
-								if (!c.getName().equals(w.getName())) {
-									War.Team t = war.getTeam(c);
-									map.put(c, war.getPoints(t));
-								}
-							}
-							ClanWarWonEvent e = ClanVentBus.call(new ClanWarWonEvent(war, new MapEntry<>(w, points), map));
-							if (!e.isCancelled()) {
-								Message msg = LabyrinthProvider.getService(Service.MESSENGER).getNewMessage().setPrefix(ClansAPI.getInstance().getPrefix().joined());
-								Bukkit.broadcastMessage(" ");
-								msg.broadcast("&3A war between clans &b[" + Arrays.stream(war.getQueue().teams()).map(Clan::getName).collect(Collectors.joining(",")) + "]&3 in arena &7#&e" + war.getId() + " &3concluded with winner &6&l" + w.getName() + " &f(&a" + points + "&f)");
-								Bukkit.broadcastMessage(" ");
-							}
-							war.reset();
-						}
-					} else {
-						ClanVentBus.call(new ClanWarActiveEvent(war));
-					}
-				}
-
+		sendBorder();
+		instance.getLogger().info("- Cleaning misc files.");
+		for (String id : Clan.ACTION.getAllClanIDs()) {
+			if (ClansAPI.getInstance().getClanManager().getClanName(HUID.fromString(id)) == null) {
+				Clan o = ClansAPI.getInstance().getClanManager().getClan(HUID.fromString(id));
+				FileManager clan = ClansAPI.getDataInstance().getClanFile(o);
+				clan.getRoot().delete();
+				o.remove();
 			}
-
-			for (Player p : Bukkit.getOnlinePlayers()) {
-
-				Clan.Associate associate = ClansAPI.getInstance().getAssociate(p).orElse(null);
-
-				if (associate == null) continue;
-
-				Clan c = associate.getClan();
-
-				for (ClanCooldown clanCooldown : c.getCooldowns()) {
-					if (clanCooldown.isComplete()) {
-						ClanCooldown.remove(clanCooldown);
-						c.broadcast(MessageFormat.format(ClansAPI.getData().getMessageResponse("cooldown-expired"), clanCooldown.getAction().replace("Clans:", "")));
-					}
-				}
-				for (String ally : c.getAllyList()) {
-					if (!Clan.ACTION.getAllClanIDs().contains(ally)) {
-						c.removeAlly(HUID.fromString(ally));
-						break;
-					}
-				}
-				for (String enemy : c.getEnemyList()) {
-					if (!Clan.ACTION.getAllClanIDs().contains(enemy)) {
-						c.removeEnemy(HUID.fromString(enemy));
-						break;
-					}
-				}
-				for (String allyRe : c.getAllyRequests()) {
-					if (!Clan.ACTION.getAllClanIDs().contains(allyRe)) {
-						FileManager cl = ClansAPI.getData().getClanFile(c);
-						List<String> allies = c.getAllyList();
-						allies.remove(allyRe);
-						cl.write(t -> t.set("ally-requests", allies));
-						break;
-					}
-				}
-
-			}
-
-		});
-		if (ClansAPI.getData().isTrue("Formatting.console-debug")) {
-			sync.debug();
 		}
-		sync.debug().repeatReal(2, 18);
 	}
 
 	@Ordinal(6)
@@ -244,13 +150,29 @@ public final class StartProcedure {
 				instance.getLogger().info("- PlaceholderAPI not found, placeholders will not work!");
 			}
 		}).wait(5);
+		new Item(Material.BLAZE_ROD, StringUtils.use("&r[&6Tamer stick&r]").translate()).setKey("tamer_stick")
+				.buildStack()
+				.attachLore(Arrays.asList("Right click a tamed animal", "to add it as a teammate.", " ", "This will not persist it is", "merely a way to momentarily keep track of", "any tamed animals."))
+				.setItem('U', Material.AIR)
+				.setItem('I', Material.BLAZE_ROD)
+				.setItem('G', Material.LEATHER)
+				.shapeRecipe("UGU", "UIU", "UIU")
+				.register();
+		new Item(Material.STICK, StringUtils.use("&r[&bRemover stick&r]").translate()).setKey("remover_stick")
+				.buildStack()
+				.attachLore(Arrays.asList("Right click a tamed animal teammate", "to remove it as a teammate."))
+				.setItem('U', Material.AIR)
+				.setItem('I', Material.STICK)
+				.setItem('G', Material.LEATHER)
+				.shapeRecipe("UGU", "UIU", "UIU")
+				.register();
 	}
 
 	@Ordinal(7)
 	void g() {
 		if (bail) return;
 		sendBorder();
-		if (ClansAPI.getData().isTrue("Clans.check-version")) {
+		if (ClansAPI.getDataInstance().isTrue("Clans.check-version")) {
 			ClansAPI.getInstance().isUpdated();
 		} else {
 			instance.getLogger().info("- Version check skipped.");
@@ -262,14 +184,13 @@ public final class StartProcedure {
 	void h() {
 		if (bail) return;
 		ClansAPI.getInstance().getShieldManager().setEnabled(true);
-		boolean configAllow = instance.dataManager.getMain().getRoot().getBoolean("Clans.raid-shield.allow");
+		boolean configAllow = instance.dataManager.getConfig().getRoot().getBoolean("Clans.raid-shield.allow");
 		if (Claim.ACTION.isEnabled()) {
 			if (configAllow) {
-				Schedule.sync(() -> {
-					if (Bukkit.getOnlinePlayers().size() > 0) {
-						new Vent.Call<>(Vent.Runtime.Synchronous, new RaidShieldEvent()).run();
-					}
-				}).repeatReal(1, 40);
+				ClanVentBus.subscribe(TimerEvent.class, Vent.Priority.HIGH, (event, subscription) -> {
+					if (event.isAsynchronous()) return;
+					new Vent.Call<>(Vent.Runtime.Synchronous, new RaidShieldEvent()).run();
+				});
 				instance.getLogger().info("- Running raid shield timer.");
 			} else {
 				instance.getLogger().info("- Denying raid shield timer. (Off)");
@@ -364,8 +285,8 @@ public final class StartProcedure {
 		instance.getServer().getPluginManager().addPermission(balance);
 
 		// Events
-		instance.getServer().getPluginManager().registerEvents(new BankListener(), instance);
-		instance.getLogger().info("Banking log-level=" + ClanBank.API.defaultImpl.logToConsole());
+		LabyrinthProvider.getInstance().getEventMap().subscribe(instance, new BankListener());
+		instance.getLogger().info("- Banking log-level=" + BanksAPI.getInstance().logToConsole());
 	}
 
 	@Ordinal(11)
@@ -379,7 +300,7 @@ public final class StartProcedure {
 				}
 				return result;
 			}));
-			boolean configAllow = instance.dataManager.getMain().read(c -> c.getBoolean("Clans.raid-shield.allow"));
+			boolean configAllow = instance.dataManager.getConfig().read(c -> c.getBoolean("Clans.raid-shield.allow"));
 			metrics.addCustomChart(new Metrics.SimplePie("using_raidshield", () -> {
 				String result = "No";
 				if (configAllow) {
@@ -406,7 +327,7 @@ public final class StartProcedure {
 	@Ordinal(12)
 	void l() {
 		if (bail) return;
-		if (ClansAPI.getData().assertDefaults()) {
+		if (ClansAPI.getDataInstance().isUpdate()) {
 			instance.getLogger().info("- Configuration updated to latest.");
 		}
 		bail = true;

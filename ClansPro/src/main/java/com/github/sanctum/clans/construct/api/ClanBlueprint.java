@@ -1,10 +1,11 @@
 package com.github.sanctum.clans.construct.api;
 
 import com.github.sanctum.clans.construct.RankPriority;
+import com.github.sanctum.labyrinth.formatting.string.RandomID;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
-import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 
 public class ClanBlueprint {
@@ -66,13 +67,13 @@ public class ClanBlueprint {
 	}
 
 	/**
-	 * Assign clan leadership to an online player.
+	 * Assign clan leadership to a unique id.
 	 *
-	 * @param player The online player to assign leadership to.
+	 * @param id The unique id to use as ownership.
 	 * @return The same blueprint object with the newly applied values.
 	 */
-	public ClanBlueprint setLeader(OfflinePlayer player) {
-		this.leader = player.getUniqueId();
+	public ClanBlueprint setLeader(UUID id) {
+		this.leader = id;
 		return this;
 	}
 
@@ -97,6 +98,9 @@ public class ClanBlueprint {
 	 * @return The finishing builder.
 	 */
 	public ClanBuilder toBuilder() {
+		if (this.password == null && this.isLocked) {
+			setPassword(new RandomID(24, "JNASPOIYL125789").generate().toLowerCase(Locale.ROOT));
+		}
 		return new ClanBuilder(this);
 	}
 

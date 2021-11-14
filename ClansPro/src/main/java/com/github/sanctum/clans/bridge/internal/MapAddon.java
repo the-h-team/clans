@@ -6,7 +6,7 @@ import com.github.sanctum.clans.bridge.ClanVentBus;
 import com.github.sanctum.clans.bridge.internal.map.MapController;
 import com.github.sanctum.clans.bridge.internal.map.command.MapCommand;
 import com.github.sanctum.clans.construct.api.ClansAPI;
-import com.github.sanctum.clans.events.command.CommandHelpInsertEvent;
+import com.github.sanctum.clans.event.command.CommandInformationAdaptEvent;
 import com.github.sanctum.labyrinth.event.custom.Vent;
 import org.bukkit.plugin.ServicePriority;
 import org.jetbrains.annotations.NotNull;
@@ -15,7 +15,7 @@ public class MapAddon extends ClanAddon {
 
 	@Override
 	public boolean isPersistent() {
-		return ClansAPI.getData().isTrue("Addon." + getName() + ".enabled");
+		return ClansAPI.getDataInstance().isTrue("Addon." + getName() + ".enabled");
 	}
 
 	@Override
@@ -49,9 +49,9 @@ public class MapAddon extends ClanAddon {
 
 		getServicesManager().unregisterAll(this);
 
-		getServicesManager().register(ClansAPI.getData().isTrue("Addon.Map.enhanced"), this, ServicePriority.High);
+		getServicesManager().register(ClansAPI.getDataInstance().isTrue("Addon.Map.enhanced"), this, ServicePriority.High);
 
-		ClanVentBus.subscribe(CommandHelpInsertEvent.class, Vent.Priority.HIGH, (e, subscription) -> {
+		ClanVentBus.subscribe(CommandInformationAdaptEvent.class, Vent.Priority.HIGH, (e, subscription) -> {
 
 			ClanAddon cycle = ClanAddonQuery.getAddon("Map");
 

@@ -44,7 +44,7 @@ public abstract class ClanSubCommand {
 		this.ALIASES = ALIASES;
 	}
 
-	public String getPermissions() {
+	public String getPermission() {
 		return this.PERMISSION;
 	}
 

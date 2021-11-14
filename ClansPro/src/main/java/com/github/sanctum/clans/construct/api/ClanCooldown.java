@@ -1,7 +1,7 @@
 package com.github.sanctum.clans.construct.api;
 
-import com.github.sanctum.clans.construct.DataManager;
 import com.github.sanctum.labyrinth.data.FileManager;
+import com.github.sanctum.labyrinth.library.HUID;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
@@ -53,8 +53,8 @@ public abstract class ClanCooldown {
 	}
 
 	public void save() {
-		if (!ClansAPI.getData().COOLDOWNS.contains(getInstance())) {
-			ClansAPI.getData().COOLDOWNS.add(getInstance());
+		if (!ClansAPI.getDataInstance().getCooldowns().contains(getInstance())) {
+			ClansAPI.getDataInstance().addCooldown(getInstance());
 		}
 	}
 
@@ -69,7 +69,7 @@ public abstract class ClanCooldown {
 	}
 
 	protected void abp(String key, int seconds) {
-		FileManager clan = DataManager.FileType.CLAN_FILE.get(getId());
+		FileManager clan = ClansAPI.getDataInstance().getClanFile(ClansAPI.getInstance().getClanManager().getClan(HUID.fromString(getId())));
 		clan.write(t -> t.set("cooldown." + key, abv(seconds)));
 	}
 
@@ -87,11 +87,11 @@ public abstract class ClanCooldown {
 	}
 
 	public static ClanCooldown getById(String id) {
-		return ClansAPI.getData().COOLDOWNS.stream().filter(c -> c.getId().equals(id)).findFirst().orElse(null);
+		return ClansAPI.getDataInstance().getCooldowns().stream().filter(c -> c.getId().equals(id)).findFirst().orElse(null);
 	}
 
 	public static void remove(ClanCooldown c) {
-		ClansAPI.getData().COOLDOWNS.removeIf(cooldown -> cooldown.equals(c));
+		ClansAPI.getDataInstance().removeCooldown(c);
 	}
 
 

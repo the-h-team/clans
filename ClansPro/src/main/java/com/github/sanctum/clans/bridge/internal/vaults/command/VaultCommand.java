@@ -6,7 +6,7 @@ import com.github.sanctum.clans.bridge.internal.vaults.events.VaultOpenEvent;
 import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClanSubCommand;
 import com.github.sanctum.clans.construct.api.ClansAPI;
-import com.github.sanctum.clans.construct.api.Permission;
+import com.github.sanctum.clans.construct.api.Clearance;
 import com.github.sanctum.labyrinth.gui.unity.construct.Menu;
 import java.util.List;
 import org.bukkit.command.CommandSender;
@@ -22,18 +22,18 @@ public class VaultCommand extends ClanSubCommand {
 		int length = args.length;
 		if (length == 0) {
 
-			if (ClansAPI.getInstance().getClanID(p.getUniqueId()) != null) {
+			if (ClansAPI.getInstance().getClanManager().getClanID(p.getUniqueId()) != null) {
 				Clan.Associate associate = ClansAPI.getInstance().getAssociate(p).orElse(null);
 
 				if (associate == null) {
 
 					return true;
 				}
-				if (!Permission.MANAGE_VAULT.test(associate)) {
+				if (!Clearance.MANAGE_VAULT.test(associate)) {
 					Clan.ACTION.sendMessage(p, Clan.ACTION.noClearance());
 					return true;
 				}
-				Clan clan = ClansAPI.getInstance().getClan(p.getUniqueId());
+				Clan clan = ClansAPI.getInstance().getClanManager().getClan(p.getUniqueId());
 				Menu pull = VaultsAddon.getVault(clan.getName());
 				VaultOpenEvent event = ClanVentBus.call(new VaultOpenEvent(clan, p, pull, pull.getInventory().getElement().getViewers()));
 				if (!event.isCancelled()) {

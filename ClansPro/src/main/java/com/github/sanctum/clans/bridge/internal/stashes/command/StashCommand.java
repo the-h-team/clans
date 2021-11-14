@@ -2,11 +2,11 @@ package com.github.sanctum.clans.bridge.internal.stashes.command;
 
 import com.github.sanctum.clans.bridge.internal.StashesAddon;
 import com.github.sanctum.clans.bridge.internal.stashes.events.StashOpenEvent;
-import com.github.sanctum.clans.construct.Claim;
+import com.github.sanctum.clans.construct.api.Claim;
 import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClanSubCommand;
 import com.github.sanctum.clans.construct.api.ClansAPI;
-import com.github.sanctum.clans.construct.api.Permission;
+import com.github.sanctum.clans.construct.api.Clearance;
 import com.github.sanctum.clans.construct.impl.Resident;
 import com.github.sanctum.labyrinth.gui.unity.construct.Menu;
 import java.util.List;
@@ -28,7 +28,7 @@ public class StashCommand extends ClanSubCommand {
 				Clan clan = associate.getClan();
 				if (ClansAPI.getInstance().getClaimManager().isInClaim(p.getLocation())) {
 					Resident r = Claim.getResident(p);
-					if (!Permission.MANAGE_STASH.test(associate)) {
+					if (!Clearance.MANAGE_STASH.test(associate)) {
 						Clan.ACTION.sendMessage(p, Clan.ACTION.noClearance());
 						return true;
 					}

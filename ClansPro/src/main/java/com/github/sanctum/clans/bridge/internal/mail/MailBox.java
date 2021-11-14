@@ -2,6 +2,7 @@ package com.github.sanctum.clans.bridge.internal.mail;
 
 import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClansAPI;
+import com.github.sanctum.labyrinth.library.HUID;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.HashSet;
@@ -22,7 +23,7 @@ public class MailBox implements Serializable {
 	}
 
 	public Clan getClan() {
-		return ClansAPI.getInstance().getClan(this.id);
+		return ClansAPI.getInstance().getClanManager().getClan(HUID.fromString(this.id));
 	}
 
 	public int getMaxSize() {

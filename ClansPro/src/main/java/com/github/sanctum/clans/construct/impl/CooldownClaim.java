@@ -1,9 +1,9 @@
 package com.github.sanctum.clans.construct.impl;
 
-import com.github.sanctum.clans.construct.DataManager;
 import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClanCooldown;
 import com.github.sanctum.clans.construct.api.ClansAPI;
+import com.github.sanctum.labyrinth.library.HUID;
 
 public class CooldownClaim extends ClanCooldown {
 
@@ -25,17 +25,17 @@ public class CooldownClaim extends ClanCooldown {
 
 	@Override
 	public void setCooldown() {
-		abp("unclaim-limit", ClansAPI.getData().getInt("Clans.land-claiming.over-powering.cooldown.length"));
+		abp("unclaim-limit", ClansAPI.getDataInstance().getConfigInt("Clans.land-claiming.over-powering.cooldown.length"));
 	}
 
 	@Override
 	public long getCooldown() {
-		return DataManager.FileType.CLAN_FILE.get(clanId).getRoot().getLong("cooldown.unclaim-limit");
+		return ClansAPI.getInstance().getClanManager().getClan(HUID.fromString(clanId)).getNode("cooldown").getNode("unclaim-limit").toPrimitive().getLong();
 	}
 
 	@Override
 	public String fullTimeLeft() {
-		return Clan.ACTION.format(Clan.ACTION.format(Clan.ACTION.format(Clan.ACTION.format(ClansAPI.getData().getMessageResponse("cooldown-active"), "%d", String.valueOf(getDaysLeft())), "%h", String.valueOf(getHoursLeft())), "%m", String.valueOf(getMinutesLeft())), "%s", String.valueOf(getSecondsLeft()));
+		return Clan.ACTION.format(Clan.ACTION.format(Clan.ACTION.format(Clan.ACTION.format(ClansAPI.getDataInstance().getMessageResponse("cooldown-active"), "%d", String.valueOf(getDaysLeft())), "%h", String.valueOf(getHoursLeft())), "%m", String.valueOf(getMinutesLeft())), "%s", String.valueOf(getSecondsLeft()));
 	}
 
 	@Override

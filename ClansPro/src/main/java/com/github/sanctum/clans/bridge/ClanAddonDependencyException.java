@@ -1,6 +1,6 @@
 package com.github.sanctum.clans.bridge;
 
-import com.github.sanctum.clans.construct.api.ClanError;
+import com.github.sanctum.clans.construct.extra.ClanError;
 
 public class ClanAddonDependencyException extends ClanError {
 

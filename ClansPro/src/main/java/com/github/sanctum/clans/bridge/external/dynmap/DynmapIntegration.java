@@ -1,8 +1,9 @@
 package com.github.sanctum.clans.bridge.external.dynmap;
 
-import com.github.sanctum.clans.construct.Claim;
+import com.github.sanctum.clans.construct.api.Claim;
+import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClansAPI;
-import java.util.Arrays;
+import java.util.stream.Collectors;
 import org.bukkit.Bukkit;
 import org.dynmap.DynmapAPI;
 import org.dynmap.markers.AreaMarker;
@@ -12,12 +13,12 @@ public class DynmapIntegration {
 
 	private String failedAttempt;
 
-	public MarkerSet markerset;
+	MarkerSet markerset;
 
-	public static DynmapAPI dapi = (DynmapAPI) Bukkit.getServer().getPluginManager().getPlugin("dynmap");
+	static DynmapAPI dapi = (DynmapAPI) Bukkit.getServer().getPluginManager().getPlugin("dynmap");
 
 
-	public DynmapIntegration applyFormat() {
+	public DynmapIntegration dedicateMarkerSet() {
 		if (Bukkit.getPluginManager().isPluginEnabled("dynmap")) {
 			try {
 				markerset = dapi.getMarkerAPI().createMarkerSet("clans.claim.markerset", "Claims", dapi.getMarkerAPI().getMarkerIcons(), false);
@@ -45,7 +46,7 @@ public class DynmapIntegration {
 			try {
 				am.setCornerLocations(d1, d2);
 				am.setLabel(c.getId());
-				am.setDescription(c.getClan().getName() + " - " + Arrays.asList(c.getClan().getMemberIds()).toString());
+				am.setDescription(c.getClan().getName() + " - " + c.getClan().getMembers().stream().map(Clan.Associate::getName).collect(Collectors.joining(", ")));
 				int stroke = 1;
 				double strokeOpac = 0.0;
 				double Opac = 0.3;

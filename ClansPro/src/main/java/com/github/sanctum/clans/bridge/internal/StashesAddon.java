@@ -6,7 +6,7 @@ import com.github.sanctum.clans.bridge.ClanVentBus;
 import com.github.sanctum.clans.bridge.internal.stashes.StashMenu;
 import com.github.sanctum.clans.bridge.internal.stashes.command.StashCommand;
 import com.github.sanctum.clans.construct.api.ClansAPI;
-import com.github.sanctum.clans.events.command.CommandHelpInsertEvent;
+import com.github.sanctum.clans.event.command.CommandInformationAdaptEvent;
 import com.github.sanctum.labyrinth.event.custom.Vent;
 import com.github.sanctum.labyrinth.gui.unity.construct.Menu;
 import com.github.sanctum.labyrinth.gui.unity.impl.MenuType;
@@ -16,7 +16,7 @@ public class StashesAddon extends ClanAddon {
 
 	@Override
 	public boolean isPersistent() {
-		return ClansAPI.getData().isTrue("Addon." + getName() + ".enabled");
+		return ClansAPI.getDataInstance().isTrue("Addon." + getName() + ".enabled");
 	}
 
 	@Override
@@ -47,7 +47,7 @@ public class StashesAddon extends ClanAddon {
 	@Override
 	public void onEnable() {
 
-		ClanVentBus.subscribe(CommandHelpInsertEvent.class, Vent.Priority.HIGH, (e, subscription) -> {
+		ClanVentBus.subscribe(CommandInformationAdaptEvent.class, Vent.Priority.HIGH, (e, subscription) -> {
 			ClanAddon cycle = ClanAddonQuery.getAddon("Stashes");
 
 			if (cycle != null && !cycle.getContext().isActive()) {

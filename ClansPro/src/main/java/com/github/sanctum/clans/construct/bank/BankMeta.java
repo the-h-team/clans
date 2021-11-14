@@ -1,10 +1,12 @@
 package com.github.sanctum.clans.construct.bank;
 
 import com.github.sanctum.clans.construct.api.Clan;
+import com.github.sanctum.clans.construct.api.ClanBank;
 import com.github.sanctum.clans.construct.api.ClansAPI;
-import com.github.sanctum.clans.events.core.bank.AsyncNewBankEvent;
+import com.github.sanctum.clans.event.bank.AsyncNewBankEvent;
 import com.github.sanctum.labyrinth.event.custom.Vent;
 import com.github.sanctum.labyrinth.library.HFEncoded;
+import com.github.sanctum.labyrinth.library.HUID;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.HashMap;
@@ -31,7 +33,7 @@ public class BankMeta implements Serializable {
 
 	public Clan getClan() {
 		if (clan == null) {
-			clan = ClansAPI.getInstance().getClan(clanId);
+			clan = ClansAPI.getInstance().getClanManager().getClan(HUID.fromString(clanId));
 		}
 		return clan;
 	}
@@ -130,6 +132,10 @@ public class BankMeta implements Serializable {
 
 	public static BankMeta get(Clan clan) {
 		return instances.computeIfAbsent(clan, BankMeta::new);
+	}
+
+	public static BankMeta get(ClanBank bank) {
+		return instances.values().stream().filter(b -> b.getBank().map(ba -> ba.equals(bank)).orElse(false)).findFirst().orElse(null);
 	}
 
 	public static void clearManagerCache() {

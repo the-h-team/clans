@@ -27,19 +27,19 @@ public class CooldownCreate extends ClanCooldown {
 
 	@Override
 	public void setCooldown() {
-		FileManager config = ClansAPI.getInstance().getFileList().find("cooldowns", "Configuration", FileType.JSON);
-		config.write(t -> t.set("Data." + getAction().replace("Clans:", "") + ".Time-allotted", System.currentTimeMillis() + (ClansAPI.getData().getInt("Clans.creation.cooldown.time") * 1000)));
+		FileManager config = ClansAPI.getInstance().getFileList().get("cooldowns", "Configuration", FileType.JSON);
+		config.write(t -> t.set("Data." + Id.toString() + "." + getAction().replace("Clans:", "") + ".Time-allotted", System.currentTimeMillis() + (ClansAPI.getDataInstance().getConfigInt("Clans.creation.cooldown.time") * 1000)));
 	}
 
 	@Override
 	public long getCooldown() {
-		FileManager config = ClansAPI.getInstance().getFileList().find("cooldowns", "Configuration", FileType.JSON);
-		return config.getRoot().getLong("Data." + getAction().replace("Clans:", "") + ".Time-allotted");
+		FileManager config = ClansAPI.getInstance().getFileList().get("cooldowns", "Configuration", FileType.JSON);
+		return config.getRoot().getLong("Data." + Id.toString() + "." + getAction().replace("Clans:", "") + ".Time-allotted");
 	}
 
 	@Override
 	public String fullTimeLeft() {
-		return Clan.ACTION.format(Clan.ACTION.format(Clan.ACTION.format(Clan.ACTION.format(ClansAPI.getData().getMessageResponse("cooldown-active"), "%d", String.valueOf(getDaysLeft())), "%h", String.valueOf(getHoursLeft())), "%m", String.valueOf(getMinutesLeft())), "%s", String.valueOf(getSecondsLeft()));
+		return Clan.ACTION.format(Clan.ACTION.format(Clan.ACTION.format(Clan.ACTION.format(ClansAPI.getDataInstance().getMessageResponse("cooldown-active"), "%d", String.valueOf(getDaysLeft())), "%h", String.valueOf(getHoursLeft())), "%m", String.valueOf(getMinutesLeft())), "%s", String.valueOf(getSecondsLeft()));
 	}
 
 	@Override

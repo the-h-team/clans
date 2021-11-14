@@ -8,6 +8,10 @@ import java.util.Spliterator;
 import java.util.function.Consumer;
 import org.jetbrains.annotations.NotNull;
 
+/**
+ * @deprecated To be replaced by {@link ClearanceLog}
+ */
+@Deprecated
 public class PermissionLog implements Iterable<Map.Entry<Permission, Integer>>, Serializable {
 	private static final long serialVersionUID = -3379504326801396918L;
 

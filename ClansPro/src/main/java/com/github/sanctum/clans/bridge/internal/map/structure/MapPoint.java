@@ -3,6 +3,7 @@ package com.github.sanctum.clans.bridge.internal.map.structure;
 import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClansAPI;
 import com.github.sanctum.labyrinth.library.Applicable;
+import com.github.sanctum.labyrinth.library.HUID;
 import net.md_5.bungee.api.ChatColor;
 import org.jetbrains.annotations.Nullable;
 
@@ -38,7 +39,7 @@ public class MapPoint {
      */
     public Clan getClan() {
         if (clanId == null) return null;
-	    return ClansAPI.getInstance().getClan(clanId);
+	    return ClansAPI.getInstance().getClanManager().getClan(HUID.fromString(clanId));
     }
 
     /**
@@ -48,7 +49,7 @@ public class MapPoint {
      */
     public String getClanName() {
         if (clanId == null) return null;
-	    return ClansAPI.getInstance().getClanName(clanId);
+	    return ClansAPI.getInstance().getClanManager().getClanName(HUID.fromString(clanId));
     }
 
     /**
@@ -131,16 +132,16 @@ public class MapPoint {
         if (!hover.contains("%")) return hover;
         String hover = this.hover;
         if (hover.contains("%clanTag%")) {
-            hover = hover.replaceAll("%clanTag%", getClanName());
+            hover = hover.replace("%clanTag%", getClanName());
         }
         if (hover.contains("%clanPower%")) {
-            hover = hover.replaceAll("%clanPower%", getClan().format(String.valueOf(getClan().getPower())));
+            hover = hover.replace("%clanPower%", Clan.ACTION.format(getClan().getPower()));
         }
         if (hover.contains("%chunkX%")) {
-            hover = hover.replaceAll("%chunkX%", String.valueOf(chunkPosition.x));
+            hover = hover.replace("%chunkX%", String.valueOf(chunkPosition.x));
         }
         if (hover.contains("%chunkZ%")) {
-            hover = hover.replaceAll("%chunkZ%", String.valueOf(chunkPosition.z));
+            hover = hover.replace("%chunkZ%", String.valueOf(chunkPosition.z));
         }
         /*if (hover.contains("%allyStatus%")) {
             // TODO: need reference to player?

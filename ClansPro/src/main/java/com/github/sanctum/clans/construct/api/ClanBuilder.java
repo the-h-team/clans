@@ -1,12 +1,19 @@
 package com.github.sanctum.clans.construct.api;
 
 import com.github.sanctum.clans.construct.RankPriority;
+import com.github.sanctum.clans.construct.impl.DefaultAssociate;
+import com.github.sanctum.clans.construct.impl.DefaultClan;
+import com.github.sanctum.clans.construct.impl.ServerAssociate;
+import com.github.sanctum.labyrinth.library.HUID;
 import java.util.Map;
 import java.util.UUID;
+import org.bukkit.Bukkit;
 
-public class ClanBuilder {
+public final class ClanBuilder {
 
 	private final Map<UUID, RankPriority> memberList;
+
+	private Clan ticket;
 
 	private final UUID leader;
 
@@ -14,7 +21,7 @@ public class ClanBuilder {
 
 	private final String password;
 
-	protected ClanBuilder(ClanBlueprint blueprint) {
+	ClanBuilder(ClanBlueprint blueprint) {
 		this.memberList = blueprint.getMemberList();
 		this.leader = blueprint.getLeader();
 		this.clanName = blueprint.getClanName();
@@ -31,16 +38,32 @@ public class ClanBuilder {
 		if (ClansAPI.getInstance().isInClan(leader)) {
 			Clan.ACTION.removePlayer(leader);
 		}
-		Clan.ACTION.create(leader, clanName, !password.equals("none") ? password : null);
+		HUID newID = HUID.randomID();
+		DefaultClan test = new DefaultClan(newID.toString());
+		test.setName(clanName);
+		if (!password.equals("none")) {
+			test.setPassword(password);
+		}
+		boolean war = ClansAPI.getDataInstance().getConfig().read(c -> c.getString("Clans.mode-change.default").equalsIgnoreCase("peace"));
+		test.setPeaceful(war);
+		if (leader.equals(ClansAPI.getInstance().getSessionId())) {
+			test.add(new ServerAssociate(InvasiveEntity.wrapNonAssociated(Bukkit.getConsoleSender()), RankPriority.HIGHEST, test));
+		} else {
+			test.add(new DefaultAssociate(leader, RankPriority.HIGHEST, test));
+		}
 		for (Map.Entry<UUID, RankPriority> entry : memberList.entrySet()) {
 			if (ClansAPI.getInstance().isInClan(entry.getKey())) {
 				Clan.ACTION.removePlayer(entry.getKey());
 			}
-			Clan.ACTION.joinClan(entry.getKey(), clanName, password);
-
-			Clan.Associate associate = ClansAPI.getInstance().getAssociate(entry.getKey()).orElse(null);
-			ClansAPI.getInstance().setRank(associate, entry.getValue());
+			if (entry.getKey().equals(ClansAPI.getInstance().getSessionId())) {
+				Clan.Associate a = new ServerAssociate(InvasiveEntity.wrapNonAssociated(Bukkit.getConsoleSender()), entry.getValue(), test);
+				test.add(a);
+			} else {
+				Clan.Associate a = new DefaultAssociate(entry.getKey(), entry.getValue(), test);
+				test.add(a);
+			}
 		}
+		this.ticket = test;
 		return this;
 	}
 
@@ -51,7 +74,7 @@ public class ClanBuilder {
 	 * @return The clan object from creation.
 	 */
 	public Clan getClan() {
-		return ClansAPI.getInstance().getClan(leader);
+		return this.ticket;
 	}
 
 	/**
@@ -76,7 +99,7 @@ public class ClanBuilder {
 	 * @param amount The amount to give.
 	 */
 	public ClanBuilder giveClaims(int amount) {
-		getClan().addMaxClaim(amount);
+		getClan().giveClaims(amount);
 		return this;
 	}
 
@@ -102,7 +125,7 @@ public class ClanBuilder {
 	 * @param amount The amount to take.
 	 */
 	public ClanBuilder takeClaims(int amount) {
-		getClan().takeMaxClaim(amount);
+		getClan().takeClaims(amount);
 		return this;
 	}
 

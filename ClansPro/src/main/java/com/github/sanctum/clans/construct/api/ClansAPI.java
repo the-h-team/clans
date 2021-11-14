@@ -6,18 +6,29 @@ import com.github.sanctum.clans.construct.ArenaManager;
 import com.github.sanctum.clans.construct.ClaimManager;
 import com.github.sanctum.clans.construct.ClanManager;
 import com.github.sanctum.clans.construct.DataManager;
-import com.github.sanctum.clans.construct.RankPriority;
+import com.github.sanctum.clans.construct.GUI;
 import com.github.sanctum.clans.construct.ShieldManager;
 import com.github.sanctum.clans.construct.extra.MessagePrefix;
+import com.github.sanctum.labyrinth.annotation.Experimental;
 import com.github.sanctum.labyrinth.data.FileList;
+import com.github.sanctum.labyrinth.data.LabyrinthUser;
 import com.github.sanctum.labyrinth.data.container.KeyedServiceManager;
+import com.github.sanctum.labyrinth.data.service.Check;
+import com.github.sanctum.labyrinth.gui.unity.construct.Menu;
 import com.github.sanctum.labyrinth.library.HUID;
+import java.text.MessageFormat;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * <pre>
@@ -53,43 +64,33 @@ public interface ClansAPI {
 		return Bukkit.getServicesManager().load(ClansAPI.class);
 	}
 
-	static DataManager getData() {
-		return ((ClansJavaPlugin) JavaPlugin.getProvidingPlugin(ClansJavaPlugin.class)).dataManager;
+	static BanksAPI getBankInstance() {
+		return BanksAPI.getInstance();
 	}
+
+	static DataManager getDataInstance() {
+		return JavaPlugin.getPlugin(ClansJavaPlugin.class).dataManager;
+	}
+
+	/**
+	 * Get this server's unique session id.
+	 *
+	 * @apiNote This id is no longer unique after a single game session.
+	 * @return the persistently unique id for this session.
+	 */
+	@NotNull UUID getSessionId();
 
 	/**
 	 * @return Gets the prefix object for the plugin.
 	 */
-	MessagePrefix getPrefix();
+	@NotNull MessagePrefix getPrefix();
 
 	/**
 	 * The plugin instance for the api. Try not to use this!
 	 *
 	 * @return The primary plugin instance.
 	 */
-	Plugin getPlugin();
-
-	/**
-	 * @param target The target to look for
-	 * @return Gets a clan object for the given target
-	 */
-	Clan getClan(UUID target);
-
-	/**
-	 * Gets a clan object from a clan id
-	 *
-	 * @param clanID The clan id to convert
-	 * @return A clan object containing all values for the clan
-	 */
-	Clan getClan(String clanID);
-
-	/**
-	 * Gets a clan object from an offline-player if they're in one.
-	 *
-	 * @param player The player to search for.
-	 * @return An optional Clan.
-	 */
-	Optional<Clan> getClan(OfflinePlayer player);
+	@NotNull Plugin getPlugin();
 
 	/**
 	 * Gets a clan associate by their player object.
@@ -120,42 +121,49 @@ public interface ClansAPI {
 	 *
 	 * @return Get's the file collection for the given plugin.
 	 */
-	FileList getFileList();
+	@NotNull FileList getFileList();
 
 	/**
 	 * Gets the service manager for event cycles.
 	 *
 	 * @return The event cycle services manager.
 	 */
-	KeyedServiceManager<ClanAddon> getServiceManager();
+	@NotNull KeyedServiceManager<ClanAddon> getServiceManager();
 
 	/**
 	 * Get the manager for clan war arenas.
 	 *
 	 * @return The arena manager.
 	 */
-	ArenaManager getArenaManager();
+	@NotNull ArenaManager getArenaManager();
 
 	/**
 	 * Get the manager for clans to load/delete from.
 	 *
 	 * @return The clan manager.
 	 */
-	ClanManager getClanManager();
+	@NotNull ClanManager getClanManager();
 
 	/**
 	 * Get the manager for clan claims.
 	 *
 	 * @return The claim manager.
 	 */
-	ClaimManager getClaimManager();
+	@NotNull ClaimManager getClaimManager();
 
 	/**
 	 * Get the manger for the raid-shield
 	 *
 	 * @return The raid shield manager.
 	 */
-	ShieldManager getShieldManager();
+	@NotNull ShieldManager getShieldManager();
+
+	/**
+	 * Get the logo gallery. A public place for local users to upload their 8-bit art work.
+	 *
+	 * @return The public logo gallery
+	 */
+	@NotNull LogoGallery getLogoGallery();
 
 	/**
 	 * Check if pro needs to be updated.
@@ -171,7 +179,7 @@ public interface ClansAPI {
 	 * @param clanID The target clan to search
 	 * @return true if the given clan's members contains the given uuid
 	 */
-	boolean isClanMember(UUID target, String clanID);
+	boolean isClanMember(UUID target, HUID clanID);
 
 	/**
 	 * Check if a target player is currently a member of a clan.
@@ -190,53 +198,20 @@ public interface ClansAPI {
 	boolean isNameBlackListed(String name);
 
 	/**
-	 * Converts and clan id into a clan name
-	 *
-	 * @param clanID The clan id to convert
-	 * @return A clan name or null
-	 */
-	String getClanName(String clanID);
-
-	/**
-	 * Converts a clan name into a clan id
-	 *
-	 * @param clanName The clan tag to convert
-	 * @return A clan id or null
-	 */
-	String getClanID(String clanName);
-
-	/**
-	 * Get the bare id object for a player's given clan.
-	 *
-	 * @param uuid The player to search for.
-	 * @return A clan id or null
-	 */
-	HUID getClanID(UUID uuid);
-
-	/**
-	 * Set a player's rank priority disregarding all factors. (Besides ownership)
-	 *
-	 * @param associate The clan associate to promote/demote.
-	 * @param priority  The rank to give
-	 */
-	@Deprecated
-	void setRank(Clan.Associate associate, RankPriority priority);
-
-	/**
 	 * Search and automatically register all found pro addons in a given package location
 	 *
 	 * @param packageName The package location to browse for addons.
 	 */
-	void searchNewAddons(Plugin plugin, String packageName);
+	void registerAddons(Plugin plugin, String packageName);
 
 	/**
 	 * Automatically hook a specific addon via class instantiation.
 	 * <p>
-	 * Desired class must inherit EventCycle functionality.
+	 * Desired class must inherit ClanAddon.
 	 *
 	 * @param cycle The class that extends EventCycle functionality
 	 */
-	void importAddon(Class<? extends ClanAddon> cycle);
+	void registerAddon(Class<? extends ClanAddon> cycle);
 
 	/**
 	 * Kick a specified user from a clan they might be in.
@@ -250,17 +225,9 @@ public interface ClansAPI {
 	 * Onboard a specified user to a clan of specification.
 	 *
 	 * @param uuid The user to invite
-	 * @return true if the user isn't in a clan otherwise false if the user is in a clan.
+	 * @return true if the user isn't in a clan otherwise false if the user is in a clan or is the leader.
 	 */
 	boolean obtainUser(UUID uuid, String clanName);
-
-	/**
-	 * Gets the first found cooldown object for an action label
-	 *
-	 * @param action The cooldown label
-	 * @return A cooldown object for a given clan.
-	 */
-	ClanCooldown getCooldownByAction(String action);
 
 	/**
 	 * Gets an addon by its name.
@@ -268,7 +235,81 @@ public interface ClansAPI {
 	 * @param name The name of the addon.
 	 * @return A clan addon.
 	 */
-	ClanAddon getAddon(String name);
+	@Nullable ClanAddon getAddon(String name);
+
+	@Nullable Menu getMenu(GUI gui, InvasiveEntity entity);
+
+	/**
+	 * Debug an invasive entity in console, displaying all of its cached information.
+	 *
+	 * @param entity The entity to debug.
+	 */
+	default void debugConsole(InvasiveEntity entity) {
+		if (entity.isClan()) {
+			Clan c = entity.getAsClan();
+			getPlugin().getLogger().warning("|==============================================|");
+			getPlugin().getLogger().warning("|==============================================|");
+			getPlugin().getLogger().warning("|==============================================|");
+			getPlugin().getLogger().warning(MessageFormat.format("|           Debug run for clan {0}              ", Check.forNull(c.getName(), "The clan's name is null!")));
+			getPlugin().getLogger().warning("|==============================================|");
+			getPlugin().getLogger().warning("- Members = [ size: " + c.getMembers().size() + ", visual: " + c.getMembers().stream().map(InvasiveEntity::getName).collect(Collectors.joining(", ")) + " ]");
+			getPlugin().getLogger().warning(MessageFormat.format("- Id = [{0}]", c.getId()));
+			getPlugin().getLogger().warning(MessageFormat.format("- Type = [{0}]", c.isConsole() ? "SERVER" : "PLAYER"));
+			getPlugin().getLogger().warning(MessageFormat.format("- Mode = [{0}]", c.isPeaceful() ? "PEACE" : "WAR"));
+			getPlugin().getLogger().warning(MessageFormat.format("- Password = [{0}]", c.getPassword() != null ? c.getPassword() : "N/A"));
+			getPlugin().getLogger().warning(MessageFormat.format("- Power = [{0}]", c.getPower()));
+			getPlugin().getLogger().warning(MessageFormat.format("- Claims = [{0}/{1}]", c.getClaims().length, c.getClaimLimit()));
+			getPlugin().getLogger().warning("|==============================================|");
+			getPlugin().getLogger().warning("|==============================================|");
+			getPlugin().getLogger().warning("|==============================================|");
+			getPlugin().getLogger().warning("|==============================================|");
+		}
+		if (entity.isAssociate()) {
+			Clan.Associate a = entity.getAsAssociate();
+			getPlugin().getLogger().warning("|==============================================|");
+			getPlugin().getLogger().warning("|==============================================|");
+			getPlugin().getLogger().warning("|==============================================|");
+			getPlugin().getLogger().warning(MessageFormat.format("|        Debug run for associate {0}              ", a.getName()));
+			getPlugin().getLogger().warning("|==============================================|");
+			getPlugin().getLogger().warning(MessageFormat.format("- Id = [{0}]", a.getId().toString()));
+			getPlugin().getLogger().warning(MessageFormat.format("- Clan = [{0}]", a.getClan().getName()));
+			getPlugin().getLogger().warning(MessageFormat.format("- Bio = [{0}]", a.getBiography()));
+			getPlugin().getLogger().warning(MessageFormat.format("- Chat = [{0}]", a.getChannel()));
+			getPlugin().getLogger().warning(MessageFormat.format("- Joined = [{0}]", a.getJoinDate().toLocaleString()));
+			getPlugin().getLogger().warning(MessageFormat.format("- Nickname = [{0}]", a.getNickname()));
+			getPlugin().getLogger().warning(MessageFormat.format("- Rank = [{0}]", a.getPriority()));
+			getPlugin().getLogger().warning(MessageFormat.format("- KD = [{0}]", a.getKD()));
+			getPlugin().getLogger().warning("|==============================================|");
+			getPlugin().getLogger().warning("|==============================================|");
+			getPlugin().getLogger().warning("|==============================================|");
+			getPlugin().getLogger().warning("|==============================================|");
+		}
+	}
+
+	default Optional<Clan.Associate> getAssociate(LabyrinthUser user) {
+		return getAssociate(user.getId());
+	}
+
+	/**
+	 * Get the server consultant object if one has been provided.
+	 *
+	 * @apiNote The server consultant is also an {@link com.github.sanctum.clans.construct.api.Clan.Associate}!
+	 * @return the server consultant object if provided or null.
+	 */
+	default @Nullable Consultant getConsultant() {
+		return (Consultant) getAssociate(getSessionId()).orElse(null);
+	}
+
+	@Experimental("This involves usage of the brand new api! Use at your own risk.")
+	default List<InvasiveEntity> getEntities() {
+		List<InvasiveEntity> list = new ArrayList<>();
+		getClanManager().getClans().forEach(c -> {
+			list.addAll(c.getMembers());
+			list.add(c);
+		});
+		list.addAll(InoperableSpecialMemory.ENTITY_MAP.values());
+		return Collections.unmodifiableList(list);
+	}
 
 
 }

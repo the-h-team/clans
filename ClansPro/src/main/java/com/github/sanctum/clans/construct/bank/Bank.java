@@ -1,9 +1,10 @@
 package com.github.sanctum.clans.construct.bank;
 
+import com.github.sanctum.clans.construct.api.BanksAPI;
 import com.github.sanctum.clans.construct.api.ClanBank;
-import com.github.sanctum.clans.events.core.bank.BankPreTransactionEvent;
-import com.github.sanctum.clans.events.core.bank.BankSetBalanceEvent;
-import com.github.sanctum.clans.events.core.bank.BankTransactionEvent;
+import com.github.sanctum.clans.event.bank.BankPreTransactionEvent;
+import com.github.sanctum.clans.event.bank.BankSetBalanceEvent;
+import com.github.sanctum.clans.event.bank.BankTransactionEvent;
 import com.github.sanctum.labyrinth.data.EconomyProvision;
 import com.github.sanctum.labyrinth.event.custom.Vent;
 import java.io.Serializable;
@@ -19,7 +20,7 @@ public final class Bank implements ClanBank, Serializable {
     protected final String clanId;
 
     public Bank(@NotNull String clanId) {
-        this.balance = API.defaultImpl.startingBalance();
+        this.balance = BanksAPI.getInstance().startingBalance();
         this.enabled = true;
         this.clanId = clanId;
     }

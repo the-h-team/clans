@@ -4,6 +4,7 @@ import com.github.sanctum.clans.construct.api.ClansAPI;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
@@ -54,8 +55,8 @@ final class ClanAddonClassLoader extends URLClassLoader {
 				});
 		try {
 			Class<? extends ClanAddon> addonClass = loadedClasses.stream().filter(ClanAddon.class::isAssignableFrom).findFirst().map(aClass -> (Class<? extends ClanAddon>) aClass).get();
-			this.addon = addonClass.newInstance();
-		} catch (IllegalAccessException ex) {
+			this.addon = addonClass.getDeclaredConstructor().newInstance();
+		} catch (IllegalAccessException | NoSuchMethodException | InvocationTargetException ex) {
 			throw new InvalidAddonException("No public constructor", ex);
 		} catch (InstantiationException ex) {
 			throw new InvalidAddonException("Unusual constructor args detected.", ex);
@@ -87,8 +88,8 @@ final class ClanAddonClassLoader extends URLClassLoader {
 				});
 		try {
 			Class<? extends ClanAddon> addonClass = loadedClasses.stream().filter(ClanAddon.class::isAssignableFrom).findFirst().map(aClass -> (Class<? extends ClanAddon>) aClass).get();
-			this.addon = addonClass.newInstance();
-		} catch (IllegalAccessException ex) {
+			this.addon = addonClass.getDeclaredConstructor().newInstance();
+		} catch (IllegalAccessException | NoSuchMethodException | InvocationTargetException ex) {
 			throw new InvalidAddonException("No public constructor", ex);
 		} catch (InstantiationException ex) {
 			throw new InvalidAddonException("Unusual constructor args detected.", ex);

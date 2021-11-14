@@ -1,7 +1,7 @@
 #==================================================#
 ##  ██╗  ██╗███████╗██╗     ██████╗
 ##  ██║  ██║██╔════╝██║     ██╔══██╗
-##  ███████║█████╗  ██║     ██████╔╝  v[1.3.0]
+##  ███████║█████╗  ██║     ██████╔╝  v[1.3.1]
 ##  ██╔══██║██╔══╝  ██║     ██╔═══╝
 ##  ██║  ██║███████╗███████╗██║
 ##  ╚═╝  ╚═╝╚══════╝╚══════╝╚═╝
@@ -324,7 +324,7 @@ Response:
 pagination-size: THREE
 
 menu-format:
-  # {0} = Clan Color
+  # {0} = Clan BukkitColor
   # {1} = Clan Description
   # {2} = Clan Power
   # {3} = Clan Base Validation
@@ -333,7 +333,7 @@ menu-format:
   # {6} = Clan Members (Partial)
   # {7} = Clan Allies (Partial)
   # {8} = Clan Enemies (Partial)
-  # {9} = Clan Color (Normal)
+  # {9} = Clan BukkitColor (Normal)
   clan:
     - '&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬'
     - '&3Cor: {0}'
@@ -371,7 +371,7 @@ menu-titles:
 menu-categories:
   top-list: '&7[&6Tabela de classificação&7]'
   roster-list: '&7[&bLista&7]'
-  # {0} = Clan Color
+  # {0} = Clan BukkitColor
   # {1} = Clan Name
   # {2} = Clan ID Short
   clan: '&6&lTag: {0}{1} {0}(&3#{0}{2})'

@@ -5,9 +5,11 @@ import com.github.sanctum.clans.ClansJavaPlugin;
 import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClanCooldown;
 import com.github.sanctum.clans.construct.api.ClansAPI;
+import com.github.sanctum.clans.construct.extra.FancyLogoAppendage;
 import com.github.sanctum.clans.construct.impl.Resident;
 import com.github.sanctum.labyrinth.data.FileList;
 import com.github.sanctum.labyrinth.data.FileManager;
+import com.github.sanctum.labyrinth.formatting.FancyMessage;
 import com.github.sanctum.labyrinth.library.Items;
 import com.github.sanctum.labyrinth.library.StringUtils;
 import com.github.sanctum.labyrinth.task.Schedule;
@@ -17,91 +19,155 @@ import java.io.File;
 import java.io.InputStream;
 import java.text.MessageFormat;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
+import java.util.function.Consumer;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.plugin.java.JavaPlugin;
+import org.intellij.lang.annotations.MagicConstant;
 import org.jetbrains.annotations.NotNull;
 
-@SuppressWarnings("ResultOfMethodCallIgnored")
 public class DataManager {
 
-	public final List<String> WAR_BLOCKED_CMDS = new ArrayList<>();
-	public final HashMap<Player, String> ID_MODE = new HashMap<>();
-	public final List<String> CLAN_GUI_FORMAT = new LinkedList<>();
-	public final List<Player> CHAT_SPY = new ArrayList<>();
-	public final List<Resident> RESIDENTS = new ArrayList<>();
-	public final List<Player> INHABITANTS = new ArrayList<>();
-	public final LinkedList<ClanCooldown> COOLDOWNS = new LinkedList<>();
+	private final List<String> WAR_BLOCKED_CMDS = new ArrayList<>();
+	private final List<String> CLAN_GUI_FORMAT = new LinkedList<>();
+	public final Map<Player, String> ID_MODE = new HashMap<>();
+	private final Set<Player> CHAT_SPY = new HashSet<>();
+	private final Set<Resident> RESIDENTS = new HashSet<>();
+	private final Set<Player> INHABITANTS = new HashSet<>();
+	private final List<ClanCooldown> COOLDOWNS = new LinkedList<>();
 
 	public DataManager() {
-		this.WAR_BLOCKED_CMDS.addAll(getMain().getRoot().getStringList("Clans.war.blocked-commands"));
+		this.WAR_BLOCKED_CMDS.addAll(getConfig().getRoot().getStringList("Clans.war.blocked-commands"));
 	}
 
-	public @NotNull FileManager getMain() {
-		FileManager main = FileType.MISC_FILE.get("Config", "Configuration");
-		if (!main.getRoot().exists()) {
-			InputStream is = ClansAPI.getInstance().getPlugin().getResource("Config.yml");
+	public static class Side {
+		public static final int LEFT = 1;
+		public static final int RIGHT = 2;
+	}
+
+	void create(FileManager manager) {
+		if (!manager.getRoot().exists()) {
+			InputStream is = ClansAPI.getInstance().getPlugin().getResource(manager.getRoot().getName() + manager.getRoot().getType().getExtension());
 			if (is == null) throw new IllegalStateException("Unable to load Config.yml from the jar!");
-			FileManager.copy(is, main.getRoot().getParent());
-			main.getRoot().reload();
+			FileList.copy(is, manager.getRoot().getParent());
+			manager.getRoot().reload();
 		}
+	}
+
+	public List<String> getGUIFormat() {
+		return Collections.unmodifiableList(CLAN_GUI_FORMAT);
+	}
+
+	public List<String> getWarBlockedCommands() {
+		return WAR_BLOCKED_CMDS;
+	}
+
+	public void setBlockedWarCommands(List<String> commands) {
+		WAR_BLOCKED_CMDS.clear();
+		WAR_BLOCKED_CMDS.addAll(commands);
+	}
+
+	public void setGUIFormat(List<String> format) {
+		CLAN_GUI_FORMAT.clear();
+		CLAN_GUI_FORMAT.addAll(format);
+	}
+
+	public boolean isSpy(Player player) {
+		return CHAT_SPY.contains(player);
+	}
+
+	public boolean addSpy(Player spy) {
+		return CHAT_SPY.add(spy);
+	}
+
+	public boolean removeSpy(Player spy) {
+		return CHAT_SPY.remove(spy);
+	}
+
+	public Set<Player> getSpies() {
+		return Collections.unmodifiableSet(CHAT_SPY);
+	}
+
+	public List<ClanCooldown> getCooldowns() {
+		return Collections.unmodifiableList(COOLDOWNS);
+	}
+
+	public Set<Resident> getResidents() {
+		return Collections.unmodifiableSet(RESIDENTS);
+	}
+
+	public Resident getResident(Player p) {
+		return RESIDENTS.stream().filter(r -> r.getPlayer().getName().equals(p.getName())).findFirst().orElse(null);
+	}
+
+	public boolean isInWild(Player player) {
+		return INHABITANTS.contains(player);
+	}
+
+	public boolean removeWildernessInhabitant(Player player) {
+		return INHABITANTS.remove(player);
+	}
+
+	public boolean addWildernessInhabitant(Player player) {
+		return INHABITANTS.add(player);
+	}
+
+	public boolean addClaimResident(Resident resident) {
+		return RESIDENTS.add(resident);
+	}
+
+	public boolean removeClaimResident(Resident resident) {
+		return RESIDENTS.remove(resident);
+	}
+
+	public @NotNull FileManager getConfig() {
+		FileManager main = ClansAPI.getInstance().getFileList().get("Config", "Configuration");
+		create(main);
 		return main;
 	}
 
 	public @NotNull FileManager getMessages() {
-		FileManager main = FileType.MISC_FILE.get("Messages", "Configuration");
-		if (!main.getRoot().exists()) {
-			InputStream is = ClansAPI.getInstance().getPlugin().getResource("Messages.yml");
-			if (is == null) throw new IllegalStateException("Unable to load Messages.yml from the jar!");
-			FileManager.copy(is, main.getRoot().getParent());
-			main.getRoot().reload();
-		}
+		FileManager main = ClansAPI.getInstance().getFileList().get("Messages", "Configuration");
+		create(main);
 		return main;
 	}
 
 	public @NotNull FileManager getClanFile(Clan c) {
-		return FileType.CLAN_FILE.get(c.getId().toString());
+		return ClansAPI.getInstance().getFileList().get(c.getId().toString(), "Clans", JavaPlugin.getPlugin(ClansJavaPlugin.class).TYPE);
 	}
 
 	public String getConfigString(String path) {
-		return getMain().getRoot().getString(path);
+		return getConfig().getRoot().getString(path);
 	}
 
 	public boolean isTrue(String path) {
-		return getMain().getRoot().getBoolean(path);
+		return getConfig().getRoot().getBoolean(path);
 	}
 
 	public String getMenuTitle(String menu) {
-		FileManager main = FileType.MISC_FILE.get("Messages", "Configuration");
-		if (!main.getRoot().exists()) {
-			InputStream is = ClansAPI.getInstance().getPlugin().getResource("Messages.yml");
-			if (is == null) throw new IllegalStateException("Unable to load Messages.yml from the jar!");
-			FileManager.copy(is, main.getRoot().getParent());
-		}
+		FileManager main = ClansAPI.getInstance().getFileList().get("Messages", "Configuration");
+		create(main);
 		return main.getRoot().getString("menu-titles." + menu);
 	}
 
 	public String getMenuCategory(String menu) {
-		FileManager main = FileType.MISC_FILE.get("Messages", "Configuration");
-		if (!main.getRoot().exists()) {
-			InputStream is = ClansAPI.getInstance().getPlugin().getResource("Messages.yml");
-			if (is == null) throw new IllegalStateException("Unable to load Messages.yml from the jar!");
-			FileManager.copy(is, main.getRoot().getParent());
-		}
+		FileManager main = ClansAPI.getInstance().getFileList().get("Messages", "Configuration");
+		create(main);
 		return main.getRoot().getString("menu-categories." + menu);
 	}
 
 	public String getMenuNavigation(String menu) {
-		FileManager main = FileType.MISC_FILE.get("Messages", "Configuration");
-		if (!main.getRoot().exists()) {
-			InputStream is = ClansAPI.getInstance().getPlugin().getResource("Messages.yml");
-			if (is == null) throw new IllegalStateException("Unable to load Messages.yml from the jar!");
-			FileManager.copy(is, main.getRoot().getParent());
-		}
+		FileManager main = ClansAPI.getInstance().getFileList().get("Messages", "Configuration");
+		create(main);
 		return main.getRoot().getString("gui-navigation." + menu);
 	}
 
@@ -118,70 +184,78 @@ public class DataManager {
 		}
 	}
 
-	public ItemStack getItem(String object) {
-		FileManager main = FileType.MISC_FILE.get("Messages", "Configuration");
-		if (!main.getRoot().exists()) {
-			InputStream is = ClansAPI.getInstance().getPlugin().getResource("Messages.yml");
-			if (is == null) throw new IllegalStateException("Unable to load Messages.yml from the jar!");
-			FileManager.copy(is, main.getRoot().getParent());
-		}
+	public ItemStack getMenuItem(String object) {
+		FileManager main = ClansAPI.getInstance().getFileList().get("Messages", "Configuration");
+		create(main);
 		return improvise(Objects.requireNonNull(main.getRoot().getString("menu-items." + object)));
 	}
 
-	public Material getMaterial(String object) {
-		FileManager main = FileType.MISC_FILE.get("Messages", "Configuration");
-		if (!main.getRoot().exists()) {
-			InputStream is = ClansAPI.getInstance().getPlugin().getResource("Messages.yml");
-			if (is == null) throw new IllegalStateException("Unable to load Messages.yml from the jar!");
-			FileManager.copy(is, main.getRoot().getParent());
-		}
-		return Items.getMaterial(Objects.requireNonNull(main.getRoot().getString("menu-items." + object)));
+	public Material getMenuMaterial(String object) {
+		FileManager main = ClansAPI.getInstance().getFileList().get("Messages", "Configuration");
+		create(main);
+		return Items.findMaterial(Objects.requireNonNull(main.getRoot().getString("menu-items." + object)));
 	}
 
-	public String getPath(String path) {
-		FileManager main = FileType.MISC_FILE.get("Messages", "Configuration");
-		if (!main.getRoot().exists()) {
-			InputStream is = ClansAPI.getInstance().getPlugin().getResource("Messages.yml");
-			if (is == null) throw new IllegalStateException("Unable to load Messages.yml from the jar!");
-			FileManager.copy(is, main.getRoot().getParent());
-		}
+	public String getMessageString(String path) {
+		FileManager main = ClansAPI.getInstance().getFileList().get("Messages", "Configuration");
+		create(main);
 		return main.getRoot().getString(path);
 	}
 
-	public int getInt(String path) {
-		return getMain().getRoot().getInt(path);
+	public int getConfigInt(String path) {
+		return getConfig().getRoot().getInt(path);
 	}
 
 	public String getMessageResponse(String path) {
-		FileManager main = FileType.MISC_FILE.get("Messages", "Configuration");
-		if (!main.getRoot().exists()) {
-			InputStream is = ClansAPI.getInstance().getPlugin().getResource("Messages.yml");
-			if (is == null) throw new IllegalStateException("Unable to load Messages.yml from the jar!");
-			FileManager.copy(is, main.getRoot().getParent());
-		}
+		FileManager main = ClansAPI.getInstance().getFileList().get("Messages", "Configuration");
+		create(main);
 		return main.getRoot().getString("Response." + path);
 	}
 
-	public static boolean titlesAllowed() {
+	public FancyLogoAppendage appendStringsToLogo(List<String> logo, Consumer<FancyMessage> consumer) {
+		return new FancyLogoAppendage().append(logo, consumer);
+	}
+
+	public String[] appendStringsToLogo(List<String> logo, @MagicConstant(valuesFromClass = Side.class) int side, String... text) {
+		String[] ar = logo.toArray(new String[0]);
+		for (int i = 0; i < ar.length; i++) {
+			if (i > 0) {
+				if ((Math.max(0, i - 1)) <= text.length - 1) {
+					String m = text[Math.max(0, i - 1)];
+					switch (side) {
+						case 1:
+							ar[i] = "&r" + m + "   &r" + ar[i];
+							break;
+						case 2:
+							ar[i] = ar[i] + "   &r" + m;
+							break;
+					}
+				}
+			}
+		}
+		return ar;
+	}
+
+	public static boolean isTitlesAllowed() {
 		FileManager main = ClansAPI.getInstance().getFileList().get("Config", "Configuration");
 		return main.getRoot().getBoolean("Clans.land-claiming.send-titles");
 	}
 
-	public String prefixedTag(String color, String name) {
-		return MessageFormat.format(Objects.requireNonNull(getMain().getConfig().getString("Formatting.nametag-prefix.text")), color, name);
+	public String formatDisplayTag(String color, String name) {
+		return MessageFormat.format(Objects.requireNonNull(getConfig().getRoot().getString("Formatting.nametag-prefix.text")), color, name);
 	}
 
-	public boolean prefixedTagsAllowed() {
-		FileManager main = getMain();
+	public boolean isDisplayTagsAllowed() {
+		FileManager main = getConfig();
 		return main.getRoot().getBoolean("Formatting.nametag-prefix.use");
 	}
 
-	public boolean assertDefaults() {
+	public boolean isUpdate() {
 		ClansAPI api = ClansAPI.getInstance();
 		FileList list = api.getFileList();
 		FileManager main = list.get("Config", "Configuration");
 		FileManager messages = list.get("Messages", "Configuration");
-		if (!ClansAPI.getInstance().getPlugin().getDescription().getVersion().equals(getMain().getRoot().getString("Version"))) {
+		if (!ClansAPI.getInstance().getPlugin().getDescription().getVersion().equals(getConfig().getRoot().getString("Version"))) {
 			FileManager mainOld = list.get("config_old", "Configuration", com.github.sanctum.labyrinth.data.FileType.JSON);
 			FileManager messOld = list.get("messages_old", "Configuration", com.github.sanctum.labyrinth.data.FileType.JSON);
 			if (mainOld.getRoot().exists()) {
@@ -243,43 +317,17 @@ public class DataManager {
 		return d;
 	}
 
-	public static class Security {
-		public static String getPermission(String command) {
-			return ClansAPI.getData().getPath("Commands." + command + ".permission");
-		}
+	public boolean addCooldown(ClanCooldown instance) {
+		return COOLDOWNS.add(instance);
 	}
 
-	public enum FileType {
-		CLAN_FILE, MISC_FILE;
+	public boolean removeCooldown(ClanCooldown instance) {
+		return COOLDOWNS.remove(instance);
+	}
 
-		/**
-		 * Get the file manager for a User file or for a Clan file.
-		 *
-		 * @param id user/clan id
-		 * @return FileManager for user or clan
-		 * @throws IllegalArgumentException if called on MISC_FILE
-		 */
-		public FileManager get(String id) throws IllegalArgumentException {
-			if (this == FileType.CLAN_FILE) {
-				return ClansAPI.getInstance().getFileList().get(id, "Clans", ((ClansJavaPlugin) ClansAPI.getInstance().getPlugin()).TYPE);
-			}
-			throw new IllegalArgumentException("This method should only be invoked on CLAN_FILE");
+	public static class Security {
+		public static String getPermission(String command) {
+			return ClansAPI.getDataInstance().getMessageString("Commands." + command + ".permission");
 		}
-
-		/**
-		 * Get the file manager for a miscellaneous file.
-		 *
-		 * @param name      filename
-		 * @param directory directory of file
-		 * @return FileManager for miscellaneous file
-		 * @throws IllegalArgumentException if not called on MISC_FILE
-		 */
-		public FileManager get(String name, String directory) throws IllegalArgumentException {
-			if (this == MISC_FILE) {
-				return ClansAPI.getInstance().getFileList().get(name, directory);
-			}
-			throw new IllegalArgumentException("This method should only be invoked on MISC_FILE");
-		}
-
 	}
 }

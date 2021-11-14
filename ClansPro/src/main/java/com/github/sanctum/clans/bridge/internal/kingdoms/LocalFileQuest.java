@@ -221,7 +221,7 @@ public final class LocalFileQuest implements Quest, Message.Factory {
 
 					@Override
 					public void give(Clan clan) {
-						clan.forEach(this::give);
+						clan.getMembers().forEach(this::give);
 					}
 
 					@Override
@@ -255,7 +255,7 @@ public final class LocalFileQuest implements Quest, Message.Factory {
 
 						@Override
 						public void give(Clan clan) {
-							clan.forEach(this::give);
+							clan.getMembers().forEach(this::give);
 						}
 
 						@Override
@@ -286,7 +286,7 @@ public final class LocalFileQuest implements Quest, Message.Factory {
 
 						@Override
 						public void give(Clan clan) {
-							clan.forEach(this::give);
+							clan.getMembers().forEach(this::give);
 						}
 
 						@Override
@@ -302,8 +302,7 @@ public final class LocalFileQuest implements Quest, Message.Factory {
 					};
 				}
 			}
-		} else
-			throw new IllegalArgumentException("Quest: An invalid reward type was provided, expected [ITEM_ARRAY, ITEM or MONEY]");
+		}
 	}
 
 	@Override

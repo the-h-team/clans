@@ -7,6 +7,7 @@ import com.github.sanctum.clans.bridge.internal.kingdoms.RoundTable;
 import com.github.sanctum.clans.bridge.internal.kingdoms.command.KingdomCommand;
 import com.github.sanctum.clans.bridge.internal.kingdoms.listener.KingdomController;
 import com.github.sanctum.clans.construct.api.ClansAPI;
+import com.github.sanctum.labyrinth.LabyrinthProvider;
 import com.github.sanctum.labyrinth.data.FileManager;
 import com.github.sanctum.labyrinth.data.FileType;
 import java.io.IOException;
@@ -16,7 +17,7 @@ public class KingdomAddon extends ClanAddon {
 
 	@Override
 	public boolean isPersistent() {
-		return ClansAPI.getData().isTrue("Addon.Kingdoms.enabled");
+		return ClansAPI.getDataInstance().isTrue("Addon.Kingdoms.enabled") && !LabyrinthProvider.getInstance().isLegacy();
 	}
 
 	@Override
@@ -45,7 +46,6 @@ public class KingdomAddon extends ClanAddon {
 		getLogger().info("- Attention all passengers, let the games begin :)");
 		getContext().stage(new KingdomCommand(this, "kingdom"));
 		getContext().stage(new KingdomController(this));
-
 	}
 
 	public static RoundTable getRoundTable() {

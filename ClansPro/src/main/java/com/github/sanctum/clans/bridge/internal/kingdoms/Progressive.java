@@ -1,13 +1,14 @@
 package com.github.sanctum.clans.bridge.internal.kingdoms;
 
 import com.github.sanctum.clans.bridge.ClanAddon;
+import com.github.sanctum.labyrinth.data.MemorySpace;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public abstract class Progressive {
+public abstract class Progressive implements MemorySpace {
 
 	protected static final List<Progressive> PROGRESSIVES = new LinkedList<>();
 

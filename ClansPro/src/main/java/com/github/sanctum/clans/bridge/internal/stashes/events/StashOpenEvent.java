@@ -1,13 +1,13 @@
 package com.github.sanctum.clans.bridge.internal.stashes.events;
 
 import com.github.sanctum.clans.construct.api.Clan;
-import com.github.sanctum.clans.events.ClanEventBuilder;
+import com.github.sanctum.clans.event.ClanEvent;
 import com.github.sanctum.labyrinth.gui.unity.construct.Menu;
 import java.util.List;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Player;
 
-public class StashOpenEvent extends ClanEventBuilder {
+public class StashOpenEvent extends ClanEvent {
 
 	private final Clan owner;
 	private final Player opener;
@@ -15,13 +15,14 @@ public class StashOpenEvent extends ClanEventBuilder {
 	private final List<HumanEntity> viewers;
 
 	public StashOpenEvent(Clan owner, Player opener, Menu inventory, List<HumanEntity> viewers) {
+		super(false);
 		this.owner = owner;
 		this.opener = opener;
 		this.inventory = inventory;
 		this.viewers = viewers;
 	}
 
-	public Clan getOwner() {
+	public Clan getClan() {
 		return owner;
 	}
 

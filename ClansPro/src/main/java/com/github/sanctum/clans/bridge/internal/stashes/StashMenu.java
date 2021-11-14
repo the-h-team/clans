@@ -1,13 +1,14 @@
 package com.github.sanctum.clans.bridge.internal.stashes;
 
 import com.github.sanctum.clans.bridge.ClanVentBus;
-import com.github.sanctum.clans.bridge.internal.vaults.events.VaultInteractEvent;
+import com.github.sanctum.clans.bridge.internal.stashes.events.StashInteractEvent;
 import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClansAPI;
 import com.github.sanctum.labyrinth.data.service.Check;
 import com.github.sanctum.labyrinth.gui.unity.construct.Menu;
 import com.github.sanctum.labyrinth.gui.unity.impl.InventoryElement;
 import com.github.sanctum.labyrinth.gui.unity.impl.PreProcessElement;
+import com.github.sanctum.labyrinth.library.HUID;
 import java.util.Objects;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -20,19 +21,19 @@ public class StashMenu extends Menu {
 		addElement(new InventoryElement.Shared(clanName, this));
 		this.key = clanName + "-stash";
 		this.close = close -> {
-			Clan c = ClansAPI.getInstance().getClan(ClansAPI.getInstance().getClanID(clanName));
+			Clan c = ClansAPI.getInstance().getClanManager().getClan(ClansAPI.getInstance().getClanManager().getClanID(clanName));
 			c.setValue("stash", close.getMain().getContents(), false);
 		};
 
 		this.click = click -> {
-			Clan c = ClansAPI.getInstance().getClan(ClansAPI.getInstance().getClanID(clanName));
-			VaultInteractEvent event = ClanVentBus.call(new VaultInteractEvent(c, click.getElement(), click.getParent().getElement(), click.getAttachment(), click.getParent().getParent().getElement().getViewers()));
+			Clan c = ClansAPI.getInstance().getClanManager().getClan(ClansAPI.getInstance().getClanManager().getClanID(clanName));
+			StashInteractEvent event = ClanVentBus.call(new StashInteractEvent(c, click.getElement(), click.getParent().getElement(), click.getAttachment(), click.getAction(), click.getClickType(), click.getParent().getParent().getElement().getViewers()));
 			if (event.isCancelled()) {
 				click.setCancelled(true);
 			}
 		};
 
-		for (ItemStack it : getInventoryContents(Check.forNull(ClansAPI.getInstance().getClanID(clanName), "Clan '" + clanName + "' not found!"))) {
+		for (ItemStack it : getInventoryContents(Check.forNull(ClansAPI.getInstance().getClanManager().getClanID(clanName), "Clan '" + clanName + "' not found!"))) {
 			if (Objects.equals(it, null)) {
 				getInventory().getElement().addItem(new ItemStack(Material.AIR));
 			} else {
@@ -45,8 +46,8 @@ public class StashMenu extends Menu {
 		}
 	}
 
-	ItemStack[] getInventoryContents(String clanID) {
-		Clan c = ClansAPI.getInstance().getClan(clanID);
+	ItemStack[] getInventoryContents(HUID clanID) {
+		Clan c = ClansAPI.getInstance().getClanManager().getClan(clanID);
 		ItemStack[] content = new ItemStack[9];
 		ItemStack[] copy = c.getValue(ItemStack[].class, "stash");
 		if (copy != null) {

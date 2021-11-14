@@ -17,6 +17,7 @@ import com.github.sanctum.labyrinth.data.EconomyProvision;
 import com.github.sanctum.labyrinth.formatting.Message;
 import com.github.sanctum.labyrinth.formatting.PaginatedList;
 import com.github.sanctum.labyrinth.formatting.string.DefaultColor;
+import com.github.sanctum.labyrinth.formatting.string.ProgressBar;
 import com.github.sanctum.labyrinth.formatting.string.RandomHex;
 import com.github.sanctum.labyrinth.library.Mailer;
 import com.github.sanctum.labyrinth.library.StringUtils;
@@ -24,6 +25,7 @@ import com.github.sanctum.labyrinth.library.TextLib;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -41,26 +43,7 @@ public class KingdomCommand extends ClanSubCommand implements Message.Factory {
 	}
 
 	public static String getProgressBar(int currentValue, int maxValue, int maxBars) {
-		int progressBarLength = maxBars;
-		if (progressBarLength < 9 || progressBarLength % 2 == 0) {
-			progressBarLength = 33;
-		}
-		int currentProgressBarIndex = (int) Math.ceil(((double) progressBarLength / maxValue) * currentValue);
-		String formattedPercent = String.format("%5.1f %% ", (100 * currentProgressBarIndex) / (double) progressBarLength);
-		int percentStartIndex = ((progressBarLength - formattedPercent.length()) / 2);
-
-		StringBuilder sb = new StringBuilder();
-		sb.append("[");
-		for (int progressBarIndex = 0; progressBarIndex < progressBarLength; progressBarIndex++) {
-			if (progressBarIndex <= percentStartIndex - 1
-					|| progressBarIndex >= percentStartIndex + formattedPercent.length()) {
-				sb.append(currentProgressBarIndex <= progressBarIndex ? "&7|" : "&a|");
-			} else if (progressBarIndex == percentStartIndex) {
-				sb.append("&r").append(formattedPercent);
-			}
-		}
-		sb.append("&r]");
-		return sb.toString();
+		return new ProgressBar().setProgress(currentValue).setGoal(maxValue).setBars(maxBars).setPercentPosition(ProgressBar.PERCENT_IN_MIDDLE).setPrefix("[").setSuffix("&r]").setSymbol('|').setFullColor("&a").setEmptyColor("&8").toString();
 	}
 
 	@Override
@@ -80,7 +63,22 @@ public class KingdomCommand extends ClanSubCommand implements Message.Factory {
 							.append(text("Start").color(Color.MAROON).style(ChatColor.STRIKETHROUGH).bind(hover("You are already in a kingdom").style(DefaultColor.VELVET)))
 							.append(text("]").color(Color.OLIVE))
 							.append(text(" "))
-							.append(text("Level: " + Kingdom.getKingdom(associate.getClan()).getLevel() + " " + getProgressBar(Kingdom.getKingdom(associate.getClan()).getLevel(), Kingdom.getDefaults().length, 73)))
+							.append(text("Level: " + Kingdom.getKingdom(associate.getClan()).getLevel()))
+							.send(p).deploy();
+					message()
+							.append(text(" "))
+							.send(p).deploy();
+					message()
+							.append(text(" "))
+							.append(text("|").color(Color.OLIVE))
+							.append(text(" "))
+							.append(text("Name: " + Kingdom.getKingdom(associate.getClan()).getName()))
+							.send(p).deploy();
+					message()
+							.append(text(" "))
+							.append(text("|").color(Color.OLIVE))
+							.append(text(" "))
+							.append(text("Members: " + Kingdom.getKingdom(associate.getClan()).getMembers().stream().map(clan -> clan.getPalette().isGradient() ? clan.getPalette().toString(clan.getName()) : clan.getPalette() + clan.getName()).collect(Collectors.joining("&r, "))))
 							.send(p).deploy();
 					message()
 							.append(text(" "))
@@ -162,6 +160,7 @@ public class KingdomCommand extends ClanSubCommand implements Message.Factory {
 						if (k.getMembers().size() == 0) {
 							// TODO: announce kingdom fallen
 							k.remove(ClanAddonQuery.getAddon("Kingdoms"));
+							Bukkit.getOnlinePlayers().forEach(pl -> Clan.ACTION.sendMessage(pl, "&2[&b" + k.getName() + "&2]&r &c&ohas fallen.."));
 						}
 
 					}
@@ -193,7 +192,6 @@ public class KingdomCommand extends ClanSubCommand implements Message.Factory {
 
 						help.finish(builder -> {
 							builder.setPrefix("&7&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬");
-							builder.setSuffix("&7&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬");
 							builder.setPlayer(p);
 						}).decorate((pagination, quest, page, max, placement) -> {
 
@@ -205,6 +203,11 @@ public class KingdomCommand extends ClanSubCommand implements Message.Factory {
 										.append(text(" "))
 										.append(text(quest.getTitle()).style(new RandomHex()).bind(hover(quest.getDescription()).style(new RandomHex())))
 										.append(text(" "))
+										.append(text("(").color(Color.ORANGE))
+										.append(text(String.valueOf(quest.getProgression())))
+										.append(text("/"))
+										.append(text(String.valueOf(quest.getRequirement())))
+										.append(text(")").color(Color.ORANGE))
 										.send(p).deploy();
 								message()
 										.append(text("(").color(Color.MAROON))
@@ -216,7 +219,6 @@ public class KingdomCommand extends ClanSubCommand implements Message.Factory {
 
 											}
 										})))
-										.append(text("%"))
 										.append(text(")").color(Color.MAROON))
 										.append(text(" "))
 										.send(p).deploy();
@@ -228,6 +230,11 @@ public class KingdomCommand extends ClanSubCommand implements Message.Factory {
 										.append(text(" "))
 										.append(text(quest.getTitle()).style(new RandomHex()).bind(hover(quest.getDescription()).style(new RandomHex())))
 										.append(text(" "))
+										.append(text("(").color(Color.ORANGE))
+										.append(text(String.valueOf(quest.getProgression())))
+										.append(text("/"))
+										.append(text(String.valueOf(quest.getRequirement())))
+										.append(text(")").color(Color.ORANGE))
 										.send(p).deploy();
 								message()
 										.append(text("(").color(Color.MAROON))
@@ -248,7 +255,6 @@ public class KingdomCommand extends ClanSubCommand implements Message.Factory {
 
 											}
 										})))
-										.append(text("%"))
 										.append(text(")").color(Color.MAROON))
 										.append(text(" "))
 										.send(p).deploy();
@@ -297,6 +303,8 @@ public class KingdomCommand extends ClanSubCommand implements Message.Factory {
 						if (associate.getPriority().toInt() == 3) {
 
 							k.getMembers().add(c);
+
+							c.setValue("kingdom", k.getName(), false);
 
 							k.getMembers().forEach(cl -> cl.broadcast("&2[&b" + k.getName() + "&2]&r " + c.getName() + " vows protection to the kingdom."));
 
@@ -733,6 +741,7 @@ public class KingdomCommand extends ClanSubCommand implements Message.Factory {
 			return getBaseCompletion(args);
 		}
 		if (args.length == 2) {
+			if (!args[0].equalsIgnoreCase(getLabel())) return null;
 			List<String> list = new ArrayList<>();
 			Stream.of("start", "join", "leave", "work", "quit", "jobs", "name").filter(s -> s.toLowerCase().startsWith(args[1].toLowerCase())).forEach(list::add);
 			return list;

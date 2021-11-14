@@ -1,6 +1,7 @@
 package com.github.sanctum.clans.construct.impl;
 
-import com.github.sanctum.clans.construct.Claim;
+import com.github.sanctum.clans.construct.api.Claim;
+import com.github.sanctum.clans.construct.api.ClansAPI;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -46,7 +47,7 @@ public class Resident {
 	}
 
 	public Claim getCurrent() {
-		return Claim.from(inhabitant.getLocation());
+		return ClansAPI.getInstance().getClaimManager().getClaim(inhabitant.getLocation());
 	}
 
 	public boolean hasProperty(Property property) {

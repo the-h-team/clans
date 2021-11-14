@@ -2,61 +2,55 @@ package com.github.sanctum.clans.construct;
 
 import com.github.sanctum.clans.ClansJavaPlugin;
 import com.github.sanctum.clans.bridge.ClanVentBus;
+import com.github.sanctum.clans.construct.api.Claim;
 import com.github.sanctum.clans.construct.api.Clan;
-import com.github.sanctum.clans.construct.api.ClanCooldown;
 import com.github.sanctum.clans.construct.api.ClansAPI;
+import com.github.sanctum.clans.construct.api.InvasiveEntity;
+import com.github.sanctum.clans.construct.impl.DefaultAssociate;
+import com.github.sanctum.clans.construct.impl.DefaultClaim;
 import com.github.sanctum.clans.construct.impl.DefaultClan;
 import com.github.sanctum.clans.construct.impl.Resident;
-import com.github.sanctum.clans.events.core.ClaimResidentEvent;
-import com.github.sanctum.clans.events.core.WildernessInhabitantEvent;
+import com.github.sanctum.clans.event.TimerEvent;
+import com.github.sanctum.clans.event.claim.ClaimResidentEvent;
+import com.github.sanctum.clans.event.claim.ClaimsLoadingProcedureEvent;
+import com.github.sanctum.clans.event.claim.WildernessInhabitantEvent;
 import com.github.sanctum.labyrinth.data.Configurable;
 import com.github.sanctum.labyrinth.data.FileManager;
 import com.github.sanctum.labyrinth.data.FileType;
 import com.github.sanctum.labyrinth.data.Node;
-import com.github.sanctum.labyrinth.task.JoinableRepeatingTask;
-import com.github.sanctum.labyrinth.task.Schedule;
-import java.text.MessageFormat;
+import com.github.sanctum.labyrinth.event.custom.Vent;
+import com.github.sanctum.labyrinth.library.HUID;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 import org.bukkit.Chunk;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
+import org.bukkit.plugin.java.JavaPlugin;
+import org.jetbrains.annotations.NotNull;
 
-public class ClaimManager {
+public final class ClaimManager {
 
 	private final FileManager regions;
-	private final JoinableRepeatingTask<Player> task;
+	private final FlagManager flagManager;
 
 	public ClaimManager() {
-		switch (((ClansJavaPlugin) ClansAPI.getInstance().getPlugin()).TYPE) {
-			case YAML:
-				this.regions = DataManager.FileType.MISC_FILE.get("Regions", "Configuration");
-				break;
-			case JSON:
-				this.regions = ClansAPI.getInstance().getFileList().find("regions", "Configuration", FileType.JSON);
-				break;
-			default:
-				this.regions = DataManager.FileType.MISC_FILE.get("Regions", "Configuration");
-				break;
+		this.flagManager = new FlagManager(this);
+		if (JavaPlugin.getPlugin(ClansJavaPlugin.class).TYPE == FileType.YAML) {
+			this.regions = ClansAPI.getInstance().getFileList().get("Regions", "Configuration", FileType.YAML);
+		} else {
+			this.regions = ClansAPI.getInstance().getFileList().get("regions", "Configuration", FileType.JSON);
 		}
 
-		this.task = JoinableRepeatingTask.create(18, ClansAPI.getInstance().getPlugin(), p -> {
+		ClanVentBus.subscribe(TimerEvent.class, Vent.Priority.HIGH, (e, subscription) -> {
+			if (e.isAsynchronous()) return;
+			Player p = e.getPlayer();
 			ClansAPI API = ClansAPI.getInstance();
-
-			Clan.Associate associate = API.getAssociate(p).orElse(null);
-
-			if (associate != null) {
-				for (ClanCooldown clanCooldown : ClansAPI.getData().COOLDOWNS) {
-					if (clanCooldown.getId().equals(p.getUniqueId().toString())) {
-						if (clanCooldown.isComplete()) {
-							Schedule.sync(() -> ClanCooldown.remove(clanCooldown)).run();
-							Clan.ACTION.sendMessage(p, MessageFormat.format(ClansAPI.getData().getMessageResponse("cooldown-expired"), clanCooldown.getAction().replace("Clans:", "")));
-						}
-					}
-				}
-
-			}
 
 			if (Claim.ACTION.isEnabled()) {
 
@@ -67,18 +61,18 @@ public class ClaimManager {
 				} else {
 					ClaimResidentEvent event = ClanVentBus.call(new ClaimResidentEvent(p));
 					if (!event.isCancelled()) {
-						ClansAPI.getData().INHABITANTS.remove(event.getResident().getPlayer());
+						ClansAPI.getDataInstance().removeWildernessInhabitant(event.getResident().getPlayer());
 						Resident r = event.getResident();
 						Claim current = event.getClaim();
 						if (current.isActive()) {
-							if (ClansAPI.getInstance().getClanName(current.getOwner()) == null) {
+							if (ClansAPI.getInstance().getClanManager().getClanName(HUID.fromString(current.getOwner().getTag().getId())) == null) {
 								current.remove();
 								return;
 							}
 							Claim lastKnown = r.getLastKnown();
 							if (!current.getId().equals(lastKnown.getId())) {
 								if (r.hasProperty(Resident.Property.NOTIFIED)) {
-									if (!lastKnown.getOwner().equals(r.getCurrent().getOwner())) {
+									if (!lastKnown.getOwner().getTag().getId().equals(r.getCurrent().getOwner().getTag().getId())) {
 										r.setProperty(Resident.Property.TRAVERSED, true);
 										r.setLastKnownClaim(event.getClaim());
 										r.setTimeEntered(System.currentTimeMillis());
@@ -103,8 +97,8 @@ public class ClaimManager {
 	}
 
 	public boolean isInClaim(Location location) {
-		for (Clan clan : ClansAPI.getInstance().getClanManager().getClans().list()) {
-			boolean test = Arrays.stream(clan.getOwnedClaims()).anyMatch(c -> location.getChunk().getX() == c.getPos()[0] && location.getChunk().getZ() == c.getPos()[1] && location.getWorld().getName().equals(c.getKey()[2]));
+		for (Clan clan : ClansAPI.getInstance().getClanManager().getClans()) {
+			boolean test = Arrays.stream(clan.getClaims()).anyMatch(c -> location.getChunk().getX() == c.getPos()[0] && location.getChunk().getZ() == c.getPos()[1] && location.getWorld().getName().equals(c.getKey()[2]));
 			if (test) {
 				return test;
 			}
@@ -113,8 +107,8 @@ public class ClaimManager {
 	}
 
 	public boolean isInClaim(int x, int z, String world) {
-		for (Clan clan : ClansAPI.getInstance().getClanManager().getClans().list()) {
-			boolean test = Arrays.stream(clan.getOwnedClaims()).anyMatch(c -> x == c.getPos()[0] && z == c.getPos()[1] && world.equals(c.getKey()[2]));
+		for (Clan clan : ClansAPI.getInstance().getClanManager().getClans()) {
+			boolean test = Arrays.stream(clan.getClaims()).anyMatch(c -> x == c.getPos()[0] && z == c.getPos()[1] && world.equals(c.getKey()[2]));
 			if (test) {
 				return test;
 			}
@@ -123,8 +117,8 @@ public class ClaimManager {
 	}
 
 	public boolean isInClaim(Chunk chunk) {
-		for (Clan clan : ClansAPI.getInstance().getClanManager().getClans().list()) {
-			boolean test = Arrays.stream(clan.getOwnedClaims()).anyMatch(c -> chunk.getX() == c.getPos()[0] && chunk.getZ() == c.getPos()[1] && chunk.getWorld().getName().equals(c.getKey()[2]));
+		for (Clan clan : ClansAPI.getInstance().getClanManager().getClans()) {
+			boolean test = Arrays.stream(clan.getClaims()).anyMatch(c -> chunk.getX() == c.getPos()[0] && chunk.getZ() == c.getPos()[1] && chunk.getWorld().getName().equals(c.getKey()[2]));
 			if (test) {
 				return test;
 			}
@@ -133,8 +127,8 @@ public class ClaimManager {
 	}
 
 	public String getId(Location location) {
-		for (Clan clan : ClansAPI.getInstance().getClanManager().getClans().list()) {
-			String id = Arrays.stream(clan.getOwnedClaims()).filter(c -> location.getChunk().getX() == c.getPos()[0] && location.getChunk().getZ() == c.getPos()[1] && location.getWorld().getName().equals(c.getKey()[2])).map(Claim::getId).findFirst().orElse(null);
+		for (Clan clan : ClansAPI.getInstance().getClanManager().getClans()) {
+			String id = Arrays.stream(clan.getClaims()).filter(c -> location.getChunk().getX() == c.getPos()[0] && location.getChunk().getZ() == c.getPos()[1] && location.getWorld().getName().equals(c.getKey()[2])).map(Claim::getId).findFirst().orElse(null);
 			if (id != null) {
 				return id;
 			}
@@ -143,8 +137,8 @@ public class ClaimManager {
 	}
 
 	public String getId(int x, int z, String world) {
-		for (Clan clan : ClansAPI.getInstance().getClanManager().getClans().list()) {
-			String id = Arrays.stream(clan.getOwnedClaims()).filter(c -> x == c.getPos()[0] && z == c.getPos()[1] && world.equals(c.getKey()[2])).map(Claim::getId).findFirst().orElse(null);
+		for (Clan clan : ClansAPI.getInstance().getClanManager().getClans()) {
+			String id = Arrays.stream(clan.getClaims()).filter(c -> x == c.getPos()[0] && z == c.getPos()[1] && world.equals(c.getKey()[2])).map(Claim::getId).findFirst().orElse(null);
 			if (id != null) {
 				return id;
 			}
@@ -153,8 +147,8 @@ public class ClaimManager {
 	}
 
 	public Claim getClaim(String claimID) {
-		for (Clan clan : ClansAPI.getInstance().getClanManager().getClans().list()) {
-			Claim claim = Arrays.stream(clan.getOwnedClaims()).filter(c -> c.getId().equals(claimID)).findFirst().orElse(null);
+		for (Clan clan : ClansAPI.getInstance().getClanManager().getClans()) {
+			Claim claim = Arrays.stream(clan.getClaims()).filter(c -> c.getId().equals(claimID)).findFirst().orElse(null);
 			if (claim != null) {
 				return claim;
 			}
@@ -162,14 +156,26 @@ public class ClaimManager {
 		return null;
 	}
 
+	public Claim getClaim(Location loc) {
+		return getId(loc) != null ? getClaim(getId(loc)) : null;
+	}
+
+	public Claim getClaim(Chunk chunk) {
+		return getId(chunk.getX(), chunk.getZ(), chunk.getWorld().getName()) != null ? getClaim(getId(chunk.getX(), chunk.getZ(), chunk.getWorld().getName())) : null;
+	}
+
 	public FileManager getFile() {
 		return regions;
 	}
 
+	public FlagManager getFlagManager() {
+		return flagManager;
+	}
+
 	public Set<Claim> getClaims() {
 		return ClansAPI.getInstance().getClanManager().getClans()
-				.map(Clan::getOwnedClaims)
-				.map(cl -> (Set<Claim>) new HashSet<>(Arrays.asList(cl)))
+				.map(Clan::getClaims)
+				.map(cl -> Arrays.stream(cl).sequential().collect(Collectors.toSet()))
 				.reduce((claims1, claims2) -> {
 					Set<Claim> c = new HashSet<>(claims1);
 					c.addAll(claims2);
@@ -178,16 +184,21 @@ public class ClaimManager {
 	}
 
 	public boolean load(Claim claim) {
-		if (claim.getClan() instanceof DefaultClan) {
-			DefaultClan clan = (DefaultClan) claim.getClan();
-			clan.addClaim(claim);
-			return true;
+		if (claim.getOwner() instanceof Clan) {
+			if (claim.getClan() instanceof DefaultClan) {
+				DefaultClan clan = (DefaultClan) claim.getClan();
+				clan.addClaim(claim);
+				return true;
+			}
+		} else {
+			if (claim.getOwner() instanceof Clan.Associate) {
+				if (claim.getOwner() instanceof DefaultAssociate) {
+					DefaultAssociate associate = (DefaultAssociate) claim.getOwner();
+					// TODO: setup associate claim api
+				}
+			}
 		}
 		return false;
-	}
-
-	public JoinableRepeatingTask<Player> getTask() {
-		return this.task;
 	}
 
 	/**
@@ -201,28 +212,99 @@ public class ClaimManager {
 				clan.resetClaims();
 			}
 		}
-		int loaded = 0;
 		Configurable d = getFile().getRoot();
+		Map<InvasiveEntity.Tag, List<Claim>> map = new HashMap<>();
 		for (String clan : d.getKeys(false)) {
 			Node cl = d.getNode(clan);
-			Node claims = cl.getNode("Claims");
-			for (String claimID : claims.getKeys(false)) {
-				Node claim = claims.getNode(claimID);
-				int x = claim.getNode("X").toPrimitive().getInt();
-				int z = claim.getNode("Z").toPrimitive().getInt();
-				String w = claim.getNode("World").toPrimitive().getString();
-				String[] ID = {clan, claimID, w};
-				int[] pos = {x, z};
-				Claim c = new Claim(ID, pos, true);
-				load(c);
-				loaded++;
-				if (!d.isBoolean(clan + ".Claims." + claimID + ".active")) {
-					getFile().write(t -> t.set(clan + ".Claims." + claimID + ".active", true));
+			if (cl.isNode("Claims")) {
+				Node claims = cl.getNode("Claims");
+				for (String claimID : claims.getKeys(false)) {
+					Node claim = claims.getNode(claimID);
+					int x = claim.getNode("X").toPrimitive().getInt();
+					int z = claim.getNode("Z").toPrimitive().getInt();
+					String w = claim.getNode("World").toPrimitive().getString();
+					Claim c = new DefaultClaim(x, z, clan, claimID, w, true);
+					if (claim.isNode("flags")) {
+						for (String id : claim.getNode("flags").getKeys(false)) {
+							boolean allowed = claim.getNode("flags").getNode(id).toPrimitive().getBoolean();
+							Claim.Flag loading = new Claim.Flag(id, true) {
+
+								private static final long serialVersionUID = -5092886817202966276L;
+
+								{
+									setEnabled(allowed);
+								}
+
+								@Override
+								public @NotNull String getId() {
+									return id;
+								}
+							};
+							c.register(loading);
+						}
+					}
+					if (map.get(c.getOwner().getTag()) != null) {
+						map.get(c.getOwner().getTag()).add(c);
+					} else {
+						List<Claim> list = new ArrayList<>();
+						list.add(c);
+						map.put(c.getOwner().getTag(), list);
+					}
+					claim.set(null);
+				}
+				claims.set(null);
+				claims.save();
+			} else {
+				InvasiveEntity.Tag c = () -> clan;
+				for (String claimID : cl.getKeys(false)) {
+					Node claim = cl.getNode(claimID);
+					int x = claim.getNode("x").toPrimitive().getInt();
+					int z = claim.getNode("z").toPrimitive().getInt();
+					String world = claim.getNode("world").toPrimitive().getString();
+					boolean active = claim.getNode("active").toPrimitive().getBoolean();
+					Claim cla = new DefaultClaim(x, z, clan, claimID, world, active);
+					if (claim.isNode("flags")) {
+						for (String id : claim.getNode("flags").getKeys(false)) {
+							boolean allowed = claim.getNode("flags").getNode(id).toPrimitive().getBoolean();
+							Claim.Flag loading = new Claim.Flag(id, true) {
+
+								private static final long serialVersionUID = -5092886817202966276L;
+
+								{
+									setEnabled(allowed);
+								}
+
+								@Override
+								public @NotNull String getId() {
+									return id;
+								}
+							};
+							cla.register(loading);
+						}
+					}
+					if (map.get(c) != null) {
+						map.get(c).add(cla);
+					} else {
+						List<Claim> list = new ArrayList<>();
+						list.add(cla);
+						map.put(c, list);
+					}
 				}
 			}
 		}
-		return loaded;
+		ClaimsLoadingProcedureEvent loading = ClanVentBus.call(new ClaimsLoadingProcedureEvent(map));
+		int size = 0;
+		for (Claim claim : loading.getClaims()) {
+			if (claim instanceof DefaultClaim) {
+				if (!getFile().getRoot().isNode(claim.getOwner().getTag().getId() + "." + claim.getId())) {
+					getFile().getRoot().getNode(claim.getOwner().getTag().getId() + "." + claim.getId()).set(claim);
+					getFile().getRoot().save();
+				}
+			}
+			load(claim);
+			size++;
+		}
+		return size;
 	}
-
 
 }

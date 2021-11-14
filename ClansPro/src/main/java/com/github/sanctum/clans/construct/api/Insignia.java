@@ -1,21 +1,27 @@
 package com.github.sanctum.clans.construct.api;
 
+import com.github.sanctum.clans.bridge.ClanVentBus;
+import com.github.sanctum.clans.construct.extra.InsigniaError;
+import com.github.sanctum.clans.event.associate.AssociateChangeBrushColorEvent;
+import com.github.sanctum.labyrinth.LabyrinthProvider;
 import com.github.sanctum.labyrinth.library.Applicable;
 import com.github.sanctum.labyrinth.library.StringUtils;
 import com.github.sanctum.labyrinth.library.TextLib;
-import java.io.Serializable;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import net.md_5.bungee.api.chat.BaseComponent;
+import org.bukkit.Bukkit;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 
-public abstract class Insignia implements Serializable {
+public abstract class Insignia {
 
 	private static final List<Insignia> CACHE = new LinkedList<>();
 
@@ -25,7 +31,7 @@ public abstract class Insignia implements Serializable {
 
 	private final String key;
 
-	private final LinkedList<Insignia.Line> list;
+	private final LinkedList<Line> list;
 
 	private String selection = "&4";
 
@@ -141,7 +147,7 @@ public abstract class Insignia implements Serializable {
 		return selection;
 	}
 
-	public Insignia input(Insignia.Line line) {
+	public Insignia input(Line line) {
 		if (this.list.size() < z) {
 			this.list.add(line);
 		}
@@ -152,15 +158,15 @@ public abstract class Insignia implements Serializable {
 		CACHE.remove(this);
 	}
 
-	public LinkedList<Insignia.Line> getLines() {
+	public LinkedList<Line> getLines() {
 		return this.list;
 	}
 
 	public List<BaseComponent[]> get() {
-		return getLines().stream().map(Line::toArray).collect(Collectors.toList());
+		return getLines().stream().map(Insignia.Line::toArray).collect(Collectors.toList());
 	}
 
-	public static class Line implements Serializable {
+	public static class Line {
 
 		private final Map<Integer, Line.Symbol> position;
 
@@ -234,7 +240,7 @@ public abstract class Insignia implements Serializable {
 			return builder.toString().trim();
 		}
 
-		public static class Symbol implements Serializable {
+		public static class Symbol {
 
 			private char character;
 
@@ -300,7 +306,7 @@ public abstract class Insignia implements Serializable {
 
 	}
 
-	protected static final class LabyrinthImpl extends Insignia implements Serializable {
+	protected static final class LabyrinthImpl extends Insignia {
 
 		public LabyrinthImpl(String key, int height, int width) {
 			super(key, height, width);
@@ -353,15 +359,19 @@ public abstract class Insignia implements Serializable {
 		}
 
 		public Insignia draw(Player p) {
+			final UUID user = p.getUniqueId();
 			try {
 				Insignia insignia = newInsignia(this.key, this.width, this.height);
 
 				if (this.color != null) {
-					insignia.setSelection(this.color);
+					AssociateChangeBrushColorEvent e = ClanVentBus.call(new AssociateChangeBrushColorEvent(ClansAPI.getInstance().getAssociate(user).get(), this.color));
+					if (!e.isCancelled()) {
+						insignia.setSelection(e.getColor());
+					}
 				}
-				insignia.setSymbol('█');
+				insignia.setSymbol('█'); // set our starting symbol to solid
 
-				for (int j = 1; j < this.height + 1; j++) {
+				for (int j = 1; j < this.height + 1; j++) { // populate the size of our grid.
 
 					Line line = new Line(j, insignia);
 
@@ -373,30 +383,32 @@ public abstract class Insignia implements Serializable {
 
 				}
 
-				//Message msg = Message.form(p);
-
 				for (Line line : insignia.getLines()) {
-					for (Line.Symbol symbol : line.getSymbols()) {
+					for (Line.Symbol symbol : line.getSymbols()) { // Setup what happens when we click a box (Default reaction is to resend the graph)
 
 						symbol.setAction(() -> {
 
 							symbol.setColor(insignia.getSelection());
 							symbol.setCharacter(insignia.getSymbol());
 
-							p.sendMessage(" ");
-							p.sendMessage(" ");
-							p.sendMessage(" ");
-							p.sendMessage(" ");
-							p.sendMessage(" ");
-							p.sendMessage(" ");
-							p.sendMessage(" ");
-							p.sendMessage(StringUtils.use(this.border).translate());
+							OfflinePlayer offline = Bukkit.getOfflinePlayer(user);
+							if (offline.isOnline()) {
+								Player t = offline.getPlayer();
+								t.sendMessage(" ");
+								t.sendMessage(" ");
+								t.sendMessage(" ");
+								t.sendMessage(" ");
+								t.sendMessage(" ");
+								t.sendMessage(" ");
+								t.sendMessage(" ");
+								t.sendMessage(StringUtils.use(this.border).translate());
 
-							for (BaseComponent[] components : insignia.get()) {
-								p.spigot().sendMessage(components);
+								for (BaseComponent[] components : insignia.get()) {
+									t.spigot().sendMessage(components);
+								}
+
+								t.sendMessage(StringUtils.use(this.border).translate());
 							}
-
-							p.sendMessage(StringUtils.use(this.border).translate());
 
 						});
 
@@ -416,238 +428,548 @@ public abstract class Insignia implements Serializable {
 							}
 							break;
 						case 2:
-							insignia.getLines().get(0).finish(symbol -> {
-								symbol.setCharacter(insignia.getSymbol());
-								symbol.setHoverMsg("Click for #0735dbblue");
-								symbol.setColor("#0735db");
-								symbol.setHidden(true, true);
-								symbol.setAction(() -> {
-									insignia.setSelection("#0735db");
+							if (LabyrinthProvider.getInstance().isNew()) {
+								insignia.getLines().get(0).finish(symbol -> {
+									symbol.setCharacter(insignia.getSymbol());
+									symbol.setHoverMsg("Click for #0735dbblue");
+									symbol.setColor("#0735db");
+									symbol.setHidden(true, true);
+									symbol.setAction(() -> {
+										AssociateChangeBrushColorEvent e = ClanVentBus.call(new AssociateChangeBrushColorEvent(ClansAPI.getInstance().getAssociate(p).get(), "{#0735db}"));
+										if (!e.isCancelled()) {
+											insignia.setSelection(e.getColor());
+										}
+									});
 								});
-							});
-							insignia.getLines().get(1).finish(symbol -> {
-								symbol.setCharacter(insignia.getSymbol());
-								symbol.setHoverMsg("Click for {#07dbb1}teal");
-								symbol.setColor("{#07dbb1}");
-								symbol.setHidden(true, true);
-								symbol.setAction(() -> {
-									insignia.setSelection("{#07dbb1}");
+								insignia.getLines().get(1).finish(symbol -> {
+									symbol.setCharacter(insignia.getSymbol());
+									symbol.setHoverMsg("Click for {#07dbb1}teal");
+									symbol.setColor("{#07dbb1}");
+									symbol.setHidden(true, true);
+									symbol.setAction(() -> {
+										AssociateChangeBrushColorEvent e = ClanVentBus.call(new AssociateChangeBrushColorEvent(ClansAPI.getInstance().getAssociate(p).get(), "{#07dbb1}"));
+										if (!e.isCancelled()) {
+											insignia.setSelection(e.getColor());
+										}
+									});
 								});
-							});
-							insignia.getLines().get(2).finish(symbol -> {
-								symbol.setCharacter(insignia.getSymbol());
-								symbol.setHoverMsg("Click for {#07db38}green");
-								symbol.setColor("{#07db38}");
-								symbol.setHidden(true, true);
-								symbol.setAction(() -> {
-									insignia.setSelection("{#07db38}");
+								insignia.getLines().get(2).finish(symbol -> {
+									symbol.setCharacter(insignia.getSymbol());
+									symbol.setHoverMsg("Click for {#07db38}green");
+									symbol.setColor("{#07db38}");
+									symbol.setHidden(true, true);
+									symbol.setAction(() -> {
+										AssociateChangeBrushColorEvent e = ClanVentBus.call(new AssociateChangeBrushColorEvent(ClansAPI.getInstance().getAssociate(p).get(), "{#07db38}"));
+										if (!e.isCancelled()) {
+											insignia.setSelection(e.getColor());
+										}
+									});
 								});
-							});
-							insignia.getLines().get(3).finish(symbol -> {
-								symbol.setCharacter(insignia.getSymbol());
-								symbol.setHoverMsg("Click for #dbeb34yellow");
-								symbol.setColor("#dbeb34");
-								symbol.setHidden(true, true);
-								symbol.setAction(() -> {
-									insignia.setSelection("#dbeb34");
+								insignia.getLines().get(3).finish(symbol -> {
+									symbol.setCharacter(insignia.getSymbol());
+									symbol.setHoverMsg("Click for #dbeb34yellow");
+									symbol.setColor("#dbeb34");
+									symbol.setHidden(true, true);
+									symbol.setAction(() -> {
+										AssociateChangeBrushColorEvent e = ClanVentBus.call(new AssociateChangeBrushColorEvent(ClansAPI.getInstance().getAssociate(p).get(), "{#dbeb34}"));
+										if (!e.isCancelled()) {
+											insignia.setSelection(e.getColor());
+										}
+									});
 								});
-							});
-							insignia.getLines().get(4).finish(symbol -> {
-								symbol.setCharacter(insignia.getSymbol());
-								symbol.setHoverMsg("Click for &4red");
-								symbol.setColor("&4");
-								symbol.setHidden(true, true);
-								symbol.setAction(() -> {
-									insignia.setSelection("&4");
+								insignia.getLines().get(4).finish(symbol -> {
+									symbol.setCharacter(insignia.getSymbol());
+									symbol.setHoverMsg("Click for &4red");
+									symbol.setColor("&4");
+									symbol.setHidden(true, true);
+									symbol.setAction(() -> {
+										AssociateChangeBrushColorEvent e = ClanVentBus.call(new AssociateChangeBrushColorEvent(ClansAPI.getInstance().getAssociate(p).get(), "&4"));
+										if (!e.isCancelled()) {
+											insignia.setSelection(e.getColor());
+										}
+									});
 								});
-							});
-							insignia.getLines().get(5).finish(symbol -> {
-								symbol.setCharacter(insignia.getSymbol());
-								symbol.setColor("&5");
-								symbol.setHidden(true, true);
-								symbol.setHoverMsg("Click for &5purple");
-								symbol.setAction(() -> {
-									insignia.setSelection("&5");
+								insignia.getLines().get(5).finish(symbol -> {
+									symbol.setCharacter(insignia.getSymbol());
+									symbol.setColor("&5");
+									symbol.setHidden(true, true);
+									symbol.setHoverMsg("Click for &5purple");
+									symbol.setAction(() -> {
+										AssociateChangeBrushColorEvent e = ClanVentBus.call(new AssociateChangeBrushColorEvent(ClansAPI.getInstance().getAssociate(p).get(), "&5"));
+										if (!e.isCancelled()) {
+											insignia.setSelection(e.getColor());
+										}
+									});
 								});
-							});
+							} else {
+								insignia.getLines().get(0).finish(symbol -> {
+									symbol.setCharacter(insignia.getSymbol());
+									symbol.setHoverMsg("Click for &9blue");
+									symbol.setColor("&9");
+									symbol.setHidden(true, true);
+									symbol.setAction(() -> {
+										AssociateChangeBrushColorEvent e = ClanVentBus.call(new AssociateChangeBrushColorEvent(ClansAPI.getInstance().getAssociate(p).get(), "&9"));
+										if (!e.isCancelled()) {
+											insignia.setSelection(e.getColor());
+										}
+									});
+								});
+								insignia.getLines().get(1).finish(symbol -> {
+									symbol.setCharacter(insignia.getSymbol());
+									symbol.setHoverMsg("Click for &baqua");
+									symbol.setColor("&b");
+									symbol.setHidden(true, true);
+									symbol.setAction(() -> {
+										AssociateChangeBrushColorEvent e = ClanVentBus.call(new AssociateChangeBrushColorEvent(ClansAPI.getInstance().getAssociate(p).get(), "&b"));
+										if (!e.isCancelled()) {
+											insignia.setSelection(e.getColor());
+										}
+									});
+								});
+								insignia.getLines().get(2).finish(symbol -> {
+									symbol.setCharacter(insignia.getSymbol());
+									symbol.setHoverMsg("Click for &2green");
+									symbol.setColor("&2");
+									symbol.setHidden(true, true);
+									symbol.setAction(() -> {
+										AssociateChangeBrushColorEvent e = ClanVentBus.call(new AssociateChangeBrushColorEvent(ClansAPI.getInstance().getAssociate(p).get(), "&2"));
+										if (!e.isCancelled()) {
+											insignia.setSelection(e.getColor());
+										}
+									});
+								});
+								insignia.getLines().get(3).finish(symbol -> {
+									symbol.setCharacter(insignia.getSymbol());
+									symbol.setHoverMsg("Click for &eyellow");
+									symbol.setColor("&e");
+									symbol.setHidden(true, true);
+									symbol.setAction(() -> {
+										AssociateChangeBrushColorEvent e = ClanVentBus.call(new AssociateChangeBrushColorEvent(ClansAPI.getInstance().getAssociate(p).get(), "&e"));
+										if (!e.isCancelled()) {
+											insignia.setSelection(e.getColor());
+										}
+									});
+								});
+								insignia.getLines().get(4).finish(symbol -> {
+									symbol.setCharacter(insignia.getSymbol());
+									symbol.setHoverMsg("Click for &4red");
+									symbol.setColor("&4");
+									symbol.setHidden(true, true);
+									symbol.setAction(() -> {
+										AssociateChangeBrushColorEvent e = ClanVentBus.call(new AssociateChangeBrushColorEvent(ClansAPI.getInstance().getAssociate(p).get(), "&4"));
+										if (!e.isCancelled()) {
+											insignia.setSelection(e.getColor());
+										}
+									});
+								});
+								insignia.getLines().get(5).finish(symbol -> {
+									symbol.setCharacter(insignia.getSymbol());
+									symbol.setColor("&5");
+									symbol.setHidden(true, true);
+									symbol.setHoverMsg("Click for &5purple");
+									symbol.setAction(() -> {
+										AssociateChangeBrushColorEvent e = ClanVentBus.call(new AssociateChangeBrushColorEvent(ClansAPI.getInstance().getAssociate(p).get(), "&5"));
+										if (!e.isCancelled()) {
+											insignia.setSelection(e.getColor());
+										}
+									});
+								});
+							}
 							break;
 
 						case 4:
-							insignia.getLines().get(0).finish(symbol -> {
-								symbol.setCharacter(insignia.getSymbol());
-								symbol.setHoverMsg("Click for &#5f07dbkinda blue");
-								symbol.setColor("#5f07db");
-								symbol.setHidden(true, true);
-								symbol.setAction(() -> {
-									insignia.setSelection("#5f07db");
+							if (LabyrinthProvider.getInstance().isNew()) {
+								insignia.getLines().get(0).finish(symbol -> {
+									symbol.setCharacter(insignia.getSymbol());
+									symbol.setHoverMsg("Click for &#5f07dbkinda blue");
+									symbol.setColor("#5f07db");
+									symbol.setHidden(true, true);
+									symbol.setAction(() -> {
+										AssociateChangeBrushColorEvent e = ClanVentBus.call(new AssociateChangeBrushColorEvent(ClansAPI.getInstance().getAssociate(p).get(), "{#5f07db}"));
+										if (!e.isCancelled()) {
+											insignia.setSelection(e.getColor());
+										}
+									});
 								});
-							});
-							insignia.getLines().get(1).finish(symbol -> {
-								symbol.setCharacter(insignia.getSymbol());
-								symbol.setHoverMsg("Click for {#07d0db}straight neon");
-								symbol.setColor("{#07d0db}");
-								symbol.setHidden(true, true);
-								symbol.setAction(() -> {
-									insignia.setSelection("{#07d0db}");
+								insignia.getLines().get(1).finish(symbol -> {
+									symbol.setCharacter(insignia.getSymbol());
+									symbol.setHoverMsg("Click for {#07d0db}straight neon");
+									symbol.setColor("{#07d0db}");
+									symbol.setHidden(true, true);
+									symbol.setAction(() -> {
+										AssociateChangeBrushColorEvent e = ClanVentBus.call(new AssociateChangeBrushColorEvent(ClansAPI.getInstance().getAssociate(p).get(), "{#07d0db}"));
+										if (!e.isCancelled()) {
+											insignia.setSelection(e.getColor());
+										}
+									});
 								});
-							});
-							insignia.getLines().get(2).finish(symbol -> {
-								symbol.setCharacter(insignia.getSymbol());
-								symbol.setHoverMsg("Click for {#07db9b}whoa green");
-								symbol.setColor("{#07db9b}");
-								symbol.setHidden(true, true);
-								symbol.setAction(() -> {
-									insignia.setSelection("{#07db9b}");
+								insignia.getLines().get(2).finish(symbol -> {
+									symbol.setCharacter(insignia.getSymbol());
+									symbol.setHoverMsg("Click for {#07db9b}whoa green");
+									symbol.setColor("{#07db9b}");
+									symbol.setHidden(true, true);
+									symbol.setAction(() -> {
+										AssociateChangeBrushColorEvent e = ClanVentBus.call(new AssociateChangeBrushColorEvent(ClansAPI.getInstance().getAssociate(p).get(), "{#07db9b}"));
+										if (!e.isCancelled()) {
+											insignia.setSelection(e.getColor());
+										}
+									});
 								});
-							});
-							insignia.getLines().get(3).finish(symbol -> {
-								symbol.setCharacter(insignia.getSymbol());
-								symbol.setHoverMsg("Click for {#a4f542}ooz green");
-								symbol.setColor("#a4f542");
-								symbol.setHidden(true, true);
-								symbol.setAction(() -> {
-									insignia.setSelection("#a4f542");
+								insignia.getLines().get(3).finish(symbol -> {
+									symbol.setCharacter(insignia.getSymbol());
+									symbol.setHoverMsg("Click for {#a4f542}ooz green");
+									symbol.setColor("#a4f542");
+									symbol.setHidden(true, true);
+									symbol.setAction(() -> {
+										AssociateChangeBrushColorEvent e = ClanVentBus.call(new AssociateChangeBrushColorEvent(ClansAPI.getInstance().getAssociate(p).get(), "{#a4f542}"));
+										if (!e.isCancelled()) {
+											insignia.setSelection(e.getColor());
+										}
+									});
 								});
-							});
-							insignia.getLines().get(4).finish(symbol -> {
-								symbol.setCharacter(insignia.getSymbol());
-								symbol.setHoverMsg("Click for {#eb6834}pumpkin red");
-								symbol.setColor("#eb6834");
-								symbol.setHidden(true, true);
-								symbol.setAction(() -> {
-									insignia.setSelection("#eb6834");
+								insignia.getLines().get(4).finish(symbol -> {
+									symbol.setCharacter(insignia.getSymbol());
+									symbol.setHoverMsg("Click for {#eb6834}pumpkin red");
+									symbol.setColor("#eb6834");
+									symbol.setHidden(true, true);
+									symbol.setAction(() -> {
+										AssociateChangeBrushColorEvent e = ClanVentBus.call(new AssociateChangeBrushColorEvent(ClansAPI.getInstance().getAssociate(p).get(), "{#eb6834}"));
+										if (!e.isCancelled()) {
+											insignia.setSelection(e.getColor());
+										}
+									});
 								});
-							});
-							insignia.getLines().get(5).finish(symbol -> {
-								symbol.setCharacter(insignia.getSymbol());
-								symbol.setColor("#a6128d");
-								symbol.setHoverMsg("Click for {#a6128d}sexy purple");
-								symbol.setHidden(true, true);
-								symbol.setAction(() -> {
-									insignia.setSelection("#a6128d");
+								insignia.getLines().get(5).finish(symbol -> {
+									symbol.setCharacter(insignia.getSymbol());
+									symbol.setColor("#a6128d");
+									symbol.setHoverMsg("Click for {#a6128d}sexy purple");
+									symbol.setHidden(true, true);
+									symbol.setAction(() -> {
+										AssociateChangeBrushColorEvent e = ClanVentBus.call(new AssociateChangeBrushColorEvent(ClansAPI.getInstance().getAssociate(p).get(), "{#a6128d}"));
+										if (!e.isCancelled()) {
+											insignia.setSelection(e.getColor());
+										}
+									});
 								});
-							});
+							} else {
+								insignia.getLines().get(0).finish(symbol -> {
+									symbol.setCharacter(insignia.getSymbol());
+									symbol.setHoverMsg("Click for &1dark blue");
+									symbol.setColor("&1");
+									symbol.setHidden(true, true);
+									symbol.setAction(() -> {
+										AssociateChangeBrushColorEvent e = ClanVentBus.call(new AssociateChangeBrushColorEvent(ClansAPI.getInstance().getAssociate(p).get(), "&1"));
+										if (!e.isCancelled()) {
+											insignia.setSelection(e.getColor());
+										}
+									});
+								});
+								insignia.getLines().get(1).finish(symbol -> {
+									symbol.setCharacter(insignia.getSymbol());
+									symbol.setHoverMsg("Click for &3dark aqua");
+									symbol.setColor("&3");
+									symbol.setHidden(true, true);
+									symbol.setAction(() -> {
+										AssociateChangeBrushColorEvent e = ClanVentBus.call(new AssociateChangeBrushColorEvent(ClansAPI.getInstance().getAssociate(p).get(), "&3"));
+										if (!e.isCancelled()) {
+											insignia.setSelection(e.getColor());
+										}
+									});
+								});
+								insignia.getLines().get(2).finish(symbol -> {
+									symbol.setCharacter(insignia.getSymbol());
+									symbol.setHoverMsg("Click for &alight green");
+									symbol.setColor("&a");
+									symbol.setHidden(true, true);
+									symbol.setAction(() -> {
+										AssociateChangeBrushColorEvent e = ClanVentBus.call(new AssociateChangeBrushColorEvent(ClansAPI.getInstance().getAssociate(p).get(), "&a"));
+										if (!e.isCancelled()) {
+											insignia.setSelection(e.getColor());
+										}
+									});
+								});
+								insignia.getLines().get(3).finish(symbol -> {
+									symbol.setCharacter(insignia.getSymbol());
+									symbol.setHidden(true, true);
+									symbol.setHoverMsg("Click for &6gold");
+									symbol.setColor("&6");
+									symbol.setAction(() -> {
+										AssociateChangeBrushColorEvent e = ClanVentBus.call(new AssociateChangeBrushColorEvent(ClansAPI.getInstance().getAssociate(p).get(), "&6"));
+										if (!e.isCancelled()) {
+											insignia.setSelection(e.getColor());
+										}
+									});
+								});
+								insignia.getLines().get(4).finish(symbol -> {
+									symbol.setCharacter(insignia.getSymbol());
+									symbol.setHoverMsg("Click for &clight red");
+									symbol.setColor("&c");
+									symbol.setHidden(true, true);
+									symbol.setAction(() -> {
+										AssociateChangeBrushColorEvent e = ClanVentBus.call(new AssociateChangeBrushColorEvent(ClansAPI.getInstance().getAssociate(p).get(), "&c"));
+										if (!e.isCancelled()) {
+											insignia.setSelection(e.getColor());
+										}
+									});
+								});
+								insignia.getLines().get(5).finish(symbol -> {
+									symbol.setCharacter(insignia.getSymbol());
+									symbol.setColor("&d");
+									symbol.setHoverMsg("Click for &dlight purple");
+									symbol.setHidden(true, true);
+									symbol.setAction(() -> {
+										AssociateChangeBrushColorEvent e = ClanVentBus.call(new AssociateChangeBrushColorEvent(ClansAPI.getInstance().getAssociate(p).get(), "&d"));
+										if (!e.isCancelled()) {
+											insignia.setSelection(e.getColor());
+										}
+									});
+								});
+							}
 							break;
 
 						case 6:
-							insignia.getLines().get(0).finish(symbol -> {
-								symbol.setCharacter(insignia.getSymbol());
-								symbol.setHoverMsg(StringUtils.use("Click for {#a58bb0}what happened purple").translate());
-								symbol.setColor("#a58bb0");
-								symbol.setHidden(true, true);
-								symbol.setAction(() -> {
-									insignia.setSelection("#a58bb0");
+							if (!LabyrinthProvider.getInstance().isNew()) {
+								insignia.getLines().get(0).finish(symbol -> {
+									symbol.setCharacter(insignia.getSymbol());
+									symbol.setHoverMsg(StringUtils.use("Click for &0black").translate());
+									symbol.setColor("&0");
+									symbol.setHidden(true, true);
+									symbol.setAction(() -> {
+										AssociateChangeBrushColorEvent e = ClanVentBus.call(new AssociateChangeBrushColorEvent(ClansAPI.getInstance().getAssociate(p).get(), "&0"));
+										if (!e.isCancelled()) {
+											insignia.setSelection(e.getColor());
+										}
+									});
 								});
-							});
-							insignia.getLines().get(1).finish(symbol -> {
-								symbol.setCharacter(insignia.getSymbol());
-								symbol.setHoverMsg("Click for {#07a6db}ocean blue");
-								symbol.setColor("{#07a6db}");
-								symbol.setHidden(true, true);
-								symbol.setAction(() -> {
-									insignia.setSelection("{#07a6db}");
+								insignia.getLines().get(1).finish(symbol -> symbol.setCharacter(' '));
+								insignia.getLines().get(1).finish(symbol -> {
+									symbol.setCharacter('|');
+									symbol.setHidden(true, true);
 								});
-							});
-							insignia.getLines().get(1).finish(symbol -> {
-								symbol.setCharacter('|');
-								symbol.setHidden(true, true);
-							});
-							insignia.getLines().get(2).finish(symbol -> {
-								symbol.setCharacter(insignia.getSymbol());
-								symbol.setHoverMsg("Click for {#07db0b}mean green");
-								symbol.setColor("{#07db0b}");
-								symbol.setHidden(true, true);
-								symbol.setAction(() -> {
-									insignia.setSelection("{#07db0b}");
+								insignia.getLines().get(2).finish(symbol -> {
+									symbol.setCharacter(insignia.getSymbol());
+									symbol.setHoverMsg("Click for &fwhite");
+									symbol.setColor("&f");
+									symbol.setHidden(true, true);
+									symbol.setAction(() -> {
+										AssociateChangeBrushColorEvent e = ClanVentBus.call(new AssociateChangeBrushColorEvent(ClansAPI.getInstance().getAssociate(p).get(), "&f"));
+										if (!e.isCancelled()) {
+											insignia.setSelection(e.getColor());
+										}
+									});
 								});
-							});
-							insignia.getLines().get(2).finish(symbol -> {
-								symbol.setCharacter('|');
-								symbol.setHidden(true, true);
-							});
-							insignia.getLines().get(2).finish(symbol -> {
-								symbol.setCharacter(' ');
-								symbol.setHidden(true, true);
-							});
-							insignia.getLines().get(2).finish(symbol -> {
-								symbol.setCharacter('▓');
-								symbol.setHidden(true, true);
-								symbol.setHoverMsg("Change the symbol");
-								symbol.setAction(() -> {
-									insignia.setSymbol('▓');
+								insignia.getLines().get(2).finish(symbol -> {
+									symbol.setCharacter('|');
+									symbol.setHidden(true, true);
 								});
-							});
-							insignia.getLines().get(2).finish(symbol -> {
-								symbol.setCharacter(' ');
-								symbol.setHidden(true, true);
-							});
-							insignia.getLines().get(2).finish(symbol -> {
-								symbol.setCharacter('▒');
-								symbol.setHidden(true, true);
-								symbol.setHoverMsg("Change the symbol");
-								symbol.setAction(() -> {
-									insignia.setSymbol('▒');
+								insignia.getLines().get(2).finish(symbol -> {
+									symbol.setCharacter(' ');
+									symbol.setHidden(true, true);
 								});
-							});
-							insignia.getLines().get(3).finish(symbol -> {
-								symbol.setCharacter(insignia.getSymbol());
-								symbol.setHidden(true, true);
-								symbol.setHoverMsg("Click for {#965806}turd");
-								symbol.setColor("#965806");
-								symbol.setAction(() -> {
-									insignia.setSelection("#965806");
+								insignia.getLines().get(2).finish(symbol -> {
+									symbol.setCharacter('▓');
+									symbol.setHidden(true, true);
+									symbol.setHoverMsg("Change the brush to translucent 1");
+									symbol.setAction(() -> {
+										insignia.setSymbol('▓');
+									});
 								});
-							});
-							insignia.getLines().get(3).finish(symbol -> {
-								symbol.setCharacter('|');
-								symbol.setHidden(true, true);
-							});
-							insignia.getLines().get(3).finish(symbol -> {
-								symbol.setCharacter(' ');
-								symbol.setHidden(true, true);
-							});
-							insignia.getLines().get(3).finish(symbol -> {
-								symbol.setCharacter('█');
-								symbol.setHidden(true, true);
-								symbol.setHoverMsg("Change the symbol");
-								symbol.setAction(() -> {
-									insignia.setSymbol('█');
+								insignia.getLines().get(2).finish(symbol -> {
+									symbol.setCharacter(' ');
+									symbol.setHidden(true, true);
 								});
-							});
-							insignia.getLines().get(3).finish(symbol -> {
-								symbol.setCharacter(' ');
-								symbol.setHidden(true, true);
-							});
-							insignia.getLines().get(3).finish(symbol -> {
-								symbol.setCharacter('░');
-								symbol.setHidden(true, true);
-								symbol.setHoverMsg("Change the symbol");
-								symbol.setAction(() -> {
-									insignia.setSymbol('░');
+								insignia.getLines().get(2).finish(symbol -> {
+									symbol.setCharacter('▒');
+									symbol.setHidden(true, true);
+									symbol.setHoverMsg("Change the brush to translucent 2");
+									symbol.setAction(() -> {
+										insignia.setSymbol('▒');
+									});
 								});
-							});
-							insignia.getLines().get(4).finish(symbol -> {
-								symbol.setCharacter(insignia.getSymbol());
-								symbol.setHoverMsg("Click for {#f5425d}questionably red");
-								symbol.setColor("#f5425d");
-								symbol.setHidden(true, true);
-								symbol.setAction(() -> {
-									insignia.setSelection("#f5425d");
+								insignia.getLines().get(3).finish(symbol -> {
+									symbol.setCharacter(insignia.getSymbol());
+									symbol.setHoverMsg("Click for &7gray");
+									symbol.setColor("&7");
+									symbol.setHidden(true, true);
+									symbol.setAction(() -> {
+										AssociateChangeBrushColorEvent e = ClanVentBus.call(new AssociateChangeBrushColorEvent(ClansAPI.getInstance().getAssociate(p).get(), "&7"));
+										if (!e.isCancelled()) {
+											insignia.setSelection(e.getColor());
+										}
+									});
 								});
-							});
-							insignia.getLines().get(4).finish(symbol -> {
-								symbol.setCharacter('|');
-								symbol.setHidden(true, true);
-							});
-							insignia.getLines().get(5).finish(symbol -> {
-								symbol.setCharacter(insignia.getSymbol());
-								symbol.setColor("#21094f");
-								symbol.setHidden(true, true);
-								symbol.setHoverMsg("Click for {#21094f}nightmare cake");
-								symbol.setAction(() -> {
-									insignia.setSelection("#21094f");
+								insignia.getLines().get(3).finish(symbol -> {
+									symbol.setCharacter('|');
+									symbol.setHidden(true, true);
 								});
-							});
+								insignia.getLines().get(3).finish(symbol -> {
+									symbol.setCharacter(' ');
+									symbol.setHidden(true, true);
+								});
+								insignia.getLines().get(3).finish(symbol -> {
+									symbol.setCharacter('█');
+									symbol.setHidden(true, true);
+									symbol.setHoverMsg("Change the brush to solid");
+									symbol.setAction(() -> {
+										insignia.setSymbol('█');
+									});
+								});
+								insignia.getLines().get(3).finish(symbol -> {
+									symbol.setCharacter(' ');
+									symbol.setHidden(true, true);
+								});
+								insignia.getLines().get(3).finish(symbol -> {
+									symbol.setCharacter('░');
+									symbol.setHidden(true, true);
+									symbol.setHoverMsg("Change the brush to translucent 3");
+									symbol.setAction(() -> {
+										insignia.setSymbol('░');
+									});
+								});
+								insignia.getLines().get(4).finish(symbol -> symbol.setCharacter(' '));
+								insignia.getLines().get(4).finish(symbol -> {
+									symbol.setCharacter('|');
+									symbol.setHidden(true, true);
+								});
+								insignia.getLines().get(5).finish(symbol -> symbol.setCharacter(' '));
+							} else {
+								insignia.getLines().get(0).finish(symbol -> {
+									symbol.setCharacter(insignia.getSymbol());
+									symbol.setHoverMsg(StringUtils.use("Click for {#a58bb0}what happened purple").translate());
+									symbol.setColor("#a58bb0");
+									symbol.setHidden(true, true);
+									symbol.setAction(() -> {
+										AssociateChangeBrushColorEvent e = ClanVentBus.call(new AssociateChangeBrushColorEvent(ClansAPI.getInstance().getAssociate(p).get(), "{#a58bb0}"));
+										if (!e.isCancelled()) {
+											insignia.setSelection(e.getColor());
+										}
+									});
+								});
+								insignia.getLines().get(1).finish(symbol -> {
+									symbol.setCharacter(insignia.getSymbol());
+									symbol.setHoverMsg("Click for {#07a6db}ocean blue");
+									symbol.setColor("{#07a6db}");
+									symbol.setHidden(true, true);
+									symbol.setAction(() -> {
+										AssociateChangeBrushColorEvent e = ClanVentBus.call(new AssociateChangeBrushColorEvent(ClansAPI.getInstance().getAssociate(p).get(), "{#07a6db}"));
+										if (!e.isCancelled()) {
+											insignia.setSelection(e.getColor());
+										}
+									});
+								});
+								insignia.getLines().get(1).finish(symbol -> {
+									symbol.setCharacter('|');
+									symbol.setHidden(true, true);
+								});
+								insignia.getLines().get(2).finish(symbol -> {
+									symbol.setCharacter(insignia.getSymbol());
+									symbol.setHoverMsg("Click for {#07db0b}mean green");
+									symbol.setColor("{#07db0b}");
+									symbol.setHidden(true, true);
+									symbol.setAction(() -> {
+										AssociateChangeBrushColorEvent e = ClanVentBus.call(new AssociateChangeBrushColorEvent(ClansAPI.getInstance().getAssociate(p).get(), "{#07db0b}"));
+										if (!e.isCancelled()) {
+											insignia.setSelection(e.getColor());
+										}
+									});
+								});
+								insignia.getLines().get(2).finish(symbol -> {
+									symbol.setCharacter('|');
+									symbol.setHidden(true, true);
+								});
+								insignia.getLines().get(2).finish(symbol -> {
+									symbol.setCharacter(' ');
+									symbol.setHidden(true, true);
+								});
+								insignia.getLines().get(2).finish(symbol -> {
+									symbol.setCharacter('▓');
+									symbol.setHidden(true, true);
+									symbol.setHoverMsg("Change the brush to translucent 1");
+									symbol.setAction(() -> {
+										insignia.setSymbol('▓');
+									});
+								});
+								insignia.getLines().get(2).finish(symbol -> {
+									symbol.setCharacter(' ');
+									symbol.setHidden(true, true);
+								});
+								insignia.getLines().get(2).finish(symbol -> {
+									symbol.setCharacter('▒');
+									symbol.setHidden(true, true);
+									symbol.setHoverMsg("Change the brush to translucent 2");
+									symbol.setAction(() -> {
+										insignia.setSymbol('▒');
+									});
+								});
+								insignia.getLines().get(3).finish(symbol -> {
+									symbol.setCharacter(insignia.getSymbol());
+									symbol.setHidden(true, true);
+									symbol.setHoverMsg("Click for {#965806}turd");
+									symbol.setColor("#965806");
+									symbol.setAction(() -> {
+										AssociateChangeBrushColorEvent e = ClanVentBus.call(new AssociateChangeBrushColorEvent(ClansAPI.getInstance().getAssociate(p).get(), "{#965806}"));
+										if (!e.isCancelled()) {
+											insignia.setSelection(e.getColor());
+										}
+									});
+								});
+								insignia.getLines().get(3).finish(symbol -> {
+									symbol.setCharacter('|');
+									symbol.setHidden(true, true);
+								});
+								insignia.getLines().get(3).finish(symbol -> {
+									symbol.setCharacter(' ');
+									symbol.setHidden(true, true);
+								});
+								insignia.getLines().get(3).finish(symbol -> {
+									symbol.setCharacter('█');
+									symbol.setHidden(true, true);
+									symbol.setHoverMsg("Change the brush to solid");
+									symbol.setAction(() -> {
+										insignia.setSymbol('█');
+									});
+								});
+								insignia.getLines().get(3).finish(symbol -> {
+									symbol.setCharacter(' ');
+									symbol.setHidden(true, true);
+								});
+								insignia.getLines().get(3).finish(symbol -> {
+									symbol.setCharacter('░');
+									symbol.setHidden(true, true);
+									symbol.setHoverMsg("Change the brush to translucent 3");
+									symbol.setAction(() -> {
+										insignia.setSymbol('░');
+									});
+								});
+								insignia.getLines().get(4).finish(symbol -> {
+									symbol.setCharacter(insignia.getSymbol());
+									symbol.setHoverMsg("Click for {#f5425d}questionably red");
+									symbol.setColor("#f5425d");
+									symbol.setHidden(true, true);
+									symbol.setAction(() -> {
+										AssociateChangeBrushColorEvent e = ClanVentBus.call(new AssociateChangeBrushColorEvent(ClansAPI.getInstance().getAssociate(p).get(), "{#f5425d}"));
+										if (!e.isCancelled()) {
+											insignia.setSelection(e.getColor());
+										}
+									});
+								});
+								insignia.getLines().get(4).finish(symbol -> {
+									symbol.setCharacter('|');
+									symbol.setHidden(true, true);
+								});
+								insignia.getLines().get(5).finish(symbol -> {
+									symbol.setCharacter(insignia.getSymbol());
+									symbol.setColor("#21094f");
+									symbol.setHidden(true, true);
+									symbol.setHoverMsg("Click for {#21094f}nightmare cake");
+									symbol.setAction(() -> {
+										AssociateChangeBrushColorEvent e = ClanVentBus.call(new AssociateChangeBrushColorEvent(ClansAPI.getInstance().getAssociate(p).get(), "{#21094f}"));
+										if (!e.isCancelled()) {
+											insignia.setSelection(e.getColor());
+										}
+									});
+								});
+							}
 							break;
 					}
 				}

@@ -3,13 +3,11 @@ package com.github.sanctum.clans.construct.extra;
 import com.github.sanctum.clans.ClansJavaPlugin;
 import com.github.sanctum.clans.bridge.ClanAddon;
 import com.github.sanctum.clans.bridge.ClanAddonQuery;
-import com.github.sanctum.clans.construct.Claim;
+import com.github.sanctum.clans.construct.api.Claim;
 import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClansAPI;
 import com.github.sanctum.clans.construct.api.War;
-import java.util.UUID;
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
-import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
@@ -127,14 +125,14 @@ public class ClanPlaceholders extends PlaceholderExpansion {
 					return "Empty";
 				}
 				Clan target = Clan.ACTION.getMostPowerful().get(i - 1);
-				return target != null ? target.format(String.valueOf(target.getPower())) + "" : "Empty";
+				return target != null ? Clan.ACTION.format(target.getPower()) + "" : "Empty";
 			}
 			if (identifier.equals("clan_top_slot_" + i + "_color")) {
 				if (i > Clan.ACTION.getMostPowerful().size()) {
 					return "&r";
 				}
 				Clan target = Clan.ACTION.getMostPowerful().get(i - 1);
-				return target != null ? target.getPalette().getStart() + "" : "&r";
+				return target != null ? target.getPalette().toString() + "" : "&r";
 			}
 		}
 
@@ -144,7 +142,7 @@ public class ClanPlaceholders extends PlaceholderExpansion {
 		}
 
 		if (identifier.equals("clan_name_colored")) {
-			return c.getPalette().isGradient() ? c.getPalette().toString() : c.getPalette().getStart() + c.getName();
+			return c.getPalette().isGradient() ? c.getPalette().toGradient().context(c.getName()).translate() : c.getPalette() + c.getName();
 		}
 
 		if (identifier.equals("clan_description")) {
@@ -152,15 +150,15 @@ public class ClanPlaceholders extends PlaceholderExpansion {
 		}
 
 		if (identifier.equals("land_status")) {
-			Claim claim = Claim.from(player.getLocation());
+			Claim claim = ClansAPI.getInstance().getClaimManager().getClaim(player.getLocation());
 			if (claim != null) {
 				if (claim.getClan().getId().equals(c.getId())) {
 					return "Owned";
 				}
-				if (claim.getClan().getAllies().list().contains(c)) {
+				if (claim.getClan().getRelation().getAlliance().has(c)) {
 					return "Allied";
 				}
-				if (claim.getClan().getEnemies().list().contains(c)) {
+				if (claim.getClan().getRelation().getRivalry().has(c)) {
 					return "Rivaled";
 				}
 			}
@@ -178,8 +176,8 @@ public class ClanPlaceholders extends PlaceholderExpansion {
 		if (identifier.equals("clan_members_online")) {
 			String result;
 			int count = 0;
-			for (String member : c.getMemberIds()) {
-				if (Bukkit.getOfflinePlayer(UUID.fromString(member)).isOnline()) {
+			for (Clan.Associate associate1 : c.getMembers()) {
+				if (associate1.getTag().isPlayer() && associate1.getUser().isOnline()) {
 					count++;
 				}
 			}
@@ -240,24 +238,24 @@ public class ClanPlaceholders extends PlaceholderExpansion {
 			if (c.getBalance() == null) {
 				return result;
 			}
-			result = c.format(String.valueOf(c.getBalance().doubleValue()));
+			result = Clan.ACTION.format(c.getBalance().doubleValue());
 			return result;
 		}
 
 		if (identifier.equals("clan_power")) {
-			return c.format(String.valueOf(c.getPower()));
+			return Clan.ACTION.format(c.getPower());
 		}
 
 		if (identifier.equals("clan_color")) {
-			return c.getPalette().getStart();
+			return c.getPalette().toString();
 		}
 
 		if (identifier.equals("member_rank")) {
-			return associate.getRankTag();
+			return associate.getRankFull();
 		}
 
 		if (identifier.equals("member_rank_short")) {
-			return associate.getRankShort();
+			return associate.getRankWordless();
 		}
 
 		if (identifier.equals("member_bio")) {

@@ -18,14 +18,14 @@ public class MapCommand extends ClanSubCommand {
 		if (length == 0) {
 			MapController.sendMapCurrentLoc(p);
 		} else {
-			if (args[1].equalsIgnoreCase("on")) {
+			if (args[0].equalsIgnoreCase("on")) {
 				// on logic
 				if (!MapController.isToggled(p)) {
 					Clan.ACTION.sendMessage(p, "&aMap enabled.");
 					MapController.sendMapCurrentLoc(p);
 					MapController.toggle(p);
 				}
-			} else if (args[1].equalsIgnoreCase("off")) {
+			} else if (args[0].equalsIgnoreCase("off")) {
 				// off logic
 				if (MapController.isToggled(p)) {
 					Clan.ACTION.sendMessage(p, "&cMap disabled.");

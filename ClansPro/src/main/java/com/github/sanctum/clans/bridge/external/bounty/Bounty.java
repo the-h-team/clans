@@ -33,11 +33,11 @@ public class Bounty {
 	}
 
 	public Clan getAssociatedClan() {
-		return ClansAPI.getInstance().getAssociate(target).orElse(null) != null ? ClansAPI.getInstance().getClan(target) : null;
+		return ClansAPI.getInstance().getAssociate(target).orElse(null) != null ? ClansAPI.getInstance().getClanManager().getClan(target) : null;
 	}
 
 	public void complete() {
-		FileManager clanFile = ClansAPI.getData().getClanFile(charge);
+		FileManager clanFile = ClansAPI.getDataInstance().getClanFile(charge);
 		clanFile.write(t -> t.set("bounties." + target.toString(), null));
 	}
 

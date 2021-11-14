@@ -1,15 +1,14 @@
 package com.github.sanctum.clans.bridge.internal.kingdoms.event;
 
 import com.github.sanctum.clans.construct.api.Clan;
-import com.github.sanctum.clans.events.ClanEventBuilder;
+import com.github.sanctum.clans.event.associate.AssociateEvent;
 
-public class KingdomCreationEvent extends ClanEventBuilder {
+public class KingdomCreationEvent extends AssociateEvent {
 
-	private final Clan.Associate associate;
 	private String name;
 
 	public KingdomCreationEvent(Clan.Associate associate, String name) {
-		this.associate = associate;
+		super(associate, false);
 		this.name = name;
 	}
 
@@ -21,7 +20,4 @@ public class KingdomCreationEvent extends ClanEventBuilder {
 		this.name = name;
 	}
 
-	public Clan.Associate getAssociate() {
-		return associate;
-	}
 }

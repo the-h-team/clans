@@ -2,7 +2,7 @@ package com.github.sanctum.clans.bridge.internal.borders.event;
 
 import com.github.sanctum.clans.bridge.internal.borders.BorderListener;
 import com.github.sanctum.clans.bridge.internal.borders.BorderRegion;
-import com.github.sanctum.clans.construct.Claim;
+import com.github.sanctum.clans.construct.api.Claim;
 import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClansAPI;
 import com.github.sanctum.labyrinth.data.Region;
@@ -41,7 +41,7 @@ public class BorderTaskEvent extends Event implements Cancellable {
 	}
 
 	public Claim getClaim() {
-		return Claim.from(p.getLocation());
+		return ClansAPI.getInstance().getClaimManager().getClaim(p.getLocation());
 	}
 
 	public Player getUser() {
@@ -64,7 +64,7 @@ public class BorderTaskEvent extends Event implements Cancellable {
 			boundary.target(p);
 			if (associate != null) {
 
-				if (claim.getOwner().equals(associate.getClanID().toString())) {
+				if (claim.getOwner().getTag().getId().equals(associate.getClan().getId().toString())) {
 					int i = 0;
 					i++;
 					p.getWorld().spawnParticle(Particle.HEART, p.getLocation().getX(), p.getEyeLocation().getY() + 0.5, p.getLocation().getZ(), 1);
@@ -82,13 +82,13 @@ public class BorderTaskEvent extends Event implements Cancellable {
 					}
 					return;
 				}
-				if (claim.getClan().isNeutral(associate.getClanID().toString())) {
+				if (claim.getClan().getRelation().isNeutral(associate.getClan())) {
 					boundary.deploy(Cuboid.Boundary.Particle.WHITE);
 				} else {
-					if (claim.getClan().getAllyList().contains(associate.getClanID().toString())) {
+					if (claim.getClan().getRelation().getAlliance().has(associate.getClan())) {
 						boundary.deploy(Cuboid.Boundary.Particle.GREEN);
 					}
-					if (claim.getClan().getEnemyList().contains(associate.getClanID().toString())) {
+					if (claim.getClan().getRelation().getRivalry().has(associate.getClan())) {
 						boundary.deploy(Cuboid.Boundary.Particle.RED);
 					}
 				}

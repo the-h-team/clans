@@ -25,7 +25,7 @@ public class TerritoryCommand extends ClanSubCommand {
 		if (length == 0) {
 			if (!BorderListener.toggled.containsKey(p.getUniqueId())) {
 				msg.build(BorderListener.coToggle(Clan.ACTION.getPrefix().replace("&6", "&#eb9534&l") + " &#3ee67c&lChunk borders on &#ffffff| &#3ee6ddClick to toggle ", prefix.replace("&6", "&#eb9534")));
-				BorderTask.run(p).cancelAfter(140).repeatReal(1, 40);
+				BorderTask.run(p).repeatReal(1, 40);
 				BorderListener.toggled.put(p.getUniqueId(), true);
 				return true;
 			}
@@ -48,14 +48,14 @@ public class TerritoryCommand extends ClanSubCommand {
 		if (length == 2) {
 			if (args[0].equalsIgnoreCase("-f")) {
 				if (args[1].equalsIgnoreCase("base")) {
-					if (ClansAPI.getInstance().getClanID(p.getUniqueId()) != null) {
+					if (ClansAPI.getInstance().getClanManager().getClanID(p.getUniqueId()) != null) {
 						if (!BorderListener.baseLocate.contains(p.getUniqueId())) {
 							BorderListener.baseLocate.add(p.getUniqueId());
 							BorderListener.spawnLocate.remove(p.getUniqueId());
 							BorderListener.playerLocate.remove(p.getUniqueId());
 							if (!BorderListener.toggled.containsKey(p.getUniqueId())) {
 								msg.build(BorderListener.coToggle(Clan.ACTION.getPrefix().replace("&6", "&#eb9534&l") + " &#3ee67c&lChunk borders on &#ffffff| &#3ee6ddClick to toggle ", prefix.replace("&6", "&#eb9534")));
-								BorderTask.run(p).cancelAfter(140).repeatReal(1, 40);
+								BorderTask.run(p).repeatReal(1, 40);
 								BorderListener.toggled.put(p.getUniqueId(), true);
 							}
 							msg.send("&6&oBase flag has been enabled.");
@@ -76,7 +76,7 @@ public class TerritoryCommand extends ClanSubCommand {
 						BorderListener.baseLocate.remove(p.getUniqueId());
 						if (!BorderListener.toggled.containsKey(p.getUniqueId())) {
 							msg.build(BorderListener.coToggle(Clan.ACTION.getPrefix().replace("&6", "&#eb9534&l") + " &#3ee67c&lChunk borders on &#ffffff| &#3ee6ddClick to toggle ", prefix.replace("&6", "&#eb9534")));
-							BorderTask.run(p).cancelAfter(140).repeatReal(1, 40);
+							BorderTask.run(p).repeatReal(1, 40);
 							BorderListener.toggled.put(p.getUniqueId(), true);
 						}
 						msg.send("&6&oPlayer flag has been enabled.");
@@ -94,7 +94,7 @@ public class TerritoryCommand extends ClanSubCommand {
 						BorderListener.baseLocate.remove(p.getUniqueId());
 						if (!BorderListener.toggled.containsKey(p.getUniqueId())) {
 							msg.build(BorderListener.coToggle(Clan.ACTION.getPrefix().replace("&6", "&#eb9534&l") + " &#3ee67c&lChunk borders on &#ffffff| &#3ee6ddClick to toggle ", prefix.replace("&6", "&#eb9534")));
-							BorderTask.run(p).cancelAfter(140).repeatReal(1, 40);
+							BorderTask.run(p).repeatReal(1, 40);
 							BorderListener.toggled.put(p.getUniqueId(), true);
 						}
 						msg.send("&6&oSpawn flag has been enabled.");

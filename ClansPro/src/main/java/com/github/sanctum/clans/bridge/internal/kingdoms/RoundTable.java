@@ -1,12 +1,14 @@
 package com.github.sanctum.clans.bridge.internal.kingdoms;
 
 import com.github.sanctum.clans.bridge.ClanAddon;
+import com.github.sanctum.clans.bridge.ClanAddonQuery;
 import com.github.sanctum.clans.bridge.internal.KingdomAddon;
-import com.github.sanctum.clans.construct.Claim;
+import com.github.sanctum.clans.construct.api.Claim;
 import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClansAPI;
 import com.github.sanctum.labyrinth.data.FileManager;
 import com.github.sanctum.labyrinth.data.FileType;
+import com.github.sanctum.labyrinth.data.Node;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -31,7 +33,7 @@ public class RoundTable extends Progressive implements Iterable<Clan.Associate> 
 
 	public RoundTable(KingdomAddon cycle) {
 
-		this.name = ClansAPI.getData().getConfigString("Addon.Kingdoms.roundtable.name");
+		this.name = ClansAPI.getDataInstance().getConfigString("Addon.Kingdoms.roundtable.name");
 
 		FileManager data = cycle.getFile(FileType.JSON, "achievements", "data");
 
@@ -195,9 +197,9 @@ public class RoundTable extends Progressive implements Iterable<Clan.Associate> 
 	public List<Claim> getLandPool() {
 		List<Claim> list = new LinkedList<>();
 		for (UUID id : this.users.keySet()) {
-			Clan c = ClansAPI.getInstance().getClan(id);
+			Clan c = ClansAPI.getInstance().getClanManager().getClan(id);
 			if (c != null) {
-				list.addAll(Arrays.asList(c.getOwnedClaims()));
+				list.addAll(Arrays.asList(c.getClaims()));
 			} else {
 				leave(id);
 			}
@@ -236,6 +238,36 @@ public class RoundTable extends Progressive implements Iterable<Clan.Associate> 
 			achievement.save();
 		}
 
+	}
+
+	@Override
+	public String getPath() {
+		return getName();
+	}
+
+	Node getParentNode() {
+		FileManager section = ClanAddonQuery.getAddon("Kingdoms").getFile(FileType.JSON, "table", "data");
+		return section.getRoot().getNode(getPath());
+	}
+
+	@Override
+	public boolean isNode(String key) {
+		return getParentNode().isNode(key);
+	}
+
+	@Override
+	public Node getNode(String key) {
+		return getParentNode().getNode(key);
+	}
+
+	@Override
+	public Set<String> getKeys(boolean deep) {
+		return getParentNode().getKeys(deep);
+	}
+
+	@Override
+	public Map<String, Object> getValues(boolean deep) {
+		return getParentNode().getValues(deep);
 	}
 
 

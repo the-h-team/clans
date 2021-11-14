@@ -1,6 +1,5 @@
 package com.github.sanctum.clans.construct.extra;
 
-import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClansAPI;
 import com.github.sanctum.labyrinth.data.FileManager;
 import com.github.sanctum.labyrinth.library.StringUtils;
@@ -50,321 +49,321 @@ public class StringLibrary {
 	}
 
 	public String alreadyInClan() {
-		return ClansAPI.getData().getMessageResponse("already-occupied");
+		return ClansAPI.getDataInstance().getMessageResponse("already-occupied");
 	}
 
 	public String notInClan() {
-		return ClansAPI.getData().getMessageResponse("no-clan");
+		return ClansAPI.getDataInstance().getMessageResponse("no-clan");
 	}
 
 	public String noClearance() {
-		return ClansAPI.getData().getMessageResponse("no-clearance");
+		return ClansAPI.getDataInstance().getMessageResponse("no-clearance");
 	}
 
 	public String clanUnknown(String name) {
-		return MessageFormat.format(ClansAPI.getData().getMessageResponse("clan-unknown"), name);
+		return MessageFormat.format(ClansAPI.getDataInstance().getMessageResponse("clan-unknown"), name);
 	}
 
 	public String passwordInvalid() {
-		return ClansAPI.getData().getMessageResponse("password-invalid");
+		return ClansAPI.getDataInstance().getMessageResponse("password-invalid");
 	}
 
 	public String playerUnknown(String name) {
-		return MessageFormat.format(ClansAPI.getData().getMessageResponse("player-unknown"), name);
+		return MessageFormat.format(ClansAPI.getDataInstance().getMessageResponse("player-unknown"), name);
 	}
 
 	public String commandCreate() {
-		return ClansAPI.getData().getMessageResponse("create");
+		return ClansAPI.getDataInstance().getMessageResponse("create");
 	}
 
 	public String commandPassword() {
-		return ClansAPI.getData().getMessageResponse("password");
+		return ClansAPI.getDataInstance().getMessageResponse("password");
 	}
 
 	public String commandJoin() {
-		return ClansAPI.getData().getMessageResponse("join");
+		return ClansAPI.getDataInstance().getMessageResponse("join");
 	}
 
 	public String commandPermit() {
-		return ClansAPI.getData().getMessageResponse("permit");
+		return ClansAPI.getDataInstance().getMessageResponse("permit");
 	}
 
 	public String commandKick() {
-		return ClansAPI.getData().getMessageResponse("kick");
+		return ClansAPI.getDataInstance().getMessageResponse("kick");
 	}
 
 	public String commandTag() {
-		return ClansAPI.getData().getMessageResponse("tag");
+		return ClansAPI.getDataInstance().getMessageResponse("tag");
 	}
 
 	public String commandPassowner() {
-		return ClansAPI.getData().getMessageResponse("passowner");
+		return ClansAPI.getDataInstance().getMessageResponse("passowner");
 	}
 
 	public String commandNick() {
-		return ClansAPI.getData().getMessageResponse("nick");
+		return ClansAPI.getDataInstance().getMessageResponse("nick");
 	}
 
 	public String commandChat(String channel) {
-		return MessageFormat.format(ClansAPI.getData().getMessageResponse("chat"), channel);
+		return MessageFormat.format(ClansAPI.getDataInstance().getMessageResponse("chat"), channel);
 	}
 
 	public String commandPromote() {
-		return ClansAPI.getData().getMessageResponse("promote");
+		return ClansAPI.getDataInstance().getMessageResponse("promote");
 	}
 
 	public String commandDemote() {
-		return ClansAPI.getData().getMessageResponse("demote");
+		return ClansAPI.getDataInstance().getMessageResponse("demote");
 	}
 
 	public String commandAlly() {
-		return ClansAPI.getData().getMessageResponse("ally");
+		return ClansAPI.getDataInstance().getMessageResponse("ally");
 	}
 
 	public String commandEnemy() {
-		return ClansAPI.getData().getMessageResponse("enemy");
+		return ClansAPI.getDataInstance().getMessageResponse("enemy");
 	}
 
 	public String commandColor() {
-		return ClansAPI.getData().getMessageResponse("color");
+		return ClansAPI.getDataInstance().getMessageResponse("color");
 	}
 
 	public String commandMessage() {
-		return ClansAPI.getData().getMessageResponse("message");
+		return ClansAPI.getDataInstance().getMessageResponse("message");
 	}
 
 	public String commandBase() {
-		return ClansAPI.getData().getMessageResponse("base");
+		return ClansAPI.getDataInstance().getMessageResponse("base");
 	}
 
 	public String commandMode() {
-		return ClansAPI.getData().getMessageResponse("mode");
+		return ClansAPI.getDataInstance().getMessageResponse("mode");
 	}
 
 	public String commandSetbase() {
-		return ClansAPI.getData().getMessageResponse("base-changed");
+		return ClansAPI.getDataInstance().getMessageResponse("base-changed");
 	}
 
 	public String commandUnknown(String label) {
-		return MessageFormat.format(ClansAPI.getData().getMessageResponse("command-unknown"), label);
+		return MessageFormat.format(ClansAPI.getDataInstance().getMessageResponse("command-unknown"), label);
 	}
 
 	public String nameInvalid(String name) {
-		return MessageFormat.format(ClansAPI.getData().getMessageResponse("name-invalid"), name);
+		return MessageFormat.format(ClansAPI.getDataInstance().getMessageResponse("name-invalid"), name);
 	}
 
 	public String nameTooLong(String name) {
-		return MessageFormat.format(ClansAPI.getData().getMessageResponse("too-long"), name);
+		return MessageFormat.format(ClansAPI.getDataInstance().getMessageResponse("too-long"), name);
 	}
 
 	public String alreadyMade(String name) {
-		return MessageFormat.format(ClansAPI.getData().getMessageResponse("already-made"), name);
+		return MessageFormat.format(ClansAPI.getDataInstance().getMessageResponse("already-made"), name);
 	}
 
 	public String alreadyEnemies(String name) {
-		return MessageFormat.format(ClansAPI.getData().getMessageResponse("already-enemies"), name);
+		return MessageFormat.format(ClansAPI.getDataInstance().getMessageResponse("already-enemies"), name);
 	}
 
 	public String alreadyAllies(String name) {
-		return MessageFormat.format(ClansAPI.getData().getMessageResponse("already-allies"), name);
+		return MessageFormat.format(ClansAPI.getDataInstance().getMessageResponse("already-allies"), name);
 	}
 
 	public String alreadyNeutral(String name) {
-		return MessageFormat.format(ClansAPI.getData().getMessageResponse("already-neutral"), name);
+		return MessageFormat.format(ClansAPI.getDataInstance().getMessageResponse("already-neutral"), name);
 	}
 
 	public String neutral(String name) {
-		return MessageFormat.format(ClansAPI.getData().getMessageResponse("neutral"), name);
+		return MessageFormat.format(ClansAPI.getDataInstance().getMessageResponse("neutral"), name);
 	}
 
 	public String ally(String name) {
-		return MessageFormat.format(ClansAPI.getData().getMessageResponse("allies"), name);
+		return MessageFormat.format(ClansAPI.getDataInstance().getMessageResponse("allies"), name);
 	}
 
 	public String waiting(String name) {
-		return MessageFormat.format(ClansAPI.getData().getMessageResponse("already-requested"), name);
+		return MessageFormat.format(ClansAPI.getDataInstance().getMessageResponse("already-requested"), name);
 	}
 
 	public String enemy(String name) {
-		return MessageFormat.format(ClansAPI.getData().getMessageResponse("enemies"), name);
+		return MessageFormat.format(ClansAPI.getDataInstance().getMessageResponse("enemies"), name);
 	}
 
 	public String noRemoval(String name) {
-		return MessageFormat.format(ClansAPI.getData().getMessageResponse("no-removal"), name);
+		return MessageFormat.format(ClansAPI.getDataInstance().getMessageResponse("no-removal"), name);
 	}
 
 	public String breach(String name) {
-		return MessageFormat.format(ClansAPI.getData().getMessageResponse("claim-breach"), name);
+		return MessageFormat.format(ClansAPI.getDataInstance().getMessageResponse("claim-breach"), name);
 	}
 
 	public String higherpower(String name) {
-		return MessageFormat.format(ClansAPI.getData().getMessageResponse("claim-higherpower"), name);
+		return MessageFormat.format(ClansAPI.getDataInstance().getMessageResponse("claim-higherpower"), name);
 	}
 
 	public String alreadyMax(String instert1, String insert2) {
-		return MessageFormat.format(ClansAPI.getData().getMessageResponse("already-max"), instert1, insert2);
+		return MessageFormat.format(ClansAPI.getDataInstance().getMessageResponse("already-max"), instert1, insert2);
 	}
 
 	public String claimed(int x, int z, String world) {
-		return MessageFormat.format(ClansAPI.getData().getMessageResponse("claim"), x, z, world);
+		return MessageFormat.format(ClansAPI.getDataInstance().getMessageResponse("claim"), x, z, world);
 	}
 
 	public String unclaimed(int x, int z, String world) {
-		return MessageFormat.format(ClansAPI.getData().getMessageResponse("un-claim"), x, z, world);
+		return MessageFormat.format(ClansAPI.getDataInstance().getMessageResponse("un-claim"), x, z, world);
 	}
 
 	public String overpowered(int x, int z, String world) {
-		return MessageFormat.format(ClansAPI.getData().getMessageResponse("claim-overpowered"), x, z, world);
+		return MessageFormat.format(ClansAPI.getDataInstance().getMessageResponse("claim-overpowered"), x, z, world);
 	}
 
 	public String alreadyWild() {
-		return ClansAPI.getData().getMessageResponse("already-wild");
+		return ClansAPI.getDataInstance().getMessageResponse("already-wild");
 	}
 
 	public String noClaims() {
-		return ClansAPI.getData().getMessageResponse("no-claims");
+		return ClansAPI.getDataInstance().getMessageResponse("no-claims");
 	}
 
 	public String unclaimedAll(String name) {
-		return MessageFormat.format(ClansAPI.getData().getMessageResponse("un-claim-all"), name);
+		return MessageFormat.format(ClansAPI.getDataInstance().getMessageResponse("un-claim-all"), name);
 	}
 
 	public String alreadyMaxClaims() {
-		return ClansAPI.getData().getMessageResponse("already-max-claims");
+		return ClansAPI.getDataInstance().getMessageResponse("already-max-claims");
 	}
 
 	public String shieldDeny() {
-		return ClansAPI.getData().getMessageResponse("shield-deny");
+		return ClansAPI.getDataInstance().getMessageResponse("shield-deny");
 	}
 
 	public String tooWeak() {
-		return ClansAPI.getData().getMessageResponse("too-weak");
+		return ClansAPI.getDataInstance().getMessageResponse("too-weak");
 	}
 
 	public String selfDenial() {
-		return ClansAPI.getData().getMessageResponse("self-denial");
+		return ClansAPI.getDataInstance().getMessageResponse("self-denial");
 	}
 
 	public String peacefulDeny() {
-		return ClansAPI.getData().getMessageResponse("peaceful-deny");
+		return ClansAPI.getDataInstance().getMessageResponse("peaceful-deny");
 	}
 
 	public String defaultMode() {
-		return ClansAPI.getData().getMain().getConfig().getString("Clans.mode-change.default");
+		return ClansAPI.getDataInstance().getConfig().getConfig().getString("Clans.mode-change.default");
 	}
 
 	public String peacefulDenyOther(String name) {
-		return MessageFormat.format(ClansAPI.getData().getMessageResponse("peaceful-deny-other"), name);
+		return MessageFormat.format(ClansAPI.getDataInstance().getMessageResponse("peaceful-deny-other"), name);
 	}
 
 	public String friendlyFire() {
-		return ClansAPI.getData().getMessageResponse("friendly-fire");
+		return ClansAPI.getDataInstance().getMessageResponse("friendly-fire");
 	}
 
 	public String friendlyFireOn(String name) {
-		return MessageFormat.format(ClansAPI.getData().getMessageResponse("friendly-fire-on"), name);
+		return MessageFormat.format(ClansAPI.getDataInstance().getMessageResponse("friendly-fire-on"), name);
 	}
 
 	public String friendlyFireOff(String name) {
-		return MessageFormat.format(ClansAPI.getData().getMessageResponse("friendly-fire-off"), name);
+		return MessageFormat.format(ClansAPI.getDataInstance().getMessageResponse("friendly-fire-off"), name);
 	}
 
 	public String peaceful() {
-		return ClansAPI.getData().getMessageResponse("peace-mode");
+		return ClansAPI.getDataInstance().getMessageResponse("peace-mode");
 	}
 
 	public String modeAnnounce(String mode, String clanName) {
 		String result = null;
 		switch (mode.toLowerCase()) {
 			case "war":
-				result = MessageFormat.format(ClansAPI.getData().getMessageResponse("war"), clanName);
+				result = MessageFormat.format(ClansAPI.getDataInstance().getMessageResponse("war"), clanName);
 				break;
 
 			case "peace":
-				result = MessageFormat.format(ClansAPI.getData().getMessageResponse("peace"), clanName);
+				result = MessageFormat.format(ClansAPI.getDataInstance().getMessageResponse("peace"), clanName);
 				break;
 		}
 		return result;
 	}
 
 	public String war() {
-		return ClansAPI.getData().getMessageResponse("war-mode");
+		return ClansAPI.getDataInstance().getMessageResponse("war-mode");
 	}
 
 	public String claimHint() {
-		return ClansAPI.getData().getMessageResponse("claim-hint");
+		return ClansAPI.getDataInstance().getMessageResponse("claim-hint");
 	}
 
 	public String alreadyPeaceful() {
-		return ClansAPI.getData().getMessageResponse("already-peace");
+		return ClansAPI.getDataInstance().getMessageResponse("already-peace");
 	}
 
 	public String alreadyWar() {
-		return ClansAPI.getData().getMessageResponse("already-war");
+		return ClansAPI.getDataInstance().getMessageResponse("already-war");
 	}
 
 	public String alreadyLastPage() {
-		return ClansAPI.getData().getMessageResponse("already-last-page");
+		return ClansAPI.getDataInstance().getMessageResponse("already-last-page");
 	}
 
 	public String alreadyFirstPage() {
-		return ClansAPI.getData().getMessageResponse("already-first-page");
+		return ClansAPI.getDataInstance().getMessageResponse("already-first-page");
 	}
 
 	public String allianceRequested() {
-		return ClansAPI.getData().getMessageResponse("alliance-requested-in");
+		return ClansAPI.getDataInstance().getMessageResponse("alliance-requested-in");
 	}
 
 	public String allianceRequestedOut(String insert1, String insert2) {
-		return MessageFormat.format(ClansAPI.getData().getMessageResponse("alliance-requested-out"), insert1, insert2);
+		return MessageFormat.format(ClansAPI.getDataInstance().getMessageResponse("alliance-requested-out"), insert1, insert2);
 	}
 
 	public String allianceDenial() {
-		return ClansAPI.getData().getMessageResponse("alliance-denial");
+		return ClansAPI.getDataInstance().getMessageResponse("alliance-denial");
 	}
 
 	public String menuBorder() {
-		return ClansAPI.getData().getPath("Border");
+		return ClansAPI.getDataInstance().getMessageString("Border");
 	}
 
 	public int menuSize() {
-		return Integer.parseInt(ClansAPI.getData().getPath("Lines"));
+		return Integer.parseInt(ClansAPI.getDataInstance().getMessageString("Lines"));
 	}
 
 	public String menuTitle() {
-		return ClansAPI.getData().getPath("Title");
+		return ClansAPI.getDataInstance().getMessageString("Title");
 	}
 
 	public String pageUnknown() {
-		return ClansAPI.getData().getMessageResponse("page-unknown");
+		return ClansAPI.getDataInstance().getMessageResponse("page-unknown");
 	}
 
 	public String noPermission(String permission) {
-		return MessageFormat.format(ClansAPI.getData().getMessageResponse("no-permission"), permission);
+		return MessageFormat.format(ClansAPI.getDataInstance().getMessageResponse("no-permission"), permission);
 	}
 
 	public String alreadyOwnClaim() {
-		return ClansAPI.getData().getMessageResponse("already-owned");
+		return ClansAPI.getDataInstance().getMessageResponse("already-owned");
 	}
 
 	public String notEnemies(String name) {
-		return MessageFormat.format(ClansAPI.getData().getMessageResponse("not-enemies"), name);
+		return MessageFormat.format(ClansAPI.getDataInstance().getMessageResponse("not-enemies"), name);
 	}
 
 	public String notEnough(double needed) {
-		return MessageFormat.format(ClansAPI.getData().getMessageResponse("not-enough"), needed);
+		return MessageFormat.format(ClansAPI.getDataInstance().getMessageResponse("not-enough"), needed);
 	}
 
 	public String notClaimOwner(String actualOwner) {
-		return MessageFormat.format(ClansAPI.getData().getMessageResponse("not-owner"), actualOwner);
+		return MessageFormat.format(ClansAPI.getDataInstance().getMessageResponse("not-owner"), actualOwner);
 	}
 
 	public String wrongPassword() {
-		return ClansAPI.getData().getMessageResponse("password-wrong");
+		return ClansAPI.getDataInstance().getMessageResponse("password-wrong");
 	}
 
 	public String getRankStyle() {
-		FileManager main = ClansAPI.getData().getMain();
+		FileManager main = ClansAPI.getDataInstance().getConfig();
 		String type = main.getRoot().getString("Formatting.Chat.rank-style");
 		String result;
 		if (type.equalsIgnoreCase("WORDLESS")) {
@@ -376,17 +375,17 @@ public class StringLibrary {
 	}
 
 	public String getWordlessStyle(String rank) {
-		FileManager main = ClansAPI.getData().getMain();
+		FileManager main = ClansAPI.getDataInstance().getConfig();
 		return main.getRoot().getString("Formatting.Chat.Styles.Wordless." + rank);
 	}
 
 	public String getFullStyle(String rank) {
-		FileManager main = ClansAPI.getData().getMain();
+		FileManager main = ClansAPI.getDataInstance().getConfig();
 		return main.getRoot().getString("Formatting.Chat.Styles.Full." + rank);
 	}
 
 	public String getChatFormat() {
-		FileManager main = ClansAPI.getData().getMain();
+		FileManager main = ClansAPI.getDataInstance().getConfig();
 		return main.getRoot().getString("Formatting.Chat.Channel.global");
 	}
 
@@ -412,10 +411,7 @@ public class StringLibrary {
 					if ((((page * 2) + i + 1) == k) && (k != ((page * 2) + 2 + 1))) {
 						i++;
 						UUID id = UUID.fromString(entry);
-						Clan.Associate associate = ClansAPI.getInstance().getAssociate(id).orElse(null);
-						if (associate != null) {
-							sendComponent(p, TextLib.getInstance().textRunnable("&f- ", "&b&l" + Bukkit.getOfflinePlayer(UUID.fromString(entry)).getName(), "", "&rRank: " + '"' + "&b" + associate.getRankTag() + "&r" + '"' + "\nK/D: &b&o" + associate.getKD(), "c i " + associate.getUser().getName()));
-						}
+						ClansAPI.getInstance().getAssociate(id).ifPresent(associate -> sendComponent(p, TextLib.getInstance().textRunnable("&f- ", "&b&l" + associate.getName(), "", "&rRank: " + '"' + "&b" + associate.getRankFull() + "&r" + '"' + "\nK/D: &b&o" + associate.getKD(), "c i " + associate.getName())));
 					}
 				}
 				int point;

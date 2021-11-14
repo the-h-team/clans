@@ -9,7 +9,7 @@ import java.util.UUID;
 public final class BountyList {
 
 	public static Bounty get(Clan charge, UUID target) {
-		FileManager clanFile = ClansAPI.getData().getClanFile(charge);
+		FileManager clanFile = ClansAPI.getDataInstance().getClanFile(charge);
 		double result = clanFile.getRoot().getDouble("bounties." + target.toString());
 		return result > 0 ? new Bounty(charge, target, result) : null;
 	}

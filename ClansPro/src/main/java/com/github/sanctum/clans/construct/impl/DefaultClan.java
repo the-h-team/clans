@@ -1,17 +1,30 @@
 package com.github.sanctum.clans.construct.impl;
 
-import com.github.sanctum.clans.construct.Claim;
-import com.github.sanctum.clans.construct.DataManager;
+import com.github.sanctum.clans.bridge.ClanVentBus;
 import com.github.sanctum.clans.construct.RankPriority;
+import com.github.sanctum.clans.construct.api.BanksAPI;
+import com.github.sanctum.clans.construct.api.Claim;
 import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClanBank;
 import com.github.sanctum.clans.construct.api.ClanCooldown;
 import com.github.sanctum.clans.construct.api.ClansAPI;
+import com.github.sanctum.clans.construct.api.Clearance;
+import com.github.sanctum.clans.construct.api.ClearanceLog;
+import com.github.sanctum.clans.construct.api.InvasiveEntity;
+import com.github.sanctum.clans.construct.api.LogoHolder;
+import com.github.sanctum.clans.construct.api.Permission;
 import com.github.sanctum.clans.construct.api.PermissionLog;
-import com.github.sanctum.clans.construct.extra.ClanWrapper;
-import com.github.sanctum.clans.events.command.OtherInformationAdaptEvent;
-import com.github.sanctum.clans.events.core.LandClaimedEvent;
+import com.github.sanctum.clans.construct.api.Relation;
+import com.github.sanctum.clans.construct.api.Savable;
+import com.github.sanctum.clans.construct.api.Teleport;
+import com.github.sanctum.clans.construct.extra.BukkitColor;
+import com.github.sanctum.clans.construct.extra.ClanRelationElement;
+import com.github.sanctum.clans.event.associate.AssociateObtainLandEvent;
+import com.github.sanctum.clans.event.command.ClanInformationAdaptEvent;
+import com.github.sanctum.clans.event.insignia.InsigniaBuildCarrierEvent;
+import com.github.sanctum.clans.event.player.PlayerJoinClanEvent;
 import com.github.sanctum.labyrinth.LabyrinthProvider;
+import com.github.sanctum.labyrinth.annotation.Ordinal;
 import com.github.sanctum.labyrinth.api.Service;
 import com.github.sanctum.labyrinth.data.DataTable;
 import com.github.sanctum.labyrinth.data.EconomyProvision;
@@ -19,21 +32,29 @@ import com.github.sanctum.labyrinth.data.FileManager;
 import com.github.sanctum.labyrinth.data.LabyrinthUser;
 import com.github.sanctum.labyrinth.data.Node;
 import com.github.sanctum.labyrinth.event.custom.Vent;
+import com.github.sanctum.labyrinth.formatting.Message;
 import com.github.sanctum.labyrinth.formatting.UniformedComponents;
 import com.github.sanctum.labyrinth.formatting.string.RandomHex;
 import com.github.sanctum.labyrinth.formatting.string.RandomID;
+import com.github.sanctum.labyrinth.interfacing.OrdinalProcedure;
+import com.github.sanctum.labyrinth.library.Entities;
 import com.github.sanctum.labyrinth.library.HUID;
 import com.github.sanctum.labyrinth.library.NamespacedKey;
+import com.github.sanctum.labyrinth.library.StringUtils;
 import com.github.sanctum.labyrinth.task.Schedule;
+import com.google.gson.reflect.TypeToken;
 import java.math.BigDecimal;
 import java.text.MessageFormat;
-import java.text.NumberFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -48,13 +69,17 @@ import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
 import org.bukkit.Location;
 import org.bukkit.World;
+import org.bukkit.attribute.Attributable;
+import org.bukkit.configuration.serialization.SerializableAs;
+import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class DefaultClan implements Clan {
+@SerializableAs("Clan")
+public final class DefaultClan implements Clan {
 
-	private static final long serialVersionUID = 427254537180595211L;
+	private final Map<Chunk, List<LogoHolder.Carrier>> stands = new HashMap<>();
 	private final String clanID;
 	private boolean peaceful;
 	private boolean friendlyfire;
@@ -65,8 +90,7 @@ public class DefaultClan implements Clan {
 	private String description;
 	private Location base;
 	transient NamespacedKey key;
-	private final Set<Associate> associates = new HashSet<>();
-	private final List<Clan> warInvites = new ArrayList<>();
+	private final Set<Associate> associates = Collections.synchronizedSet(new LinkedHashSet<>());
 	private final Set<Claim> claims = new HashSet<>();
 	private final List<String> allies = new ArrayList<>();
 	private final List<String> enemies = new ArrayList<>();
@@ -74,6 +98,8 @@ public class DefaultClan implements Clan {
 	private final UniformedComponents<Clan> allyList;
 	private final UniformedComponents<Clan> enemyList;
 	private final Color palette;
+	private final Tag tag;
+	private final Relation dock;
 
 	/**
 	 * @deprecated for internal use only!!!
@@ -84,22 +110,307 @@ public class DefaultClan implements Clan {
 		this.allyList = UniformedComponents.accept(new ArrayList<>());
 		this.enemyList = UniformedComponents.accept(new ArrayList<>());
 		this.palette = null;
+		this.tag = null;
+		this.dock = null;
 	}
 
 	public DefaultClan(String clanID) {
 		this.clanID = clanID;
+		this.dock = new Relation() {
+
+			private final Alliance alliance;
+			private final Rivalry rivalry;
+
+			{
+				this.alliance = new Alliance() {
+					@Override
+					public @NotNull List<InvasiveEntity> get() {
+						return getAllies();
+					}
+
+					@Override
+					public @NotNull <T extends InvasiveEntity> List<T> get(Class<T> cl) {
+						return getAllies(cl);
+					}
+
+					@Override
+					public void request(InvasiveEntity target) {
+						requestAlliance(target);
+					}
+
+					@Override
+					public void request(InvasiveEntity target, String message) {
+						requestAlliance(target, message);
+					}
+
+					@Override
+					public @NotNull List<InvasiveEntity> getRequests() {
+						return getAllyRequests();
+					}
+
+					@Override
+					public @NotNull <T extends InvasiveEntity> List<T> getRequests(Class<T> cl) {
+						return getAllyRequests(cl);
+					}
+
+					@Override
+					public Teleport getTeleport(InvasiveEntity entity) {
+						return getTeleportation(entity);
+					}
+
+					@Override
+					public boolean isEmpty() {
+						return get().isEmpty();
+					}
+
+					@Override
+					public InvasiveEntity[] toArray() {
+						return get().toArray(new InvasiveEntity[0]);
+					}
+
+					@Override
+					public <T extends InvasiveEntity> T[] toArray(T[] a) {
+						return stream().map(entity -> (T)entity).collect(Collectors.toList()).toArray(a);
+					}
+
+					@Override
+					public <T extends InvasiveEntity> boolean has(T o) {
+						return get().contains(o);
+					}
+
+					@Override
+					public <T extends InvasiveEntity> boolean hasAll(Collection<T> c) {
+						return get().containsAll(c);
+					}
+
+					@Override
+					public <T extends InvasiveEntity> boolean addAll(Collection<T> c) {
+						for (T t : c) {
+							if (has(t)) {
+								return false;
+							} else {
+								add(t);
+							}
+						}
+						return true;
+					}
+
+					@Override
+					public <T extends InvasiveEntity> boolean removeAll(Collection<T> c) {
+						for (T t : c) {
+							if (!has(t)) {
+								return false;
+							} else {
+								remove(t);
+							}
+						}
+						return true;
+					}
+
+					@Override
+					public void add(InvasiveEntity entity) {
+						addAlly(entity);
+					}
+
+					@Override
+					public void remove(InvasiveEntity entity) {
+						removeAlly(entity);
+					}
+
+					@Override
+					public int size() {
+						return get().size();
+					}
+
+					@Override
+					public void clear() {
+						allies.clear();
+					}
+				};
+				this.rivalry = new Rivalry() {
+					@Override
+					public @NotNull List<InvasiveEntity> get() {
+						return getEnemies();
+					}
+
+					@Override
+					public @NotNull <T extends InvasiveEntity> List<T> get(Class<T> cl) {
+						return getEnemies(cl);
+					}
+
+					@Override
+					public Teleport getTeleport(InvasiveEntity entity) {
+						return getTeleportation(entity);
+					}
+
+					@Override
+					public boolean isEmpty() {
+						return get().isEmpty();
+					}
+
+					@Override
+					public InvasiveEntity[] toArray() {
+						return get().toArray(new InvasiveEntity[0]);
+					}
+
+					@Override
+					public <T extends InvasiveEntity> T[] toArray(T[] a) {
+						return stream().map(entity -> (T)entity).collect(Collectors.toList()).toArray(a);
+					}
+
+					@Override
+					public <T extends InvasiveEntity> boolean has(T o) {
+						return get().contains(o);
+					}
+
+					@Override
+					public <T extends InvasiveEntity> boolean hasAll(Collection<T> c) {
+						return get().containsAll(c);
+					}
+
+					@Override
+					public <T extends InvasiveEntity> boolean addAll(Collection<T> c) {
+						for (T t : c) {
+							if (has(t)) {
+								return false;
+							} else {
+								add(t);
+							}
+						}
+						return true;
+					}
+
+					@Override
+					public <T extends InvasiveEntity> boolean removeAll(Collection<T> c) {
+						for (T t : c) {
+							if (!has(t)) {
+								return false;
+							} else {
+								remove(t);
+							}
+						}
+						return true;
+					}
+
+					@Override
+					public void add(InvasiveEntity entity) {
+						addEnemy(entity);
+					}
+
+					@Override
+					public void remove(InvasiveEntity entity) {
+						removeEnemy(entity);
+					}
+
+					@Override
+					public int size() {
+						return get().size();
+					}
+
+					@Override
+					public void clear() {
+						enemies.clear();
+					}
+				};
+			}
+
+			@NotNull List<InvasiveEntity> getAllies() {
+				return DefaultClan.this.getAllies().map(clan -> (InvasiveEntity)clan).collect(Collectors.toList());
+			}
+
+			@NotNull List<InvasiveEntity> getAllyRequests() {
+				return DefaultClan.this.getAllyRequests().stream().map(clan -> (InvasiveEntity)clan).collect(Collectors.toList());
+			}
+
+			@NotNull List<InvasiveEntity> getEnemies() {
+				return DefaultClan.this.getEnemies().map(clan -> (InvasiveEntity)clan).collect(Collectors.toList());
+			}
+
+			<T extends InvasiveEntity> List<T> getAllies(Class<T> cl) {
+				return DefaultClan.this.getAllies().filter(clan -> cl.isAssignableFrom(clan.getClass())).map(clan -> (T)clan).collect(Collectors.toList());
+			}
+
+			<T extends InvasiveEntity> List<T> getAllyRequests(Class<T> cl) {
+				return DefaultClan.this.getAllyRequests().stream().filter(clan -> cl.isAssignableFrom(clan.getClass())).map(clan -> (T)clan).collect(Collectors.toList());
+			}
+
+			<T extends InvasiveEntity> List<T> getEnemies(Class<T> cl) {
+				return DefaultClan.this.getEnemies().filter(clan -> cl.isAssignableFrom(clan.getClass())).map(clan -> (T)clan).collect(Collectors.toList());
+			}
+
+			@Override
+			public @NotNull Alliance getAlliance() {
+				return this.alliance;
+			}
+
+			@Override
+			public @NotNull Rivalry getRivalry() {
+				return this.rivalry;
+			}
+
+			@Override
+			public @NotNull InvasiveEntity getEntity() {
+				return DefaultClan.this;
+			}
+
+			Teleport getTeleportation(InvasiveEntity entity) {
+				if (!entity.isAssociate()) return null;
+				return Teleport.get(entity.getAsAssociate());
+			}
+
+			void requestAlliance(InvasiveEntity target) {
+				if (!(target instanceof Clan)) return;
+				sendAllyRequest(HUID.fromString(target.getTag().getId()));
+			}
+
+			void requestAlliance(InvasiveEntity target, String message) {
+				if (!(target instanceof Clan)) return;
+				sendAllyRequest(HUID.fromString(target.getTag().getId()), message);
+			}
+
+			void addAlly(InvasiveEntity target) {
+				if (!(target instanceof Clan)) return;
+				DefaultClan.this.addAlly(HUID.fromString(target.getTag().getId()));
+			}
+
+			void removeAlly(InvasiveEntity target) {
+				if (!(target instanceof Clan)) return;
+				DefaultClan.this.removeAlly(HUID.fromString(target.getTag().getId()));
+			}
+
+			void addEnemy(InvasiveEntity target) {
+				if (!(target instanceof Clan)) return;
+				DefaultClan.this.addEnemy(HUID.fromString(target.getTag().getId()));
+			}
+
+			void removeEnemy(InvasiveEntity target) {
+				if (!(target instanceof Clan)) return;
+				DefaultClan.this.removeEnemy(HUID.fromString(target.getTag().getId()));
+			}
+
+			@Override
+			public boolean isNeutral(InvasiveEntity target) {
+				return DefaultClan.this.isNeutral(HUID.fromString(target.getTag().getId()));
+			}
+		};
+		this.tag = () -> DefaultClan.this.getId().toString();
 		this.key = new NamespacedKey(ClansAPI.getInstance().getPlugin(), clanID);
-		this.allyList = new ClanWrapper(this, ClanWrapper.RelationType.Ally);
-		this.enemyList = new ClanWrapper(this, ClanWrapper.RelationType.Enemy);
+		this.allyList = new ClanRelationElement(this, ClanRelationElement.RelationType.Ally);
+		this.enemyList = new ClanRelationElement(this, ClanRelationElement.RelationType.Enemy);
 		boolean isNew = LabyrinthProvider.getService(Service.LEGACY).isNew();
-		this.palette = new Color(this).setStart(isNew ? new RandomHex().getStart() : "&f");
-		FileManager c = DataManager.FileType.CLAN_FILE.get(clanID);
+		this.palette = new Color(this);
+		if (isNew) {
+			palette.set(new RandomHex());
+		} else {
+			palette.setStart(BukkitColor.random().toCode());
+		}
+		FileManager c = ClansAPI.getInstance().getFileList().get(clanID, "Clans");
 		if (c.read(f -> f.exists() && f.getString("name") != null)) {
 			this.name = c.read(f -> f.getString("name"));
 			if (c.read(f -> f.isString("name-color"))) {
 				getPalette().setStart(c.getRoot().getString("name-color"));
 				c.write(t -> t.set("name-color", null)
-						.set("color.start", getPalette().getStart()));
+						.set("color.start", getPalette().toString()));
 			}
 
 			if (c.read(f -> f.isString("color.start"))) {
@@ -142,7 +453,7 @@ public class DefaultClan implements Clan {
 					float pitch = base.getNode("float").toPrimitive().getFloatList().get(1);
 					World w = Bukkit.getWorld(Objects.requireNonNull(c.getRoot().getString("base.world")));
 					if (w == null) {
-						w = Bukkit.getWorld(Objects.requireNonNull(ClansAPI.getData().getMain().getRoot().getString("Clans.raid-shield.main-world")));
+						w = Bukkit.getWorld(Objects.requireNonNull(ClansAPI.getDataInstance().getConfig().getRoot().getString("Clans.raid-shield.main-world")));
 					}
 					this.base = new Location(w, x, y, z, yaw, pitch);
 					c.write(t -> t.set("base", this.base));
@@ -161,35 +472,42 @@ public class DefaultClan implements Clan {
 
 					RankPriority priority = RankPriority.valueOf(rank);
 					for (String mem : c.read(f -> f.getStringList("members." + rank))) {
-						associates.add(new Associate(UUID.fromString(mem), priority, getId()));
+						associates.add(new DefaultAssociate(UUID.fromString(mem), priority, this));
 					}
 				}
 			} else {
 				// Cleaning up old format.
 				Map<UUID, RankPriority> map = new HashMap<>();
+				DataTable table = DataTable.newTable();
 				for (String m : c.read(f -> f.getStringList("members"))) {
 					map.put(UUID.fromString(m), RankPriority.NORMAL);
 				}
-				Schedule.sync(() -> c.write(t -> t.set("members", null))).run();
+				table.set("members", null);
 				for (String m : c.read(f -> f.getStringList("moderators"))) {
 					map.put(UUID.fromString(m), RankPriority.HIGH);
 				}
-				Schedule.sync(() -> c.write(t -> t.set("moderators", null))).run();
+				table.set("moderators", null);
 				for (String m : c.read(f -> f.getStringList("admins"))) {
 					map.put(UUID.fromString(m), RankPriority.HIGHER);
 				}
-				Schedule.sync(() -> c.write(t -> t.set("admins", null))).run();
+				table.set("admins", null);
 				if (c.read(f -> f.isString("owner"))) {
 					map.put(UUID.fromString(c.read(f -> f.getString("owner"))), RankPriority.HIGHEST);
-					Schedule.sync(() -> c.write(t -> t.set("owner", null))).run();
+					table.set("owner", null);
 				}
+				Schedule.sync(() -> c.write(table)).run();
 				for (Map.Entry<UUID, RankPriority> entry : map.entrySet()) {
-					associates.add(new Associate(entry.getKey(), entry.getValue(), getId()));
+					associates.add(new DefaultAssociate(entry.getKey(), entry.getValue(), this));
 				}
 
 			}
 
-			this.powerBonus = c.read(f -> f.getDouble("bonus"));
+			if (c.read(f -> f.isDouble("bonus"))) {
+				this.powerBonus = c.read(f -> f.getDouble("bonus"));
+				c.write(t -> t.set("power-bonus", this.powerBonus).set("bonus", null));
+			} else {
+				this.powerBonus = c.read(f -> f.getDouble("power-bonus"));
+			}
 
 			this.peaceful = c.read(f -> f.getBoolean("peaceful"));
 
@@ -197,31 +515,110 @@ public class DefaultClan implements Clan {
 
 		}
 
-		PermissionLog log = getValue(PermissionLog.class, "permissions");
-		if (log == null) {
-			PermissionLog newLog = new PermissionLog();
-			setValue("permissions", newLog, false);
+		ClearanceLog clog = getValue(ClearanceLog.class, "clearance");
+		if (clog == null) {
+			PermissionLog log = getValue(PermissionLog.class, "permissions");
+			ClearanceLog clearanceLog = new ClearanceLog();
+			if (log != null) {
+				for (Map.Entry<Permission, Integer> entry : log) {
+					clearanceLog.set(Clearance.valueOf(entry.getKey().name()), entry.getValue());
+				}
+				removeValue("permissions");
+			}
+			setValue("clearance", clearanceLog, false);
+		}
+
+		if (DefaultClan.this.isNode("hologram")) {
+			List<Carrier> list = new ArrayList<>();
+			Node holo = DefaultClan.this.getNode("hologram");
+			for (String world : holo.getKeys(false)) {
+				Node w = holo.getNode(world);
+				for (String chunk : w.getKeys(false)) {
+					Node ch = w.getNode(chunk);
+					for (String station : ch.getKeys(false)) {
+						Carrier st = new Carrier(HUID.fromString(station));
+						Node sta = ch.getNode(station);
+						int i = 0;
+						for (String l : sta.getKeys(false)) {
+							Location loc = sta.getNode(l).getNode("location").toBukkit().getLocation();
+							if (i == sta.getKeys(false).size() - 1) {
+								st.top = loc;
+							}
+							if (!loc.getChunk().isLoaded()) {
+								loc.getChunk().load(false);
+							}
+							String name = StringUtils.use(sta.getNode(l).getNode("content").toPrimitive().getString()).translate();
+							InsigniaBuildCarrierEvent event = ClanVentBus.call(new InsigniaBuildCarrierEvent(st, i, sta.getKeys(false).size(), name));
+							if (!event.isCancelled()) {
+								ArmorStand stand = loc.getWorld().spawn(loc, ArmorStand.class, s -> {
+									s.setVisible(false);
+									s.setSmall(true);
+									s.setMarker(true);
+									s.setCustomNameVisible(true);
+									s.setCustomName(event.getContent());
+								});
+								if (getCarriers(loc.getChunk()).isEmpty()) {
+									stands.put(loc.getChunk(), new ArrayList<>());
+								}
+								st.add(stand);
+							}
+							i++;
+						}
+						list.add(st);
+					}
+				}
+			}
+			list.forEach(station -> getCarriers(station.getChunk()).add(station));
 		}
 
 	}
 
 	@Override
-	public synchronized @Nullable Associate accept(UUID target) {
-		if (ClansAPI.getInstance().isInClan(target)) {
-			return null;
+	public synchronized @Nullable Associate newAssociate(UUID target) {
+		Clan.Associate associate = ClansAPI.getInstance().getAssociate(target).orElse(null);
+		if (associate == null) {
+			Player test = Bukkit.getPlayer(target);
+			if (test != null) {
+				PlayerJoinClanEvent event = ClanVentBus.call(new PlayerJoinClanEvent(test, this));
+				if (!event.isCancelled()) {
+					return new DefaultAssociate(target, RankPriority.NORMAL, this);
+				}
+			} else {
+				Tag temp = target::toString;
+				if (temp.isEntity() && !temp.isPlayer()) {
+					return new AnimalAssociate(InvasiveEntity.wrapNonAssociated(temp.getEntity()), RankPriority.NORMAL, this);
+				} else {
+					return new DefaultAssociate(target, RankPriority.NORMAL, this);
+				}
+			}
+
+		} else {
+			ACTION.removePlayer(target);
+			return new DefaultAssociate(target, RankPriority.NORMAL, this);
 		}
-		ACTION.joinClan(target, getName(), getPassword());
-		return ClansAPI.getInstance().getAssociate(target).get();
+		return null;
 	}
 
 	@Override
-	public synchronized boolean kick(UUID target) {
-		if (getMembers().stream().noneMatch(c -> c.getUser().getId().equals(target))) {
+	public @Nullable Clan.Associate newAssociate(InvasiveEntity target) {
+		if (target.isClan()) return null;
+		return newAssociate(UUID.fromString(target.getTag().getId()));
+	}
+
+	@Override
+	public @Nullable Clan.Associate newAssociate(LabyrinthUser target) {
+		return newAssociate(target.getId());
+	}
+
+	@Override
+	public synchronized boolean kick(Associate target) {
+		if (getMembers().stream().noneMatch(c -> c.getId().equals(target.getId()))) {
 			return false;
 		} else
 			getMembers().forEach(c -> {
-				if (c.getUser().getId().equals(target)) {
-					c.kick();
+				if (c.getId().equals(target.getId())) {
+					// run the kick event :)
+					c.remove();
 				}
 			});
 		return true;
@@ -229,7 +626,7 @@ public class DefaultClan implements Clan {
 
 	@Override
 	public boolean isValid() {
-		return this.clanID != null && this.name != null;
+		return this.clanID != null && this.name != null && ClansAPI.getInstance().getClanManager().getClans().exists(clan -> clan.equals(this));
 	}
 
 	@Override
@@ -244,8 +641,7 @@ public class DefaultClan implements Clan {
 
 	@Override
 	public boolean isOwner(@NotNull Chunk chunk) {
-		for (String claim : getOwnedClaimsList()) {
-			Claim c = ClansAPI.getInstance().getClaimManager().getClaim(claim);
+		for (Claim c : getClaims()) {
 			if (c.getChunk().equals(chunk)) {
 				return true;
 			}
@@ -254,10 +650,11 @@ public class DefaultClan implements Clan {
 	}
 
 	@Override
-	public boolean transferOwnership(UUID target) {
-		if (Objects.equals(ClansAPI.getInstance().getClan(target), this)) {
+	public boolean transferOwnership(Associate target) {
+		if (target == null) return false;
+		if (target.getClan().equals(this)) {
 			Associate owner = getOwner();
-			Associate mem = getMember(m -> m.getUser().getId().equals(target));
+			Associate mem = getMember(m -> m.getId().equals(target.getId()));
 			if (mem == null) return false;
 			owner.setPriority(RankPriority.NORMAL);
 			mem.setPriority(RankPriority.HIGHEST);
@@ -268,20 +665,19 @@ public class DefaultClan implements Clan {
 		return false;
 	}
 
-	@Override
-	public boolean isNeutral(String targetClanID) {
-		return !getAllyList().contains(targetClanID) && !getEnemyList().contains(targetClanID);
+	public boolean isNeutral(HUID targetClanID) {
+		return !getAllyList().contains(targetClanID.toString()) && !getEnemyList().contains(targetClanID.toString());
 	}
 
 	@Override
-	public boolean hasCooldown(String action) {
+	public boolean isCooldown(String action) {
 		return getCooldown(action) != null;
 	}
 
 	@Override
 	public void setName(String newTag) {
 		this.name = newTag;
-		String format = MessageFormat.format(ClansAPI.getData().getMessageResponse("tag-change"), newTag);
+		String format = MessageFormat.format(ClansAPI.getDataInstance().getMessageResponse("tag-change"), newTag);
 		broadcast(format);
 	}
 
@@ -299,7 +695,7 @@ public class DefaultClan implements Clan {
 			return;
 		}
 		this.password = newPassword;
-		broadcast(MessageFormat.format(ClansAPI.getData().getMessageResponse("password-change"), newPassword));
+		broadcast(MessageFormat.format(ClansAPI.getDataInstance().getMessageResponse("password-change"), newPassword));
 	}
 
 	@Override
@@ -321,7 +717,7 @@ public class DefaultClan implements Clan {
 	@Override
 	public void setBase(@NotNull Location loc) {
 		this.base = loc;
-		String format = MessageFormat.format(ClansAPI.getData().getMessageResponse("base-changed"), loc.getWorld().getName());
+		String format = MessageFormat.format(ClansAPI.getDataInstance().getMessageResponse("base-changed"), loc.getWorld().getName());
 		broadcast(format);
 	}
 
@@ -360,57 +756,84 @@ public class DefaultClan implements Clan {
 		return this.palette;
 	}
 
-	@Override
 	public synchronized String[] getMemberIds() {
-		return getMembers().stream().map(Associate::getUser).map(LabyrinthUser::getId).map(UUID::toString).toArray(String[]::new);
+		return getMembers().stream().map(Associate::getId).map(UUID::toString).toArray(String[]::new);
 	}
 
 	@Override
 	public @NotNull Set<Associate> getMembers() {
-		return this.associates;
+		return Collections.unmodifiableSet(this.associates);
 	}
 
 	@Override
-	public void save() {
-		FileManager file = ClansAPI.getData().getClanFile(this);
-		DataTable table = DataTable.newTable();
-		table.set("name", getName());
-		table.set("base", getBase());
-		if (getPalette().isGradient()) {
-			table.set("color.start", getPalette().getStart());
-			table.set("color.end", getPalette().getEnd());
-		} else {
-			table.set("color.start", getPalette().getStart());
-		}
-		table.set("description", getDescription());
-		table.set("password", getPassword());
-		table.set("bonus", this.powerBonus);
-		table.set("claim-bonus", this.claimBonus);
-		table.set("peaceful", this.peaceful);
-		table.set("friendlyfire", this.friendlyfire);
-		table.set("allies", allies);
-		table.set("enemies", enemies);
-		if (!getAllyRequests().isEmpty()) {
-			table.set("ally-requests", getAllyRequests());
-		}
-		Map<RankPriority, List<Associate>> map = new HashMap<>();
+	public synchronized void save() {
+		if (!getOwner().isServer()) {
+			FileManager file = ClansAPI.getDataInstance().getClanFile(this);
+			DataTable table = DataTable.newTable();
+			table.set("name", getName()).set("base", getBase());
+			if (getPalette().isGradient()) {
+				table.set("color.start", getPalette().toArray()[0]).set("color.end", getPalette().toArray()[1]);
+			} else {
+				if (file.getRoot().getNode("color.end").toPrimitive().isString()) {
+					table.set("color.end", null);
+				}
+				table.set("color.start", getPalette().toString());
+			}
+			table.set("description", getDescription())
+					.set("password", getPassword())
+					.set("power-bonus", this.powerBonus)
+					.set("claim-bonus", this.claimBonus)
+					.set("peaceful", this.peaceful)
+					.set("friendlyfire", this.friendlyfire)
+					.set("allies", allies)
+					.set("enemies", enemies);
+			if (!getAllyRequests().isEmpty()) {
+				table.set("ally-requests", requests);
+			}
+			Map<RankPriority, List<Associate>> map = new HashMap<>();
 
-		for (RankPriority v : RankPriority.values()) {
-			map.put(v, new ArrayList<>());
+			for (RankPriority v : RankPriority.values()) {
+				map.put(v, new ArrayList<>());
+			}
+
+			for (Associate ass : getMembers()) {
+				List<Associate> list = map.get(ass.getPriority());
+				if (!ass.isTamable()) {
+					list.add(ass);
+					map.put(ass.getPriority(), list);
+				}
+			}
+
+			for (Map.Entry<RankPriority, List<Associate>> entry : map.entrySet()) {
+				table.set("members." + entry.getKey().name(), entry.getValue().stream().map(Associate::getId).map(UUID::toString).collect(Collectors.toList()));
+			}
+
+			file.write(table);
+
+			Node holo = DefaultClan.this.getNode("hologram");
+			holo.set(null);
+			stands.forEach((chunk, stations) -> {
+				Node world = holo.getNode(chunk.getWorld().getName());
+				Node c = world.getNode(chunk.getX() + ";" + chunk.getZ());
+				for (LogoHolder.Carrier s : stations) {
+					int i = 0;
+					Node stat = c.getNode(OrdinalProcedure.select(s, 0).cast(() -> HUID.class).toString());
+					for (LogoHolder.Carrier.Line l : s.getLines()) {
+						Node line = stat.getNode(String.valueOf(i));
+						line.getNode("location").set(l.getStand().getLocation());
+						line.getNode("content").set(l.getStand().getCustomName());
+						i++;
+					}
+				}
+			});
+			holo.save();
 		}
 
-		for (Associate ass : getMembers()) {
-			List<Associate> list = map.get(ass.getPriority());
-			list.add(ass);
-			map.put(ass.getPriority(), list);
-		}
+	}
 
-		for (Map.Entry<RankPriority, List<Associate>> entry : map.entrySet()) {
-			table.set("members." + entry.getKey().name(), entry.getValue().stream().map(Associate::getUser).map(LabyrinthUser::getId).map(UUID::toString).collect(Collectors.toList()));
-		}
-
-		file.write(table);
-
+	@Override
+	public void remove(LogoHolder.Carrier carrier) {
+		stands.get(carrier.getChunk()).remove(carrier);
 	}
 
 	@Override
@@ -426,10 +849,10 @@ public class DefaultClan implements Clan {
 		double result = 0.0;
 		double multiplier = 1.4;
 		double add = getMemberIds().length + 0.56;
-		int claimAmount = getOwnedClaims().length;
+		int claimAmount = getClaims().length;
 		result = result + add + (claimAmount * multiplier);
 		double bonus = this.powerBonus;
-		if (ClansAPI.getData().isTrue("Clans.banks.influence")) {
+		if (ClansAPI.getDataInstance().isTrue("Clans.banks.influence")) {
 			if (EconomyProvision.getInstance().isValid()) {
 				double bal = getBalance().doubleValue();
 				if (bal != 0) {
@@ -445,12 +868,12 @@ public class DefaultClan implements Clan {
 	}
 
 	@Override
-	public synchronized String[] getOwnedClaimsList() {
-		return claims.stream().map(Claim::getId).toArray(String[]::new);
+	public @NotNull Tag getTag() {
+		return tag;
 	}
 
 	@Override
-	public synchronized Claim[] getOwnedClaims() {
+	public synchronized Claim[] getClaims() {
 		return claims.toArray(new Claim[0]);
 	}
 
@@ -467,11 +890,11 @@ public class DefaultClan implements Clan {
 	}
 
 	@Override
-	public synchronized int getMaxClaims() {
-		if (!ClansAPI.getData().isTrue("Clans.land-claiming.claim-influence.allow")) {
+	public synchronized int getClaimLimit() {
+		if (!ClansAPI.getDataInstance().isTrue("Clans.land-claiming.claim-influence.allow")) {
 			return 0;
 		}
-		if (ClansAPI.getData().getConfigString("Clans.land-claiming.claim-influence.dependence").equalsIgnoreCase("LOW")) {
+		if (ClansAPI.getDataInstance().getConfigString("Clans.land-claiming.claim-influence.dependence").equalsIgnoreCase("LOW")) {
 			this.claimBonus += 13.33;
 		}
 		if (getBalance() != null) {
@@ -480,23 +903,20 @@ public class DefaultClan implements Clan {
 			return (int) ((getMemberIds().length + Math.cbrt(getPower())) + this.claimBonus);
 	}
 
-	@Override
 	public synchronized @NotNull List<String> getAllyList() {
 		return this.allies;
 	}
 
-	@Override
 	public @NotNull UniformedComponents<Clan> getAllies() {
 		return this.allyList;
 	}
 
-	@Override
 	public @NotNull UniformedComponents<Clan> getEnemies() {
 		return this.enemyList;
 	}
 
 	@Override
-	public @NotNull List<String> getDataKeys() {
+	public @NotNull List<String> getKeys() {
 		return LabyrinthProvider.getInstance().getContainer(this.key).persistentKeySet();
 	}
 
@@ -512,51 +932,47 @@ public class DefaultClan implements Clan {
 	}
 
 	@Override
-	public boolean removeValue(String key) {
-		return LabyrinthProvider.getInstance().getContainer(this.key).delete(key);
+	public void removeValue(String key) {
+		LabyrinthProvider.getInstance().getContainer(this.key).delete(key);
 	}
 
-	@Override
 	public synchronized @NotNull List<String> getEnemyList() {
 		return this.enemies;
 	}
 
-	@Override
-	public synchronized @NotNull List<String> getAllyRequests() {
-		return this.requests;
+	public synchronized @NotNull List<Clan> getAllyRequests() {
+		return this.requests.stream().map(HUID::fromString).map(huid -> ClansAPI.getInstance().getClanManager().getClan(huid)).collect(Collectors.toList());
 	}
 
 	@Override
 	public synchronized int getWins() {
-		FileManager c = DataManager.FileType.CLAN_FILE.get(clanID);
-		return c.getRoot().getInt("wars-won");
+		return getNode("wars-won").toPrimitive().getInt();
 	}
 
 	@Override
 	public synchronized int getLosses() {
-		FileManager c = DataManager.FileType.CLAN_FILE.get(clanID);
-		return c.getRoot().getInt("wars-lost");
+		return getNode("wars-lost").toPrimitive().getInt();
 	}
 
 	@Override
 	public synchronized String[] getClanInfo() {
 		List<String> array = new ArrayList<>();
 		String password = this.password;
-		List<String> members = getMembers().stream().filter(m -> m.getPriority().toInt() == 0).map(Associate::getUser).map(LabyrinthUser::getName).collect(Collectors.toList());
-		List<String> mods = getMembers().stream().filter(m -> m.getPriority().toInt() == 1).map(Associate::getUser).map(LabyrinthUser::getName).collect(Collectors.toList());
-		List<String> admins = getMembers().stream().filter(m -> m.getPriority().toInt() == 2).map(Associate::getUser).map(LabyrinthUser::getName).collect(Collectors.toList());
+		List<String> members = getMembers().stream().filter(m -> m.getPriority().toInt() == 0).map(Associate::getName).collect(Collectors.toList());
+		List<String> mods = getMembers().stream().filter(m -> m.getPriority().toInt() == 1).map(Associate::getName).collect(Collectors.toList());
+		List<String> admins = getMembers().stream().filter(m -> m.getPriority().toInt() == 2).map(Associate::getName).collect(Collectors.toList());
 		List<String> allies = getAllies().map(Clan::getId).map(HUID::toString).collect(Collectors.toList());
 		List<String> enemies = getEnemies().map(Clan::getId).map(HUID::toString).collect(Collectors.toList());
 		String status = "LOCKED";
 		if (password == null)
 			status = "OPEN";
 		array.add(" ");
-		array.add("&2&lClan&7: " + getPalette().getStart() + ClansAPI.getInstance().getClanName(clanID));
+		array.add("&2&lClan&7: " + getPalette().toString() + ClansAPI.getInstance().getClanManager().getClanName(HUID.fromString(clanID)));
 		array.add("&f&m---------------------------");
 		array.add("&2Description: &7" + getDescription());
-		array.add("&2" + getOwner().getRankTag() + ": &f" + getOwner().getUser().getName());
+		array.add("&2" + getOwner().getRankFull() + ": &f" + getOwner().getName());
 		array.add("&2Status: &f" + status);
-		array.add("&2&lPower [&e" + format(String.valueOf(getPower())) + "&2&l]");
+		array.add("&2&lPower [&e" + Clan.ACTION.format(getPower()) + "&2&l]");
 		if (getBase() != null)
 			array.add("&2Base: &aSet");
 		if (getBase() == null)
@@ -565,16 +981,16 @@ public class DefaultClan implements Clan {
 			array.add("&2Mode: &f&lPEACE");
 		if (!isPeaceful())
 			array.add("&2Mode: &4&lWAR");
-		array.add("&2" + ClansAPI.getData().getMain().getRoot().getString("Formatting.Chat.Styles.Full.Admin") + "s [&b" + admins.size() + "&2]");
-		array.add("&2" + ClansAPI.getData().getMain().getRoot().getString("Formatting.Chat.Styles.Full.Moderator") + "s [&e" + mods.size() + "&2]");
-		array.add("&2Claims [&e" + getOwnedClaimsList().length + "&2]");
+		array.add("&2" + ClansAPI.getDataInstance().getConfig().getRoot().getString("Formatting.Chat.Styles.Full.Admin") + "s [&b" + admins.size() + "&2]");
+		array.add("&2" + ClansAPI.getDataInstance().getConfig().getRoot().getString("Formatting.Chat.Styles.Full.Moderator") + "s [&e" + mods.size() + "&2]");
+		array.add("&2Claims [&e" + getClaims().length + "&2]");
 		array.add("&f&m---------------------------");
 		if (allies.isEmpty())
 			array.add("&2Allies [&b" + "0" + "&2]");
 		if (allies.size() > 0) {
 			array.add("&2Allies [&b" + allies.size() + "&2]");
 			for (String clanId : allies) {
-				array.add("&f- &e&o" + ClansAPI.getInstance().getClanName(clanId));
+				array.add("&f- &e&o" + ClansAPI.getInstance().getClanManager().getClanName(HUID.fromString(clanId)));
 			}
 		}
 		if (enemies.isEmpty())
@@ -582,13 +998,13 @@ public class DefaultClan implements Clan {
 		if (enemies.size() > 0) {
 			array.add("&2Enemies [&b" + enemies.size() + "&2]");
 			for (String clanId : enemies) {
-				array.add("&f- &c&o" + ClansAPI.getInstance().getClanName(clanId));
+				array.add("&f- &c&o" + ClansAPI.getInstance().getClanManager().getClanName(HUID.fromString(clanId)));
 			}
 		}
 		array.add("&f&m---------------------------");
-		array.add("&n" + ClansAPI.getData().getMain().getRoot().getString("Formatting.Chat.Styles.Full.Member") + "s&r [&7" + members.size() + "&r] - " + members.toString());
+		array.add("&n" + ClansAPI.getDataInstance().getConfig().getRoot().getString("Formatting.Chat.Styles.Full.Member") + "s&r [&7" + members.size() + "&r] - " + members.toString());
 		array.add(" ");
-		OtherInformationAdaptEvent event = new Vent.Call<>(Vent.Runtime.Synchronous, new OtherInformationAdaptEvent(array, clanID)).run();
+		ClanInformationAdaptEvent event = new Vent.Call<>(Vent.Runtime.Synchronous, new ClanInformationAdaptEvent(array, clanID, ClanInformationAdaptEvent.Type.OTHER)).run();
 		return event.getInsertions().toArray(new String[0]);
 	}
 
@@ -645,22 +1061,37 @@ public class DefaultClan implements Clan {
 
 	@Override
 	public @NotNull List<ClanCooldown> getCooldowns() {
-		return ClansAPI.getData().COOLDOWNS.stream().sequential().filter(c -> c.getId().equals(clanID)).collect(Collectors.toList());
+		return ClansAPI.getDataInstance().getCooldowns().stream().sequential().filter(c -> c.getId().equals(clanID)).collect(Collectors.toList());
 	}
 
 	@Override
 	public void broadcast(String message) {
-		forEach(a -> Optional.ofNullable(a.getUser().toBukkit().getPlayer()).ifPresent(pl -> pl.sendMessage(ACTION.color("&7[&6&l" + getName() + "&7] " + message))));
+		getMembers().forEach(a -> {
+			if (a.isEntity()) return;
+			Optional.ofNullable(a.getUser().toBukkit().getPlayer()).ifPresent(pl -> pl.sendMessage(ACTION.color("&7[&6&l" + getName() + "&7] " + message)));
+		});
 	}
 
 	@Override
 	public void broadcast(BaseComponent... message) {
-		forEach(a -> Optional.ofNullable(a.getUser().toBukkit().getPlayer()).ifPresent(pl -> pl.spigot().sendMessage(message)));
+		getMembers().forEach(a -> {
+			if (a.isEntity()) return;
+			Optional.ofNullable(a.getUser().toBukkit().getPlayer()).ifPresent(pl -> pl.spigot().sendMessage(message));
+		});
+	}
+
+	@Override
+	public void broadcast(Message... message) {
+		getMembers().forEach(a -> {
+			if (a.isEntity()) return;
+			Optional.ofNullable(a.getUser().toBukkit().getPlayer()).ifPresent(pl -> Arrays.stream(message).forEach(m -> m.send(pl).deploy()));
+		});
 	}
 
 	@Override
 	public void broadcast(Predicate<Associate> predicate, String message) {
-		forEach(a -> {
+		getMembers().forEach(a -> {
+			if (a.isEntity()) return;
 			if (predicate.test(a)) {
 				Optional.ofNullable(a.getUser().toBukkit().getPlayer()).ifPresent(pl -> pl.sendMessage(ACTION.color(message)));
 			}
@@ -668,25 +1099,7 @@ public class DefaultClan implements Clan {
 	}
 
 	@Override
-	public synchronized @NotNull String format(String amount) {
-		BigDecimal b1 = new BigDecimal(amount);
-		Locale loc = Locale.US;
-		switch (ClansAPI.getData().getMain().getRoot().getString("Formatting.locale")) {
-			case "fr":
-				loc = Locale.FRANCE;
-				break;
-			case "de":
-				loc = Locale.GERMANY;
-				break;
-			case "nl":
-				loc = new Locale("nl", "NL");
-				break;
-		}
-		return NumberFormat.getNumberInstance(loc).format(b1.doubleValue());
-	}
-
-	@Override
-	public @Nullable Claim obtain(Chunk c) {
+	public @Nullable Claim newClaim(Chunk c) {
 		Claim claim = null;
 		if (!ClansAPI.getInstance().getClaimManager().isInClaim(c)) {
 			int chunkCount = 0;
@@ -695,12 +1108,12 @@ public class DefaultClan implements Clan {
 					chunkCount++;
 				}
 			}
-			if (ClansAPI.getData().isTrue("Clans.land-claiming.claim-connections")) {
-				if (getOwnedClaimsList().length >= 1 && chunkCount == 0) {
+			if (ClansAPI.getDataInstance().isTrue("Clans.land-claiming.claim-connections")) {
+				if (getClaims().length >= 1 && chunkCount == 0) {
 					return null;
 				}
 			}
-			if (getOwnedClaims().length == getMaxClaims()) return null;
+			if (getClaims().length == getClaimLimit()) return null;
 			String claimID = new RandomID(6, "AKZ0123456789").generate();
 			int x = c.getX();
 			int z = c.getZ();
@@ -711,12 +1124,22 @@ public class DefaultClan implements Clan {
 			table.set(getId().toString() + ".Claims." + claimID + ".Z", z);
 			table.set(getId().toString() + ".Claims." + claimID + ".World", world);
 			d.write(table);
-			claim = new Claim(x, z, clanID, claimID, world, true);
+			claim = new DefaultClaim(x, z, clanID, claimID, world, true);
 			ClansAPI.getInstance().getClaimManager().load(claim);
 			broadcast(Claim.ACTION.claimed(x, z, world));
-			new Vent.Call<>(Vent.Runtime.Synchronous, new LandClaimedEvent(null, claim)).run();
+			new Vent.Call<>(Vent.Runtime.Synchronous, new AssociateObtainLandEvent(null, claim)).run();
 		}
 		return claim;
+	}
+
+	@Override
+	public @NotNull Relation getRelation() {
+		return this.dock;
+	}
+
+	@Override
+	public @Nullable Teleport getTeleport() {
+		return Teleport.get(this);
 	}
 
 	@Override
@@ -734,95 +1157,85 @@ public class DefaultClan implements Clan {
 	}
 
 	@Override
-	public synchronized void addMaxClaim(int amount) {
+	public synchronized void giveClaims(int amount) {
 		this.claimBonus += amount;
 		broadcast("&fClaims: &a+" + amount);
 		ClansAPI.getInstance().getPlugin().getLogger().info("- Gave " + '"' + amount + '"' + " claim(s) to clan " + '"' + clanID + '"');
 	}
 
 	@Override
-	public synchronized void takeMaxClaim(int amount) {
+	public synchronized void takeClaims(int amount) {
 		this.claimBonus -= amount;
 		broadcast("&fClaims: &c-" + amount);
 		ClansAPI.getInstance().getPlugin().getLogger().info("- Took " + '"' + amount + '"' + " claim(s) from clan " + '"' + clanID + '"');
 	}
 
 	@Override
-	public synchronized void addWin(int amount) {
-		FileManager c = DataManager.FileType.CLAN_FILE.get(clanID);
-		if (!c.getRoot().isInt("wars-won")) {
-			c.write(t -> t.set("wars-won", 0.0));
-		}
-		int current = c.getRoot().getInt("wars-won");
-		c.write(t -> t.set("wars-won", (current + amount)));
+	public synchronized void giveWins(int amount) {
+		Node won = getNode("wars-won");
+		int current = won.toPrimitive().getInt();
+		won.set(current + amount);
+		won.save();
 	}
 
 	@Override
-	public synchronized void addLoss(int amount) {
-		FileManager c = DataManager.FileType.CLAN_FILE.get(clanID);
-		if (!c.getRoot().isInt("wars-lost")) {
-			c.write(f -> f.set("wars-lost", 0.0));
-		}
-		int current = c.getRoot().getInt("wars-lost");
-		c.write(f -> f.set("wars-lost", (current - amount)));
+	public synchronized void takeWins(int amount) {
+		Node lost = getNode("wars-lost");
+		int current = lost.toPrimitive().getInt();
+		lost.set(current - amount);
+		lost.save();
 	}
 
-	@Override
 	public synchronized void sendAllyRequest(HUID targetClanID) {
-		Clan target = ClansAPI.getInstance().getClan(targetClanID.toString());
-		if (getAllyRequests().contains(targetClanID.toString())) {
+		Clan target = ClansAPI.getInstance().getClanManager().getClan(targetClanID);
+		if (requests.contains(targetClanID.toString())) {
 			addAlly(targetClanID);
 			return;
 		}
-		if (target.getAllyRequests().contains(clanID)) {
-			broadcast(Clan.ACTION.waiting(ClansAPI.getInstance().getClanName(targetClanID.toString())));
+		if (((DefaultClan)target).requests.contains(targetClanID.toString())) {
+			broadcast(Clan.ACTION.waiting(ClansAPI.getInstance().getClanManager().getClanName(targetClanID)));
 			return;
 		}
-		Clan clanIndex = ClansAPI.getInstance().getClan(targetClanID.toString());
-		clanIndex.getAllyRequests().add(clanID);
+		((DefaultClan)target).requests.add(clanID);
 		broadcast(Clan.ACTION.allianceRequested());
-		clanIndex.broadcast(Clan.ACTION.allianceRequestedOut(getName(), ClansAPI.getInstance().getClanName(clanID)));
+		target.broadcast(Clan.ACTION.allianceRequestedOut(getName(), ClansAPI.getInstance().getClanManager().getClanName(HUID.fromString(clanID))));
 	}
 
-	@Override
 	public void sendAllyRequest(HUID targetClanID, String message) {
-		Clan target = ClansAPI.getInstance().getClan(targetClanID.toString());
-		if (getAllyRequests().contains(targetClanID.toString())) {
+		Clan target = ClansAPI.getInstance().getClanManager().getClan(targetClanID);
+		if (requests.contains(targetClanID.toString())) {
 			addAlly(targetClanID);
 			return;
 		}
-		if (target.getAllyRequests().contains(clanID)) {
-			broadcast(Clan.ACTION.waiting(ClansAPI.getInstance().getClanName(targetClanID.toString())));
+		if (((DefaultClan)target).requests.contains(clanID)) {
+			broadcast(Clan.ACTION.waiting(ClansAPI.getInstance().getClanManager().getClanName(targetClanID)));
 			return;
 		}
-		Clan clanIndex = ClansAPI.getInstance().getClan(targetClanID.toString());
-		clanIndex.getAllyRequests().add(clanID);
+		Clan clanIndex = ClansAPI.getInstance().getClanManager().getClan(targetClanID);
+		((DefaultClan)target).requests.add(clanID);
 		broadcast(Clan.ACTION.allianceRequested());
 		clanIndex.broadcast(message);
 	}
 
-	@Override
 	public synchronized void addAlly(HUID targetClanID) {
-		if (getAllyRequests().contains(targetClanID.toString())) {
+		if (requests.contains(targetClanID.toString())) {
 			requests.remove(targetClanID.toString());
 		}
-		Clan target = ClansAPI.getInstance().getClan(targetClanID.toString());
+		Clan target = ClansAPI.getInstance().getClanManager().getClan(targetClanID);
 		allies.add(targetClanID.toString());
-		target.getAllyList().add(clanID);
+		((DefaultClan)target).allies.add(clanID);
 		broadcast(Clan.ACTION.ally(target.getName()));
 		target.broadcast(Clan.ACTION.ally(getName()));
 	}
 
-	@Override
 	public synchronized void removeAlly(HUID targetClanID) {
-		Clan target = ClansAPI.getInstance().getClan(targetClanID.toString());
-		target.getAllyList().remove(clanID);
+		Clan target = ClansAPI.getInstance().getClanManager().getClan(targetClanID);
+		((DefaultClan)target).allies.remove(clanID);
 		allies.remove(targetClanID.toString());
 	}
 
-	@Override
 	public synchronized void addEnemy(HUID targetClanID) {
-		Clan target = ClansAPI.getInstance().getClan(targetClanID.toString());
+		Clan target = ClansAPI.getInstance().getClanManager().getClan(targetClanID);
 		if (getAllyList().contains(targetClanID.toString())) {
 			removeAlly(targetClanID);
 		}
@@ -831,12 +1244,16 @@ public class DefaultClan implements Clan {
 		target.broadcast(Clan.ACTION.enemy(getName()));
 	}
 
-	@Override
 	public synchronized void removeEnemy(HUID targetClanID) {
-		Clan target = ClansAPI.getInstance().getClan(targetClanID.toString());
+		Clan target = ClansAPI.getInstance().getClanManager().getClan(targetClanID);
 		enemies.remove(targetClanID.toString());
 		broadcast(Clan.ACTION.neutral(target.getName()));
 		target.broadcast(Clan.ACTION.neutral(getName()));
+	}
+
+	@Override
+	public String toString() {
+		return getTag().getId();
 	}
 
 	@Override
@@ -856,12 +1273,12 @@ public class DefaultClan implements Clan {
 		if (!EconomyProvision.getInstance().isValid()) {
 			return null;
 		}
-		return API.defaultImpl.getBank(this);
+		return BanksAPI.getInstance().getBank(this);
 	}
 
 	@Override
 	public boolean deposit(Player player, BigDecimal amount) {
-		if (!Bukkit.getPluginManager().isPluginEnabled("Vault") && !Bukkit.getPluginManager().isPluginEnabled("Enterprise")) {
+		if (!EconomyProvision.getInstance().isValid()) {
 			return false;
 		}
 		return Objects.requireNonNull(getBank()).deposit(player, amount);
@@ -869,7 +1286,7 @@ public class DefaultClan implements Clan {
 
 	@Override
 	public boolean withdraw(Player player, BigDecimal amount) {
-		if (!Bukkit.getPluginManager().isPluginEnabled("Vault") && !Bukkit.getPluginManager().isPluginEnabled("Enterprise")) {
+		if (!EconomyProvision.getInstance().isValid()) {
 			return false;
 		}
 		return Objects.requireNonNull(getBank()).withdraw(player, amount);
@@ -877,7 +1294,7 @@ public class DefaultClan implements Clan {
 
 	@Override
 	public boolean has(BigDecimal amount) {
-		if (!Bukkit.getPluginManager().isPluginEnabled("Vault") && !Bukkit.getPluginManager().isPluginEnabled("Enterprise")) {
+		if (!EconomyProvision.getInstance().isValid()) {
 			return false;
 		}
 		return Objects.requireNonNull(getBank()).has(amount);
@@ -885,22 +1302,18 @@ public class DefaultClan implements Clan {
 
 	@Override
 	public BigDecimal getBalance() {
-		if (!Bukkit.getPluginManager().isPluginEnabled("Vault") && !Bukkit.getPluginManager().isPluginEnabled("Enterprise")) {
-			return null;
+		if (!EconomyProvision.getInstance().isValid()) {
+			return BigDecimal.ZERO;
 		}
 		return Objects.requireNonNull(getBank()).getBalance();
 	}
 
 	@Override
 	public boolean setBalance(BigDecimal newBalance) {
-		if (!Bukkit.getPluginManager().isPluginEnabled("Vault") && !Bukkit.getPluginManager().isPluginEnabled("Enterprise")) {
+		if (!EconomyProvision.getInstance().isValid()) {
 			return false;
 		}
 		return Objects.requireNonNull(getBank()).setBalance(newBalance);
-	}
-
-	public @NotNull List<Clan> getWarInvites() {
-		return warInvites;
 	}
 
 	@Override
@@ -909,31 +1322,10 @@ public class DefaultClan implements Clan {
 	}
 
 	@Override
-	public int compareTo(@NotNull Clan o) {
-		return Double.compare(getPower(), o.getPower());
-	}
-
-	@NotNull
-	@Override
-	public Iterator<Associate> iterator() {
-		return getMembers().iterator();
-	}
-
-	@Override
-	public void forEach(Consumer<? super Associate> action) {
-		getMembers().forEach(action);
-	}
-
-	@Override
-	public Spliterator<Associate> spliterator() {
-		return getMembers().spliterator();
-	}
-
-	@Override
 	public String relate(Clan b) {
 		String result = "&f&o";
 		if (ACTION.getAllClanIDs().contains(b.getId().toString())) {
-			if (isNeutral(b.getId().toString())) {
+			if (isNeutral(b.getId())) {
 				result = "&f";
 			}
 			if (getId().equals(b.getId())) {
@@ -956,21 +1348,280 @@ public class DefaultClan implements Clan {
 
 	@Override
 	public boolean isNode(String key) {
-		return ClansAPI.getData().getClanFile(this).getRoot().isNode(key);
+		return ClansAPI.getDataInstance().getClanFile(this).getRoot().isNode(key);
 	}
 
 	@Override
 	public Node getNode(String key) {
-		return ClansAPI.getData().getClanFile(this).getRoot().getNode(key);
+		return ClansAPI.getDataInstance().getClanFile(this).getRoot().getNode(key);
 	}
 
 	@Override
 	public Set<String> getKeys(boolean deep) {
-		return ClansAPI.getData().getClanFile(this).getRoot().getKeys(deep);
+		return ClansAPI.getDataInstance().getClanFile(this).getRoot().getKeys(deep);
 	}
 
 	@Override
 	public Map<String, Object> getValues(boolean deep) {
-		return ClansAPI.getData().getClanFile(this).getRoot().getValues(deep);
+		return ClansAPI.getDataInstance().getClanFile(this).getRoot().getValues(deep);
+	}
+
+	@Ordinal(24)
+	Map<Chunk, List<LogoHolder.Carrier>> getStands() {
+		return stands;
+	}
+
+	public List<String> getLogo() {
+		return DefaultClan.this.getValue(new TypeToken<List<String>>(){}, "logo");
+	}
+
+	public List<LogoHolder.Carrier> getCarriers() {
+		List<LogoHolder.Carrier> list = new ArrayList<>();
+		for (List<LogoHolder.Carrier> s : stands.values()) {
+			list.addAll(s);
+		}
+		return list;
+	}
+
+	public List<LogoHolder.Carrier> getCarriers(Chunk chunk) {
+		return stands.computeIfAbsent(chunk, chunk1 -> new ArrayList<>());
+	}
+
+	@Override
+	public LogoHolder.Carrier newCarrier(Location location) {
+		double y = location.getY() + 0.5;
+		List<String> value = getLogo();
+		if (value == null) return null;
+		List<String> t = new ArrayList<>(value);
+		Collections.reverse(t);
+		String[] l = t.toArray(new String[0]);
+		Carrier carrier = new Carrier();
+		for (int i = 0; i < l.length; i++) {
+			y += 0.2;
+			Location loc = new Location(location.getWorld(), location.getX(), y, location.getZ(), location.getYaw(), location.getPitch()).add(0.5, 0, 0.5);
+			if (i == l.length - 1) {
+				carrier.top = loc;
+			}
+			String name = StringUtils.use(l[i]).translate();
+			InsigniaBuildCarrierEvent event = ClanVentBus.call(new InsigniaBuildCarrierEvent(carrier, i, l.length, name));
+			if (!event.isCancelled()) {
+				ArmorStand stand = Entities.ARMOR_STAND.spawn(loc, s -> {
+					s.setVisible(false);
+					s.setSmall(true);
+					s.setMarker(true);
+					s.setCustomNameVisible(true);
+					s.setCustomName(event.getContent());
+				});
+				if (getCarriers(loc.getChunk()).isEmpty()) {
+					stands.put(loc.getChunk(), new ArrayList<>());
+				}
+				carrier.add(stand);
+			}
+		}
+		getCarriers(carrier.getChunk()).add(carrier);
+		return carrier;
+	}
+
+	@Override
+	public void remove() {
+		stands.values().forEach(stations -> stations.forEach(station -> station.getLines().forEach(LogoHolder.Carrier.Line::destroy)));
+		Schedule.sync(() -> ClansAPI.getInstance().getClanManager().unload(this)).run();
+	}
+
+	@NotNull
+	@Override
+	public Iterator<InvasiveEntity> iterator() {
+		return getMembers().stream().map(associate -> (InvasiveEntity)associate).iterator();
+	}
+
+	@Override
+	public void forEach(Consumer<? super InvasiveEntity> action) {
+		getMembers().forEach(action);
+	}
+
+	@Override
+	public Spliterator<InvasiveEntity> spliterator() {
+		return getMembers().stream().map(associate -> (InvasiveEntity)associate).spliterator();
+	}
+
+	@Override
+	public Teleport getTeleport(InvasiveEntity entity) {
+		return getRelation().getAlliance().getTeleport(entity);
+	}
+
+	@Override
+	public boolean isEmpty() {
+		return getMembers().isEmpty();
+	}
+
+	@Override
+	public void add(InvasiveEntity entity) {
+		if (entity.isAssociate()) {
+			associates.add(entity.getAsAssociate());
+			if (ClansAPI.getInstance().getClanManager().getClans().exists(c -> c.equals(this)) && !entity.isTamable()) {
+				Node join_date = entity.getAsAssociate().getNode("join-date");
+				Date now = new Date();
+				join_date.set(now.getTime());
+				join_date.save();
+			}
+		}
+	}
+
+	@Override
+	public void remove(InvasiveEntity entity) {
+		if (entity.isAssociate()) {
+			associates.remove(entity.getAsAssociate());
+		}
+	}
+
+	@Override
+	public <T extends InvasiveEntity> boolean has(T o) {
+		if (o.isAssociate()) {
+			return getMembers().contains(o.getAsAssociate());
+		}
+		return false;
+	}
+
+	@Override
+	public <T extends InvasiveEntity> boolean hasAll(Collection<T> c) {
+		return getMembers().stream().map(associate -> (InvasiveEntity)associate).collect(Collectors.toList()).containsAll(c);
+	}
+
+	@Override
+	public InvasiveEntity[] toArray() {
+		return getMembers().stream().map(associate -> (InvasiveEntity)associate).toArray(InvasiveEntity[]::new);
+	}
+
+	@Override
+	public <T extends InvasiveEntity> T[] toArray(T[] a) {
+		return getMembers().stream().map(associate -> (T)associate).collect(Collectors.toList()).toArray(a);
+	}
+
+	@Override
+	public <T extends InvasiveEntity> boolean addAll(Collection<T> c) {
+		for (T t : c) {
+			if (t.isAssociate()) {
+				if (associates.contains(t.getAsAssociate())) {
+					return false;
+				}
+			} else {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	@Override
+	public <T extends InvasiveEntity> boolean removeAll(Collection<T> c) {
+		for (T t : c) {
+			if (t.isAssociate()) {
+				if (!has(t)) {
+					return false;
+				}
+			} else {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	@Override
+	public void clear() {
+		getMembers().forEach(Savable::remove);
+	}
+
+	final class Carrier implements LogoHolder.Carrier {
+
+		Location top;
+		final LinkedHashSet<LogoHolder.Carrier.Line> lines = new LinkedHashSet<>();
+		final HUID id;
+		private Chunk chunk;
+
+		public Carrier() {
+			this.id = HUID.randomID();
+		}
+
+		public Carrier(HUID id) {
+			this.id = id;
+		}
+
+		public void add(Attributable attributable) throws IllegalArgumentException {
+			if (attributable instanceof ArmorStand) {
+				Line line = new Line((ArmorStand) attributable);
+				if (this.chunk == null) {
+					this.chunk = line.getStand().getLocation().getChunk();
+				}
+				lines.add(line);
+			} else throw new IllegalArgumentException("Attribute cannot be used for line processing!");
+		}
+
+		@Override
+		public Location getTop() {
+			return top;
+		}
+
+		public Chunk getChunk() {
+			return chunk;
+		}
+
+		@Override
+		public LogoHolder getHolder() {
+			return DefaultClan.this;
+		}
+
+		@Ordinal
+		HUID getRealId() {
+			return id;
+		}
+
+		@Ordinal(2)
+		Clan getClanInstance() {
+			return DefaultClan.this;
+		}
+
+		public String getId() {
+			return id.toString().replace("-", "").substring(8);
+		}
+
+		public Set<LogoHolder.Carrier.Line> getLines() {
+			return lines;
+		}
+
+		public void remove(LogoHolder.Carrier.Line line) {
+			lines.remove(line);
+		}
+
+		@Override
+		public String toString() {
+			return "Carrier{" + "world=" + getChunk().getWorld().getName() + ",x=" + getChunk().getX() + ",z=" + getChunk().getZ() + ",size=" + getLines().size() + ",id=" + getRealId().toString() + '}';
+		}
+
+		public final class Line implements LogoHolder.Carrier.Line {
+
+			private final ArmorStand line;
+
+			Line(ArmorStand stand) {
+				this.line = stand;
+			}
+
+			@Ordinal(420)
+			HUID getRealId() {
+				return DefaultClan.this.getId();
+			}
+
+			public HUID getId() {
+				return Carrier.this.id;
+			}
+
+			public ArmorStand getStand() {
+				return line;
+			}
+
+			public void destroy() {
+				getStand().remove();
+				Schedule.sync(() -> Carrier.this.remove(this)).run();
+			}
+
+		}
 	}
 }

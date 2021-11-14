@@ -2,6 +2,7 @@ package com.github.sanctum.clans.construct.impl;
 
 import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClansAPI;
+import com.github.sanctum.clans.construct.api.Vote;
 import com.github.sanctum.clans.construct.api.War;
 import com.github.sanctum.clans.construct.extra.ClanDisplayName;
 import com.github.sanctum.labyrinth.data.service.AccessibleConstants;
@@ -17,7 +18,7 @@ import java.util.function.Consumer;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
-public class DefaultArena implements War {
+public final class DefaultArena implements War {
 
 	protected final String id;
 	protected final Queue queue;
@@ -76,7 +77,7 @@ public class DefaultArena implements War {
 				private final String id;
 
 				{
-					time = abv(ClansAPI.getData().getInt("Clans.war.max-length"));
+					time = abv(ClansAPI.getDataInstance().getConfigInt("Clans.war.max-length"));
 					this.id = DefaultArena.this.getId();
 				}
 
@@ -168,7 +169,7 @@ public class DefaultArena implements War {
 	@Override
 	public void setPoints(Team team, int amount) {
 		pointMap.put(team, amount);
-		if (getPoints(team) >= ClansAPI.getData().getInt("Clans.war.max-points")) {
+		if (getPoints(team) >= ClansAPI.getDataInstance().getConfigInt("Clans.war.max-points")) {
 			ClansAPI.getInstance().getArenaManager().conclude(this);
 		}
 	}

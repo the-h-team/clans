@@ -3,56 +3,67 @@ package com.github.sanctum.clans.commands;
 import com.github.sanctum.clans.bridge.ClanAddon;
 import com.github.sanctum.clans.bridge.ClanAddonQuery;
 import com.github.sanctum.clans.bridge.ClanVentBus;
-import com.github.sanctum.clans.construct.Claim;
 import com.github.sanctum.clans.construct.DataManager;
 import com.github.sanctum.clans.construct.GUI;
 import com.github.sanctum.clans.construct.actions.ClanAction;
+import com.github.sanctum.clans.construct.api.Claim;
 import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClanBank;
 import com.github.sanctum.clans.construct.api.ClanSubCommand;
 import com.github.sanctum.clans.construct.api.ClansAPI;
+import com.github.sanctum.clans.construct.api.Clearance;
+import com.github.sanctum.clans.construct.api.ClearanceLog;
 import com.github.sanctum.clans.construct.api.Insignia;
-import com.github.sanctum.clans.construct.api.Permission;
-import com.github.sanctum.clans.construct.api.PermissionLog;
 import com.github.sanctum.clans.construct.api.War;
 import com.github.sanctum.clans.construct.bank.BankAction;
 import com.github.sanctum.clans.construct.bank.BankLog;
 import com.github.sanctum.clans.construct.bank.BankPermissions;
+import com.github.sanctum.clans.construct.extra.BukkitColor;
 import com.github.sanctum.clans.construct.extra.ClanDisplayName;
-import com.github.sanctum.clans.construct.extra.Color;
+import com.github.sanctum.clans.construct.extra.FancyLogoAppendage;
 import com.github.sanctum.clans.construct.extra.StringLibrary;
 import com.github.sanctum.clans.construct.impl.DefaultClan;
-import com.github.sanctum.clans.events.command.CommandHelpInsertEvent;
-import com.github.sanctum.clans.events.command.CommandInsertEvent;
-import com.github.sanctum.clans.events.command.ServerCommandInsertEvent;
-import com.github.sanctum.clans.events.command.TabInsertEvent;
-import com.github.sanctum.clans.events.core.ClanTagChangeEvent;
-import com.github.sanctum.clans.events.core.bank.messaging.Messages;
+import com.github.sanctum.clans.event.associate.AssociateDisplayInfoEvent;
+import com.github.sanctum.clans.event.associate.AssociateKickAssociateEvent;
+import com.github.sanctum.clans.event.associate.AssociateRenameClanEvent;
+import com.github.sanctum.clans.event.associate.AssociateUpdateBaseEvent;
+import com.github.sanctum.clans.event.bank.messaging.Messages;
+import com.github.sanctum.clans.event.command.CommandInformationAdaptEvent;
 import com.github.sanctum.labyrinth.LabyrinthProvider;
 import com.github.sanctum.labyrinth.api.Service;
 import com.github.sanctum.labyrinth.data.EconomyProvision;
 import com.github.sanctum.labyrinth.data.FileManager;
 import com.github.sanctum.labyrinth.data.LabyrinthUser;
+import com.github.sanctum.labyrinth.formatting.FancyMessage;
 import com.github.sanctum.labyrinth.formatting.Message;
 import com.github.sanctum.labyrinth.formatting.PaginatedList;
+import com.github.sanctum.labyrinth.formatting.TextChunk;
+import com.github.sanctum.labyrinth.formatting.ToolTip;
 import com.github.sanctum.labyrinth.formatting.component.OldComponent;
 import com.github.sanctum.labyrinth.formatting.string.ColoredString;
+import com.github.sanctum.labyrinth.formatting.string.RandomID;
+import com.github.sanctum.labyrinth.interfacing.Nameable;
 import com.github.sanctum.labyrinth.library.HUID;
 import com.github.sanctum.labyrinth.library.Item;
 import com.github.sanctum.labyrinth.library.Mailer;
 import com.github.sanctum.labyrinth.library.StringUtils;
 import com.github.sanctum.labyrinth.library.TextLib;
+import com.github.sanctum.labyrinth.task.Schedule;
+import com.google.common.base.Strings;
 import com.google.common.collect.MapMaker;
 import java.math.BigDecimal;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.IllegalFormatException;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentMap;
 import java.util.regex.Pattern;
@@ -81,7 +92,7 @@ public class CommandClan extends Command implements Message.Factory {
 	public CommandClan() {
 		super("clan");
 		setDescription("Base command for clans.");
-		List<String> array = ClansAPI.getData().getMain().getRoot().getStringList("Formatting.aliase");
+		List<String> array = ClansAPI.getDataInstance().getConfig().getRoot().getStringList("Formatting.aliase");
 		array.addAll(Arrays.asList("clans", "cl", "c"));
 		setAliases(array);
 		setPermission("clanspro");
@@ -101,8 +112,29 @@ public class CommandClan extends Command implements Message.Factory {
 		for (String s : msg.getRoot().getNode("Commands").getKeys(false)) {
 			help.add(msg.getRoot().getString("Commands." + s + ".text"));
 		}
-		CommandHelpInsertEvent e = ClanVentBus.call(new CommandHelpInsertEvent(help));
-		return e.getHelpMenu().stream().map(s -> s.replace("clan", label)).collect(Collectors.toList());
+		CommandInformationAdaptEvent e = ClanVentBus.call(new CommandInformationAdaptEvent(help));
+		return e.getMenu().stream().map(s -> s.replace("clan", label)).collect(Collectors.toList());
+	}
+
+	static int correctCharLength(char c) {
+		switch (c) {
+			case ':':
+			case 'i':
+				return 1;
+			case 'l':
+				return 2;
+			case '*':
+			case 't':
+				return 3;
+			case 'f':
+			case 'k':
+				return 4;
+		}
+		return 5;
+	}
+
+	static int getFixedLength(String string) {
+		return string.chars().reduce(0, (p, i) -> p + correctCharLength((char) i) + 1);
 	}
 
 	private boolean isAlphaNumeric(String s) {
@@ -137,8 +169,6 @@ public class CommandClan extends Command implements Message.Factory {
 					arguments.add(a);
 				}
 			}
-			TabInsertEvent event = ClanVentBus.call(new TabInsertEvent(args));
-			arguments.addAll(event.getArgs(1));
 			for (String a : arguments) {
 				if (a.toLowerCase().startsWith(args[0].toLowerCase()))
 					result.add(a);
@@ -146,19 +176,16 @@ public class CommandClan extends Command implements Message.Factory {
 			return result;
 		}
 		if (args.length == 2) {
-			TabInsertEvent event = ClanVentBus.call(new TabInsertEvent(args));
-			arguments.addAll(event.getArgs(2));
-
-			for (String t : event.getArgs(2)) {
-				if (t.toLowerCase().startsWith(args[1].toLowerCase()))
-					result.add(t);
-			}
 			if (args[0].equalsIgnoreCase("permit")) {
 				if (!p.hasPermission(this.getPermission() + "." + DataManager.Security.getPermission("permit"))) {
 					return result;
 				}
 				arguments.clear();
-				arguments.addAll(Arrays.stream(Permission.values()).map(Enum::name).map(String::toLowerCase).collect(Collectors.toList()));
+				if (associate.isPresent()) {
+					arguments.addAll(associate.get().getClan().getPermissions().stream().map(Map.Entry::getKey).map(Nameable::getName).map(String::toLowerCase).collect(Collectors.toList()));
+				} else {
+					arguments.addAll(Arrays.stream(Clearance.values()).map(Nameable::getName).map(String::toLowerCase).collect(Collectors.toList()));
+				}
 				for (String a : arguments) {
 					if (a.toLowerCase().startsWith(args[1].toLowerCase()))
 						result.add(a);
@@ -195,7 +222,19 @@ public class CommandClan extends Command implements Message.Factory {
 					return result;
 				}
 				arguments.clear();
-				arguments.addAll(Arrays.asList("edit", "apply", "upload", "color", "redraw"));
+				arguments.addAll(Arrays.asList("edit", "apply", "upload", "color", "redraw", "share", "browse", "carriers"));
+				for (String a : arguments) {
+					if (a.toLowerCase().startsWith(args[1].toLowerCase()))
+						result.add(a);
+				}
+				return result;
+			}
+			if (args[0].equalsIgnoreCase("claim")) {
+				if (!p.hasPermission(this.getPermission() + "." + DataManager.Security.getPermission("claim"))) {
+					return result;
+				}
+				arguments.clear();
+				arguments.addAll(Arrays.asList("flags", "list"));
 				for (String a : arguments) {
 					if (a.toLowerCase().startsWith(args[1].toLowerCase()))
 						result.add(a);
@@ -216,7 +255,7 @@ public class CommandClan extends Command implements Message.Factory {
 			}
 			if (args[0].equalsIgnoreCase("promote")) {
 				if (ClansAPI.getInstance().isInClan(p.getUniqueId())) {
-					Clan c = ClansAPI.getInstance().getClan(p.getUniqueId());
+					Clan c = ClansAPI.getInstance().getClanManager().getClan(p.getUniqueId());
 					if (!p.hasPermission(this.getPermission() + "." + DataManager.Security.getPermission("promote"))) {
 						return result;
 					}
@@ -231,7 +270,7 @@ public class CommandClan extends Command implements Message.Factory {
 			}
 			if (args[0].equalsIgnoreCase("demote")) {
 				if (ClansAPI.getInstance().isInClan(p.getUniqueId())) {
-					Clan c = ClansAPI.getInstance().getClan(p.getUniqueId());
+					Clan c = ClansAPI.getInstance().getClanManager().getClan(p.getUniqueId());
 					if (!p.hasPermission(this.getPermission() + "." + DataManager.Security.getPermission("demote"))) {
 						return result;
 					}
@@ -261,7 +300,7 @@ public class CommandClan extends Command implements Message.Factory {
 					return result;
 				}
 				arguments.clear();
-				for (Color color : Color.values()) {
+				for (BukkitColor color : BukkitColor.values()) {
 					result.add(color.toCode());
 				}
 				return result;
@@ -316,7 +355,7 @@ public class CommandClan extends Command implements Message.Factory {
 					arguments.add("balance");
 					arguments.add("deposit");
 					arguments.add("withdraw");
-					ClansAPI.getInstance().getClan(p).ifPresent(clan -> {
+					Optional.ofNullable(ClansAPI.getInstance().getClanManager().getClan(p)).ifPresent(clan -> {
 						if (BankAction.VIEW_LOG.testForPlayer(clan, p)) {
 							arguments.add("viewlog");
 						}
@@ -335,19 +374,12 @@ public class CommandClan extends Command implements Message.Factory {
 			return result;
 		}
 		if (args.length == 3) {
-			TabInsertEvent event = ClanVentBus.call(new TabInsertEvent(args));
-			arguments.addAll(event.getArgs(3));
-
-			for (String t : event.getArgs(3)) {
-				if (t.toLowerCase().startsWith(args[2].toLowerCase()))
-					result.add(t);
-			}
 			if (args[0].equalsIgnoreCase("permit")) {
 				if (!p.hasPermission(this.getPermission() + "." + DataManager.Security.getPermission("permit"))) {
 					return result;
 				}
 				arguments.clear();
-				arguments.addAll(Arrays.asList("0", "1", "2", "3"));
+				arguments.addAll(Arrays.stream(Clearance.Level.values()).sorted(Integer::compareTo).map(String::valueOf).collect(Collectors.toList()));
 				for (String a : arguments) {
 					if (a.toLowerCase().startsWith(args[2].toLowerCase()))
 						result.add(a);
@@ -466,14 +498,7 @@ public class CommandClan extends Command implements Message.Factory {
 						}
 					}
 				}
-
-				final ServerCommandInsertEvent event = ClanVentBus.call(new ServerCommandInsertEvent(args));
-				if (event.getReturn()) return true;
-				event.getErrorMessage().map(s -> StringUtils.use(s).translate())
-						.ifPresent(sender::sendMessage);
-				if (event.getErrorMessage().isPresent()) customMessage = true;
 			}
-			if (!customMessage) sender.sendMessage(notPlayer());
 			return true;
 		}
 
@@ -505,14 +530,14 @@ public class CommandClan extends Command implements Message.Factory {
 			}
 		}
 
-		CommandInsertEvent event = ClanVentBus.call(new CommandInsertEvent(p, args));
-		if (event.isCommand()) {
-			return event.isCommand();
+		if (this.getPermission() == null) return true;
+		if (!p.hasPermission(this.getPermission())) {
+			lib.sendMessage(p, "&4&oYou don't have permission " + '"' + this.getPermission() + '"');
+			return true;
 		}
 
 		if (length == 0) {
-
-			String ping = ClansAPI.getData().getMessageResponse("Commands.create");
+			String ping = ClansAPI.getDataInstance().getMessageResponse("Commands.create");
 			List<String> list = new LinkedList<>(helpMenu(label));
 			new PaginatedList<>(list)
 					.limit(lib.menuSize())
@@ -523,12 +548,7 @@ public class CommandClan extends Command implements Message.Factory {
 
 			return true;
 		}
-		if (this.getPermission() == null) throw new IllegalStateException("Permission cannot be null!");
-		if (!p.hasPermission(this.getPermission())) {
-			lib.sendMessage(p, "&4&oYou don't have permission " + '"' + this.getPermission() + '"');
-			return true;
-		}
-		if (!ClansAPI.getData().getMain().getRoot().getStringList("Clans.world-whitelist").contains(p.getWorld().getName())) {
+		if (!ClansAPI.getDataInstance().getConfig().getRoot().getStringList("Clans.world-whitelist").contains(p.getWorld().getName())) {
 			lib.sendMessage(p, "&4&oClan features have been locked within this world.");
 			return true;
 		}
@@ -623,13 +643,13 @@ public class CommandClan extends Command implements Message.Factory {
 					return true;
 				}
 				if (associate != null) {
-					if (Permission.MANAGE_MODE.test(associate)) {
+					if (Clearance.MANAGE_MODE.test(associate)) {
 						if (!(associate.getClan() instanceof DefaultClan))
 							return true;
-						DefaultClan c = (DefaultClan) ClansAPI.getInstance().getClan(p.getUniqueId());
+						DefaultClan c = (DefaultClan) ClansAPI.getInstance().getClanManager().getClan(p.getUniqueId());
 						if (c.isPeaceful()) {
-							if (ClansAPI.getData().isTrue("Clans.mode-change.charge")) {
-								double amount = ClansAPI.getData().getMain().getRoot().getDouble("Clans.mode-change.amount");
+							if (ClansAPI.getDataInstance().isTrue("Clans.mode-change.charge")) {
+								double amount = ClansAPI.getDataInstance().getConfig().getRoot().getDouble("Clans.mode-change.amount");
 								double balance = EconomyProvision.getInstance().balance(p).orElse(0.0);
 								double needed = amount - balance;
 								boolean b = EconomyProvision.getInstance().withdraw(BigDecimal.valueOf(amount), p, p.getWorld().getName()).orElse(false);
@@ -639,7 +659,7 @@ public class CommandClan extends Command implements Message.Factory {
 								}
 
 							}
-							if (ClansAPI.getData().isTrue("Clans.mode-change.timer.use")) {
+							if (ClansAPI.getDataInstance().isTrue("Clans.mode-change.timer.use")) {
 								if (c.getModeCooldown().isComplete()) {
 									c.setPeaceful(false);
 									c.getModeCooldown().setCooldown();
@@ -655,8 +675,8 @@ public class CommandClan extends Command implements Message.Factory {
 							Bukkit.broadcastMessage(Clan.ACTION.color(lib.modeAnnounce("war", c.getName())));
 							lib.sendMessage(p, lib.war());
 						} else {
-							if (ClansAPI.getData().isTrue("Clans.mode-change.charge")) {
-								double amount = ClansAPI.getData().getMain().getRoot().getDouble("Clans.mode-change.amount");
+							if (ClansAPI.getDataInstance().isTrue("Clans.mode-change.charge")) {
+								double amount = ClansAPI.getDataInstance().getConfig().getRoot().getDouble("Clans.mode-change.amount");
 								double balance = EconomyProvision.getInstance().balance(p).orElse(0.0);
 								double needed = amount - balance;
 								EconomyProvision.getInstance().withdraw(BigDecimal.valueOf(amount), p).ifPresent(b -> {
@@ -665,7 +685,7 @@ public class CommandClan extends Command implements Message.Factory {
 									}
 								});
 							}
-							if (ClansAPI.getData().isTrue("Clans.mode-change.timer.use")) {
+							if (ClansAPI.getDataInstance().isTrue("Clans.mode-change.timer.use")) {
 								if (c.getModeCooldown().isComplete()) {
 									c.setPeaceful(true);
 									c.getModeCooldown().setCooldown();
@@ -714,17 +734,17 @@ public class CommandClan extends Command implements Message.Factory {
 					return true;
 				}
 				if (associate != null) {
-					PermissionLog log = associate.getClan().getValue(PermissionLog.class, "permissions");
+					ClearanceLog log = associate.getClan().getPermissions();
 					lib.sendMessage(p, "&eOur clan permission list:");
 					Mailer m = Mailer.empty(p);
 					m.chat("&f&l▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬").deploy();
-					for (Map.Entry<Permission, Integer> e : log.getMap().entrySet().stream().sorted(Map.Entry.comparingByKey()).collect(Collectors.toList())) {
-						Permission perm = e.getKey();
+					for (Map.Entry<Clearance, Integer> e : log.stream().sorted(Map.Entry.comparingByKey()).collect(Collectors.toList())) {
+						Clearance perm = e.getKey();
 						int required = e.getValue();
-						m.chat(TextLib.getInstance().textSuggestable("&e" + String.join(" ", clean(perm.name().split("_"))), " &f= {&a" + required + "&f}", "&eClick to edit this permission.", "c permit " + perm.name() + " ")).deploy();
+						m.chat(TextLib.getInstance().textSuggestable("&e" + String.join(" ", clean(perm.getName().split("_"))), " &f= {&a" + required + "&f}", "&eClick to edit this permission.", "c permit " + perm.getName() + " ")).deploy();
 					}
 					m.chat("&f&l▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬").deploy();
-					FileManager main = ClansAPI.getData().getMain();
+					FileManager main = ClansAPI.getDataInstance().getConfig();
 					String member = main.getRoot().getString("Formatting.Chat.Styles.Full.Member");
 					String mod = main.getRoot().getString("Formatting.Chat.Styles.Full.Moderator");
 					String admin = main.getRoot().getString("Formatting.Chat.Styles.Full.Admin");
@@ -777,7 +797,7 @@ public class CommandClan extends Command implements Message.Factory {
 						lib.sendMessage(p, "&cThere is no space on the battlefield right now.");
 					}
 				} else {
-					lib.sendMessage(p, ClansAPI.getData().getMessageResponse("already-at-war"));
+					lib.sendMessage(p, ClansAPI.getDataInstance().getMessageResponse("already-at-war"));
 					if (!current.isRunning()) {
 						lib.sendMessage(p, "&cAll teams are still getting ready for battle. Queue still building.");
 					}
@@ -832,7 +852,7 @@ public class CommandClan extends Command implements Message.Factory {
 					lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("list")));
 					return true;
 				}
-				GUI.CLAN_ROSTER_SELECT.get().open(p);
+				GUI.CLAN_ROSTER_SELECTION.get().open(p);
 				return true;
 			}
 			if (args0.equalsIgnoreCase("claim")) {
@@ -842,7 +862,7 @@ public class CommandClan extends Command implements Message.Factory {
 				}
 				if (Claim.ACTION.isEnabled()) {
 					if (associate != null) {
-						if (Permission.MANAGE_LAND.test(associate)) {
+						if (Clearance.MANAGE_LAND.test(associate)) {
 							Claim.ACTION.claim(p);
 						} else {
 							lib.sendMessage(p, lib.noClearance());
@@ -866,7 +886,7 @@ public class CommandClan extends Command implements Message.Factory {
 				}
 				if (associate != null) {
 					if (Claim.ACTION.isEnabled()) {
-						if (Permission.MANAGE_LAND.test(associate)) {
+						if (Clearance.MANAGE_LAND.test(associate)) {
 							Claim.ACTION.unclaim(p);
 						} else {
 							lib.sendMessage(p, lib.noClearance());
@@ -886,18 +906,18 @@ public class CommandClan extends Command implements Message.Factory {
 					return true;
 				}
 				if (associate != null) {
-					if (associate.getChat().equals("GLOBAL")) {
-						associate.setChat("CLAN");
+					if (associate.getChannel().getId().equals("GLOBAL")) {
+						associate.setChannel("CLAN");
 						lib.sendMessage(p, lib.commandChat("CLAN"));
 						return true;
 					}
-					if (associate.getChat().equals("CLAN")) {
-						associate.setChat("ALLY");
+					if (associate.getChannel().getId().equals("CLAN")) {
+						associate.setChannel("ALLY");
 						lib.sendMessage(p, lib.commandChat("ALLY"));
 						return true;
 					}
-					if (associate.getChat().equals("ALLY")) {
-						associate.setChat("GLOBAL");
+					if (associate.getChannel().getId().equals("ALLY")) {
+						associate.setChannel("GLOBAL");
 						lib.sendMessage(p, lib.commandChat("GLOBAL"));
 						return true;
 					}
@@ -1007,7 +1027,7 @@ public class CommandClan extends Command implements Message.Factory {
 					return true;
 				}
 				if (associate != null) {
-					Clan.ACTION.teleportBase(p);
+					Clan.ACTION.teleport(p, associate.getClan().getBase());
 				} else {
 					lib.sendMessage(p, lib.notInClan());
 					return true;
@@ -1049,14 +1069,20 @@ public class CommandClan extends Command implements Message.Factory {
 				}
 
 				Clan clan = associate.getClan();
-				if (Permission.MANAGE_BASE.test(associate)) {
+				if (Clearance.MANAGE_BASE.test(associate)) {
 					if (!ClansAPI.getInstance().getClaimManager().isInClaim(p.getLocation())) {
-						clan.setBase(p.getLocation());
+						AssociateUpdateBaseEvent event = ClanVentBus.call(new AssociateUpdateBaseEvent(p, p.getLocation()));
+						if (!event.isCancelled()) {
+							clan.setBase(event.getLocation());
+						}
 					} else {
-						if (Claim.from(p.getLocation()).getOwner().equals(clan.getId().toString())) {
-							clan.setBase(p.getLocation());
+						if (ClansAPI.getInstance().getClaimManager().getClaim(p.getLocation()).getOwner().getTag().getId().equals(clan.getId().toString())) {
+							AssociateUpdateBaseEvent event = ClanVentBus.call(new AssociateUpdateBaseEvent(p, p.getLocation()));
+							if (!event.isCancelled()) {
+								clan.setBase(event.getLocation());
+							}
 						} else {
-							lib.sendMessage(p, lib.notClaimOwner(Claim.from(p.getLocation()).getClan().getName()));
+							lib.sendMessage(p, lib.notClaimOwner(ClansAPI.getInstance().getClaimManager().getClaim(p.getLocation()).getClan().getName()));
 						}
 					}
 				} else {
@@ -1071,10 +1097,9 @@ public class CommandClan extends Command implements Message.Factory {
 					return true;
 				}
 				if (associate != null) {
-					try {
+					AssociateDisplayInfoEvent ev = ClanVentBus.call(new AssociateDisplayInfoEvent(associate, AssociateDisplayInfoEvent.Type.PERSONAL));
+					if (!ev.isCancelled()) {
 						Clan.ACTION.getClanboard(p, 1);
-					} catch (NullPointerException e) {
-						e.printStackTrace();
 					}
 				} else {
 					lib.sendMessage(p, lib.notInClan());
@@ -1092,11 +1117,11 @@ public class CommandClan extends Command implements Message.Factory {
 					lib.sendMessage(p, lib.notInClan());
 					return true;
 				}
-				if (Permission.MANAGE_FRIENDLY_FIRE.test(associate)) {
+				if (Clearance.MANAGE_FRIENDLY_FIRE.test(associate)) {
 					if (!(associate.getClan() instanceof DefaultClan))
 						return true;
-					DefaultClan c = (DefaultClan) ClansAPI.getInstance().getClan(p.getUniqueId());
-					if (ClansAPI.getData().isTrue("Clans.friendly-fire.timer.use")) {
+					DefaultClan c = (DefaultClan) ClansAPI.getInstance().getClanManager().getClan(p.getUniqueId());
+					if (ClansAPI.getDataInstance().isTrue("Clans.friendly-fire.timer.use")) {
 
 						if (c.isFriendlyFire()) {
 							if (c.getFriendlyCooldown().isComplete()) {
@@ -1176,9 +1201,94 @@ public class CommandClan extends Command implements Message.Factory {
 		if (length == 2) {
 			String args0 = args[0];
 			String args1 = args[1];
+			if (args0.equalsIgnoreCase("claim")) {
+				if (!p.hasPermission(this.getPermission() + "." + DataManager.Security.getPermission("claim"))) {
+					lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("claim")));
+					return true;
+				}
+				if (args1.equalsIgnoreCase("list")) {
+					if (associate != null) {
+						if (Clearance.MANAGE_LAND.test(associate)) {
+							GUI.CLAIM_LIST.get(associate.getClan()).open(p);
+						} else {
+							lib.sendMessage(p, lib.noClearance());
+						}
+					} else {
+						lib.sendMessage(p, lib.notInClan());
+					}
+					return true;
+				}
+				if (args1.equalsIgnoreCase("flags")) {
+
+					if (Claim.ACTION.isEnabled()) {
+						if (associate != null) {
+							if (!Clearance.MANAGE_LAND.test(associate)) {
+								lib.sendMessage(p, lib.noClearance());
+								return true;
+							}
+							Claim test = ClansAPI.getInstance().getClaimManager().getClaim(p.getLocation());
+							if (test != null) {
+								Set<Claim.Flag> set = Arrays.stream(test.getFlags().clone()).sorted((o1, o2) -> String.CASE_INSENSITIVE_ORDER.compare(o1.getId(), o2.getId())).sorted(Claim.Flag::compareTo).sorted(Comparator.reverseOrder()).collect(Collectors.toCollection(LinkedHashSet::new));
+								new PaginatedList<>(set)
+										.limit(5)
+										.start((pagination, page, max) -> {
+											lib.sendMessage(p, "&e&lChunk: &bX:&f" + test.getChunk().getX() + " &bZ:&f" + test.getChunk().getZ());
+											new FancyMessage("--------------------------------------").color(org.bukkit.Color.AQUA).style(org.bukkit.ChatColor.STRIKETHROUGH).send(p).deploy();
+										})
+										.decorate((pagination, f, page, max, placement) -> {
+											Message m;
+											if (f.isValid()) {
+												if (f.isEnabled()) {
+													m = new FancyMessage().then(f.getId() + ";").color(org.bukkit.Color.GREEN).then("Enable").color(org.bukkit.Color.YELLOW).then(" ").then("Disable").color(org.bukkit.Color.GRAY).hover("Click to disallow this flag.").action(() -> {
+														f.setEnabled(false);
+														p.performCommand("c claim flags");
+													});
+													for (Message.Chunk c : m) {
+														String text = c.getText();
+														if (text.contains(";")) {
+															c.replace(";", " &8" + Strings.repeat(".", ((180 - getFixedLength(text.replace(";", ""))) / 2)) + " ");
+														}
+													}
+												} else {
+													m = new FancyMessage().then(f.getId() + ";").color(org.bukkit.Color.GREEN).then("Enable").color(org.bukkit.Color.GRAY).hover("Click to allow this flag.").action(() -> {
+														f.setEnabled(true);
+														p.performCommand("c claim flags");
+													}).then(" ").then("Disable").color(org.bukkit.Color.YELLOW);
+													for (Message.Chunk c : m) {
+														String text = c.getText();
+														if (text.contains(";")) {
+															c.replace(";", " &8" + Strings.repeat(".", ((180 - getFixedLength(text.replace(";", ""))) / 2)) + " ");
+														}
+													}
+												}
+												m.send(p).deploy();
+											} else {
+												new FancyMessage("&c&m" + f.getId()).hover("Click to remove me i no longer work.").action(() -> {
+													test.remove(f);
+													Schedule.sync(() -> p.performCommand("c claim flags")).waitReal(1);
+												}).send(p).deploy();
+											}
+										})
+										.finish(builder -> builder.setPrefix("&b&m--------------------------------------").setPlayer(p))
+										.get(1);
+							} else {
+								lib.sendMessage(p, lib.alreadyWild());
+							}
+						} else {
+							lib.sendMessage(p, lib.notInClan());
+							return true;
+						}
+					} else {
+						lib.sendMessage(p, "&c&oYour server doesn't allow the use of clan land-claiming.");
+						return true;
+					}
+				}
+
+				return true;
+			}
 			if (args0.equalsIgnoreCase("permit")) {
 				if (associate != null) {
-					if (Permission.MANAGE_PERMS.test(associate)) {
+					if (Clearance.MANAGE_PERMS.test(associate)) {
 						lib.sendMessage(p, lib.commandPermit());
 					} else {
 						lib.sendMessage(p, lib.noClearance());
@@ -1216,11 +1326,6 @@ public class CommandClan extends Command implements Message.Factory {
 					return true;
 				}
 
-				if (LabyrinthProvider.getInstance().isLegacy()) {
-					lib.sendMessage(p, "&cLegacy detected! This feature only works for MC 1.16 or higher.");
-					return true;
-				}
-
 				if (!p.hasPermission(this.getPermission() + "." + DataManager.Security.getPermission("logo"))) {
 					lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("logo")));
 					return true;
@@ -1230,7 +1335,7 @@ public class CommandClan extends Command implements Message.Factory {
 
 				if (args1.equalsIgnoreCase("edit")) {
 
-					if (!Permission.LOGO_EDIT.test(associate)) {
+					if (!Clearance.LOGO_EDIT.test(associate)) {
 						lib.sendMessage(p, lib.noClearance());
 						return true;
 					}
@@ -1240,13 +1345,65 @@ public class CommandClan extends Command implements Message.Factory {
 					return true;
 				}
 
+				if (args1.equalsIgnoreCase("browse")) {
+					GUI.LOGO_LIST.get().open(p);
+					return true;
+				}
+
+				if (args1.equalsIgnoreCase("carriers")) {
+					GUI.HOLOGRAM_LIST.get(associate.getClan()).open(p);
+					return true;
+				}
+
+				if (args1.equalsIgnoreCase("share")) {
+					if (!Clearance.LOGO_SHARE.test(associate)) {
+						lib.sendMessage(p, lib.noClearance());
+						return true;
+					}
+					String id = new RandomID().generate();
+					Insignia i = Insignia.get("Template:" + p.getUniqueId().toString());
+					if (i != null) {
+						ClansAPI.getInstance().getLogoGallery().load(id, i.getLines().stream().map(Insignia.Line::toString).collect(Collectors.toList()));
+						lib.sendMessage(p, "&aInsignia successfully uploaded to the global logo gallery.");
+						GUI.LOGO_LIST.get().open(p);
+					} else {
+						ItemStack item = p.getInventory().getItemInMainHand();
+
+						if (item.getType() != Material.PAPER && item.getType() != Material.FILLED_MAP) {
+							lib.sendMessage(p, "&cInvalid insignia request. Not an insignia print.");
+							return true;
+						}
+
+						if (!item.hasItemMeta()) {
+							lib.sendMessage(p, "&cInvalid insignia request. No lore to process.");
+							return true;
+						}
+
+						if (item.getItemMeta().getLore() != null) {
+
+							for (String lore : item.getItemMeta().getLore()) {
+								if (isAlphaNumeric(ChatColor.stripColor(lore))) {
+									lib.sendMessage(p, "&cInvalid insignia request. Error 420");
+									return true;
+								}
+							}
+
+							ClansAPI.getInstance().getLogoGallery().load(id, new ArrayList<>(item.getItemMeta().getLore()));
+							lib.sendMessage(p, "&aInsignia successfully uploaded to the global logo gallery.");
+							GUI.LOGO_LIST.get().open(p);
+
+						}
+					}
+					return true;
+				}
+
 				if (args1.equalsIgnoreCase("redraw")) {
 					lib.sendMessage(p, "&cUsage: &f/c logo &eredraw &r[height] [width]");
 					return true;
 				}
 
 				if (args1.equalsIgnoreCase("upload")) {
-					if (!Permission.LOGO_UPLOAD.test(associate)) {
+					if (!Clearance.LOGO_UPLOAD.test(associate)) {
 						lib.sendMessage(p, lib.noClearance());
 						return true;
 					}
@@ -1272,13 +1429,27 @@ public class CommandClan extends Command implements Message.Factory {
 							}
 						}
 
-						c.setValue("logo", new ArrayList<>(item.getItemMeta().getLore()), false);
+						Mailer mail = associate.getMailer();
+						List<String> logo = item.getItemMeta().getLore();
+						int size = ChatColor.stripColor(logo.get(0)).length();
+						mail.chat("&6&m&l" + Strings.repeat("▬", Math.min(38, size * 2))).deploy();
+						FancyLogoAppendage appendage = ClansAPI.getDataInstance().appendStringsToLogo(logo, message -> message.hover("&2Do you like hamburgers?"));
+						for (BaseComponent[] b : appendage.append(new TextChunk("Make this"),
+								new TextChunk("your clan"),
+								new TextChunk("logo?"),
+								new TextChunk(" "),
+								new TextChunk("&7[&6Yes&7]").bind(new ToolTip.Text("&2Click me to accept")).bind(new ToolTip.Action(() -> {
+									c.setValue("logo", new ArrayList<>(logo), false);
 
-						lib.sendMessage(p, "&aPrinted insignia applied to clan container.");
+									lib.sendMessage(p, "&aPrinted insignia applied to clan container.");
+								}))).get()) {
+							mail.chat(b).deploy();
+						}
+						mail.chat("&6&m&l" + Strings.repeat("▬", Math.min(38, size * 2))).deploy();
+
 
 					} else {
-
-
+						lib.sendMessage(p, "&cInvalid insignia request. What are you trying to pull...");
 						return true;
 					}
 
@@ -1286,7 +1457,7 @@ public class CommandClan extends Command implements Message.Factory {
 				}
 
 				if (args1.equalsIgnoreCase("apply")) {
-					if (!Permission.LOGO_APPLY.test(associate)) {
+					if (!Clearance.LOGO_APPLY.test(associate)) {
 						lib.sendMessage(p, lib.noClearance());
 						return true;
 					}
@@ -1295,10 +1466,26 @@ public class CommandClan extends Command implements Message.Factory {
 					Insignia.copy(c.getId().toString(), i);
 					if (i != null) {
 
-						c.setValue("logo", i.getLines().stream().map(Insignia.Line::toString).collect(Collectors.toList()), false);
+						Mailer mail = associate.getMailer();
+						List<String> logo = i.getLines().stream().map(Insignia.Line::toString).collect(Collectors.toList());
+						int size = ChatColor.stripColor(logo.get(0)).length();
+						mail.chat("&6&m&l" + Strings.repeat("▬", Math.min(38, size * 2))).deploy();
+						FancyLogoAppendage appendage = ClansAPI.getDataInstance().appendStringsToLogo(logo, message -> message.hover("&2Do you like hamburgers?"));
+						for (BaseComponent[] b : appendage.append(new TextChunk("Make this"),
+								new TextChunk("your clan"),
+								new TextChunk("logo?"),
+								new TextChunk(" "),
+								new TextChunk("&7[&6Yes&7]").bind(new ToolTip.Text("&2Click me to accept")).bind(new ToolTip.Action(() -> {
+									c.setValue("logo", logo, false);
 
-						lib.sendMessage(p, "&aCustom insignia applied to clan container.");
+									lib.sendMessage(p, "&aCustom insignia applied to clan container.");
+								}))).get()) {
+							mail.chat(b).deploy();
+						}
+						mail.chat("&6&m&l" + Strings.repeat("▬", Math.min(38, size * 2))).deploy();
 
+					} else {
+						lib.sendMessage(p, "&cInvalid insignia request. No lore to process.");
 					}
 
 					return true;
@@ -1321,7 +1508,7 @@ public class CommandClan extends Command implements Message.Factory {
  */
 
 				if (args1.equalsIgnoreCase("print")) {
-					if (!Permission.LOGO_PRINT.test(associate)) {
+					if (!Clearance.LOGO_PRINT.test(associate)) {
 						lib.sendMessage(p, lib.noClearance());
 						return true;
 					}
@@ -1333,11 +1520,16 @@ public class CommandClan extends Command implements Message.Factory {
 
 						lib.sendMessage(p, "&aInsignia template printed.");
 
+					} else {
+						new Insignia.Builder("Template:" + p.getUniqueId().toString()).setBorder("&f&l&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬").setColor("&2").setHeight(8).setWidth(16).draw(p);
+						lib.sendMessage(p, "&cInvalid insignia request. No lore to process.");
 					}
 
 					return true;
 				}
 
+				final boolean b = !args1.matches("(&#[a-zA-Z0-9]{6})+(&[a-zA-Z0-9])+") && !args1.matches("(&[a-zA-Z0-9])+") && !args1.matches("(&#[a-zA-Z0-9])+") && !args1.matches("(#[a-zA-Z0-9])+");
+				if (b) return true;
 				new Insignia.Builder(c.getId().toString()).setHeight(16).setWidth(16).setColor(args1).draw(p);
 
 				return true;
@@ -1355,7 +1547,7 @@ public class CommandClan extends Command implements Message.Factory {
 
 				if (!(associate.getClan() instanceof DefaultClan))
 					return true;
-				DefaultClan clan = (DefaultClan) ClansAPI.getInstance().getClan(p.getUniqueId());
+				DefaultClan clan = (DefaultClan) ClansAPI.getInstance().getClanManager().getClan(p.getUniqueId());
 				switch (args1.toLowerCase()) {
 					case "balance":
 						if (BankPermissions.BANKS_BALANCE.not(p) || !BankAction.BALANCE.testForPlayer(clan, p)) {
@@ -1515,7 +1707,7 @@ public class CommandClan extends Command implements Message.Factory {
 						lib.sendMessage(p, lib.notInClan());
 						return true;
 					}
-					if (Permission.INVITE_PLAYERS.test(associate)) {
+					if (Clearance.INVITE_PLAYERS.test(associate)) {
 						if (blockedUsers.containsKey(target)) {
 							List<UUID> users = blockedUsers.get(target);
 							if (users.contains(p.getUniqueId())) {
@@ -1523,13 +1715,13 @@ public class CommandClan extends Command implements Message.Factory {
 								return true;
 							}
 						}
-						ClansAPI.getInstance().getClan(p.getUniqueId()).broadcast(p.getName() + " &e&ohas invited player &6&l" + target.getName());
+						ClansAPI.getInstance().getClanManager().getClan(p.getUniqueId()).broadcast(p.getName() + " &e&ohas invited player &6&l" + target.getName());
 						lib.sendMessage(target, "&b&o" + p.getName() + " &3invites you to their clan.");
 						if (associate.getClan().getPassword() != null) {
 							message().append(text("&3|&7> &3Click a button to respond. "))
 									.append(text("&b[&nACCEPT&b]")
 											.bind(hover("&3Click to accept the request from '" + p.getName() + "'."))
-											.bind(command("clan join " + ClansAPI.getInstance().getClan(p.getUniqueId()).getName() + " " + associate.getClan().getPassword())))
+											.bind(command("clan join " + ClansAPI.getInstance().getClanManager().getClan(p.getUniqueId()).getName() + " " + associate.getClan().getPassword())))
 									.append(text("&4[&nDENY&4]")
 											.bind(hover("&3Click to deny the request from '" + p.getName() + "'."))
 											.bind(command("msg " + p.getName() + " No thank you.")))
@@ -1538,7 +1730,7 @@ public class CommandClan extends Command implements Message.Factory {
 							message().append(text("&3|&7> &3Click a button to respond. "))
 									.append(text("&b[&nACCEPT&b]")
 											.bind(hover("&3Click to accept the request from '" + p.getName() + "'."))
-											.bind(command("clan join " + ClansAPI.getInstance().getClan(p.getUniqueId()).getName())))
+											.bind(command("clan join " + ClansAPI.getInstance().getClanManager().getClan(p.getUniqueId()).getName())))
 									.append(text("&4[&nDENY&4]")
 											.bind(hover("&3Click to deny the request from '" + p.getName() + "'."))
 											.bind(command("msg " + p.getName() + " No thank you.")))
@@ -1582,15 +1774,15 @@ public class CommandClan extends Command implements Message.Factory {
 					return true;
 				}
 				if (associate != null) {
-					if (Permission.MANAGE_MODE.test(associate)) {
+					if (Clearance.MANAGE_MODE.test(associate)) {
 						if (!(associate.getClan() instanceof DefaultClan))
 							return true;
-						DefaultClan c = (DefaultClan) ClansAPI.getInstance().getClan(p.getUniqueId());
+						DefaultClan c = (DefaultClan) ClansAPI.getInstance().getClanManager().getClan(p.getUniqueId());
 						switch (args1.toLowerCase()) {
 							case "war":
 								if (c.isPeaceful()) {
-									if (ClansAPI.getData().isTrue("Clans.mode-change.charge")) {
-										double amount = ClansAPI.getData().getMain().getRoot().getDouble("Clans.mode-change.amount");
+									if (ClansAPI.getDataInstance().isTrue("Clans.mode-change.charge")) {
+										double amount = ClansAPI.getDataInstance().getConfig().getRoot().getDouble("Clans.mode-change.amount");
 										double balance = EconomyProvision.getInstance().balance(p).orElse(0.0);
 										double needed = amount - balance;
 										EconomyProvision.getInstance().withdraw(BigDecimal.valueOf(amount), p).ifPresent(b -> {
@@ -1601,7 +1793,7 @@ public class CommandClan extends Command implements Message.Factory {
 
 										});
 									}
-									if (ClansAPI.getData().isTrue("Clans.mode-change.timer.use")) {
+									if (ClansAPI.getDataInstance().isTrue("Clans.mode-change.timer.use")) {
 										if (c.getModeCooldown().isComplete()) {
 											c.setPeaceful(false);
 											c.getModeCooldown().setCooldown();
@@ -1626,8 +1818,8 @@ public class CommandClan extends Command implements Message.Factory {
 								if (c.isPeaceful()) {
 									lib.sendMessage(p, lib.alreadyPeaceful());
 								} else {
-									if (ClansAPI.getData().isTrue("Clans.mode-change.charge")) {
-										double amount = ClansAPI.getData().getMain().getRoot().getDouble("Clans.mode-change.amount");
+									if (ClansAPI.getDataInstance().isTrue("Clans.mode-change.charge")) {
+										double amount = ClansAPI.getDataInstance().getConfig().getRoot().getDouble("Clans.mode-change.amount");
 										double balance = EconomyProvision.getInstance().balance(p).orElse(0.0);
 										double needed = amount - balance;
 										EconomyProvision.getInstance().withdraw(BigDecimal.valueOf(amount), p).ifPresent(b -> {
@@ -1638,7 +1830,7 @@ public class CommandClan extends Command implements Message.Factory {
 
 										});
 									}
-									if (ClansAPI.getData().isTrue("Clans.mode-change.timer.use")) {
+									if (ClansAPI.getDataInstance().isTrue("Clans.mode-change.timer.use")) {
 										if (c.getModeCooldown().isComplete()) {
 											c.setPeaceful(true);
 											c.getModeCooldown().setCooldown();
@@ -1732,7 +1924,7 @@ public class CommandClan extends Command implements Message.Factory {
 					if (target != null) {
 
 						if (associate.getPriority().toInt() == 3) {
-							if (!associate.getClan().transferOwnership(target)) {
+							if (!associate.getClan().transferOwnership(ClansAPI.getInstance().getAssociate(target).get())) {
 								sendMessage(p, lib.playerUnknown("clan member"));
 							} else {
 								associate.getClan().broadcast("&eClan ownership was transferred to associate " + args1);
@@ -1769,13 +1961,13 @@ public class CommandClan extends Command implements Message.Factory {
 					return true;
 				}
 				if (associate != null) {
-					Clan clan = ClansAPI.getInstance().getClan(p.getUniqueId());
+					Clan clan = ClansAPI.getInstance().getClanManager().getClan(p.getUniqueId());
 					if (associate.getPriority().toInt() >= Clan.ACTION.tagChangeClearance()) {
 						if (!isAlphaNumeric(args1)) {
 							lib.sendMessage(p, lib.nameInvalid(args1));
 							return true;
 						}
-						if (args1.length() > ClansAPI.getData().getMain().read(f -> f.getInt("Formatting.tag-size"))) {
+						if (args1.length() > ClansAPI.getDataInstance().getConfig().read(f -> f.getInt("Formatting.tag-size"))) {
 							Clan.ACTION.sendMessage(p, lib.nameTooLong(args1));
 							return true;
 						}
@@ -1783,29 +1975,31 @@ public class CommandClan extends Command implements Message.Factory {
 							lib.sendMessage(p, lib.alreadyMade(args1));
 							return true;
 						}
-						for (String s : ClansAPI.getData().getMain().getRoot().getStringList("Clans.name-blacklist")) {
+						for (String s : ClansAPI.getDataInstance().getConfig().getRoot().getStringList("Clans.name-blacklist")) {
 							if (Pattern.compile(Pattern.quote(args1), Pattern.CASE_INSENSITIVE).matcher(s).find()) {
-								event.getUtil().sendMessage(p, "&c&oThis name is not allowed!");
+								lib.sendMessage(p, "&c&oThis name is not allowed!");
 								return true;
 							}
 						}
-						ClanTagChangeEvent ev = ClanVentBus.call(new ClanTagChangeEvent(p, clan, clan.getName(), args1));
+						AssociateRenameClanEvent ev = ClanVentBus.call(new AssociateRenameClanEvent(p, clan.getName(), args1));
 						if (!ev.isCancelled()) {
-							clan.setName(ev.getToName());
+							clan.setName(ev.getTo());
 						}
-						for (String s : clan.getMemberIds()) {
-							OfflinePlayer op = Bukkit.getOfflinePlayer(UUID.fromString(s));
-							if (op.isOnline()) {
-								if (ClansAPI.getData().prefixedTagsAllowed()) {
-									if (clan.getPalette().isGradient()) {
-										Clan c = ClansAPI.getInstance().getClan(op.getUniqueId());
-										ClanDisplayName.set(op.getPlayer(), ClansAPI.getData().prefixedTag("", c.getPalette().toGradient().context(c.getName()).translate()));
-									} else {
-										ClanDisplayName.set(op.getPlayer(), ClansAPI.getData().prefixedTag(ClansAPI.getInstance().getClan(op.getUniqueId()).getPalette().toString(), ClansAPI.getInstance().getClan(op.getUniqueId()).getName()));
+						if (!LabyrinthProvider.getInstance().isLegacy()) {
+							clan.getMembers().forEach(a -> {
+								OfflinePlayer op = a.getUser().toBukkit();
+								if (op.isOnline()) {
+									if (ClansAPI.getDataInstance().isDisplayTagsAllowed()) {
+										if (clan.getPalette().isGradient()) {
+											Clan c = a.getClan();
+											ClanDisplayName.set(op.getPlayer(), ClansAPI.getDataInstance().formatDisplayTag("", c.getPalette().toGradient().context(c.getName()).translate()));
+										} else {
+											ClanDisplayName.set(op.getPlayer(), ClansAPI.getDataInstance().formatDisplayTag(ClansAPI.getInstance().getClanManager().getClan(op.getUniqueId()).getPalette().toString(), ClansAPI.getInstance().getClanManager().getClan(op.getUniqueId()).getName()));
 
+										}
 									}
 								}
-							}
+							});
 						}
 					} else {
 						lib.sendMessage(p, lib.noClearance());
@@ -1823,14 +2017,20 @@ public class CommandClan extends Command implements Message.Factory {
 				}
 				if (associate != null) {
 					Clan clan = associate.getClan();
-					if (Permission.MANAGE_COLOR.test(associate)) {
+					if (Clearance.MANAGE_COLOR.test(associate)) {
+
+						if (args1.equalsIgnoreCase("random")) {
+							clan.getPalette().randomize();
+							lib.sendMessage(p, clan.getPalette().isGradient() ? clan.getPalette().toString("The clan color has been updated.") : clan.getPalette().toString() + "The clan color has been updated.");
+							return true;
+						}
 
 						if (!args1.matches("(&#[a-zA-Z0-9]{6})+(&[a-zA-Z0-9])+") && !args1.matches("(&[a-zA-Z0-9])+") && !args1.matches("(&#[a-zA-Z0-9])+") && !args1.matches("(#[a-zA-Z0-9])+")) {
 							lib.sendMessage(p, "&c&oInvalid color format.");
 							return true;
 						}
 
-						for (String s : ClansAPI.getData().getMain().read(c -> c.getStringList("Clans.color-blacklist"))) {
+						for (String s : ClansAPI.getDataInstance().getConfig().read(c -> c.getStringList("Clans.color-blacklist"))) {
 
 							if (StringUtils.use(args1).containsIgnoreCase(s)) {
 								lib.sendMessage(p, "&c&oInvalid color format. Code: '" + s + "' is not allowed.");
@@ -1839,23 +2039,25 @@ public class CommandClan extends Command implements Message.Factory {
 						}
 
 						clan.getPalette().setStart(args1);
-						for (String s : clan.getMemberIds()) {
-							OfflinePlayer op = Bukkit.getOfflinePlayer(UUID.fromString(s));
-							try {
-								if (op.isOnline()) {
-									if (ClansAPI.getData().prefixedTagsAllowed()) {
-										if (clan.getPalette().isGradient()) {
-											Clan c = ClansAPI.getInstance().getClan(op.getUniqueId());
-											ClanDisplayName.set(op.getPlayer(), ClansAPI.getData().prefixedTag("", c.getPalette().toGradient().context(c.getName()).translate()));
-										} else {
-											ClanDisplayName.set(op.getPlayer(), ClansAPI.getData().prefixedTag(ClansAPI.getInstance().getClan(op.getUniqueId()).getPalette().toString(), ClansAPI.getInstance().getClan(op.getUniqueId()).getName()));
+						if (!LabyrinthProvider.getInstance().isLegacy()) {
+							clan.getMembers().forEach(a -> {
+								OfflinePlayer op = a.getUser().toBukkit();
+								try {
+									if (op.isOnline()) {
+										if (ClansAPI.getDataInstance().isDisplayTagsAllowed()) {
+											if (clan.getPalette().isGradient()) {
+												Clan c = a.getClan();
+												ClanDisplayName.set(op.getPlayer(), ClansAPI.getDataInstance().formatDisplayTag("", c.getPalette().toGradient().context(c.getName()).translate()));
+											} else {
+												ClanDisplayName.set(op.getPlayer(), ClansAPI.getDataInstance().formatDisplayTag(ClansAPI.getInstance().getClanManager().getClan(op.getUniqueId()).getPalette().toString(), ClansAPI.getInstance().getClanManager().getClan(op.getUniqueId()).getName()));
 
+											}
 										}
 									}
+								} catch (NullPointerException e) {
+									ClansAPI.getInstance().getPlugin().getLogger().severe("- Failed to updated name tags for user " + op.getName() + ".");
 								}
-							} catch (NullPointerException e) {
-								ClansAPI.getInstance().getPlugin().getLogger().severe("- Failed to updated name tags for user " + op.getName() + ".");
-							}
+							});
 						}
 						clan.broadcast(args1 + "Our color was changed.");
 					} else {
@@ -1872,17 +2074,17 @@ public class CommandClan extends Command implements Message.Factory {
 					lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("promote")));
 					return true;
 				}
-				FileManager main = ClansAPI.getData().getMain();
+				FileManager main = ClansAPI.getDataInstance().getConfig();
 				String adminRank = main.getRoot().getString("Formatting.Chat.Styles.Full.Admin");
 				String ownerRank = main.getRoot().getString("Formatting.Chat.Styles.Full.Owner");
 				if (associate != null) {
-					if (Permission.MANAGE_POSITIONS.test(associate)) {
+					if (Clearance.MANAGE_POSITIONS.test(associate)) {
 						UUID tid = Clan.ACTION.getUserID(args1);
 						if (tid == null) {
 							lib.sendMessage(p, lib.playerUnknown(args1));
 							return true;
 						}
-						Clan.Associate member = associate.getClan().getMember(m -> m.getUser().getId().equals(tid));
+						Clan.Associate member = associate.getClan().getMember(m -> m.getId().equals(tid));
 						if (member == null) return true;
 						if (member.getPriority().toInt() >= 2) {
 							lib.sendMessage(p, lib.alreadyMax(adminRank, ownerRank));
@@ -1905,13 +2107,13 @@ public class CommandClan extends Command implements Message.Factory {
 					return true;
 				}
 				if (associate != null) {
-					if (Permission.MANAGE_POSITIONS.test(associate)) {
+					if (Clearance.MANAGE_POSITIONS.test(associate)) {
 						UUID tid = Clan.ACTION.getUserID(args1);
 						if (tid == null) {
 							lib.sendMessage(p, lib.playerUnknown(args1));
 							return true;
 						}
-						Clan.Associate member = associate.getClan().getMember(m -> m.getUser().getId().equals(tid));
+						Clan.Associate member = associate.getClan().getMember(m -> m.getId().equals(tid));
 						if (member == null) return true;
 						if (member.getPriority().toInt() >= associate.getPriority().toInt()) {
 							lib.sendMessage(p, lib.noClearance());
@@ -1936,7 +2138,7 @@ public class CommandClan extends Command implements Message.Factory {
 							return true;
 						}
 						if (associate != null) {
-							if (Permission.MANAGE_ALL_LAND.test(associate)) {
+							if (Clearance.MANAGE_ALL_LAND.test(associate)) {
 								Claim.ACTION.unclaimAll(p);
 							} else {
 								lib.sendMessage(p, lib.noClearance());
@@ -1959,9 +2161,9 @@ public class CommandClan extends Command implements Message.Factory {
 					lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("password")));
 					return true;
 				}
-				Clan clan = ClansAPI.getInstance().getClan(p.getUniqueId());
+				Clan clan = ClansAPI.getInstance().getClanManager().getClan(p.getUniqueId());
 				if (associate != null) {
-					if (Permission.MANAGE_PASSWORD.test(associate)) {
+					if (Clearance.MANAGE_PASSWORD.test(associate)) {
 						if (!isAlphaNumeric(args1)) {
 							lib.sendMessage(p, lib.passwordInvalid());
 							return true;
@@ -1983,20 +2185,19 @@ public class CommandClan extends Command implements Message.Factory {
 					return true;
 				}
 				if (associate != null) {
-					if (Permission.KICK_MEMBERS.test(associate)) {
+					if (Clearance.KICK_MEMBERS.test(associate)) {
 						UUID tid = Clan.ACTION.getUserID(args1);
 						if (tid == null) {
 							lib.sendMessage(p, lib.playerUnknown(args1));
 							return true;
 						}
 						OfflinePlayer target = Bukkit.getOfflinePlayer(tid);
-						Clan clan = ClansAPI.getInstance().getClan(p.getUniqueId());
-						if (!Arrays.asList(clan.getMemberIds()).contains(target.getUniqueId().toString())) {
+						Clan clan = associate.getClan();
+						Clan.Associate member = clan.getMember(m -> m.getId().equals(target.getUniqueId()));
+						if (member == null) {
 							lib.sendMessage(p, lib.playerUnknown(args1));
 							return true;
 						}
-						Clan.Associate member = associate.getClan().getMember(m -> m.getUser().getId().equals(tid));
-						if (member == null) return true;
 						if (member.getPriority().toInt() > associate.getPriority().toInt()) {
 							lib.sendMessage(p, lib.noClearance());
 							return true;
@@ -2005,17 +2206,15 @@ public class CommandClan extends Command implements Message.Factory {
 							lib.sendMessage(p, lib.nameInvalid(args1));
 							return true;
 						}
-						Clan.Associate tar = ClansAPI.getInstance().getAssociate(target).orElse(null);
-						if (tar == null) {
-							sendMessage(p, "&4Something went wrong. Contact an administrator.");
-							throw new IllegalStateException("The specified target exists within the clan but has no known associate representation");
-						}
-						tar.kick();
-						String format = MessageFormat.format(ClansAPI.getData().getMessageResponse("kick-out"), target.getName());
-						String format1 = MessageFormat.format(ClansAPI.getData().getMessageResponse("kick-in"), p.getName());
-						clan.broadcast(format);
-						if (target.isOnline()) {
-							lib.sendMessage(target.getPlayer(), format1);
+						AssociateKickAssociateEvent event = ClanVentBus.call(new AssociateKickAssociateEvent(member, associate));
+						if (!event.isCancelled()) {
+							member.remove();
+							String format = MessageFormat.format(ClansAPI.getDataInstance().getMessageResponse("kick-out"), target.getName());
+							String format1 = MessageFormat.format(ClansAPI.getDataInstance().getMessageResponse("kick-in"), p.getName());
+							clan.broadcast(format);
+							if (target.isOnline()) {
+								lib.sendMessage(target.getPlayer(), format1);
+							}
 						}
 					} else {
 						lib.sendMessage(p, lib.noClearance());
@@ -2054,26 +2253,32 @@ public class CommandClan extends Command implements Message.Factory {
 						return true;
 					}
 					if (associate != null && args1.equals(associate.getClan().getName())) {
-						Clan.ACTION.getClanboard(p, 1);
+						AssociateDisplayInfoEvent ev = ClanVentBus.queue(new AssociateDisplayInfoEvent(associate, AssociateDisplayInfoEvent.Type.PERSONAL)).join();
+						if (!ev.isCancelled()) {
+							Clan.ACTION.getClanboard(p, 1);
+						}
 						return true;
 					}
-					Clan clan = ClansAPI.getInstance().getClan(ClansAPI.getInstance().getClanID(args1));
-					for (String info : clan.getClanInfo()) {
+					Clan clan = ClansAPI.getInstance().getClanManager().getClan(ClansAPI.getInstance().getClanManager().getClanID(args1));
+					AssociateDisplayInfoEvent ev = ClanVentBus.queue(new AssociateDisplayInfoEvent(associate, p, clan, AssociateDisplayInfoEvent.Type.OTHER)).join();
+					if (!ev.isCancelled()) {
+						for (String info : clan.getClanInfo()) {
 
-						if (ClansAPI.getInstance().isInClan(p.getUniqueId())) {
-							sendMessage(p, info.replace(ClansAPI.getInstance().getClan(p.getUniqueId()).getName(), "&6&lUS"));
-						} else {
-							sendMessage(p, info);
+							if (ClansAPI.getInstance().isInClan(p.getUniqueId())) {
+								sendMessage(p, info.replace(ClansAPI.getInstance().getClanManager().getClan(p.getUniqueId()).getName(), "&6&lUS"));
+							} else {
+								sendMessage(p, info);
+							}
 						}
 					}
-					if (ClansAPI.getData().ID_MODE.containsKey(p) && ClansAPI.getData().ID_MODE.get(p).equals("ENABLED")) {
-						lib.sendMessage(p, "&7#&fID &7of clan " + '"' + args1 + '"' + " is: &e&o" + ClansAPI.getInstance().getClanID(args1));
+					if (ClansAPI.getDataInstance().ID_MODE.containsKey(p) && ClansAPI.getDataInstance().ID_MODE.get(p).equals("ENABLED")) {
+						lib.sendMessage(p, "&7#&fID &7of clan " + '"' + args1 + '"' + " is: &e&o" + ClansAPI.getInstance().getClanManager().getClanID(args1));
 					}
 					return true;
 				}
 				ClansAPI.getInstance().getAssociate(target).ifPresent(a -> {
 					GUI.MEMBER_INFO.get(a).open(p);
-					if (ClansAPI.getData().ID_MODE.containsKey(p) && ClansAPI.getData().ID_MODE.get(p).equals("ENABLED")) {
+					if (ClansAPI.getDataInstance().ID_MODE.containsKey(p) && ClansAPI.getDataInstance().ID_MODE.get(p).equals("ENABLED")) {
 						lib.sendMessage(p, "&7#&fID &7of player " + '"' + args1 + '"' + " clan " + '"' + a.getClan().getName() + '"' + " is: &e&o" + a.getClan().getId().toString());
 					}
 				});
@@ -2084,9 +2289,9 @@ public class CommandClan extends Command implements Message.Factory {
 					lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("message")));
 					return true;
 				}
-				Clan clan = ClansAPI.getInstance().getClan(p.getUniqueId());
+				Clan clan = ClansAPI.getInstance().getClanManager().getClan(p.getUniqueId());
 				if (associate != null)
-					clan.broadcast(MessageFormat.format(ClansAPI.getData().getMain().getRoot().getString("Formatting.chat-message-format"), p.getName()) + " " + args1);
+					clan.broadcast(MessageFormat.format(ClansAPI.getDataInstance().getConfig().getRoot().getString("Formatting.chat-message-format"), p.getName()) + " " + args1);
 				return true;
 			}
 			if (args0.equalsIgnoreCase("bio")) {
@@ -2105,8 +2310,8 @@ public class CommandClan extends Command implements Message.Factory {
 					return true;
 				}
 				if (associate != null) {
-					if (Permission.MANAGE_DESCRIPTION.test(associate)) {
-						Clan c = ClansAPI.getInstance().getClan(p.getUniqueId());
+					if (Clearance.MANAGE_DESCRIPTION.test(associate)) {
+						Clan c = ClansAPI.getInstance().getClanManager().getClan(p.getUniqueId());
 						c.setDescription(args1);
 					} else {
 						lib.sendMessage(p, lib.noClearance());
@@ -2154,13 +2359,14 @@ public class CommandClan extends Command implements Message.Factory {
 						lib.sendMessage(p, "&cAn invalid rank level was provided");
 						return true;
 					}
-					PermissionLog log = associate.getClan().getValue(PermissionLog.class, "permissions");
-					if (Permission.MANAGE_PERMS.test(associate)) {
+					ClearanceLog log = associate.getClan().getPermissions();
+					log.set(Clearance.LAND_USE, Clearance.Level.ADMIN);
+					if (Clearance.MANAGE_PERMS.test(associate)) {
 
-						Permission target = null;
-						for (Permission perm : Permission.values()) {
-							if (StringUtils.use(perm.name()).containsIgnoreCase(args1)) {
-								target = perm;
+						Clearance target = null;
+						for (Map.Entry<Clearance, Integer> entry : log) {
+							if (StringUtils.use(entry.getKey().getName()).containsIgnoreCase(args1)) {
+								target = entry.getKey();
 								break;
 							}
 						}
@@ -2172,13 +2378,13 @@ public class CommandClan extends Command implements Message.Factory {
 
 						int t = Integer.parseInt(args2);
 
-						if (t > 3 || t < 0) {
+						if (!Arrays.asList(Clearance.Level.values()).contains(t)) {
 							lib.sendMessage(p, "&cAn invalid rank level was provided");
 							return true;
 						}
 
 						log.set(target, t);
-						lib.sendMessage(p, "&aClan permission &f" + target.name() + " &arequired rank level changed to &6" + t);
+						lib.sendMessage(p, "&aClan permission &f" + target.getName() + " &arequired rank level changed to &6" + t);
 
 					} else {
 						lib.sendMessage(p, lib.noClearance());
@@ -2201,7 +2407,7 @@ public class CommandClan extends Command implements Message.Factory {
 					}
 
 					Clan clan = associate.getClan();
-					if (Permission.MANAGE_COLOR.test(associate)) {
+					if (Clearance.MANAGE_COLOR.test(associate)) {
 
 						if (!args1.matches("(&#[a-zA-Z0-9]{6})+") && !args1.matches("(#[a-zA-Z0-9]{6})+")) {
 							lib.sendMessage(p, "&c&oInvalid color format. Only hex is allowed for gradients.");
@@ -2213,7 +2419,7 @@ public class CommandClan extends Command implements Message.Factory {
 							return true;
 						}
 
-						for (String s : ClansAPI.getData().getMain().getRoot().getStringList("Clans.color-blacklist")) {
+						for (String s : ClansAPI.getDataInstance().getConfig().getRoot().getStringList("Clans.color-blacklist")) {
 
 							if (StringUtils.use(args1).containsIgnoreCase(s) || StringUtils.use(args2).containsIgnoreCase(s)) {
 								lib.sendMessage(p, "&c&oInvalid color format. Code: '" + s + "' is not allowed.");
@@ -2235,16 +2441,16 @@ public class CommandClan extends Command implements Message.Factory {
 							clan.getPalette().setEnd(args2);
 						}
 						clan.broadcast(clan.getPalette().toGradient().context("Our color was changed").translate());
-						for (String s : clan.getMemberIds()) {
-							OfflinePlayer op = Bukkit.getOfflinePlayer(UUID.fromString(s));
+						clan.getMembers().forEach(a -> {
+							OfflinePlayer op = a.getUser().toBukkit();
 							try {
 								if (op.isOnline()) {
-									if (ClansAPI.getData().prefixedTagsAllowed()) {
+									if (ClansAPI.getDataInstance().isDisplayTagsAllowed()) {
 										if (clan.getPalette().isGradient()) {
-											Clan c = ClansAPI.getInstance().getClan(op.getUniqueId());
-											ClanDisplayName.update(p, ClansAPI.getData().prefixedTag("", c.getPalette().toGradient().context(c.getName()).translate()));
+											Clan c = a.getClan();
+											ClanDisplayName.update(p, ClansAPI.getDataInstance().formatDisplayTag("", c.getPalette().toGradient().context(c.getName()).translate()));
 										} else {
-											ClanDisplayName.update(p, ClansAPI.getData().prefixedTag(ClansAPI.getInstance().getClan(op.getUniqueId()).getPalette().toString(), ClansAPI.getInstance().getClan(op.getUniqueId()).getName()));
+											ClanDisplayName.update(p, ClansAPI.getDataInstance().formatDisplayTag(ClansAPI.getInstance().getClanManager().getClan(op.getUniqueId()).getPalette().toString(), ClansAPI.getInstance().getClanManager().getClan(op.getUniqueId()).getName()));
 
 										}
 									}
@@ -2252,7 +2458,7 @@ public class CommandClan extends Command implements Message.Factory {
 							} catch (NullPointerException e) {
 								ClansAPI.getInstance().getPlugin().getLogger().severe("- Failed to updated name tags for user " + op.getName() + ".");
 							}
-						}
+						});
 					} else {
 						lib.sendMessage(p, lib.noClearance());
 					}
@@ -2308,7 +2514,7 @@ public class CommandClan extends Command implements Message.Factory {
 
 				if (args1.equalsIgnoreCase("color")) {
 
-					if (!Permission.LOGO_COLOR.test(associate)) {
+					if (!Clearance.LOGO_COLOR.test(associate)) {
 						lib.sendMessage(p, lib.noClearance());
 						return true;
 					}
@@ -2383,7 +2589,7 @@ public class CommandClan extends Command implements Message.Factory {
 				}
 				if (associate != null) {
 					Clan clan = associate.getClan();
-					clan.broadcast(MessageFormat.format(ClansAPI.getData().getMain().getRoot().getString("Formatting.chat-message-format"), p.getName()) + " " + args1 + " " + args2);
+					clan.broadcast(MessageFormat.format(ClansAPI.getDataInstance().getConfig().getRoot().getString("Formatting.chat-message-format"), p.getName()) + " " + args1 + " " + args2);
 				}
 				return true;
 			}
@@ -2479,8 +2685,8 @@ public class CommandClan extends Command implements Message.Factory {
 					return true;
 				}
 				if (associate != null) {
-					if (Permission.MANAGE_DESCRIPTION.test(associate)) {
-						Clan c = ClansAPI.getInstance().getClan(p.getUniqueId());
+					if (Clearance.MANAGE_DESCRIPTION.test(associate)) {
+						Clan c = ClansAPI.getInstance().getClanManager().getClan(p.getUniqueId());
 						c.setDescription(args1 + " " + args2);
 					} else {
 						lib.sendMessage(p, lib.noClearance());
@@ -2497,7 +2703,7 @@ public class CommandClan extends Command implements Message.Factory {
 					}
 					if (associate != null) {
 						Clan c = associate.getClan();
-						if (!Permission.MANAGE_RELATIONS.test(associate)) {
+						if (!Clearance.MANAGE_RELATIONS.test(associate)) {
 							lib.sendMessage(p, lib.noClearance());
 							return true;
 						}
@@ -2505,29 +2711,28 @@ public class CommandClan extends Command implements Message.Factory {
 							lib.sendMessage(p, lib.clanUnknown(args2));
 							return true;
 						}
-						Clan t = ClansAPI.getInstance().getClan(args2);
+						Clan t = ClansAPI.getInstance().getClanManager().getClan(HUID.fromString(args2));
 						if (args2.equals(associate.getClan().getName())) {
 							lib.sendMessage(p, lib.allianceDenial());
 							return true;
 						}
-						if (c.getEnemyList().contains(t.getId().toString())) {
+						if (c.getRelation().getRivalry().has(t)) {
 							lib.sendMessage(p, lib.alreadyEnemies(args2));
 							return true;
 						}
 						List<String> online = new ArrayList<>();
-						for (String mem : t.getMemberIds()) {
-							OfflinePlayer op = Bukkit.getOfflinePlayer(UUID.fromString(mem));
-							if (op.isOnline()) {
-								online.add(op.getName());
+						for (Clan.Associate associate1 : t.getMembers()) {
+							if (associate1.getUser().isOnline()) {
+								online.add(associate1.getName());
 							}
 						}
-						if (ClansAPI.getData().isTrue("Clans.relations.enemy.cancel-if-empty")) {
+						if (ClansAPI.getDataInstance().isTrue("Clans.relations.enemy.cancel-if-empty")) {
 							if (online.isEmpty()) {
 								lib.sendMessage(p, "&c&oThis clan has no members online, unable to mark as enemy.");
 								return true;
 							}
 						}
-						if (c.isNeutral(t.getId().toString())) {
+						if (c.getRelation().isNeutral(t)) {
 							if (c.isPeaceful()) {
 								lib.sendMessage(p, lib.peacefulDeny());
 								return true;
@@ -2536,10 +2741,10 @@ public class CommandClan extends Command implements Message.Factory {
 								lib.sendMessage(p, lib.peacefulDenyOther(t.getName()));
 								return true;
 							}
-							c.addEnemy(t.getId());
+							c.getRelation().getRivalry().add(t);
 							return true;
 						}
-						if (c.getAllyList().contains(t.getId().toString())) {
+						if (c.getRelation().getAlliance().has(t)) {
 							if (c.isPeaceful()) {
 								lib.sendMessage(p, lib.peacefulDeny());
 								return true;
@@ -2548,7 +2753,7 @@ public class CommandClan extends Command implements Message.Factory {
 								lib.sendMessage(p, lib.peacefulDenyOther(t.getName()));
 								return true;
 							}
-							c.addEnemy(t.getId());
+							c.getRelation().getRivalry().add(t);
 							return true;
 						}
 					}
@@ -2561,7 +2766,7 @@ public class CommandClan extends Command implements Message.Factory {
 					}
 					if (associate != null) {
 						Clan c = associate.getClan();
-						if (!Permission.MANAGE_RELATIONS.test(associate)) {
+						if (!Clearance.MANAGE_RELATIONS.test(associate)) {
 							lib.sendMessage(p, lib.noClearance());
 							return true;
 						}
@@ -2569,16 +2774,16 @@ public class CommandClan extends Command implements Message.Factory {
 							lib.sendMessage(p, lib.clanUnknown(args2));
 							return true;
 						}
-						Clan t = ClansAPI.getInstance().getClan(args2);
+						Clan t = ClansAPI.getInstance().getClanManager().getClan(HUID.fromString(args2));
 						if (args2.equals(c.getName())) {
 							lib.sendMessage(p, lib.allianceDenial());
 							return true;
 						}
-						if (t.getEnemyList().contains(c.getId().toString())) {
+						if (t.getRelation().getRivalry().has(c)) {
 							lib.sendMessage(p, lib.noRemoval(args2));
 							return true;
 						}
-						if (!c.getEnemyList().contains(t.getId().toString())) {
+						if (!c.getRelation().getRivalry().has(t)) {
 							lib.sendMessage(p, lib.notEnemies(t.getName()));
 							return true;
 						}
@@ -2590,7 +2795,7 @@ public class CommandClan extends Command implements Message.Factory {
 							lib.sendMessage(p, lib.peacefulDenyOther(t.getName()));
 							return true;
 						}
-						c.removeEnemy(t.getId());
+						c.getRelation().getRivalry().remove(t);
 					} else {
 						lib.sendMessage(p, lib.notInClan());
 						return true;
@@ -2607,7 +2812,7 @@ public class CommandClan extends Command implements Message.Factory {
 					}
 					if (associate != null) {
 						Clan c = associate.getClan();
-						if (!Permission.MANAGE_RELATIONS.test(associate)) {
+						if (!Clearance.MANAGE_RELATIONS.test(associate)) {
 							lib.sendMessage(p, lib.noClearance());
 							return true;
 						}
@@ -2615,20 +2820,20 @@ public class CommandClan extends Command implements Message.Factory {
 							lib.sendMessage(p, lib.clanUnknown(args2));
 							return true;
 						}
-						Clan t = ClansAPI.getInstance().getClan(args2);
+						Clan t = ClansAPI.getInstance().getClanManager().getClan(HUID.fromString(args2));
 						if (args2.equals(c.getName())) {
 							lib.sendMessage(p, lib.allianceDenial());
 							return true;
 						}
-						if (c.getAllyList().contains(t.getId().toString())) {
+						if (c.getRelation().getAlliance().has(t)) {
 							lib.sendMessage(p, lib.alreadyAllies(args2));
 							return true;
 						}
-						if (t.getEnemyList().contains(c.getId().toString())) {
+						if (t.getRelation().getRivalry().has(c)) {
 							lib.sendMessage(p, lib.alreadyEnemies(args2));
 							return true;
 						}
-						if (c.isNeutral(t.getId().toString())) {
+						if (c.getRelation().isNeutral(t)) {
 							if (c.isPeaceful()) {
 								lib.sendMessage(p, lib.peacefulDeny());
 								return true;
@@ -2637,7 +2842,7 @@ public class CommandClan extends Command implements Message.Factory {
 								lib.sendMessage(p, lib.peacefulDenyOther(t.getName()));
 								return true;
 							}
-							c.sendAllyRequest(t.getId());
+							c.getRelation().getAlliance().request(t);
 							return true;
 						}
 						if (c.isPeaceful()) {
@@ -2648,7 +2853,7 @@ public class CommandClan extends Command implements Message.Factory {
 							lib.sendMessage(p, lib.peacefulDenyOther(t.getName()));
 							return true;
 						}
-						c.addAlly(t.getId());
+						c.getRelation().getAlliance().add(t);
 					} else {
 						lib.sendMessage(p, lib.notInClan());
 						return true;
@@ -2662,7 +2867,7 @@ public class CommandClan extends Command implements Message.Factory {
 					}
 					if (associate != null) {
 						Clan c = associate.getClan();
-						if (!Permission.MANAGE_RELATIONS.test(associate)) {
+						if (!Clearance.MANAGE_RELATIONS.test(associate)) {
 							lib.sendMessage(p, lib.noClearance());
 							return true;
 						}
@@ -2670,27 +2875,26 @@ public class CommandClan extends Command implements Message.Factory {
 							lib.sendMessage(p, lib.clanUnknown(args2));
 							return true;
 						}
-						Clan t = ClansAPI.getInstance().getClan(args2);
+						Clan t = ClansAPI.getInstance().getClanManager().getClan(HUID.fromString(args2));
 						if (args2.equals(c.getName())) {
 							lib.sendMessage(p, lib.allianceDenial());
 							return true;
 						}
 
 						List<String> online = new ArrayList<>();
-						for (String mem : t.getMemberIds()) {
-							OfflinePlayer op = Bukkit.getOfflinePlayer(UUID.fromString(mem));
-							if (op.isOnline()) {
-								online.add(op.getName());
+						t.getMembers().forEach(a -> {
+							if (a.getUser().isOnline()) {
+								online.add(a.getName());
 							}
-						}
-						if (ClansAPI.getData().isTrue("Clans.relations.ally.cancel-if-empty")) {
+						});
+						if (ClansAPI.getDataInstance().isTrue("Clans.relations.ally.cancel-if-empty")) {
 							if (online.isEmpty()) {
 								lib.sendMessage(p, "&c&oThis clan has no members online, unable to mark as enemy.");
 								return true;
 							}
 						}
 
-						if (c.isNeutral(t.getId().toString())) {
+						if (c.getRelation().isNeutral(t)) {
 							lib.sendMessage(p, lib.alreadyNeutral(args2));
 							return true;
 						}
@@ -2702,8 +2906,8 @@ public class CommandClan extends Command implements Message.Factory {
 							lib.sendMessage(p, lib.peacefulDenyOther(t.getName()));
 							return true;
 						}
-						c.removeAlly(t.getId());
-						t.removeAlly(c.getId());
+						c.getRelation().getAlliance().remove(t);
+						t.getRelation().getAlliance().remove(c);
 						c.broadcast(lib.neutral(t.getName()));
 						t.broadcast(lib.neutral(c.getName()));
 					} else {
@@ -2731,7 +2935,7 @@ public class CommandClan extends Command implements Message.Factory {
 				}
 
 				if (args[1].equalsIgnoreCase("redraw")) {
-					if (!Permission.LOGO_EDIT.test(associate)) {
+					if (!Clearance.LOGO_EDIT.test(associate)) {
 						lib.sendMessage(p, lib.noClearance());
 						return true;
 					}
@@ -2821,8 +3025,8 @@ public class CommandClan extends Command implements Message.Factory {
 			rsn.append(args[i]).append(" ");
 		int stop = rsn.length() - 1;
 		if (args0.equalsIgnoreCase("message")) {
-			Clan clan = ClansAPI.getInstance().getClan(p.getUniqueId());
-			clan.broadcast(MessageFormat.format(ClansAPI.getData().getMain().getRoot().getString("Formatting.chat-message-format"), p.getName()) + " " + rsn.substring(0, stop));
+			Clan clan = ClansAPI.getInstance().getClanManager().getClan(p.getUniqueId());
+			clan.broadcast(MessageFormat.format(ClansAPI.getDataInstance().getConfig().getRoot().getString("Formatting.chat-message-format"), p.getName()) + " " + rsn.substring(0, stop));
 			return true;
 		}
 		if (args0.equalsIgnoreCase("bio")) {
@@ -2843,8 +3047,8 @@ public class CommandClan extends Command implements Message.Factory {
 				return true;
 			}
 			if (associate != null) {
-				if (Permission.MANAGE_DESCRIPTION.test(associate)) {
-					Clan c = ClansAPI.getInstance().getClan(p.getUniqueId());
+				if (Clearance.MANAGE_DESCRIPTION.test(associate)) {
+					Clan c = ClansAPI.getInstance().getClanManager().getClan(p.getUniqueId());
 					c.setDescription(rsn.substring(0, stop));
 				} else {
 					lib.sendMessage(p, lib.noClearance());

@@ -1,7 +1,8 @@
 package com.github.sanctum.clans.construct.bank;
 
+import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.impl.DefaultClan;
-import com.github.sanctum.clans.events.core.bank.BankTransactionEvent;
+import com.github.sanctum.clans.event.bank.BankTransactionEvent;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -46,12 +47,12 @@ public class BankLog implements Serializable {
 
     public void addTransaction(BankTransactionEvent e) {
         transactions.add(new Transaction(e.getPlayer().getDisplayName(), e.getTransactionType(), e.getAmount()));
-        saveForClan(e.getClan());
+        saveForClan((DefaultClan) e.getClan());
     }
 
     public void addTransaction(BankTransactionEvent e, LocalDateTime localDateTime) {
         transactions.add(new Transaction(e.getPlayer().getDisplayName(), e.getTransactionType(), e.getAmount(), localDateTime));
-        saveForClan(e.getClan());
+        saveForClan((DefaultClan) e.getClan());
     }
 
     public final List<Transaction> getTransactions() {
@@ -62,7 +63,7 @@ public class BankLog implements Serializable {
         BankMeta.get(clan).storeBankLog(this);
     }
 
-    public static BankLog getForClan(DefaultClan clan) {
+    public static BankLog getForClan(Clan clan) {
         return BankMeta.get(clan).getBankLog().orElseGet(BankLog::new);
     }
 }
