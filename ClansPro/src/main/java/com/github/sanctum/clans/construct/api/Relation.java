@@ -133,6 +133,7 @@ public interface Relation extends Iterable<InvasiveEntity>, Relatable<Relation>,
 			return get().spliterator();
 		}
 
+		@Override
 		default Stream<InvasiveEntity> stream() {
 			return get().stream();
 		}
@@ -174,6 +175,7 @@ public interface Relation extends Iterable<InvasiveEntity>, Relatable<Relation>,
 			return get().spliterator();
 		}
 
+		@Override
 		default Stream<InvasiveEntity> stream() {
 			return get().stream();
 		}

@@ -1,20 +1,25 @@
 package com.github.sanctum.clans.listener;
 
+import com.github.sanctum.clans.construct.api.Claim;
 import com.github.sanctum.clans.construct.api.ClansAPI;
 import com.github.sanctum.clans.construct.api.InvasiveEntity;
 import com.github.sanctum.labyrinth.task.Schedule;
-import org.bukkit.entity.Creeper;
+import java.text.MessageFormat;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
 
 public class EntityEventListener implements Listener {
 
-	@EventHandler
+	@EventHandler(priority = EventPriority.HIGHEST)
 	public void onExplode(EntityExplodeEvent e) {
-		if (e.getEntity() instanceof Creeper) {
-			if (ClansAPI.getInstance().getClaimManager().isInClaim(e.getEntity().getLocation())) {
+		Claim claim = ClansAPI.getInstance().getClaimManager().getClaim(e.getLocation());
+		if (claim != null) {
+			if (claim.getFlag("no-explosives").isEnabled()) {
+				claim.getClan().broadcast("&6A &e" + e.getEntity().getName() + " &6went off in our claim, &a" + e.blockList().size() + " &6blocks were saved.");
+				e.blockList().clear();
 				e.setCancelled(true);
 			}
 		}
@@ -25,10 +30,8 @@ public class EntityEventListener implements Listener {
 		Schedule.async(() -> ClansAPI.getInstance().getAssociate(e.getEntity().getUniqueId()).ifPresent(a -> {
 			if (a.isEntity()) {
 				a.getClan().broadcast(a.getName() + " is now dead... What a tragedy");
-				Schedule.sync(() -> {
-					InvasiveEntity.removeNonAssociated(a, true);
-					a.getClan().remove(a);
-				}).run();
+				a.getClan().broadcast(MessageFormat.format(ClansAPI.getDataInstance().getMessageResponse("member-leave"), a.getName()));
+				Schedule.sync(() -> InvasiveEntity.removeNonAssociated(a, true)).applyAfter(() -> a.getClan().remove(a)).run();
 			}
 		})).run();
 	}

@@ -69,6 +69,9 @@ public abstract class ClanSubCommand {
 
 	public abstract boolean console(CommandSender sender, String label, String[] args);
 
-	public abstract List<String> tab(Player player, String label, String[] args);
+	public List<String> tab(Player player, String label, String[] args) {
+		List<String> completion = getBaseCompletion(args);
+		return completion.isEmpty() ? null : completion;
+	}
 
 }

@@ -14,8 +14,12 @@ public final class DefaultClaimFlag {
 		private static final long serialVersionUID = -1963184579094331210L;
 	};
 
-	public static final Claim.Flag INFINITE_WATER = new Claim.Flag("infinite-water", false) {
+	public static final Claim.Flag NO_EXPLOSIVES = new Claim.Flag("no-explosives", false) {
 		private static final long serialVersionUID = -2994029703433239569L;
+	};
+
+	public static final Claim.Flag CUSTOM_TITLES = new Claim.Flag("custom-titles", false) {
+		private static final long serialVersionUID = -5626158771460431576L;
 	};
 
 	public static Claim.Flag[] values() {

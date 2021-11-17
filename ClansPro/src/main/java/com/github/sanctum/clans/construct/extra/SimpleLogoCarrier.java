@@ -138,13 +138,20 @@ public final class SimpleLogoCarrier implements LogoHolder.Carrier, Iterable<Str
 	final class Line implements LogoHolder.Carrier.Line {
 
 		private final ArmorStand line;
+		private final int index;
 
 		Line(ArmorStand stand) {
 			this.line = stand;
+			this.index = SimpleLogoCarrier.this.size() + 1;
 		}
 
 		public HUID getId() {
 			return SimpleLogoCarrier.this.id;
+		}
+
+		@Override
+		public int getIndex() {
+			return this.index;
 		}
 
 		public ArmorStand getStand() {

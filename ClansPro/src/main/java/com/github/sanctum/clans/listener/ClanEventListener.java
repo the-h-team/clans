@@ -9,7 +9,6 @@ import com.github.sanctum.clans.construct.api.ClanBlueprint;
 import com.github.sanctum.clans.construct.api.ClanCooldown;
 import com.github.sanctum.clans.construct.api.ClansAPI;
 import com.github.sanctum.clans.construct.api.Consultant;
-import com.github.sanctum.clans.construct.api.InvasiveEntity;
 import com.github.sanctum.clans.construct.api.War;
 import com.github.sanctum.clans.construct.extra.AnimalConsultantListener;
 import com.github.sanctum.clans.construct.impl.CooldownCreate;
@@ -36,25 +35,21 @@ import com.github.sanctum.labyrinth.event.custom.Vent;
 import com.github.sanctum.labyrinth.formatting.FancyMessage;
 import com.github.sanctum.labyrinth.formatting.FancyMessageChain;
 import com.github.sanctum.labyrinth.formatting.Message;
+import com.github.sanctum.labyrinth.interfacing.Nameable;
 import com.github.sanctum.labyrinth.library.Cooldown;
 import com.github.sanctum.labyrinth.library.Mailer;
-import com.github.sanctum.labyrinth.library.StringUtils;
 import com.github.sanctum.labyrinth.library.TimeWatch;
+import com.github.sanctum.labyrinth.task.Schedule;
 import java.math.BigDecimal;
-import java.text.MessageFormat;
 import java.util.Random;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Color;
 import org.bukkit.Material;
-import org.bukkit.Sound;
-import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
-import org.bukkit.entity.Tameable;
-import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
@@ -84,19 +79,6 @@ public class ClanEventListener implements Listener {
 						}
 					}
 				}
-				Claim.Flag water = e.getClaim().getFlag("infinite-water");
-				if (water.isValid()) {
-					if (water.isEnabled()) {
-						if (e.getItemInMainHand().getType() == Material.BUCKET) {
-							if (e.getBlock().getType() == Material.WATER) {
-								e.getItemInMainHand().setType(Material.WATER_BUCKET);
-								e.getPlayer().playSound(e.getPlayer().getLocation(), Sound.BLOCK_WATER_AMBIENT, 10, 1);
-								Clan.ACTION.sendMessage(e.getPlayer(), "&eHere's some magic water!");
-								e.setCancelled(true);
-							}
-						}
-					}
-				}
 				Claim.Flag flam = e.getClaim().getFlag("no-flammables");
 				if (flam.isValid()) {
 					if (flam.isEnabled()) {
@@ -118,6 +100,35 @@ public class ClanEventListener implements Listener {
 
 	}
 
+	@Subscribe(priority = Vent.Priority.HIGHEST)
+	public void onTitle(ClaimResidentEvent e) {
+		Clan owner = e.getClaim().getClan();
+		if (e.getClaim().getFlag("custom-titles").isEnabled()) {
+			if (owner.getValue(String.class, "claim_title") != null) {
+				if (owner.getValue(String.class, "claim_sub_title") != null) {
+					e.setClaimTitle(owner.getValue(String.class, "claim_title").replace("{*}", owner.getName()), owner.getValue(String.class, "claim_sub_title").replace("{*}", owner.getName()));
+				} else {
+					e.setClaimTitle(owner.getValue(String.class, "claim_title").replace("{*}", owner.getName()), e.getClaimSubTitle());
+				}
+			}
+		}
+	}
+
+	@Subscribe(priority = Vent.Priority.HIGHEST)
+	public void onTitle(WildernessInhabitantEvent e) {
+		if (e.getPreviousClaim() == null) return;
+		Clan owner = e.getClan();
+		if (e.getPreviousClaim().getFlag("custom-titles").isEnabled()) {
+			if (owner.getValue(String.class, "leave_claim_title") != null) {
+				if (owner.getValue(String.class, "leave_claim_sub_title") != null) {
+					e.setWildernessTitle(owner.getValue(String.class, "leave_claim_title").replace("{*}", owner.getName()), owner.getValue(String.class, "leave_claim_sub_title").replace("{*}", owner.getName()));
+				} else {
+					e.setWildernessTitle(owner.getValue(String.class, "leave_claim_title").replace("{*}", owner.getName()), e.getWildernessSubTitle());
+				}
+			}
+		}
+	}
+
 	@Subscribe
 	public void onAnimal(AssociateFromAnimalEvent e) {
 		Consultant consultant = e.getAssociate().getConsultant();
@@ -126,67 +137,6 @@ public class ClanEventListener implements Listener {
 			consultant.registerOutgoingListener(e.getAssociate().getTag(), listener);
 			consultant.registerIncomingListener(e.getAssociate().getTag(), listener);
 		}
-	}
-
-	@EventHandler
-	public void onInteract(PlayerInteractEntityEvent e) {
-		Entity entity = e.getRightClicked();
-		Player p = e.getPlayer();
-		ClansAPI.getInstance().getAssociate(p).ifPresent(associate -> {
-			Clan c = associate.getClan();
-			Clan.Associate test = ClansAPI.getInstance().getAssociate(entity.getUniqueId()).orElse(null);
-			if (test != null) {
-				if (test.getClan().equals(associate.getClan())) {
-					// TODO: check for item on removal.
-					ItemStack item = p.getInventory().getItemInMainHand();
-					if (item.getType() == Material.STICK) {
-						if (item.hasItemMeta() && item.getItemMeta().hasDisplayName()) {
-							if (StringUtils.use(StringUtils.use("&r[&bRemover stick&r]").translate()).containsIgnoreCase(item.getItemMeta().getDisplayName())) {
-								test.remove();
-								item.setAmount(Math.max(0, item.getAmount() - 1));
-								if (item.getAmount() == 0) {
-									p.getInventory().remove(item);
-								}
-								c.broadcast(MessageFormat.format(ClansAPI.getDataInstance().getMessageResponse("member-leave"), test.getName()));
-							}
-						}
-					}
-				}
-			} else {
-				if (!(entity instanceof Tameable)) return;
-				if (!((Tameable)entity).isTamed()) return;
-				if (((Tameable)entity).getOwner() == null) return;
-				if (((Tameable)entity).getOwner().getName() == null) return;
-				if (!((Tameable)entity).getOwner().getName().equals(associate.getName())) return;
-				ItemStack item = p.getInventory().getItemInMainHand();
-				if (item.getType() == Material.BLAZE_ROD) {
-					if (item.hasItemMeta() && item.getItemMeta().hasDisplayName()) {
-						if (StringUtils.use(StringUtils.use("&r[&6Tamer stick&r]").translate()).containsIgnoreCase(item.getItemMeta().getDisplayName())) {
-							item.setAmount(Math.max(0, item.getAmount() - 1));
-							if (item.getAmount() == 0) {
-								p.getInventory().remove(item);
-							}
-							// do entity stuff
-							int count = 0;
-							for (Clan.Associate a : c.getMembers()) {
-								if (StringUtils.use(a.getName()).containsIgnoreCase(((Tameable) entity).getOwner().getName() + "'s " + entity.getName())) {
-									count++;
-								}
-							}
-							InvasiveEntity conversion = InvasiveEntity.wrapNonAssociated(entity, count == 0 ? ((Tameable) entity).getOwner().getName() + "'s " + entity.getName() : ((Tameable) entity).getOwner().getName() + "'s " + entity.getName() + " x" + count);
-
-							Clan.Associate newAssociate = c.newAssociate(conversion);
-
-							if (newAssociate != null) {
-								c.add(newAssociate);
-								// TODO: make ClanBroadcastMessageEvent
-								c.broadcast(MessageFormat.format(ClansAPI.getDataInstance().getMessageResponse("member-join"), newAssociate.getName()));
-							}
-						}
-					}
-				}
-			}
-		});
 	}
 
 	@Subscribe(priority = Vent.Priority.READ_ONLY)
@@ -212,7 +162,7 @@ public class ClanEventListener implements Listener {
 			e.insert(clan);
 		}
 		if (ClansAPI.getDataInstance().isTrue("Formatting.console-debug")) {
-			e.getClans().forEach(clan -> e.getApi().debugConsole(clan));
+			e.getClans().forEach(clan -> e.getApi().debugConsole(clan, true));
 		}
 	}
 
@@ -226,10 +176,12 @@ public class ClanEventListener implements Listener {
 
 	@Subscribe(priority = Vent.Priority.READ_ONLY)
 	public void onChat(AssociateMessageReceiveEvent e) {
-		Consultant server = e.getAssociate().getConsultant();
-		if (server != null) {
-			server.sendMessage(() -> new SimpleEntry<>(e.getMessage(), new SimpleEntry<>(e.getChannel(), e.getSender())));
-		}
+		Schedule.sync(() -> {
+			Consultant server = e.getAssociate().getConsultant();
+			if (server != null) {
+				server.sendMessage(() -> new SimpleEntry<>(e.getMessage(), new SimpleEntry<>(e.getChannel(), e.getSender())));
+			}
+		}).run();
 	}
 
 	@Subscribe(priority = Vent.Priority.LOW)
@@ -302,7 +254,17 @@ public class ClanEventListener implements Listener {
 							.append(space1 -> space1.then(" "));
 					break;
 				case PERSONAL:
+					String allies = c.getRelation().getAlliance().stream().map(Nameable::getName).collect(Collectors.joining(", "));
+					String enemies = c.getRelation().getRivalry().stream().map(Nameable::getName).collect(Collectors.joining(", "));
+					if (allies.isEmpty()) {
+						allies = "&cNone";
+					}
+					if (enemies.isEmpty()) {
+						enemies = "&cNone";
+					}
 					color = c.getPalette().toString();
+					String finalAllies = allies;
+					String finalEnemies = enemies;
 					chain = new FancyMessageChain()
 							.append(top -> top.then(" ")
 									.then(" ")
@@ -315,7 +277,7 @@ public class ClanEventListener implements Listener {
 									.then(" ")
 									.then(" ")
 									.then("[")
-									.then("Stats").color(Color.RED).style(ChatColor.BOLD).hover(color + "Name: &f" + c.getName()).hover(color + "&rDescription: &f" + c.getDescription()).hover(color + "&rPower: &f" + Clan.ACTION.format(c.getPower())).hover(color + "&rColor: &f" + (c.getPalette().isGradient() ? (c.getPalette().toArray()[0] + c.getPalette().toArray()[1]).replace("&", "").replace("#", "&f»" + color + "&r") : color.replace("&", "&f»" + color + "&r").replace("#", "&f»" + color + "&r"))).hover(color + "&rClaims: &f" + c.getClaims().length + "/" + c.getClaimLimit())
+									.then("Stats").color(Color.RED).style(ChatColor.BOLD).hover(color + "Name: &f" + c.getName()).hover(color + "&rDescription: &f" + c.getDescription()).hover(color + "&rPower: &f" + Clan.ACTION.format(c.getPower())).hover(color + "&rColor: &f" + (c.getPalette().isGradient() ? (c.getPalette().toArray()[0] + c.getPalette().toArray()[1]).replace("&", "").replace("#", "&f»" + color + "&r") : color.replace("&", "&f»" + color + "&r").replace("#", "&f»" + color + "&r"))).hover(color + "&rClaims: &f" + c.getClaims().length + "/" + c.getClaimLimit()).hover(color + "&rAllies: &f" + finalAllies).hover(color + "&rEnemies: &f" + finalEnemies)
 									.then("]")
 									.then(" ")
 									.then(" ")

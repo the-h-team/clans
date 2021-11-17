@@ -7,7 +7,6 @@ import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClansAPI;
 import com.github.sanctum.clans.construct.impl.Resident;
 import com.github.sanctum.clans.event.player.PlayerEvent;
-import com.github.sanctum.labyrinth.LabyrinthProvider;
 import com.github.sanctum.labyrinth.library.TimeWatch;
 import java.text.MessageFormat;
 import java.util.ArrayList;
@@ -23,6 +22,7 @@ public class WildernessInhabitantEvent extends PlayerEvent {
 
 	private final HashMap<String, String> titleContext = new HashMap<>();
 
+	private Claim previous;
 	private final long time;
 
 	private boolean titlesAllowed = DataManager.isTitlesAllowed();
@@ -33,43 +33,29 @@ public class WildernessInhabitantEvent extends PlayerEvent {
 			titleContext.put("W-TITLE", "&4&nWilderness");
 			titleContext.put("W-SUB-TITLE", "&7&oOwned by no-one.");
 		}
+		time = System.currentTimeMillis();
 		if (ClansAPI.getDataInstance().getResident(p) != null) {
-			for (Resident res : ClansAPI.getDataInstance().getResidents()) {
-				if (res.getPlayer().getName().equals(p.getName())) {
-					// receive now leaving message
-					if (!ClansAPI.getDataInstance().isInWild(p)) {
-						if (titlesAllowed) {
-							try {
-								titleContext.put("W-TITLE", MessageFormat.format(ClansAPI.getDataInstance().getConfig().getRoot().getString("Clans.land-claiming.wilderness.title"), res.getLastKnown().getClan().getName()));
-								titleContext.put("W-SUB-TITLE", MessageFormat.format(ClansAPI.getDataInstance().getConfig().getRoot().getString("Clans.land-claiming.wilderness.sub-title"), res.getLastKnown().getClan().getName()));
-								if (!LabyrinthProvider.getInstance().isLegacy()) {
-									p.sendTitle(getClaimUtil().color(titleContext.get("W-TITLE")), getClaimUtil().color(titleContext.get("W-SUB-TITLE")), 10, 25, 10);
-								} else {
-									p.sendTitle(getClaimUtil().color(titleContext.get("W-TITLE")), getClaimUtil().color(titleContext.get("W-SUB-TITLE")));
-								}
-							} catch (NullPointerException e) {
-								titleContext.put("W-TITLE", MessageFormat.format(ClansAPI.getDataInstance().getConfig().getRoot().getString("Clans.land-claiming.wilderness.title"), "Un-claimed"));
-								titleContext.put("W-SUB-TITLE", MessageFormat.format(ClansAPI.getDataInstance().getConfig().getRoot().getString("Clans.land-claiming.wilderness.sub-title"), "Un-claimed"));
-								if (!LabyrinthProvider.getInstance().isLegacy()) {
-									p.sendTitle(getClaimUtil().color(titleContext.get("W-TITLE")), getClaimUtil().color(titleContext.get("W-SUB-TITLE")), 10, 25, 10);
-								} else {
-									p.sendTitle(getClaimUtil().color(titleContext.get("W-TITLE")), getClaimUtil().color(titleContext.get("W-SUB-TITLE")));
-								}
-								ClansAPI.getDataInstance().removeClaimResident(res);
-								break;
-							}
-						}
-						if (ClansAPI.getDataInstance().isTrue("Clans.land-claiming.send-messages")) {
-							getClaimUtil().sendMessage(p, MessageFormat.format(ClansAPI.getDataInstance().getConfig().getRoot().getString("Clans.land-claiming.wilderness.message"), res.getLastKnown().getClan().getName()));
-						}
-						ClansAPI.getDataInstance().addWildernessInhabitant(p);
+			Resident res = ClansAPI.getDataInstance().getResident(p);
+			// receive now leaving message
+			if (res.getLastKnown() != null) {
+				this.previous = res.getLastKnown();
+			} else {
+				this.previous = res.getCurrent();
+			}
+			if (!ClansAPI.getDataInstance().isInWild(p)) {
+				if (titlesAllowed) {
+					try {
+						titleContext.put("W-TITLE", MessageFormat.format(ClansAPI.getDataInstance().getConfig().getRoot().getString("Clans.land-claiming.wilderness.title"), res.getLastKnown().getClan().getName()));
+						titleContext.put("W-SUB-TITLE", MessageFormat.format(ClansAPI.getDataInstance().getConfig().getRoot().getString("Clans.land-claiming.wilderness.sub-title"), res.getLastKnown().getClan().getName()));
+					} catch (NullPointerException e) {
+						titleContext.put("W-TITLE", MessageFormat.format(ClansAPI.getDataInstance().getConfig().getRoot().getString("Clans.land-claiming.wilderness.title"), "Un-claimed"));
+						titleContext.put("W-SUB-TITLE", MessageFormat.format(ClansAPI.getDataInstance().getConfig().getRoot().getString("Clans.land-claiming.wilderness.sub-title"), "Un-claimed"));
+						ClansAPI.getDataInstance().removeClaimResident(res);
 					}
-					ClansAPI.getDataInstance().removeClaimResident(res);
-					break;
 				}
 			}
 		}
-		time = System.currentTimeMillis();
+
 	}
 
 	public void setTitlesAllowed(boolean b) {
@@ -93,9 +79,13 @@ public class WildernessInhabitantEvent extends PlayerEvent {
 		return TimeWatch.Recording.subtract(this.time);
 	}
 
+	public Claim getPreviousClaim() {
+		return previous;
+	}
+
 	@Override
 	public Clan getClan() {
-		return null;
+		return getPreviousClaim().getClan();
 	}
 
 	public boolean isTitlesAllowed() {

@@ -13,27 +13,45 @@ import com.github.sanctum.labyrinth.data.EconomyProvision;
 import com.github.sanctum.labyrinth.event.custom.DefaultEvent;
 import com.github.sanctum.labyrinth.event.custom.Subscribe;
 import com.github.sanctum.labyrinth.event.custom.Vent;
-import com.github.sanctum.labyrinth.formatting.FancyMessage;
 import com.github.sanctum.labyrinth.library.StringUtils;
 import java.math.BigDecimal;
 import java.text.MessageFormat;
 import java.util.List;
+import java.util.Set;
 import net.md_5.bungee.api.ChatColor;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.Sign;
+import org.bukkit.entity.ArmorStand;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.Action;
 import org.bukkit.event.block.SignChangeEvent;
 import org.bukkit.event.entity.ProjectileHitEvent;
 
 public class BlockEventListener implements Listener {
 
+	@Subscribe
+	public void onInteract(DefaultEvent.Interact event) {
+		if (event.getAction() == Action.RIGHT_CLICK_BLOCK) {
+			if (ClansAPI.getInstance()
+					.getClaimManager().getClaim(event.getBlock().get().getLocation()) != null) {
+				if (event.getItem() != null) {
+					if (StringUtils.use(event.getItem().getType().name()).containsIgnoreCase("bucket")) return;
+				}
+				ClaimInteractEvent e = ClanVentBus.call(new ClaimInteractEvent(event.getPlayer(), event.getBlock().get().getLocation(), ClaimInteractEvent.Type.USE));
+				if (e.isCancelled()) {
+					event.setCancelled(true);
+				}
+			}
+		}
+	}
 
 	@Subscribe
 	public void onBreak(DefaultEvent.BlockBreak event) {
@@ -57,10 +75,11 @@ public class BlockEventListener implements Listener {
 				LogoHolder.Carrier test = LogoHolder.getCarrier(b.getLocation());
 				if (test != null) {
 					Clan.ACTION.sendMessage(event.getPlayer(), "&aClan logo removed.");
-					test.getLines().forEach(LogoHolder.Carrier.Line::destroy);
 					if (test.getHolder() != null) {
 						test.getHolder().remove(test);
 					}
+					Set<ArmorStand> doubleCheck = LogoHolder.getStands(b.getLocation().add(0.5, 0, 0.5));
+					doubleCheck.forEach(Entity::remove);
 				}
 			}
 		}
@@ -78,6 +97,18 @@ public class BlockEventListener implements Listener {
 				}
 			}
 		}
+		if (event.isCancelled()) return;
+		if (StringUtils.use(event.getBlock().getType().name()).containsIgnoreCase("fence")) {
+			LogoHolder.Carrier test = LogoHolder.getCarrier(event.getBlock().getLocation());
+			if (test != null) {
+				Clan.ACTION.sendMessage(event.getPlayer(), "&aClan logo removed.");
+				if (test.getHolder() != null) {
+					test.getHolder().remove(test);
+				}
+				Set<ArmorStand> doubleCheck = LogoHolder.getStands(event.getBlock().getLocation().add(0.5, 0, 0.5));
+				doubleCheck.forEach(Entity::remove);
+			}
+		}
 	}
 
 	@EventHandler
@@ -86,41 +117,34 @@ public class BlockEventListener implements Listener {
 			ClansAPI.getInstance().getAssociate(e.getPlayer()).ifPresent(a -> {
 				Sign s = (Sign) e.getBlock().getState();
 				if (!Clearance.LOGO_DISPLAY.test(a)) {
-					s.setLine(0, StringUtils.use("&4[Clan]").translate());
-					s.update();
+					e.setLine(0, StringUtils.use("&4[Clan]").translate());
 					Clan.ACTION.sendMessage(e.getPlayer(), "&cFailed to display logo, " + Clan.ACTION.noClearance());
 					return;
 				}
-				new FancyMessage().then(ClansAPI.getInstance().getPrefix().joined()).then(" ").then("This will cost &6$125&r,").then(" ").then("&2accept").action(() -> {
-					if (LogoHolder.getCarrier(s.getLocation()) != null) {
-						s.setLine(0, StringUtils.use("&4[Clan]").translate());
-						s.update();
-						Clan.ACTION.sendMessage(e.getPlayer(), "&cToo close to another hologram! Try somewhere else");
+				if (LogoHolder.getCarrier(s.getLocation().add(0.5, 0, 0.5)) != null) {
+					e.setLine(0, StringUtils.use("&4[Clan]").translate());
+					Clan.ACTION.sendMessage(e.getPlayer(), "&cToo close to another hologram! Max logo hologram's per chunk is 1.");
+					return;
+				}
+				List<String> list = a.getClan().getLogo();
+				if (list != null) {
+					int length = ChatColor.stripColor(StringUtils.use(list.get(0)).translate()).length();
+					if (length > 16) {
+						e.setLine(0, StringUtils.use("&4[Clan]").translate());
+						Clan.ACTION.sendMessage(e.getPlayer(), "&cMaximum logo hologram size is 16x16, ours is too big.");
 						return;
 					}
-					List<String> list = a.getClan().getLogo();
-					if (list != null) {
-						int length = ChatColor.stripColor(StringUtils.use(list.get(0)).translate()).length();
-						if (length > 16) {
-							s.setLine(0, StringUtils.use("&4[Clan]").translate());
-							s.update();
-							Clan.ACTION.sendMessage(e.getPlayer(), "&cMaximum logo hologram size is 16x16, ours is too big.");
-							return;
-						}
 
-					}
-					if (EconomyProvision.getInstance().withdraw(BigDecimal.valueOf(125), e.getPlayer()).orElse(false)) {
-						s.setLine(0, StringUtils.use("&l[Clan]").translate());
-						s.setLine(1, StringUtils.use("&6&lLogo").translate());
-						s.setLine(2, a.getClan().getId().toString());
-						s.update();
-						Clan.ACTION.sendMessage(e.getPlayer(), "&aClan logo now on display w/ id " + a.getClan().newCarrier(e.getBlock().getLocation()).getId());
-					} else {
-						s.setLine(0, StringUtils.use("&4[Clan]").translate());
-						s.update();
-						Clan.ACTION.sendMessage(e.getPlayer(), "&cFailed to display logo, not enough money.");
-					}
-				}).hover("&2&oClick to purchase this hologram.").then(" ").then("the charges?").send(e.getPlayer()).deploy();
+				}
+				if (EconomyProvision.getInstance().withdraw(BigDecimal.valueOf(125), e.getPlayer()).orElse(false)) {
+					e.setLine(0, StringUtils.use("&l[Clan]").translate());
+					e.setLine(1, StringUtils.use("&6&lLogo").translate());
+					e.setLine(2, a.getClan().getId().toString());
+					Clan.ACTION.sendMessage(e.getPlayer(), "&aClan logo now on display &r(&e#&2" + a.getClan().newCarrier(e.getBlock().getLocation()).getId() + "&r)");
+				} else {
+					e.setLine(0, StringUtils.use("&4[Clan]").translate());
+					Clan.ACTION.sendMessage(e.getPlayer(), "&cFailed to display logo, not enough money.");
+				}
 			});
 		}
 	}
@@ -170,34 +194,74 @@ public class BlockEventListener implements Listener {
 
 	@Subscribe
 	public void onClaimInteract(ClaimInteractEvent e) {
-		if (ClansAPI.getInstance().getClaimManager().isInClaim(e.getLocation())) {
-			Clan.Associate associate = ClansAPI.getInstance().getAssociate(e.getPlayer()).orElse(null);
-			if (associate != null && associate.isValid()) {
-				if (!e.getClaim().getOwner().getTag().getId().equals(associate.getClan().getId().toString())) {
-					if (!e.getPlayer().hasPermission("clanspro.claim.bypass")) {
-						if (!e.getClaim().getClan().getRelation().getAlliance().has(associate.getClan())) {
+		Clan.Associate associate = ClansAPI.getInstance().getAssociate(e.getPlayer()).orElse(null);
+		if (associate != null && associate.isValid()) {
+			switch (e.getInteraction()) {
+				case USE:
+					if (e.getBlock().getType().isInteractable()) {
+						if (!e.getClaim().getOwner().getTag().getId().equals(associate.getClan().getId().toString())) {
+							if (!e.getPlayer().hasPermission("clanspro.admin")) {
+								if (!e.getClaim().getClan().getRelation().getAlliance().has(associate.getClan())) {
+									e.getUtil().sendMessage(e.getPlayer(), MessageFormat.format(e.getUtil().notClaimOwner(e.getClaim().getClan().getName()), e.getClaim().getClan().getName()));
+									e.setCancelled(true);
+								}
+							}
+						} else {
+							if (e.getInteraction() == ClaimInteractEvent.Type.USE) {
+								if (!Clearance.LAND_USE_INTRACTABLE.test(associate)) {
+									Clan.ACTION.sendMessage(e.getPlayer(), Clan.ACTION.noClearance());
+									e.setCancelled(true);
+								}
+							} else {
+								if (!Clearance.LAND_USE.test(associate)) {
+									Clan.ACTION.sendMessage(e.getPlayer(), Clan.ACTION.noClearance());
+									e.setCancelled(true);
+								}
+							}
+						}
+					}
+					break;
+				case BREAK:
+				case BUILD:
+					if (!e.getClaim().getOwner().getTag().getId().equals(associate.getClan().getId().toString())) {
+						if (!e.getPlayer().hasPermission("clanspro.admin")) {
+							if (!e.getClaim().getClan().getRelation().getAlliance().has(associate.getClan())) {
+								e.getUtil().sendMessage(e.getPlayer(), MessageFormat.format(e.getUtil().notClaimOwner(e.getClaim().getClan().getName()), e.getClaim().getClan().getName()));
+								e.setCancelled(true);
+							}
+						}
+					} else {
+						if (e.getInteraction() == ClaimInteractEvent.Type.USE) {
+							if (!Clearance.LAND_USE_INTRACTABLE.test(associate)) {
+								Clan.ACTION.sendMessage(e.getPlayer(), Clan.ACTION.noClearance());
+								e.setCancelled(true);
+							}
+						} else {
+							if (!Clearance.LAND_USE.test(associate)) {
+								Clan.ACTION.sendMessage(e.getPlayer(), Clan.ACTION.noClearance());
+								e.setCancelled(true);
+							}
+						}
+					}
+					break;
+			}
+		} else {
+			switch (e.getInteraction()) {
+				case USE:
+					if (e.getBlock().getType().isInteractable()) {
+						if (!e.getPlayer().hasPermission("clanspro.admin")) {
 							e.getUtil().sendMessage(e.getPlayer(), MessageFormat.format(e.getUtil().notClaimOwner(e.getClaim().getClan().getName()), e.getClaim().getClan().getName()));
 							e.setCancelled(true);
 						}
 					}
-				} else {
-					if (e.getInteraction() == ClaimInteractEvent.Type.USE) {
-						if (!Clearance.LAND_USE_INTRACTABLE.test(associate)) {
-							Clan.ACTION.sendMessage(e.getPlayer(), Clan.ACTION.noClearance());
-							e.setCancelled(true);
-						}
-					} else {
-						if (!Clearance.LAND_USE.test(associate)) {
-							Clan.ACTION.sendMessage(e.getPlayer(), Clan.ACTION.noClearance());
-							e.setCancelled(true);
-						}
+					break;
+				case BREAK:
+				case BUILD:
+					if (!e.getPlayer().hasPermission("clanspro.admin")) {
+						e.getUtil().sendMessage(e.getPlayer(), MessageFormat.format(e.getUtil().notClaimOwner(e.getClaim().getClan().getName()), e.getClaim().getClan().getName()));
+						e.setCancelled(true);
 					}
-				}
-			} else {
-				if (!e.getPlayer().hasPermission("clanspro.claim.bypass")) {
-					e.getUtil().sendMessage(e.getPlayer(), MessageFormat.format(e.getUtil().notClaimOwner(e.getClaim().getClan().getName()), e.getClaim().getClan().getName()));
-					e.setCancelled(true);
-				}
+					break;
 			}
 		}
 	}
@@ -206,11 +270,13 @@ public class BlockEventListener implements Listener {
 	public void onProjectileHit(ProjectileHitEvent event) {
 		if (event.getEntity().getShooter() instanceof Player) {
 			Player p = (Player) event.getEntity().getShooter();
-			ClaimInteractEvent e = new Vent.Call<>(Vent.Runtime.Synchronous, new ClaimInteractEvent(p, event.getEntity().getLocation(), ClaimInteractEvent.Type.USE)).run();
-			if (e.isCancelled()) {
-				if (event.getEntity().getType() != EntityType.TRIDENT) {
-					e.getUtil().sendMessage(e.getPlayer(), MessageFormat.format(e.getUtil().notClaimOwner(e.getClaim().getClan().getName()), e.getClaim().getClan().getName()));
-					event.getEntity().remove();
+			if (ClansAPI.getInstance().getClaimManager().getClaim(event.getEntity().getLocation()) != null) {
+				ClaimInteractEvent e = new Vent.Call<>(Vent.Runtime.Synchronous, new ClaimInteractEvent(p, event.getEntity().getLocation(), ClaimInteractEvent.Type.USE)).run();
+				if (e.isCancelled()) {
+					if (event.getEntity().getType() != EntityType.TRIDENT) {
+						e.getUtil().sendMessage(e.getPlayer(), MessageFormat.format(e.getUtil().notClaimOwner(e.getClaim().getClan().getName()), e.getClaim().getClan().getName()));
+						event.getEntity().remove();
+					}
 				}
 			}
 		}

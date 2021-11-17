@@ -48,6 +48,19 @@ public abstract class Teleport {
 		private Location start;
 		private final InvasiveEntity entity;
 
+		public Impl(InvasiveEntity teleporter, TeleportationTarget target) {
+			if (target.isLocation()) {
+				this.target = target.getAsPlayer();
+				this.location = null;
+			} else {
+				this.location = target.getAsLocation();
+				this.target = null;
+			}
+			this.entity = teleporter;
+			this.state = State.INITIALIZED;
+			REQUESTS.add(this);
+		}
+
 		public Impl(InvasiveEntity teleporter, Player target) {
 			this.target = target;
 			this.location = null;

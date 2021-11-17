@@ -1,5 +1,6 @@
 package com.github.sanctum.clans.construct.api;
 
+import com.github.sanctum.clans.construct.RankPriority;
 import com.github.sanctum.labyrinth.annotation.Json;
 import com.github.sanctum.labyrinth.data.service.Check;
 import com.github.sanctum.labyrinth.data.service.Constant;
@@ -36,6 +37,7 @@ public final class Clearance implements Nameable, Comparable<Clearance>, JsonInt
 	public static final Clearance MANAGE_MAILING = new Clearance(ClansAPI.getDataInstance().getConfigInt("Addon.Mail.mail.clearance"), "MANAGE_MAILING");
 	public static final Clearance MANAGE_MODE = new Clearance(Clan.ACTION.modeChangeClearance(), "MANAGE_MODE");
 	public static final Clearance MANAGE_NAME = new Clearance(Clan.ACTION.tagChangeClearance(), "MANAGE_NAME");
+	public static final Clearance MANAGE_NICK_NAME = new Clearance(2, "MANAGE_NICK_NAME");
 	public static final Clearance MANAGE_NICKNAMES = new Clearance(2, "MANAGE_NICKNAMES");
 	public static final Clearance MANAGE_PASSWORD = new Clearance(Clan.ACTION.passwordClearance(), "MANAGE_PASSWORD");
 	public static final Clearance MANAGE_PERMS = new Clearance(3, "MANAGE_PERMS");
@@ -68,6 +70,11 @@ public final class Clearance implements Nameable, Comparable<Clearance>, JsonInt
 		if (!entity.isAssociate()) return false;
 		ClearanceLog log = entity.getAsAssociate().getClan().getPermissions();
 		return entity.getAsAssociate().getPriority().toInt() >= log.get(this);
+	}
+
+	public boolean test(RankPriority priority) {
+		if (priority == null) return false;
+		return priority.toInt() >= getDefault();
 	}
 
 	public void update() {

@@ -9,6 +9,7 @@ import com.github.sanctum.clans.bridge.internal.kingdoms.Quest;
 import com.github.sanctum.clans.bridge.internal.kingdoms.RoundTable;
 import com.github.sanctum.clans.bridge.internal.kingdoms.event.KingdomCreatedEvent;
 import com.github.sanctum.clans.bridge.internal.kingdoms.event.KingdomCreationEvent;
+import com.github.sanctum.clans.construct.RankPriority;
 import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClanSubCommand;
 import com.github.sanctum.clans.construct.api.ClansAPI;
@@ -417,7 +418,7 @@ public class KingdomCommand extends ClanSubCommand implements Message.Factory {
 					if (table.getUsers().isEmpty()) {
 
 						if (EconomyProvision.getInstance().balance(p).orElse(0.0) >= 10000) {
-							table.take(p.getUniqueId(), RoundTable.Rank.HIGHEST);
+							table.take(p.getUniqueId(), RankPriority.HIGHEST);
 							addon.getMailer().prefix().start(Clan.ACTION.getPrefix()).finish().announce(player -> true, p.getName() + " is now among the most powerful on the server.").deploy();
 						} else {
 							Clan.ACTION.sendMessage(p, "&cYou aren't powerful enough to start the table.");

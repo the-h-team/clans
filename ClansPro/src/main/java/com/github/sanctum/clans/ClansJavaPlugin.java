@@ -42,6 +42,8 @@ import com.github.sanctum.labyrinth.interfacing.OrdinalProcedure;
 import com.github.sanctum.labyrinth.library.HUID;
 import com.github.sanctum.labyrinth.library.NamespacedKey;
 import com.github.sanctum.labyrinth.library.StringUtils;
+import com.github.sanctum.labyrinth.paste.PasteManager;
+import com.github.sanctum.labyrinth.paste.type.Hastebin;
 import com.github.sanctum.labyrinth.task.Schedule;
 import com.github.sanctum.labyrinth.task.Task;
 import com.github.sanctum.skulls.CustomHead;
@@ -63,6 +65,13 @@ import org.jetbrains.annotations.NotNull;
 
 
 /**
+ *
+ *     ▄▄▄·▄▄▄        ▄▄
+ *    ▐█ ▄█▀▄ █·▪     ██▌
+ *     ██▀·▐▀▀▄  ▄█▀▄ ▐█·
+ *    ▐█▪·•▐█•█▌▐█▌.▐▌.▀
+ *   .▀   .▀  ▀ ▀█▄▀▪ ▀
+ *
  * <pre>
  * <h3>MIT License</h2>
  * Copyright (c) 2021 Sanctum
@@ -103,6 +112,7 @@ public class ClansJavaPlugin extends JavaPlugin implements ClansAPI {
 	private ClanManager clanManager;
 	private LogoGallery gallery;
 	public DataManager dataManager;
+	private Hastebin hastebin;
 	private KeyedServiceManager<ClanAddon> serviceManager;
 
 	public String USER_ID = "%%__USER__%%";
@@ -112,35 +122,7 @@ public class ClansJavaPlugin extends JavaPlugin implements ClansAPI {
 	public void onEnable() {
 		initialize();
 
-		String state = LabyrinthProvider.getInstance().getContainer(STATE).get(String.class, "toString");
-		if (state != null) {
-			boolean recorded = Boolean.parseBoolean(state);
-			if (recorded != Bukkit.getOnlineMode()) {
-				if (!Clan.ACTION.getAllClanIDs().isEmpty()) {
-					FancyMessageChain chain = new FancyMessageChain();
-					chain.append(msg -> msg.then("-------------------------------------------------------"));
-					chain.append(msg -> msg.then("-------------------------------------------------------"));
-					chain.append(msg -> msg.then("-------------------------------------------------------"));
-					chain.append(msg -> msg.then("======================================================="));
-					chain.append(msg -> msg.then("======================================================="));
-					chain.append(msg -> msg.then("            [Online state change detected]             "));
-					chain.append(msg -> msg.then("[To use this plugin again your clan data must be reset]"));
-					chain.append(msg -> msg.then(" [This is due to a change in unique id's for players.] "));
-					chain.append(msg -> msg.then("======================================================="));
-					chain.append(msg -> msg.then("======================================================="));
-					chain.append(msg -> msg.then("-------------------------------------------------------"));
-					chain.append(msg -> msg.then("-------------------------------------------------------"));
-					chain.append(msg -> msg.then("-------------------------------------------------------"));
-					for (Message m : chain) {
-						Bukkit.getConsoleSender().spigot().sendMessage(m.build());
-					}
-					getServer().getPluginManager().disablePlugin(this);
-					return;
-				} else {
-					LabyrinthProvider.getInstance().getContainer(STATE).delete("toString");
-				}
-			}
-		}
+		if (isInvalid()) return;
 
 		Configurable.registerClass(Clan.class);
 		Configurable.registerClass(Claim.class);
@@ -209,6 +191,45 @@ public class ClansJavaPlugin extends JavaPlugin implements ClansAPI {
 		}).waitReal(12);
 
 		CustomHead.Manager.newLoader(man.getRoot()).look("My_heads").complete();
+		ReservedLogoCarrier reserved2 = ReservedLogoCarrier.SUMMER;
+		getLogoGallery().load(reserved2.getId(), reserved2.get());
+		ReservedLogoCarrier reserved3 = ReservedLogoCarrier.HALLOWEEN;
+		getLogoGallery().load(reserved3.getId(), reserved3.get());
+		ReservedLogoCarrier reserved4 = ReservedLogoCarrier.BIG_LANDSCAPE;
+		getLogoGallery().load(reserved4.getId(), reserved4.get());
+	}
+
+	private boolean isInvalid() {
+		String state = LabyrinthProvider.getInstance().getContainer(STATE).get(String.class, "toString");
+		if (state != null) {
+			boolean recorded = Boolean.parseBoolean(state);
+			if (recorded != Bukkit.getOnlineMode()) {
+				if (!Clan.ACTION.getAllClanIDs().isEmpty()) {
+					FancyMessageChain chain = new FancyMessageChain();
+					chain.append(msg -> msg.then("-------------------------------------------------------"));
+					chain.append(msg -> msg.then("-------------------------------------------------------"));
+					chain.append(msg -> msg.then("-------------------------------------------------------"));
+					chain.append(msg -> msg.then("======================================================="));
+					chain.append(msg -> msg.then("======================================================="));
+					chain.append(msg -> msg.then("            [Online state change detected]             "));
+					chain.append(msg -> msg.then("[To use this plugin again your clan data must be reset]"));
+					chain.append(msg -> msg.then(" [This is due to a change in unique id's for players.] "));
+					chain.append(msg -> msg.then("======================================================="));
+					chain.append(msg -> msg.then("======================================================="));
+					chain.append(msg -> msg.then("-------------------------------------------------------"));
+					chain.append(msg -> msg.then("-------------------------------------------------------"));
+					chain.append(msg -> msg.then("-------------------------------------------------------"));
+					for (Message m : chain) {
+						Bukkit.getConsoleSender().spigot().sendMessage(m.build());
+					}
+					getServer().getPluginManager().disablePlugin(this);
+					return true;
+				} else {
+					LabyrinthProvider.getInstance().getContainer(STATE).delete("toString");
+				}
+			}
+		}
+		return false;
 	}
 
 	public void onDisable() {
@@ -323,6 +344,16 @@ public class ClansJavaPlugin extends JavaPlugin implements ClansAPI {
 	}
 
 	@Override
+	public @NotNull PasteManager getPasteManager() {
+		return PasteManager.getInstance();
+	}
+
+	@Override
+	public @NotNull Hastebin getLocalHastebinInstance() {
+		return hastebin;
+	}
+
+	@Override
 	public boolean isUpdated() {
 		ClansUpdate update = new ClansUpdate(getPlugin());
 		return CompletableFuture.supplyAsync(() -> {
@@ -432,6 +463,7 @@ public class ClansJavaPlugin extends JavaPlugin implements ClansAPI {
 
 	void initialize() {
 		origin = FileList.search(PRO = this);
+		hastebin = getPasteManager().newHaste();
 		STATE = new NamespacedKey(this, "online-state");
 		sessionId = UUID.randomUUID();
 		Bukkit.getServicesManager().register(ClansAPI.class, this, this, ServicePriority.Normal);

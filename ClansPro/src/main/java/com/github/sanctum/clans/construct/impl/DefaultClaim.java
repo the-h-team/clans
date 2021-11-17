@@ -158,6 +158,11 @@ public final class DefaultClaim implements Claim {
 	@Override
 	public void remove(Flag flag) {
 		flags.stream().filter(f -> f.getId().equals(flag.getId())).findFirst().ifPresent(fl -> Schedule.sync(() -> flags.remove(fl)).run());
+		Node claim = ClansAPI.getInstance().getClaimManager().getFile().getRoot().getNode(getOwner().getTag().getId() + "." + getId());
+		if (claim.getNode("flags").getNode(flag.getId()).get() != null) {
+			claim.getNode("flags").getNode(flag.getId()).set(null);
+			claim.save();
+		}
 	}
 
 	/**

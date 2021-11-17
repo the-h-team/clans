@@ -98,6 +98,9 @@ Commands:
   nickname:
     text: '&7|&e) &6/clan &fnickname <&7nickName&f>'
     permission: 'nickname'
+  display:
+    text: '&7|&e) &6/clan &fdisplay <&7nickName&f>'
+    permission: 'display'
   list:
     text: '&7|&e) &6/clan &flist'
     permission: 'list'
@@ -328,31 +331,7 @@ Response:
 pagination-size: THREE
 
 menu-format:
-  # {0} = Clan BukkitColor
-  # {1} = Clan Description
-  # {2} = Clan Power
-  # {3} = Clan Base Validation
-  # {4} = Clan Land Owned
-  # {5} = Clan PVP Mode
-  # {6} = Clan Members (Partial)
-  # {7} = Clan Allies (Partial)
-  # {8} = Clan Enemies (Partial)
-  # {9} = Clan BukkitColor (Normal)
-  clan:
-    - '&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬'
-    - '&3Color: {0}'
-    - '&3Description: {1}'
-    - '&3Power: {2}'
-    - '&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬'
-    - '&3Has base: {3}'
-    - '&3Land Owned: &f({4}&f)'
-    - '&3Mode: {5}'
-    - '&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬'
-    - '&7Members: {6}'
-    - '&7Allies: {7}'
-    - '&7Enemies: {8}'
-    - '&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬'
-    - '&b&oClick to reveal clan members.'
+  clan: [ ] # This section is being removed for performance reasons.
 
 menu-items:
   # Setup custom heads from the "heads.data" file.

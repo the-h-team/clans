@@ -8,6 +8,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+/**
+ * Called any time all claims are re-loaded
+ */
 public class ClaimsLoadingProcedureEvent extends ClaimEvent {
 
 	private final Map<InvasiveEntity.Tag, List<Claim>> set = new HashMap<>();

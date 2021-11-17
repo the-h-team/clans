@@ -1,5 +1,7 @@
 package com.github.sanctum.clans.construct.api;
 
+import com.github.sanctum.clans.construct.extra.BukkitColor;
+import com.github.sanctum.labyrinth.LabyrinthProvider;
 import com.github.sanctum.labyrinth.annotation.Note;
 import com.github.sanctum.labyrinth.data.service.Constant;
 import com.github.sanctum.labyrinth.formatting.FancyMessage;
@@ -119,7 +121,7 @@ public interface Channel {
 
 	default Message tryFormat(Clan.Associate associate) {
 		FancyMessage message = new FancyMessage();
-		message.then(MessageFormat.format("(" + new RandomHex().context(getId()).join() + "&r) ", associate.getNickname(), associate.getName(), associate.getClan().getPalette(), associate.getRankFull(), associate.getClan().getName()));
+		message.then(MessageFormat.format("(" + (LabyrinthProvider.getInstance().isNew() ? new RandomHex().context(getId()).join() : BukkitColor.random().toCode().replace("0", "f") + getId()) + "&r) ", associate.getNickname(), associate.getName(), associate.getClan().getPalette(), associate.getRankFull(), associate.getClan().getName()));
 		message.then(MessageFormat.format(ClansAPI.getDataInstance().getConfig().getRoot().getString("Formatting.Chat.Channel.ally.highlight"), associate.getNickname(), associate.getName(), associate.getClan().getPalette(), associate.getRankFull(), associate.getClan().getName()));
 		message.then(MessageFormat.format(ClansAPI.getDataInstance().getConfig().getRoot().getString("Formatting.Chat.Channel.ally.divider") + "%MESSAGE%", associate.getNickname(), associate.getName(), associate.getClan().getPalette(), associate.getRankFull(), associate.getClan().getName()));
 		message.hover(MessageFormat.format(ClansAPI.getDataInstance().getConfig().getRoot().getString("Formatting.Chat.Channel.ally.hover"), associate.getNickname(), associate.getName(), associate.getClan().getPalette(), associate.getRankFull(), associate.getClan().getName()));

@@ -3,9 +3,11 @@ package com.github.sanctum.clans.bridge.internal.kingdoms;
 import com.github.sanctum.clans.bridge.ClanAddon;
 import com.github.sanctum.clans.bridge.ClanAddonQuery;
 import com.github.sanctum.clans.bridge.internal.KingdomAddon;
+import com.github.sanctum.clans.construct.RankPriority;
 import com.github.sanctum.clans.construct.api.Claim;
 import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClansAPI;
+import com.github.sanctum.clans.construct.api.Clearance;
 import com.github.sanctum.labyrinth.data.FileManager;
 import com.github.sanctum.labyrinth.data.FileType;
 import com.github.sanctum.labyrinth.data.Node;
@@ -21,15 +23,23 @@ import java.util.Spliterator;
 import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
+import org.intellij.lang.annotations.MagicConstant;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class RoundTable extends Progressive implements Iterable<Clan.Associate> {
 
+	public static final String INVITE = "INVITE";
+	public static final String TAG = "TAG";
+	public static final String PROMOTE = "PROMOTE";
+	public static final String DEMOTE = "DEMOTE";
+	public static final String KICK = "KICK";
+
 	private final String name;
-	private final Map<UUID, Rank> users = new HashMap<>();
+	private final Map<UUID, RankPriority> users = new HashMap<>();
 	private final Set<UUID> invites = new HashSet<>();
 	private final List<Quest> quests = new LinkedList<>();
+	private final Map<String, Clearance> perms = new HashMap<>();
 
 	public RoundTable(KingdomAddon cycle) {
 
@@ -52,7 +62,7 @@ public class RoundTable extends Progressive implements Iterable<Clan.Associate> 
 			if (!users.getRoot().getKeys(false).isEmpty()) {
 				for (String user : users.getRoot().getKeys(false)) {
 					UUID id = UUID.fromString(user);
-					this.users.put(id, Rank.valueOf(users.getRoot().getString(user + ".rank")));
+					this.users.put(id, RankPriority.valueOf(users.getRoot().getString(user + ".rank")));
 				}
 			}
 
@@ -60,6 +70,19 @@ public class RoundTable extends Progressive implements Iterable<Clan.Associate> 
 
 		if (quests.isEmpty()) {
 			loadQuest(Kingdom.getDefaults());
+		}
+
+		if (perms.isEmpty()) {
+			Clearance invite = new Clearance(2, "INVITE");
+			Clearance tag = new Clearance(1, "TAG");
+			Clearance promote = new Clearance(3, "PROMOTE");
+			Clearance demote = new Clearance(3, "DEMOTE");
+			Clearance kick = new Clearance(3, "KICK");
+			perms.put(invite.getName(), invite);
+			perms.put(tag.getName(), tag);
+			perms.put(promote.getName(), promote);
+			perms.put(demote.getName(), demote);
+			perms.put(kick.getName(), kick);
 		}
 
 		PROGRESSIVES.add(this);
@@ -81,48 +104,6 @@ public class RoundTable extends Progressive implements Iterable<Clan.Associate> 
 		return users.keySet().stream().map(u -> ClansAPI.getInstance().getAssociate(u).get()).collect(Collectors.toList()).spliterator();
 	}
 
-	public enum Permission {
-
-		INVITE(3),
-		TAG(2),
-		PROMOTE(4),
-		DEMOTE(4),
-		KICK(4);
-
-		private final int requirement;
-
-		Permission(int requirement) {
-			this.requirement = requirement;
-		}
-
-		public int getRequirement() {
-			return this.requirement;
-		}
-
-		public boolean test(Clan.Associate associate) {
-			return associate.getPriority().toInt() >= requirement;
-		}
-
-	}
-
-	public enum Rank {
-
-		LOW(1),
-		HIGH(2),
-		HIGHER(3),
-		HIGHEST(4);
-
-		private final int level;
-
-		Rank(int level) {
-			this.level = level;
-		}
-
-		public int getLevel() {
-			return level;
-		}
-	}
-
 	public boolean isMember(UUID target) {
 		return users.containsKey(target);
 	}
@@ -142,13 +123,13 @@ public class RoundTable extends Progressive implements Iterable<Clan.Associate> 
 
 		if (isMember(target)) return false;
 
-		take(target, Rank.LOW);
+		take(target, RankPriority.NORMAL);
 		this.invites.remove(target);
 
 		return true;
 	}
 
-	public void take(UUID target, Rank rank) {
+	public void take(UUID target, RankPriority rank) {
 		this.users.put(target, rank);
 	}
 
@@ -185,7 +166,11 @@ public class RoundTable extends Progressive implements Iterable<Clan.Associate> 
 
 	}
 
-	public Rank getRank(UUID user) {
+	public Clearance getClearance(@MagicConstant(valuesFromClass = RoundTable.class) String id) {
+		return perms.get(id);
+	}
+
+	public RankPriority getRank(UUID user) {
 		return this.users.get(user);
 	}
 
@@ -228,7 +213,7 @@ public class RoundTable extends Progressive implements Iterable<Clan.Associate> 
 
 		FileManager users = cycle.getFile(FileType.JSON, "users", "data");
 
-		for (Map.Entry<UUID, Rank> entry : this.users.entrySet()) {
+		for (Map.Entry<UUID, RankPriority> entry : this.users.entrySet()) {
 			users.getRoot().set(entry.getKey().toString() + ".rank", entry.getValue().name());
 		}
 

@@ -34,7 +34,6 @@ import com.github.sanctum.labyrinth.api.Service;
 import com.github.sanctum.labyrinth.data.EconomyProvision;
 import com.github.sanctum.labyrinth.data.FileManager;
 import com.github.sanctum.labyrinth.data.LabyrinthUser;
-import com.github.sanctum.labyrinth.formatting.FancyMessage;
 import com.github.sanctum.labyrinth.formatting.Message;
 import com.github.sanctum.labyrinth.formatting.PaginatedList;
 import com.github.sanctum.labyrinth.formatting.TextChunk;
@@ -48,7 +47,6 @@ import com.github.sanctum.labyrinth.library.Item;
 import com.github.sanctum.labyrinth.library.Mailer;
 import com.github.sanctum.labyrinth.library.StringUtils;
 import com.github.sanctum.labyrinth.library.TextLib;
-import com.github.sanctum.labyrinth.task.Schedule;
 import com.google.common.base.Strings;
 import com.google.common.collect.MapMaker;
 import java.math.BigDecimal;
@@ -89,6 +87,8 @@ public class CommandClan extends Command implements Message.Factory {
 			weakValues().
 			makeMap();
 
+	private final List<Player> references = new ArrayList<>();
+
 	public CommandClan() {
 		super("clan");
 		setDescription("Base command for clans.");
@@ -116,26 +116,9 @@ public class CommandClan extends Command implements Message.Factory {
 		return e.getMenu().stream().map(s -> s.replace("clan", label)).collect(Collectors.toList());
 	}
 
-	static int correctCharLength(char c) {
-		switch (c) {
-			case ':':
-			case 'i':
-				return 1;
-			case 'l':
-				return 2;
-			case '*':
-			case 't':
-				return 3;
-			case 'f':
-			case 'k':
-				return 4;
-		}
-		return 5;
-	}
 
-	static int getFixedLength(String string) {
-		return string.chars().reduce(0, (p, i) -> p + correctCharLength((char) i) + 1);
-	}
+
+
 
 	private boolean isAlphaNumeric(String s) {
 		return s != null && s.matches("^[a-zA-Z0-9]*$");
@@ -163,7 +146,7 @@ public class CommandClan extends Command implements Message.Factory {
 
 		if (args.length == 1) {
 			arguments.clear();
-			List<String> add = Arrays.asList("create", "war", "logo", "permit", "permissions", "invite", "block", "peace", "forfeit", "surrender", "truce", "mode", "bio", "players", "description", "friendlyfire", "color", "password", "kick", "leave", "message", "chat", "info", "promote", "demote", "tag", "nickname", "list", "base", "setbase", "top", "claim", "unclaim", "passowner", "ally", "enemy", "bank");
+			List<String> add = Arrays.asList("create", "war", "logo", "permit", "permissions", "invite", "block", "peace", "forfeit", "surrender", "truce", "mode", "bio", "players", "description", "friendlyfire", "color", "password", "kick", "leave", "message", "chat", "info", "promote", "demote", "tag", "display", "nickname", "list", "base", "setbase", "top", "claim", "unclaim", "passowner", "ally", "enemy", "bank");
 			for (String a : add) {
 				if (p.hasPermission(this.getPermission() + "." + DataManager.Security.getPermission(a))) {
 					arguments.add(a);
@@ -234,7 +217,7 @@ public class CommandClan extends Command implements Message.Factory {
 					return result;
 				}
 				arguments.clear();
-				arguments.addAll(Arrays.asList("flags", "list"));
+				arguments.addAll(Arrays.asList("flags", "list", "enter-title", "enter-sub-title", "leave-title", "leave-sub-title"));
 				for (String a : arguments) {
 					if (a.toLowerCase().startsWith(args[1].toLowerCase()))
 						result.add(a);
@@ -350,7 +333,7 @@ public class CommandClan extends Command implements Message.Factory {
 				}
 
 
-				if (Bukkit.getPluginManager().isPluginEnabled("Vault") || Bukkit.getPluginManager().isPluginEnabled("Enterprise")) {
+				if (EconomyProvision.getInstance().isValid()) {
 					arguments.clear();
 					arguments.add("balance");
 					arguments.add("deposit");
@@ -637,6 +620,14 @@ public class CommandClan extends Command implements Message.Factory {
 				lib.sendMessage(p, lib.commandCreate());
 				return true;
 			}
+			if (args0.equalsIgnoreCase("display")) {
+				if (!p.hasPermission(this.getPermission() + "." + DataManager.Security.getPermission("display"))) {
+					lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("display")));
+					return true;
+				}
+				lib.sendMessage(p, ClansAPI.getDataInstance().getMessageResponse("display"));
+				return true;
+			}
 			if (args0.equalsIgnoreCase("mode")) {
 				if (!p.hasPermission(this.getPermission() + "." + DataManager.Security.getPermission("mode"))) {
 					lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("mode")));
@@ -644,9 +635,7 @@ public class CommandClan extends Command implements Message.Factory {
 				}
 				if (associate != null) {
 					if (Clearance.MANAGE_MODE.test(associate)) {
-						if (!(associate.getClan() instanceof DefaultClan))
-							return true;
-						DefaultClan c = (DefaultClan) ClansAPI.getInstance().getClanManager().getClan(p.getUniqueId());
+						DefaultClan c = (DefaultClan) associate.getClan();
 						if (c.isPeaceful()) {
 							if (ClansAPI.getDataInstance().isTrue("Clans.mode-change.charge")) {
 								double amount = ClansAPI.getDataInstance().getConfig().getRoot().getDouble("Clans.mode-change.amount");
@@ -863,6 +852,10 @@ public class CommandClan extends Command implements Message.Factory {
 				if (Claim.ACTION.isEnabled()) {
 					if (associate != null) {
 						if (Clearance.MANAGE_LAND.test(associate)) {
+							if (!ClansAPI.getInstance().getClaimManager().test(p, p.getLocation().getBlock())) {
+								lib.sendMessage(p, MessageFormat.format(lib.notClaimOwner("Third Party"), "Third Party"));
+								return true;
+							}
 							Claim.ACTION.claim(p);
 						} else {
 							lib.sendMessage(p, lib.noClearance());
@@ -1201,9 +1194,93 @@ public class CommandClan extends Command implements Message.Factory {
 		if (length == 2) {
 			String args0 = args[0];
 			String args1 = args[1];
+			if (args0.equalsIgnoreCase("display")) {
+				if (!p.hasPermission(this.getPermission() + "." + DataManager.Security.getPermission("display"))) {
+					lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("display")));
+					return true;
+				}
+				if (associate != null) {
+					if (Clearance.MANAGE_NICK_NAME.test(associate)) {
+						associate.getClan().setNickname(args1);
+					} else {
+						lib.sendMessage(p, lib.noClearance());
+					}
+				} else {
+					lib.sendMessage(p, lib.notInClan());
+				}
+				return true;
+			}
 			if (args0.equalsIgnoreCase("claim")) {
 				if (!p.hasPermission(this.getPermission() + "." + DataManager.Security.getPermission("claim"))) {
 					lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("claim")));
+					return true;
+				}
+				if (args1.equalsIgnoreCase("enter-title")) {
+					if (associate != null) {
+						if (Clearance.MANAGE_LAND.test(associate)) {
+							String result = associate.getClan().getValue(String.class, "claim_title");
+							if (result != null) {
+								lib.sendMessage(p, "&aOur current enter claim title is: &r" + result);
+							} else {
+								lib.sendMessage(p, "&cWe have no custom enter title setup.");
+							}
+						} else {
+							lib.sendMessage(p, lib.noClearance());
+						}
+					} else {
+						lib.sendMessage(p, lib.notInClan());
+					}
+					return true;
+				}
+				if (args1.equalsIgnoreCase("enter-sub-title")) {
+					if (associate != null) {
+						if (Clearance.MANAGE_LAND.test(associate)) {
+							String result = associate.getClan().getValue(String.class, "claim_sub_title");
+							if (result != null) {
+								lib.sendMessage(p, "&aOur current enter claim sub-title is: &r" + result);
+							} else {
+								lib.sendMessage(p, "&cWe have no custom enter sub-title setup.");
+							}
+						} else {
+							lib.sendMessage(p, lib.noClearance());
+						}
+					} else {
+						lib.sendMessage(p, lib.notInClan());
+					}
+					return true;
+				}
+				if (args1.equalsIgnoreCase("leave-title")) {
+					if (associate != null) {
+						if (Clearance.MANAGE_LAND.test(associate)) {
+							String result = associate.getClan().getValue(String.class, "leave_claim_title");
+							if (result != null) {
+								lib.sendMessage(p, "&aOur current leave claim title is: &r" + result);
+							} else {
+								lib.sendMessage(p, "&cWe have no custom leave title setup.");
+							}
+						} else {
+							lib.sendMessage(p, lib.noClearance());
+						}
+					} else {
+						lib.sendMessage(p, lib.notInClan());
+					}
+					return true;
+				}
+				if (args1.equalsIgnoreCase("leave-sub-title")) {
+					if (associate != null) {
+						if (Clearance.MANAGE_LAND.test(associate)) {
+							String result = associate.getClan().getValue(String.class, "leave_claim_sub_title");
+							if (result != null) {
+								lib.sendMessage(p, "&aOur current leave claim sub-title is: &r" + result);
+							} else {
+								lib.sendMessage(p, "&cWe have no custom leave sub-title setup.");
+							}
+						} else {
+							lib.sendMessage(p, lib.noClearance());
+						}
+					} else {
+						lib.sendMessage(p, lib.notInClan());
+					}
 					return true;
 				}
 				if (args1.equalsIgnoreCase("list")) {
@@ -1229,48 +1306,7 @@ public class CommandClan extends Command implements Message.Factory {
 							Claim test = ClansAPI.getInstance().getClaimManager().getClaim(p.getLocation());
 							if (test != null) {
 								Set<Claim.Flag> set = Arrays.stream(test.getFlags().clone()).sorted((o1, o2) -> String.CASE_INSENSITIVE_ORDER.compare(o1.getId(), o2.getId())).sorted(Claim.Flag::compareTo).sorted(Comparator.reverseOrder()).collect(Collectors.toCollection(LinkedHashSet::new));
-								new PaginatedList<>(set)
-										.limit(5)
-										.start((pagination, page, max) -> {
-											lib.sendMessage(p, "&e&lChunk: &bX:&f" + test.getChunk().getX() + " &bZ:&f" + test.getChunk().getZ());
-											new FancyMessage("--------------------------------------").color(org.bukkit.Color.AQUA).style(org.bukkit.ChatColor.STRIKETHROUGH).send(p).deploy();
-										})
-										.decorate((pagination, f, page, max, placement) -> {
-											Message m;
-											if (f.isValid()) {
-												if (f.isEnabled()) {
-													m = new FancyMessage().then(f.getId() + ";").color(org.bukkit.Color.GREEN).then("Enable").color(org.bukkit.Color.YELLOW).then(" ").then("Disable").color(org.bukkit.Color.GRAY).hover("Click to disallow this flag.").action(() -> {
-														f.setEnabled(false);
-														p.performCommand("c claim flags");
-													});
-													for (Message.Chunk c : m) {
-														String text = c.getText();
-														if (text.contains(";")) {
-															c.replace(";", " &8" + Strings.repeat(".", ((180 - getFixedLength(text.replace(";", ""))) / 2)) + " ");
-														}
-													}
-												} else {
-													m = new FancyMessage().then(f.getId() + ";").color(org.bukkit.Color.GREEN).then("Enable").color(org.bukkit.Color.GRAY).hover("Click to allow this flag.").action(() -> {
-														f.setEnabled(true);
-														p.performCommand("c claim flags");
-													}).then(" ").then("Disable").color(org.bukkit.Color.YELLOW);
-													for (Message.Chunk c : m) {
-														String text = c.getText();
-														if (text.contains(";")) {
-															c.replace(";", " &8" + Strings.repeat(".", ((180 - getFixedLength(text.replace(";", ""))) / 2)) + " ");
-														}
-													}
-												}
-												m.send(p).deploy();
-											} else {
-												new FancyMessage("&c&m" + f.getId()).hover("Click to remove me i no longer work.").action(() -> {
-													test.remove(f);
-													Schedule.sync(() -> p.performCommand("c claim flags")).waitReal(1);
-												}).send(p).deploy();
-											}
-										})
-										.finish(builder -> builder.setPrefix("&b&m--------------------------------------").setPlayer(p))
-										.get(1);
+								Claim.ACTION.getFlags(p, test, set).get(1);
 							} else {
 								lib.sendMessage(p, lib.alreadyWild());
 							}
@@ -2347,6 +2383,80 @@ public class CommandClan extends Command implements Message.Factory {
 			String args0 = args[0];
 			String args1 = args[1];
 			String args2 = args[2];
+			if (args0.equalsIgnoreCase("display")) {
+				if (!p.hasPermission(this.getPermission() + "." + DataManager.Security.getPermission("display"))) {
+					lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("display")));
+					return true;
+				}
+				if (associate != null) {
+					if (Clearance.MANAGE_NICK_NAME.test(associate)) {
+						associate.getClan().setNickname(args1 + " " + args2);
+					} else {
+						lib.sendMessage(p, lib.noClearance());
+					}
+				} else {
+					lib.sendMessage(p, lib.notInClan());
+				}
+				return true;
+			}
+			if (args0.equalsIgnoreCase("claim")) {
+				if (!p.hasPermission(this.getPermission() + "." + DataManager.Security.getPermission("claim"))) {
+					lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("claim")));
+					return true;
+				}
+				if (args1.equalsIgnoreCase("enter-title")) {
+					if (associate != null) {
+						if (Clearance.MANAGE_ALL_LAND.test(associate)) {
+							associate.getClan().setValue("claim_title", args2, false);
+							lib.sendMessage(p, "&aTitle updated.");
+						} else {
+							lib.sendMessage(p, lib.noClearance());
+						}
+					} else {
+						lib.sendMessage(p, lib.notInClan());
+					}
+					return true;
+				}
+				if (args1.equalsIgnoreCase("enter-sub-title")) {
+					if (associate != null) {
+						if (Clearance.MANAGE_ALL_LAND.test(associate)) {
+							associate.getClan().setValue("claim_sub_title", args2, false);
+							lib.sendMessage(p, "&aTitle updated.");
+						} else {
+							lib.sendMessage(p, lib.noClearance());
+						}
+					} else {
+						lib.sendMessage(p, lib.notInClan());
+					}
+					return true;
+				}
+				if (args1.equalsIgnoreCase("leave-title")) {
+					if (associate != null) {
+						if (Clearance.MANAGE_ALL_LAND.test(associate)) {
+							associate.getClan().setValue("leave_claim_title", args2, false);
+							lib.sendMessage(p, "&aTitle updated.");
+						} else {
+							lib.sendMessage(p, lib.noClearance());
+						}
+					} else {
+						lib.sendMessage(p, lib.notInClan());
+					}
+					return true;
+				}
+				if (args1.equalsIgnoreCase("leave-sub-title")) {
+					if (associate != null) {
+						if (Clearance.MANAGE_ALL_LAND.test(associate)) {
+							associate.getClan().setValue("leave_claim_sub_title", args2, false);
+							lib.sendMessage(p, "&aTitle updated.");
+						} else {
+							lib.sendMessage(p, lib.noClearance());
+						}
+					} else {
+						lib.sendMessage(p, lib.notInClan());
+					}
+					return true;
+				}
+			}
 			if (args0.equalsIgnoreCase("permit")) {
 				if (!p.hasPermission(this.getPermission() + "." + DataManager.Security.getPermission("permit"))) {
 					lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("permit")));
@@ -2686,7 +2796,7 @@ public class CommandClan extends Command implements Message.Factory {
 				}
 				if (associate != null) {
 					if (Clearance.MANAGE_DESCRIPTION.test(associate)) {
-						Clan c = ClansAPI.getInstance().getClanManager().getClan(p.getUniqueId());
+						Clan c = associate.getClan();
 						c.setDescription(args1 + " " + args2);
 					} else {
 						lib.sendMessage(p, lib.noClearance());
@@ -2927,6 +3037,49 @@ public class CommandClan extends Command implements Message.Factory {
 			}
 			final Clan clan = associate.getClan();
 
+			if (args[0].equalsIgnoreCase("claim")) {
+				if (!p.hasPermission(this.getPermission() + "." + DataManager.Security.getPermission("claim"))) {
+					lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("claim")));
+					return true;
+				}
+				if (args[1].equalsIgnoreCase("enter-title")) {
+					if (Clearance.MANAGE_ALL_LAND.test(associate)) {
+						associate.getClan().setValue("claim_title", args[2] + " " + args[3], false);
+						lib.sendMessage(p, "&aTitle updated.");
+					} else {
+						lib.sendMessage(p, lib.noClearance());
+					}
+					return true;
+				}
+				if (args[1].equalsIgnoreCase("enter-sub-title")) {
+					if (Clearance.MANAGE_ALL_LAND.test(associate)) {
+						associate.getClan().setValue("claim_sub_title", args[2] + " " + args[3], false);
+						lib.sendMessage(p, "&aTitle updated.");
+					} else {
+						lib.sendMessage(p, lib.noClearance());
+					}
+					return true;
+				}
+				if (args[1].equalsIgnoreCase("leave-title")) {
+					if (Clearance.MANAGE_ALL_LAND.test(associate)) {
+						associate.getClan().setValue("leave_claim_title", args[2] + " " + args[3], false);
+						lib.sendMessage(p, "&aTitle updated.");
+					} else {
+						lib.sendMessage(p, lib.noClearance());
+					}
+					return true;
+				}
+				if (args[1].equalsIgnoreCase("leave-sub-title")) {
+					if (Clearance.MANAGE_ALL_LAND.test(associate)) {
+						associate.getClan().setValue("leave_claim_sub_title", args[2] + " " + args[3], false);
+						lib.sendMessage(p, "&aTitle updated.");
+					} else {
+						lib.sendMessage(p, lib.noClearance());
+					}
+					return true;
+				}
+			}
+
 			if (args[0].equalsIgnoreCase("logo")) {
 
 				if (!p.hasPermission(this.getPermission() + "." + DataManager.Security.getPermission("logo"))) {
@@ -3025,9 +3178,91 @@ public class CommandClan extends Command implements Message.Factory {
 			rsn.append(args[i]).append(" ");
 		int stop = rsn.length() - 1;
 		if (args0.equalsIgnoreCase("message")) {
-			Clan clan = ClansAPI.getInstance().getClanManager().getClan(p.getUniqueId());
-			clan.broadcast(MessageFormat.format(ClansAPI.getDataInstance().getConfig().getRoot().getString("Formatting.chat-message-format"), p.getName()) + " " + rsn.substring(0, stop));
+			if (associate != null) {
+				Clan clan = associate.getClan();
+				clan.broadcast(MessageFormat.format(ClansAPI.getDataInstance().getConfig().getRoot().getString("Formatting.chat-message-format"), p.getName()) + " " + rsn.substring(0, stop));
+			} else {
+				lib.sendMessage(p, lib.notInClan());
+			}
 			return true;
+		}
+		if (args[0].equalsIgnoreCase("claim")) {
+			if (!p.hasPermission(this.getPermission() + "." + DataManager.Security.getPermission("claim"))) {
+				lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("claim")));
+				return true;
+			}
+			if (args[1].equalsIgnoreCase("enter-title")) {
+				if (associate != null) {
+					if (Clearance.MANAGE_ALL_LAND.test(associate)) {
+						String result = rsn.substring(12, stop).trim();
+						if (result.length() >= 34) {
+							lib.sendMessage(p, "&cYour title message is too long!");
+							return true;
+						}
+						associate.getClan().setValue("claim_title", result, false);
+						lib.sendMessage(p, "&aEnter title updated.");
+					} else {
+						lib.sendMessage(p, lib.noClearance());
+					}
+				} else {
+					lib.sendMessage(p, lib.notInClan());
+				}
+				return true;
+			}
+			if (args[1].equalsIgnoreCase("enter-sub-title")) {
+				if (associate != null) {
+					if (Clearance.MANAGE_ALL_LAND.test(associate)) {
+						String result = rsn.substring(15, stop).trim();
+						if (result.length() >= 34) {
+							lib.sendMessage(p, "&cYour title message is too long!");
+							return true;
+						}
+						associate.getClan().setValue("claim_sub_title", result, false);
+						lib.sendMessage(p, "&aEnter sub-title updated.");
+					} else {
+						lib.sendMessage(p, lib.noClearance());
+					}
+				} else {
+					lib.sendMessage(p, lib.notInClan());
+				}
+				return true;
+			}
+			if (args[1].equalsIgnoreCase("leave-title")) {
+				if (associate != null) {
+					if (Clearance.MANAGE_ALL_LAND.test(associate)) {
+						String result = rsn.substring(12, stop).trim();
+						if (result.length() >= 34) {
+							lib.sendMessage(p, "&cYour title message is too long!");
+							return true;
+						}
+						associate.getClan().setValue("leave_claim_title", result, false);
+						lib.sendMessage(p, "&aLeave title updated.");
+					} else {
+						lib.sendMessage(p, lib.noClearance());
+					}
+				} else {
+					lib.sendMessage(p, lib.notInClan());
+				}
+				return true;
+			}
+			if (args[1].equalsIgnoreCase("leave-sub-title")) {
+				if (associate != null) {
+					if (Clearance.MANAGE_ALL_LAND.test(associate)) {
+						String result = rsn.substring(15, stop).trim();
+						if (result.length() >= 34) {
+							lib.sendMessage(p, "&cYour title message is too long!");
+							return true;
+						}
+						associate.getClan().setValue("leave_claim_sub_title", result, false);
+						lib.sendMessage(p, "&aLeave sub-title updated.");
+					} else {
+						lib.sendMessage(p, lib.noClearance());
+					}
+				} else {
+					lib.sendMessage(p, lib.notInClan());
+				}
+				return true;
+			}
 		}
 		if (args0.equalsIgnoreCase("bio")) {
 			if (!p.hasPermission(this.getPermission() + "." + DataManager.Security.getPermission("bio"))) {
@@ -3048,7 +3283,7 @@ public class CommandClan extends Command implements Message.Factory {
 			}
 			if (associate != null) {
 				if (Clearance.MANAGE_DESCRIPTION.test(associate)) {
-					Clan c = ClansAPI.getInstance().getClanManager().getClan(p.getUniqueId());
+					Clan c = associate.getClan();
 					c.setDescription(rsn.substring(0, stop));
 				} else {
 					lib.sendMessage(p, lib.noClearance());

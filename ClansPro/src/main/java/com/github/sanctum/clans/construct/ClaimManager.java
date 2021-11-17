@@ -14,12 +14,14 @@ import com.github.sanctum.clans.event.TimerEvent;
 import com.github.sanctum.clans.event.claim.ClaimResidentEvent;
 import com.github.sanctum.clans.event.claim.ClaimsLoadingProcedureEvent;
 import com.github.sanctum.clans.event.claim.WildernessInhabitantEvent;
+import com.github.sanctum.labyrinth.LabyrinthProvider;
 import com.github.sanctum.labyrinth.data.Configurable;
 import com.github.sanctum.labyrinth.data.FileManager;
 import com.github.sanctum.labyrinth.data.FileType;
 import com.github.sanctum.labyrinth.data.Node;
 import com.github.sanctum.labyrinth.event.custom.Vent;
 import com.github.sanctum.labyrinth.library.HUID;
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -28,9 +30,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
 import org.bukkit.Location;
+import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
+import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 
@@ -56,7 +61,30 @@ public final class ClaimManager {
 
 				if (!API.getClaimManager().isInClaim(p.getLocation())) {
 
-					ClanVentBus.call(new WildernessInhabitantEvent(p));
+					WildernessInhabitantEvent wild = ClanVentBus.call(new WildernessInhabitantEvent(p));
+					if (!wild.isCancelled()) {
+
+
+						if (ClansAPI.getDataInstance().getResident(wild.getPlayer()) != null) {
+							Resident res = ClansAPI.getDataInstance().getResident(p);
+							// receive now leaving message
+							if (!ClansAPI.getDataInstance().isInWild(p)) {
+								if (wild.isTitlesAllowed()) {
+									if (!LabyrinthProvider.getInstance().isLegacy()) {
+										wild.getPlayer().sendTitle(wild.getClaimUtil().color(wild.getWildernessTitle()), wild.getClaimUtil().color(wild.getWildernessSubTitle()), 10, 25, 10);
+									} else {
+										wild.getPlayer().sendTitle(wild.getClaimUtil().color(wild.getWildernessTitle()), wild.getClaimUtil().color(wild.getWildernessSubTitle()));
+									}
+								}
+								if (ClansAPI.getDataInstance().isTrue("Clans.land-claiming.send-messages")) {
+									wild.getClaimUtil().sendMessage(p, MessageFormat.format(ClansAPI.getDataInstance().getConfig().getRoot().getString("Clans.land-claiming.wilderness.message"), res.getLastKnown().getClan().getName()));
+								}
+								ClansAPI.getDataInstance().addWildernessInhabitant(p);
+							}
+							ClansAPI.getDataInstance().removeClaimResident(res);
+						}
+
+					}
 
 				} else {
 					ClaimResidentEvent event = ClanVentBus.call(new ClaimResidentEvent(p));
@@ -162,6 +190,12 @@ public final class ClaimManager {
 
 	public Claim getClaim(Chunk chunk) {
 		return getId(chunk.getX(), chunk.getZ(), chunk.getWorld().getName()) != null ? getClaim(getId(chunk.getX(), chunk.getZ(), chunk.getWorld().getName())) : null;
+	}
+
+	public boolean test(Player player, Block block) {
+		BlockBreakEvent blockBreakEvent = new BlockBreakEvent(block, player);
+		Bukkit.getPluginManager().callEvent(blockBreakEvent);
+		return !blockBreakEvent.isCancelled();
 	}
 
 	public FileManager getFile() {

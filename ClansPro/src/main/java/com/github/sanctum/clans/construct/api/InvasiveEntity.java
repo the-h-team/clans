@@ -2,10 +2,8 @@ package com.github.sanctum.clans.construct.api;
 
 import com.github.sanctum.clans.construct.impl.AnimalAssociate;
 import com.github.sanctum.clans.construct.impl.ServerAssociate;
-import com.github.sanctum.labyrinth.LabyrinthProvider;
 import com.github.sanctum.labyrinth.annotation.Experimental;
 import com.github.sanctum.labyrinth.data.EconomyProvision;
-import com.github.sanctum.labyrinth.data.LabyrinthUser;
 import com.github.sanctum.labyrinth.interfacing.Nameable;
 import com.github.sanctum.labyrinth.library.HUID;
 import java.io.Serializable;
@@ -175,13 +173,13 @@ public interface InvasiveEntity extends Nameable, LogoHolder, Comparable<Invasiv
 						}
 
 						@Override
-						public void add(InvasiveEntity entity) {
-
+						public boolean add(InvasiveEntity entity) {
+							return false;
 						}
 
 						@Override
-						public void remove(InvasiveEntity entity) {
-
+						public boolean remove(InvasiveEntity entity) {
+							return false;
 						}
 
 						@Override
@@ -246,13 +244,13 @@ public interface InvasiveEntity extends Nameable, LogoHolder, Comparable<Invasiv
 						}
 
 						@Override
-						public void add(InvasiveEntity entity) {
-
+						public boolean add(InvasiveEntity entity) {
+							return false;
 						}
 
 						@Override
-						public void remove(InvasiveEntity entity) {
-
+						public boolean remove(InvasiveEntity entity) {
+							return false;
 						}
 
 						@Override
@@ -472,13 +470,13 @@ public interface InvasiveEntity extends Nameable, LogoHolder, Comparable<Invasiv
 						}
 
 						@Override
-						public void add(InvasiveEntity entity) {
-
+						public boolean add(InvasiveEntity entity) {
+							return false;
 						}
 
 						@Override
-						public void remove(InvasiveEntity entity) {
-
+						public boolean remove(InvasiveEntity entity) {
+							return false;
 						}
 
 						@Override
@@ -543,13 +541,13 @@ public interface InvasiveEntity extends Nameable, LogoHolder, Comparable<Invasiv
 						}
 
 						@Override
-						public void add(InvasiveEntity entity) {
-
+						public boolean add(InvasiveEntity entity) {
+							return false;
 						}
 
 						@Override
-						public void remove(InvasiveEntity entity) {
-
+						public boolean remove(InvasiveEntity entity) {
+							return false;
 						}
 
 						@Override
@@ -751,7 +749,29 @@ public interface InvasiveEntity extends Nameable, LogoHolder, Comparable<Invasiv
 	 */
 	@NotNull Relation getRelation();
 
+	/**
+	 * Get the teleportation for this entity.
+	 *
+	 * @return The teleportation object or null
+	 */
 	@Nullable Teleport getTeleport();
+
+	/**
+	 * Create a brand-new teleportation for this entity.
+	 *
+	 * @param location The location to teleport [player, location]
+	 * @return A new teleportation or null
+	 */
+	default @Nullable Teleport newTeleport(Object location) {
+		if (getTeleport() != null) return null;
+		if (isAssociate()) {
+			return getAsAssociate().getClan().newTeleport(this, location);
+		}
+		if (isClan()) {
+			return getAsClan().newTeleport(this, location);
+		}
+		return null;
+	}
 
 	/**
 	 * @return The max amount of chunks this entity can own.
@@ -930,7 +950,12 @@ public interface InvasiveEntity extends Nameable, LogoHolder, Comparable<Invasiv
 		 * @return true if this tag's id represents a player.
 		 */
 		default boolean isPlayer() {
-			return LabyrinthProvider.getOfflinePlayers().stream().anyMatch(l -> l.getId().toString().equals(getId()));
+			try {
+				UUID.fromString(getId());
+			} catch (Exception e) {
+				return false;
+			}
+			return getPlayer() != null && getPlayer().getName() != null;
 		}
 
 		/**
@@ -960,7 +985,7 @@ public interface InvasiveEntity extends Nameable, LogoHolder, Comparable<Invasiv
 		 * @return the player this id belongs to or null.
 		 */
 		default OfflinePlayer getPlayer() {
-			return LabyrinthProvider.getOfflinePlayers().stream().filter(l -> l.getId().toString().equals(getId())).findFirst().map(LabyrinthUser::toBukkit).orElse(null);
+			return Bukkit.getOfflinePlayer(UUID.fromString(getId()));
 		}
 
 		/**

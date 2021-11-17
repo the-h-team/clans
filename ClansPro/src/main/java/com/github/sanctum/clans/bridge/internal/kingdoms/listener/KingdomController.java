@@ -16,6 +16,7 @@ import com.github.sanctum.clans.construct.extra.PrivateContainer;
 import com.github.sanctum.clans.event.associate.AssociateQuitEvent;
 import com.github.sanctum.clans.event.claim.ClaimInteractEvent;
 import com.github.sanctum.clans.event.claim.ClaimResidentEvent;
+import com.github.sanctum.clans.event.clan.ClanOverpowerClaimEvent;
 import com.github.sanctum.clans.event.player.PlayerKillPlayerEvent;
 import com.github.sanctum.labyrinth.event.custom.DefaultEvent;
 import com.github.sanctum.labyrinth.event.custom.Subscribe;
@@ -73,6 +74,32 @@ public class KingdomController implements Listener {
 		}
 	}
 
+	@Subscribe
+	public void onClaim(ClanOverpowerClaimEvent e) {
+		Clan c = e.getClan();
+		Kingdom test = Kingdom.getKingdom(c);
+		if (test != null) {
+			Quest over = test.getQuest("Chunk 007");
+			if (over != null) {
+				over.progress(1.0);
+				c.getMembers().forEach(ass -> {
+					Player online = ass.getUser().toBukkit().getPlayer();
+					if (online != null) {
+						addon.getMailer().accept(online).action(KingdomCommand.getProgressBar(((Number) over.getProgression()).intValue(), ((Number) over.getRequirement()).intValue(), 73)).deploy();
+					}
+				});
+				if (over.isComplete()) {
+					c.getMembers().forEach(ass -> {
+						Player n = ass.getUser().toBukkit().getPlayer();
+						if (n != null) {
+							over.deactivate(n);
+						}
+					});
+				}
+			}
+		}
+	}
+
 	@EventHandler
 	public void onEnterCity(EntityDamageEvent e) {
 		if (e.getEntity() instanceof Player) {
@@ -114,9 +141,8 @@ public class KingdomController implements Listener {
 			if (test != null) {
 				Quest upside = test.getQuest("Down Upside");
 				if (upside != null) {
-					Location nearest = e.getBlock().getWorld().locateNearestStructure(e.getBlock().getLocation(), StructureType.END_CITY, 30, false);
+					Location nearest = e.getBlock().getWorld().locateNearestStructure(e.getBlock().getLocation(), StructureType.END_CITY, 1, false);
 					if (nearest == null) return;
-					if (nearest.distanceSquared(e.getPlayer().getLocation()) > 5) return;
 					if (upside.activated(e.getPlayer())) {
 						upside.progress(1.0);
 						a.getClan().getMembers().forEach(ass -> {

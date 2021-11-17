@@ -1,19 +1,22 @@
 package com.github.sanctum.clans.construct.api;
 
 import com.github.sanctum.clans.construct.extra.SpecialCarrierAdapter;
+import com.github.sanctum.clans.construct.impl.DefaultClan;
 import com.github.sanctum.labyrinth.annotation.Note;
+import com.github.sanctum.labyrinth.data.Node;
+import com.github.sanctum.labyrinth.interfacing.OrdinalProcedure;
 import com.github.sanctum.labyrinth.library.Deployable;
 import com.github.sanctum.labyrinth.library.HUID;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import org.bukkit.Chunk;
 import org.bukkit.Location;
 import org.bukkit.attribute.Attributable;
-import org.bukkit.block.Block;
-import org.bukkit.block.BlockFace;
 import org.bukkit.entity.ArmorStand;
+import org.bukkit.entity.Entity;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -29,19 +32,27 @@ import org.jetbrains.annotations.NotNull;
 public interface LogoHolder extends Savable {
 
 	static Carrier getCarrier(Location location) {
-		for (Clan c : ClansAPI.getInstance().getClanManager().getClans()) {
-			for (Carrier l : c.getCarriers()) {
-				for (Carrier.Line line : l.getLines()) {
-					for (int i = 1; i < 2; i++) {
-						Block up = location.getBlock().getRelative(BlockFace.UP, i);
-						if (line.getStand().getLocation().distanceSquared(up.getLocation().add(0.5, 0, 0.5)) <= 1) {
-							return l;
-						}
-					}
+		if (DefaultClan.stands.get(location.getChunk().getX() + ";" + location.getChunk().getZ()) != null) {
+			for (Carrier l : DefaultClan.stands.get(location.getChunk().getX() + ";" + location.getChunk().getZ())) {
+				if (!getStands(l.getTop()).isEmpty()) {
+					return l;
 				}
 			}
 		}
 		return InoperableSpecialMemory.ADAPTERS.stream().filter(adapter -> adapter.accept(location) != null).map(adapter -> adapter.accept(location)).findFirst().orElse(null);
+	}
+
+	static Set<ArmorStand> getStands(Location location) {
+		Set<ArmorStand> stands = new HashSet<>();
+		stands.addAll(getStands(location, 0.001, 22, 0.001));
+		stands.addAll(getStands(location, 0.001, -22, 0.001));
+		return stands;
+	}
+
+	static Set<ArmorStand> getStands(Location location, double x, double y, double z) {
+		Set<ArmorStand> stands = new HashSet<>();
+		location.getWorld().getNearbyEntities(location, x, y, z).stream().filter(entity -> entity instanceof ArmorStand).map(entity -> (ArmorStand) entity).forEach(stands::add);
+		return stands;
 	}
 
 	static Deployable<Void> newAdapter(@NotNull("Carrier extension's cannot be null!") SpecialCarrierAdapter adapter) {
@@ -129,6 +140,24 @@ public interface LogoHolder extends Savable {
 			return getLines().toArray(new Line[0])[getLines().size()].getStand().getLocation();
 		}
 
+		default void removeAndSave() {
+			if (getHolder().isPersistent()) {
+				Node holo = ((Clan) getHolder()).getNode("hologram");
+				holo.set(null);
+				Node world = holo.getNode(getChunk().getWorld().getName());
+				Node c = world.getNode(getChunk().getX() + ";" + getChunk().getZ());
+				Node stat = c.getNode(OrdinalProcedure.select(this, 0).cast(() -> HUID.class).toString());
+				for (LogoHolder.Carrier.Line l : getLines()) {
+					Node line = stat.getNode(String.valueOf(l.getIndex()));
+					line.getNode("location").set(l.getStand().getLocation());
+					line.getNode("content").set(l.getStand().getCustomName());
+					l.destroy();
+				}
+				getStands(getTop()).forEach(Entity::remove);
+				holo.save();
+			}
+		}
+
 		default void remove() {
 			getLines().forEach(l -> l.getStand().remove());
 		}
@@ -147,6 +176,8 @@ public interface LogoHolder extends Savable {
 			}
 
 			HUID getId();
+
+			int getIndex();
 
 			ArmorStand getStand();
 

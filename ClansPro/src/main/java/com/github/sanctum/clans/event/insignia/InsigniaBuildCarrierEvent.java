@@ -3,6 +3,9 @@ package com.github.sanctum.clans.event.insignia;
 import com.github.sanctum.clans.construct.api.LogoHolder;
 import com.github.sanctum.clans.event.ClanEvent;
 
+/**
+ * Called when a clan insignia is attempting to be built.
+ */
 public class InsigniaBuildCarrierEvent extends ClanEvent {
 
 	private final LogoHolder.Carrier carrier;

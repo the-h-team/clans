@@ -129,12 +129,14 @@ public class Kingdom extends Progressive implements Iterable<Clan> {
 		barter.setReward(Reward.ITEM_ARRAY, new ItemStack[]{new ItemStack(Material.MAP), Items.edit().setType(Material.ENCHANTED_BOOK).addEnchantment(Enchantment.MENDING, 1).build()});
 		Quest diamond = Quest.newQuest("Diamond Back", "Mine 250 diamonds", 0, 250);
 		diamond.setReward(Reward.MONEY, 2569.69);
-		Quest lumberjack = Quest.newQuest("Lumberjack",  "Obtain 2 stacks of wood", 0, 128);
+		Quest lumberjack = Quest.newQuest("Lumberjack", "Obtain 2 stacks of wood", 0, 128);
 		lumberjack.setReward(Reward.ITEM, Items.edit().setType(Material.ENCHANTED_BOOK).addEnchantment(Enchantment.DIG_SPEED, 3).build());
 		Quest dark = Quest.newQuest("Dark Soldier", "Kill 25 wither skeleton", 0, 25);
 		dark.setReward(Reward.ITEM, Items.edit().setType(Material.ENCHANTED_BOOK).addEnchantment(Enchantment.LOOT_BONUS_BLOCKS, 3).build());
 		Quest city = Quest.newQuest("Down Upside", "Locate and traverse an end city", 0, 1);
 		city.setReward(Reward.ITEM_ARRAY, new ItemStack[]{new ItemStack(Material.MAP), Items.edit().setType(Material.ENCHANTED_BOOK).addEnchantment(Enchantment.MENDING, 1).build()});
+		Quest chunk = Quest.newQuest("Chunk 007", "Locate and conquer 7 enemy claims.", 0, 7);
+		chunk.setReward(Reward.ITEM_ARRAY, new ItemStack[]{new ItemStack(Material.DIAMOND, 8), new ItemStack(Material.IRON_INGOT, 128), new ItemStack(Material.EXPERIENCE_BOTTLE, Math.max(1, new Random().nextInt(14)))});
 		return new Quest[]{walls, gate, kills, spawner, farmer, beef, sky, color, miner, breaker, hotfeet, souless, dirt, barter, diamond, lumberjack, dark, city};
 	}
 

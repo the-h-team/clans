@@ -8,6 +8,9 @@ import java.util.HashSet;
 import java.util.Set;
 import org.jetbrains.annotations.NotNull;
 
+/**
+ * Called any time the clans are re-loaded.
+ */
 public class ClansLoadingProcedureEvent extends ClanEvent {
 
 	private final Set<Clan> set = new HashSet<>();
@@ -25,7 +28,6 @@ public class ClansLoadingProcedureEvent extends ClanEvent {
 	public Set<Clan> getClans() {
 		return Collections.unmodifiableSet(set);
 	}
-
 
 
 }

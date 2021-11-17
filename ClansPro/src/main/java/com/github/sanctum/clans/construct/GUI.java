@@ -7,7 +7,6 @@ import com.github.sanctum.clans.construct.api.Claim;
 import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClansAPI;
 import com.github.sanctum.clans.construct.api.Clearance;
-import com.github.sanctum.clans.construct.api.InvasiveEntity;
 import com.github.sanctum.clans.construct.api.LogoHolder;
 import com.github.sanctum.clans.construct.api.Teleport;
 import com.github.sanctum.clans.construct.api.Vote;
@@ -43,7 +42,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -326,93 +324,8 @@ public enum GUI {
 									} else {
 										it = new ItemStack(ClansAPI.getDataInstance().getMenuItem("clan"));
 									}
-									int a1 = 0;
-									int a2 = 0;
-									int a3 = 0;
-									StringBuilder members = new StringBuilder("&b&o");
-									for (Clan.Associate associate : c.getMembers()) {
-										a1++;
-										if (a1 == 1) {
-											members.append("&b&o").append(associate.getName());
-										} else {
-											members.append("&f, &b&o").append(associate.getName());
-										}
-									}
-
-									StringBuilder allies = new StringBuilder("&a&o");
-									for (InvasiveEntity id : c.getRelation().getAlliance()) {
-										a2++;
-										if (a2 == 1) {
-											allies.append("&b&o").append(id.getName());
-										} else {
-											allies.append("&f, &b&o").append(id.getName());
-										}
-									}
-									StringBuilder enemies = new StringBuilder("&a&o");
-									for (InvasiveEntity id : c.getRelation().getRivalry()) {
-										a3++;
-										if (a3 == 1) {
-											enemies.append("&b&o").append(id.getName());
-										} else {
-											enemies.append("&f, &b&o").append(id.getName());
-										}
-									}
-									String memlist = members.toString();
-									if (memlist.length() > 44) {
-										memlist = memlist.substring(0, 44) + "...";
-									}
-									String allylist = allies.toString();
-									if (allylist.length() > 44) {
-										allylist = allylist.substring(0, 44) + "...";
-									}
-									String enemylist = enemies.toString();
-									if (enemylist.length() > 44) {
-										enemylist = enemylist.substring(0, 44) + "...";
-									}
-
-									String color = c.getPalette().toString().replace("&k", "");
-
-									double power = c.getPower();
-
-									String pvp;
-
-									if (c.isPeaceful()) {
-										pvp = "&a&lPEACE";
-									} else {
-										pvp = "&4&lWAR";
-									}
-
-									int ownedLand = c.getClaims().length;
-
-									StringBuilder idShort = new StringBuilder();
-									for (int j = 0; j < 4; j++) {
-										idShort.append(c.getId().toString().charAt(j));
-									}
-									String id = idShort.toString();
-
-									boolean baseSet = c.getBase() != null;
-
-									String desc = c.getDescription();
-
-									if (c.getRelation().getAlliance().isEmpty()) {
-										allylist = "&cEmpty";
-									}
-
-									if (c.getRelation().getRivalry().isEmpty()) {
-										enemylist = "&cEmpty";
-									}
-
 									ItemMeta meta = it.getItemMeta();
-
-									String[] par = new Paragraph(desc).setRegex(Paragraph.COMMA_AND_PERIOD).get();
-
-									List<String> result = new LinkedList<>();
-									for (String a : ClansAPI.getDataInstance().getGUIFormat()) {
-										result.add(MessageFormat.format(a, color.replace("&", "&f»" + color).replace("#", "&f»" + color + " "), (c.getPalette().isGradient() ? c.getPalette().toGradient().context(par[0]).join() : c.getPalette() + par[0]), (c.getPalette().isGradient() ? c.getPalette().toGradient().context(Clan.ACTION.format(c.getPower())).join() : c.getPalette() + Clan.ACTION.format(c.getPower())), baseSet, c.getPalette().toString() + ownedLand, pvp, memlist, allylist, enemylist, color));
-									}
-									meta.setLore(color(result.toArray(new String[0])));
-
-									String title = MessageFormat.format(ClansAPI.getDataInstance().getMenuCategory("clan"), color, c.getName(), id);
+									String title = MessageFormat.format(ClansAPI.getDataInstance().getMenuCategory("clan"), c.getPalette().toString(), c.getName(), c.getId().toString().substring(0, 4));
 
 									meta.setDisplayName(StringUtils.use(title).translate());
 
@@ -490,87 +403,14 @@ public enum GUI {
 									} else {
 										it = new ItemStack(ClansAPI.getDataInstance().getMenuItem("clan"));
 									}
-									int a1 = 0;
-									int a2 = 0;
-									int a3 = 0;
-									StringBuilder members = new StringBuilder("&b&o");
-									for (Clan.Associate associate : c.getMembers()) {
-										a1++;
-										if (a1 == 1) {
-											members.append("&b&o").append(associate.getName());
-										} else {
-											members.append("&f, &b&o").append(associate.getName());
-										}
-									}
+									ItemMeta meta = it.getItemMeta();
+									String title = MessageFormat.format(ClansAPI.getDataInstance().getMenuCategory("clan"), c.getPalette().toString(), c.getName(), c.getId().toString().substring(0, 4));
 
-									StringBuilder allies = new StringBuilder("&a&o");
-									for (InvasiveEntity id : c.getRelation().getAlliance()) {
-										a2++;
-										if (a2 == 1) {
-											allies.append("&b&o").append(id.getName());
-										} else {
-											allies.append("&f, &b&o").append(id.getName());
-										}
-									}
-									StringBuilder enemies = new StringBuilder("&a&o");
-									for (InvasiveEntity id : c.getRelation().getRivalry()) {
-										a3++;
-										if (a3 == 1) {
-											enemies.append("&b&o").append(id.getName());
-										} else {
-											enemies.append("&f, &b&o").append(id.getName());
-										}
-									}
-									String memlist = members.toString();
-									if (memlist.length() > 44) {
-										memlist = memlist.substring(0, 44) + "...";
-									}
-									String allylist = allies.toString();
-									if (allylist.length() > 44) {
-										allylist = allylist.substring(0, 44) + "...";
-									}
-									String enemylist = enemies.toString();
-									if (enemylist.length() > 44) {
-										enemylist = enemylist.substring(0, 44) + "...";
-									}
+									meta.setDisplayName(StringUtils.use(title).translate());
 
-									String color = c.getPalette().toString().replace("&k", "");
-
-									String pvp;
-
-									if (c.isPeaceful()) {
-										pvp = "&a&lPEACE";
-									} else {
-										pvp = "&4&lWAR";
-									}
-
-									int ownedLand = c.getClaims().length;
-
-									StringBuilder idShort = new StringBuilder();
-									for (int j = 0; j < 4; j++) {
-										idShort.append(c.getId().toString().charAt(j));
-									}
-									String id = idShort.toString();
-
-									boolean baseSet = c.getBase() != null;
-
-									String desc = c.getDescription();
-
-									if (c.getRelation().getAlliance().isEmpty()) {
-										allylist = "&cEmpty";
-									}
-
-									if (c.getRelation().getRivalry().isEmpty()) {
-										enemylist = "&cEmpty";
-									}
-
-									String[] par = new Paragraph(desc).setRegex(Paragraph.COMMA_AND_PERIOD).get();
-
-									List<String> result = new LinkedList<>();
-									for (String a : ClansAPI.getDataInstance().getGUIFormat()) {
-										result.add(MessageFormat.format(a, color.replace("&", "&f»" + color).replace("#", "&f»" + color + " "), (c.getPalette().isGradient() ? c.getPalette().toGradient().context(par[0]).join() : c.getPalette().toString() + par[0]), (c.getPalette().isGradient() ? c.getPalette().toGradient().context(Clan.ACTION.format(c.getPower())).join() : c.getPalette().toString() + Clan.ACTION.format(c.getPower())), baseSet, c.getPalette().toString() + ownedLand, pvp, memlist, allylist, enemylist, color));
-									}
-									return b.setItem(it).setLore(result).setTitle(MessageFormat.format(ClansAPI.getDataInstance().getMenuCategory("clan"), color, c.getName(), id)).build();
+									it.setItemMeta(meta);
+									b.setItem(it);
+									return b.build();
 								}).setClick(click -> {
 									click.setCancelled(true);
 									click.setHotbarAllowed(false);
@@ -643,71 +483,25 @@ public enum GUI {
 									} else {
 										it = new ItemStack(ClansAPI.getDataInstance().getMenuItem("clan"));
 									}
-									int a1 = 0;
-									int a2 = 0;
-									int a3 = 0;
-									StringBuilder members = new StringBuilder("&b&o");
-									for (Clan.Associate associate : c.getMembers()) {
-										a1++;
-										if (a1 == 1) {
-											members.append("&b&o").append(associate.getName());
-										} else {
-											members.append("&f, &b&o").append(associate.getName());
-										}
-									}
-
-									StringBuilder allies = new StringBuilder("&a&o");
-									for (InvasiveEntity id : c.getRelation().getAlliance()) {
-										a2++;
-										if (a2 == 1) {
-											allies.append("&b&o").append(id.getName());
-										} else {
-											allies.append("&f, &b&o").append(id.getName());
-										}
-									}
-									StringBuilder enemies = new StringBuilder("&a&o");
-									for (InvasiveEntity id : c.getRelation().getRivalry()) {
-										a3++;
-										if (a3 == 1) {
-											enemies.append("&b&o").append(id.getName());
-										} else {
-											enemies.append("&f, &b&o").append(id.getName());
-										}
-									}
-									String memlist = members.toString();
+									/*
+									String memlist = "";
 									if (memlist.length() > 44) {
 										memlist = memlist.substring(0, 44) + "...";
 									}
-									String allylist = allies.toString();
+									String allylist = "";
 									if (allylist.length() > 44) {
 										allylist = allylist.substring(0, 44) + "...";
 									}
-									String enemylist = enemies.toString();
+									String enemylist = "";
 									if (enemylist.length() > 44) {
 										enemylist = enemylist.substring(0, 44) + "...";
 									}
-
-									String color = c.getPalette().toString().replace("&k", "");
-
 									String pvp;
-
 									if (c.isPeaceful()) {
 										pvp = "&a&lPEACE";
 									} else {
 										pvp = "&4&lWAR";
 									}
-
-									int ownedLand = c.getClaims().length;
-
-									StringBuilder idShort = new StringBuilder();
-									for (int j = 0; j < 4; j++) {
-										idShort.append(c.getId().toString().charAt(j));
-									}
-									String id = idShort.toString();
-
-									boolean baseSet = c.getBase() != null;
-
-									String desc = c.getDescription();
 
 									if (c.getRelation().getAlliance().isEmpty()) {
 										allylist = "&cEmpty";
@@ -717,17 +511,19 @@ public enum GUI {
 										enemylist = "&cEmpty";
 									}
 
-									ItemMeta meta = it.getItemMeta();
 
-									String[] par = new Paragraph(desc).setRegex(Paragraph.COMMA_AND_PERIOD).get();
+
+									String[] par = new Paragraph(c.getDescription()).setRegex(Paragraph.COMMA_AND_PERIOD).get();
 
 									List<String> result = new LinkedList<>();
 									for (String a : ClansAPI.getDataInstance().getGUIFormat()) {
-										result.add(MessageFormat.format(a, color.replace("&", "&f»" + color).replace("#", "&f»" + color + " "), (c.getPalette().isGradient() ? c.getPalette().toGradient().context(par[0]).join() : c.getPalette().toString() + par[0]), (c.getPalette().isGradient() ? c.getPalette().toGradient().context(Clan.ACTION.format(c.getPower())).join() : c.getPalette().toString() + Clan.ACTION.format(c.getPower())), baseSet, c.getPalette().toString() + ownedLand, pvp, memlist, allylist, enemylist, color));
+										result.add(MessageFormat.format(a, c.getPalette().toString().replace("&", "&f»" + c.getPalette().toString()).replace("#", "&f»" + c.getPalette().toString() + " "), (c.getPalette().isGradient() ? c.getPalette().toGradient().context(par[0]).join() : c.getPalette() + par[0]), (c.getPalette().isGradient() ? c.getPalette().toGradient().context(Clan.ACTION.format(c.getPower())).join() : c.getPalette() + Clan.ACTION.format(c.getPower())), c.getBase() != null, c.getPalette().toString() + c.getClaims().length, pvp, memlist, allylist, enemylist, c.getPalette().toString()));
 									}
 									meta.setLore(color(result.toArray(new String[0])));
 
-									String title = MessageFormat.format(ClansAPI.getDataInstance().getMenuCategory("clan"), color, c.getName(), id);
+									 */
+									ItemMeta meta = it.getItemMeta();
+									String title = MessageFormat.format(ClansAPI.getDataInstance().getMenuCategory("clan"), c.getPalette().toString(), c.getName(), c.getId().toString().substring(0, 4));
 
 									meta.setDisplayName(StringUtils.use(title).translate());
 

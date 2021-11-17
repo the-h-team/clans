@@ -7,6 +7,7 @@ import com.github.sanctum.clans.construct.api.Claim;
 import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClanCooldown;
 import com.github.sanctum.clans.construct.api.ClansAPI;
+import com.github.sanctum.clans.construct.api.InvasiveEntity;
 import com.github.sanctum.clans.construct.api.LogoHolder;
 import com.github.sanctum.clans.construct.api.Teleport;
 import com.github.sanctum.clans.construct.api.War;
@@ -47,7 +48,6 @@ import com.github.sanctum.labyrinth.task.Schedule;
 import com.google.common.base.Strings;
 import java.math.BigDecimal;
 import java.text.MessageFormat;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -59,20 +59,21 @@ import net.md_5.bungee.api.chat.BaseComponent;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
-import org.bukkit.block.Block;
 import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.Tameable;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
-import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerAnimationEvent;
 import org.bukkit.event.player.PlayerBucketEmptyEvent;
 import org.bukkit.event.player.PlayerBucketFillEvent;
+import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerPortalEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.Vector;
 
 public class PlayerEventListener implements Listener {
@@ -173,29 +174,26 @@ public class PlayerEventListener implements Listener {
 	public void onViewLogo(TimerEvent e) {
 		Player p = e.getPlayer();
 		if (!e.isAsynchronous()) {
-			Entity test = getNearestEntityInSight(p, 5);
-			if (test instanceof ArmorStand) {
+			ArmorStand test = Clan.ACTION.getArmorStandInSight(p, 5);
+			if (test != null) {
 				LogoHolder.Carrier t = LogoHolder.getCarrier(test.getLocation());
 				if (t != null) {
 					Location location = new Location(t.getTop().getWorld(), t.getTop().getX(), t.getTop().getY(), t.getTop().getZ(), t.getTop().getYaw(), t.getTop().getPitch()).add(0, 0.5, 0);
-					PlayerLookAtCarrierEvent event = ClanVentBus.call(new PlayerLookAtCarrierEvent(p, t, "(" + t.getId() + ") " + OrdinalProcedure.select(t, 2).cast(() -> Clan.class).getName(), 45));
+					PlayerLookAtCarrierEvent event = ClanVentBus.call(new PlayerLookAtCarrierEvent(p, t, "(" + t.getId() + ") " + OrdinalProcedure.select(t, 2).cast(() -> Clan.class).getName(), 2));
 					if (!event.isCancelled()) {
-						if (STAND_MAP.get(location) == null) {
-							ArmorStand stand = Entities.ARMOR_STAND.spawn(location, armorStand -> {
-								armorStand.setVisible(false);
-								armorStand.setMarker(true);
-								armorStand.setSmall(true);
-								armorStand.setCustomName(event.getTitle());
-								armorStand.setCustomNameVisible(true);
-							});
-							STAND_MAP.put(location, stand);
-							Schedule.sync(() -> {
-								if (stand.isValid()) {
-									stand.remove();
-									STAND_MAP.remove(location);
-								}
-							}).wait(event.getDespawn());
-						}
+						ArmorStand stand = Entities.ARMOR_STAND.spawn(location, armorStand -> {
+							armorStand.setVisible(false);
+							armorStand.setMarker(true);
+							armorStand.setSmall(true);
+							armorStand.setCustomName(event.getTitle());
+							armorStand.setCustomNameVisible(true);
+						});
+						STAND_MAP.put(location, stand);
+						Schedule.sync(() -> {
+							if (stand.isValid()) {
+								stand.remove();
+							}
+						}).wait(event.getDespawn());
 					}
 				}
 			}
@@ -215,40 +213,6 @@ public class PlayerEventListener implements Listener {
 					double amount = eco.balance(e.getClaimer()).orElse(0.0);
 					Clan.ACTION.sendMessage(e.getClaimer(), Clan.ACTION.notEnough(cost - amount));
 					e.setCancelled(true);
-				}
-			}
-		}
-	}
-
-
-	Entity getNearestEntityInSight(Player player, int range) {
-		List<Entity> entities = player.getNearbyEntities(range, range, range);
-		try {
-			List<Block> sightBlock = player.getLineOfSight(null, range);
-			List<Location> sight = new ArrayList<>();
-			int i;
-			for (i = 0; i < sightBlock.size(); i++)
-				sight.add(sightBlock.get(i).getLocation());
-			for (i = 0; i < sight.size(); i++) {
-				for (Entity entity : entities) {
-					if (entity.getLocation().distance(sight.get(i)) <= 0.8) return entity;
-				}
-			}
-		} catch (IllegalStateException ignored) {}
-		return null;
-	}
-
-	@Subscribe
-	public void onInteract(DefaultEvent.Interact event) {
-		if (event.getAction() == Action.RIGHT_CLICK_BLOCK) {
-			if (ClansAPI.getInstance()
-					.getClaimManager().getClaim(event.getBlock().get().getLocation()) != null) {
-				if (event.getItem() != null) {
-					if (StringUtils.use(event.getItem().getType().name()).containsIgnoreCase("bucket")) return;
-				}
-				ClaimInteractEvent e = new Vent.Call<>(Vent.Runtime.Synchronous, new ClaimInteractEvent(event.getPlayer(), event.getBlock().get().getLocation(), ClaimInteractEvent.Type.USE)).run();
-				if (e.isCancelled()) {
-					event.setCancelled(e.isCancelled());
 				}
 			}
 		}
@@ -419,6 +383,67 @@ public class PlayerEventListener implements Listener {
 				e.setCancelled(true);
 			}
 		}
+	}
+
+	@EventHandler
+	public void onInteract(PlayerInteractEntityEvent e) {
+		Entity entity = e.getRightClicked();
+		Player p = e.getPlayer();
+		ClansAPI.getInstance().getAssociate(p).ifPresent(associate -> {
+			Clan c = associate.getClan();
+			Clan.Associate test = ClansAPI.getInstance().getAssociate(entity.getUniqueId()).orElse(null);
+			if (test != null) {
+				if (test.getClan().equals(associate.getClan())) {
+					// TODO: check for item on removal.
+					ItemStack item = p.getInventory().getItemInMainHand();
+					if (item.getType() == Material.STICK) {
+						if (item.hasItemMeta() && item.getItemMeta().hasDisplayName()) {
+							if (StringUtils.use(StringUtils.use("&r[&bRemover stick&r]").translate()).containsIgnoreCase(item.getItemMeta().getDisplayName())) {
+								test.remove();
+								item.setAmount(Math.max(0, item.getAmount() - 1));
+								if (item.getAmount() == 0) {
+									p.getInventory().remove(item);
+								}
+								c.broadcast(MessageFormat.format(ClansAPI.getDataInstance().getMessageResponse("member-leave"), test.getName()));
+							}
+						}
+					}
+				}
+			} else {
+				if (!(entity instanceof Tameable)) return;
+				if (!((Tameable) entity).isTamed()) return;
+				if (((Tameable) entity).getOwner() == null) return;
+				if (((Tameable) entity).getOwner().getName() == null) return;
+				if (!((Tameable) entity).getOwner().getName().equals(associate.getName())) return;
+				ItemStack item = p.getInventory().getItemInMainHand();
+				if (item.getType() == Material.BLAZE_ROD) {
+					if (item.hasItemMeta() && item.getItemMeta().hasDisplayName()) {
+						if (StringUtils.use(StringUtils.use("&r[&6Tamer stick&r]").translate()).containsIgnoreCase(item.getItemMeta().getDisplayName())) {
+							item.setAmount(Math.max(0, item.getAmount() - 1));
+							if (item.getAmount() == 0) {
+								p.getInventory().remove(item);
+							}
+							// do entity stuff
+							int count = 0;
+							for (Clan.Associate a : c.getMembers()) {
+								if (StringUtils.use(a.getName()).containsIgnoreCase(((Tameable) entity).getOwner().getName() + "'s " + entity.getName())) {
+									count++;
+								}
+							}
+							InvasiveEntity conversion = InvasiveEntity.wrapNonAssociated(entity, count == 0 ? ((Tameable) entity).getOwner().getName() + "'s " + entity.getName() : ((Tameable) entity).getOwner().getName() + "'s " + entity.getName() + " x" + count);
+
+							Clan.Associate newAssociate = c.newAssociate(conversion);
+
+							if (newAssociate != null) {
+								c.add(newAssociate);
+								// TODO: make ClanBroadcastMessageEvent
+								c.broadcast(MessageFormat.format(ClansAPI.getDataInstance().getMessageResponse("member-join"), newAssociate.getName()));
+							}
+						}
+					}
+				}
+			}
+		});
 	}
 
 	@Subscribe

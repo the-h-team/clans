@@ -4,6 +4,9 @@ import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClanCooldown;
 import com.github.sanctum.clans.event.ClanEvent;
 
+/**
+ * Called when a clan only cooldown expires.
+ */
 public class ClanCooldownCompleteEvent extends ClanEvent {
 
 	private final Clan clan;

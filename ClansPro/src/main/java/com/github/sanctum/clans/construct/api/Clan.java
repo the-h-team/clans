@@ -67,6 +67,13 @@ public interface Clan extends ClanBank, ConfigurationSerializable, EntityHolder,
 	@NotNull String getName();
 
 	/**
+	 * Get the display name of the clan.
+	 *
+	 * @return Get the clan objects custom display name
+	 */
+	@Nullable String getNickname();
+
+	/**
 	 * Get the clans color palette
 	 *
 	 * @return The clans color palette
@@ -247,11 +254,18 @@ public interface Clan extends ClanBank, ConfigurationSerializable, EntityHolder,
 	void removeValue(String key);
 
 	/**
-	 * Change the clans name
+	 * Change the clans name (No spaces or special chars)
 	 *
 	 * @param newTag String to change name to.
 	 */
 	void setName(String newTag);
+
+	/**
+	 * Change the clans custom display name (Spaces & special chars)
+	 *
+	 * @param newTag String to change name to.
+	 */
+	void setNickname(String newTag);
 
 	/**
 	 * Change the clans description

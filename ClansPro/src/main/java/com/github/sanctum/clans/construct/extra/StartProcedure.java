@@ -50,6 +50,7 @@ import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
 import org.bukkit.permissions.Permission;
 
+// You're probably reading this and thinking "what is this..." its the power of ordinals baby.
 public final class StartProcedure {
 
 	final ClansJavaPlugin instance;

@@ -48,6 +48,8 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.World;
+import org.bukkit.block.Block;
+import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
@@ -516,6 +518,24 @@ public class ClanAction extends StringLibrary {
 	}
 
 	 */
+
+	public ArmorStand getArmorStandInSight(Player player, int range) {
+		List<ArmorStand> entities = player.getNearbyEntities(range, range, range).stream().filter(entity -> entity instanceof ArmorStand).map(entity -> (ArmorStand) entity).collect(Collectors.toList());
+		try {
+			List<Block> sightBlock = player.getLineOfSight(null, range);
+			List<Location> sight = new ArrayList<>();
+			int i;
+			for (i = 0; i < sightBlock.size(); i++)
+				sight.add(sightBlock.get(i).getLocation());
+			for (i = 0; i < sight.size(); i++) {
+				for (ArmorStand entity : entities) {
+					if (entity.getLocation().distance(sight.get(i)) <= 0.8) return entity;
+				}
+			}
+		} catch (IllegalStateException ignored) {
+		}
+		return null;
+	}
 
 	public List<Clan> getMostPowerful() {
 		List<Clan> c = ClansAPI.getInstance().getClanManager().getClans().list();

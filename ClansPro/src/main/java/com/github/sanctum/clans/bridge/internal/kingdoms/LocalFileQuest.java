@@ -276,7 +276,7 @@ public final class LocalFileQuest implements Quest, Message.Factory {
 
 						@Override
 						public BaseComponent[] getMessage() {
-							return message().append(text("[").color(Color.BLUE)).append(text("Item's").color(Color.GREEN).bind(hover(get()[0]))).append(text("]").color(Color.BLUE)).append(text(" ")).append(text(get()[0].getType() + " + " + (get().length - 2) + " more items has been received.").color(Color.ORANGE)).build();
+							return message().append(text("[").color(Color.BLUE)).append(text("Item's").color(Color.GREEN).bind(hover(get()[0]))).append(text("]").color(Color.BLUE)).append(text(" ")).append(text(get()[0].getType() + " + " + (get().length - 1) + " more items has been received.").color(Color.ORANGE)).build();
 						}
 
 						@Override

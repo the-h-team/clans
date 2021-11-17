@@ -222,13 +222,13 @@ public abstract class ClaimEvent extends AssociateEvent {
 						}
 
 						@Override
-						public void add(InvasiveEntity entity) {
-
+						public boolean add(InvasiveEntity entity) {
+							return false;
 						}
 
 						@Override
-						public void remove(InvasiveEntity entity) {
-
+						public boolean remove(InvasiveEntity entity) {
+							return false;
 						}
 
 						@Override
@@ -297,13 +297,13 @@ public abstract class ClaimEvent extends AssociateEvent {
 						}
 
 						@Override
-						public void add(InvasiveEntity entity) {
-
+						public boolean add(InvasiveEntity entity) {
+							return false;
 						}
 
 						@Override
-						public void remove(InvasiveEntity entity) {
-
+						public boolean remove(InvasiveEntity entity) {
+							return false;
 						}
 
 						@Override

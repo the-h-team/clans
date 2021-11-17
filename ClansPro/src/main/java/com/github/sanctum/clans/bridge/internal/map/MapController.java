@@ -2,6 +2,10 @@ package com.github.sanctum.clans.bridge.internal.map;
 
 import com.github.sanctum.clans.bridge.ClanAddon;
 import com.github.sanctum.clans.bridge.ClanAddonQuery;
+import com.github.sanctum.clans.bridge.ClanVentBus;
+import com.github.sanctum.clans.bridge.internal.map.event.AsyncMapDrawEvent;
+import com.github.sanctum.clans.bridge.internal.map.event.AsyncMapFormatEvent;
+import com.github.sanctum.clans.bridge.internal.map.event.ChangeChunkInWorldEvent;
 import com.github.sanctum.clans.bridge.internal.map.structure.ChunkPosition;
 import com.github.sanctum.clans.bridge.internal.map.structure.MapPoint;
 import com.github.sanctum.clans.construct.api.Claim;
@@ -9,6 +13,8 @@ import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClansAPI;
 import com.github.sanctum.labyrinth.LabyrinthProvider;
 import com.github.sanctum.labyrinth.data.Region;
+import com.github.sanctum.labyrinth.event.custom.Subscribe;
+import com.github.sanctum.labyrinth.event.custom.Vent;
 import com.github.sanctum.labyrinth.formatting.string.ColoredString;
 import com.github.sanctum.labyrinth.library.DirectivePoint;
 import com.github.sanctum.labyrinth.library.HUID;
@@ -28,7 +34,6 @@ import java.util.concurrent.CompletableFuture;
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.api.chat.TextComponent;
-import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
 import org.bukkit.Location;
 import org.bukkit.World;
@@ -89,20 +94,19 @@ public class MapController implements Listener {
         final Chunk chunkTo = toWorld.getChunkAt(to);
         if (chunkFrom.equals(chunkTo)) return;
         // more code
-        PLUGIN.getServer().getPluginManager()
-                .callEvent(new ChangeChunkInWorldEvent(e.getPlayer(), chunkFrom, chunkTo, fromWorld));
+	    ClanVentBus.call(new ChangeChunkInWorldEvent(e.getPlayer(), chunkFrom, chunkTo, fromWorld));
     }
 
-    @EventHandler
+	@Subscribe
     public void onChangeChunkInWorld(ChangeChunkInWorldEvent e) {
-        if (players.contains(e.player)) {
-            final float yaw = e.player.getLocation().getYaw();
-            final Optional<BlockFace> optional = CompletableFuture.supplyAsync(() -> chooseDirection(yaw)).join();
-            if (optional.isPresent()) sendMapCurrentLoc(e.player);
-        }
-    }
+		if (players.contains(e.getPlayer())) {
+			final float yaw = e.getPlayer().getLocation().getYaw();
+			final Optional<BlockFace> optional = CompletableFuture.supplyAsync(() -> chooseDirection(yaw)).join();
+			if (optional.isPresent()) sendMapCurrentLoc(e.getPlayer());
+		}
+	}
 
-    @EventHandler(priority = EventPriority.LOWEST)
+	@Subscribe(priority = Vent.Priority.LOW)
     public void onMapDrawEvent(AsyncMapDrawEvent e) {
         final ChunkPosition playerChunkPosition = e.getPlayerChunkPosition();
         final Map<ChunkPosition, String> clanClaims = e.getClanChunks();
@@ -146,12 +150,12 @@ public class MapController implements Listener {
                         mapPoints[z][x] = new MapPoint(clanId, test); // chunk data now always stored with MapPoint
                     }
                 }
-                PLUGIN.getServer().getPluginManager().callEvent(new AsyncMapFormatEvent(e.getPlayer(), mapPoints, clanIds));
+	            ClanVentBus.call(new AsyncMapFormatEvent(e.getPlayer(), mapPoints, clanIds));
             }
         }.runTaskAsynchronously(PLUGIN);
     }
 
-    @EventHandler(priority = EventPriority.LOWEST)
+	@Subscribe(priority = Vent.Priority.LOW)
     public void onMapFormatEvent(AsyncMapFormatEvent e) {
         final MapPoint[][] mapPoints = e.getMapPoints();
         final Set<String> clanIds = e.getClanIds();
@@ -216,7 +220,7 @@ public class MapController implements Listener {
         e.setAddedLinesBottom(Collections.singletonList(ChatColor.YELLOW + "X = " + ChatColor.BOLD + "You" + ChatColor.RESET + clanLegend));
     }
 
-    @EventHandler(priority = EventPriority.MONITOR)
+	@Subscribe(priority = Vent.Priority.READ_ONLY)
     public void onMapFormatDoneMonitor(AsyncMapFormatEvent e) {
         final List<BaseComponent[]> strings = new ArrayList<>();
         final MapPoint[][] mapPoints = e.getMapPoints();
@@ -312,7 +316,7 @@ public class MapController implements Listener {
 
     private final HashMap<Player, Boolean> actionWait = new HashMap<>();
 
-    @EventHandler(priority = EventPriority.HIGH)
+	@Subscribe(priority = Vent.Priority.HIGH)
     public void onFormat(AsyncMapFormatEvent e) {
 
         ClanAddon ec = ClanAddonQuery.getRegisteredAddons().stream().filter(c -> c.getName().equals("Map")).findFirst().orElse(null);
@@ -513,7 +517,7 @@ public class MapController implements Listener {
                 }
 	            final Set<String> clanIdStrings = new HashSet<>(clanChunks.values());
 	            final ChunkPosition playerChunk = new ChunkPosition(playerChunkX, playerChunkZ);
-	            Bukkit.getPluginManager().callEvent(new AsyncMapDrawEvent(player, playerChunk, compassDirection, clanChunks, clanIdStrings));
+	            ClanVentBus.call(new AsyncMapDrawEvent(player, playerChunk, compassDirection, clanChunks, clanIdStrings));
             }
         }.runTaskAsynchronously(ClansAPI.getInstance().getPlugin());
     }

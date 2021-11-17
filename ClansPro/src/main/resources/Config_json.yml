@@ -466,7 +466,7 @@ Addon:
   Kingdoms:
     ###########################################################################
     ##                                                                       ##
-    ## Enabling this at the moment will do nothing. Feature not yet-finished ##
+    ## Kingdoms is a progression tracking feature with rewarding attributes  ##
     ##                                                                       ##
     ###########################################################################
     enabled: false
