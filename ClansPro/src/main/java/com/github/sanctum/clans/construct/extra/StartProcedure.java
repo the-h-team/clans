@@ -30,8 +30,10 @@ import com.github.sanctum.labyrinth.library.HUID;
 import com.github.sanctum.labyrinth.library.Item;
 import com.github.sanctum.labyrinth.library.Metrics;
 import com.github.sanctum.labyrinth.library.StringUtils;
+import com.github.sanctum.labyrinth.library.TimeWatch;
 import com.github.sanctum.labyrinth.placeholders.PlaceholderRegistration;
-import com.github.sanctum.labyrinth.task.Schedule;
+import com.github.sanctum.labyrinth.task.LabyrinthApplicable;
+import com.github.sanctum.labyrinth.task.TaskScheduler;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -143,17 +145,32 @@ public final class StartProcedure {
 	@Ordinal(6)
 	void f() {
 		if (bail) return;
-		Schedule.sync(() -> {
-			instance.getLogger().info("- Checking for placeholders.");
-			if (Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI")) {
-				new PapiPlaceholders(instance).register();
-				new LabyrinthPlaceholders(instance).register().deploy();
-				instance.getLogger().info("- PlaceholderAPI found! Loading clans placeholders");
-			} else {
-				PlaceholderRegistration.getInstance().registerTranslation(new LabyrinthPlaceholders(instance)).deploy();
-				instance.getLogger().info("- PlaceholderAPI not found, loading labyrinth provision.");
+		instance.getLogger().info("- Checking for placeholders.");
+		new LabyrinthApplicable("placeholder_registration") {
+
+			private static final long serialVersionUID = 379087412543385L;
+			private long time;
+
+			@Override
+			public void run() {
+				if (time == 0) {
+					time = System.currentTimeMillis();
+				}
+				if (Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI")) {
+					new PapiPlaceholders(instance).register();
+					new LabyrinthPlaceholders(instance).register().deploy();
+					instance.getLogger().info("- PlaceholderAPI found! Loading clans placeholders");
+					cancel();
+				} else {
+					if (TimeWatch.Recording.subtract(time).getMinutes() >= 1) {
+						PlaceholderRegistration.getInstance().registerTranslation(new LabyrinthPlaceholders(instance)).deploy();
+						instance.getLogger().info("- PlaceholderAPI not found, loading labyrinth provision.");
+						cancel();
+					}
+				}
 			}
-		}).wait(5);
+
+		}.scheduleTimer(5, 5);
 
 		try {
 			new Item(Material.BLAZE_ROD, StringUtils.use("&r[&6Tamer stick&r]").translate()).setKey("tamer_stick")
@@ -173,7 +190,8 @@ public final class StartProcedure {
 					.shapeRecipe("UGU", "UIU", "UIU")
 					.register();
 		} catch (UnsupportedOperationException failed) {
-			instance.getLogger().severe("- For some reason we weren't able to register the tamer sticks. (Modded?)");
+			instance.getLogger().severe("- We were unable to register some crafting recipes due to modded circumstances.");
+			instance.getLogger().severe("- Items not registered: [tamer_stick, remover_stick]");
 		}
 	}
 
@@ -216,14 +234,14 @@ public final class StartProcedure {
 	void i() {
 		if (bail) return;
 		ClanAddonQuery.load(instance, "com.github.sanctum.clans.bridge.internal");
-		Schedule.sync(() -> {
+		TaskScheduler.of(() -> {
 			if (Bukkit.getPluginManager().isPluginEnabled("dynmap")) {
 				ClanAddonQuery.register(DynmapAddon.class);
 			}
 			if (EconomyProvision.getInstance().isValid()) {
 				ClanAddonQuery.register(BountyAddon.class);
 			}
-		}).wait(5);
+		}).scheduleLater(5);
 		instance.getLogger().info("- Found (" + ClanAddonQuery.getRegisteredAddons().size() + ") clan addon(s)");
 		ClanAddonQuery.getRegisteredAddons().forEach(ClanAddonQuery::adjust);
 		for (ClanAddon e : ClanAddonQuery.getRegisteredAddons().stream().sorted(Comparator.comparingInt(value -> value.getContext().getLevel())).collect(Collectors.toCollection(LinkedHashSet::new))) {
