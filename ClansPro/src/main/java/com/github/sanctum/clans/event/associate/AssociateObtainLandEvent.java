@@ -13,6 +13,11 @@ public class AssociateObtainLandEvent extends ClaimEvent {
 
 	private final Player claimer;
 
+	public AssociateObtainLandEvent(Claim land) {
+		super(dummy, land);
+		this.claimer = null;
+	}
+
 	public AssociateObtainLandEvent(Player claimer, Claim land) {
 		super(ClansAPI.getInstance().getAssociate(claimer).get(), land);
 		this.claimer = claimer;
@@ -25,7 +30,7 @@ public class AssociateObtainLandEvent extends ClaimEvent {
 
 	@Override
 	public Clan getClan() {
-		return getClaim().getClan();
+		return ((Clan)getClaim().getHolder());
 	}
 
 }

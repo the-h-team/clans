@@ -5,12 +5,14 @@ import com.github.sanctum.clans.bridge.ClanVentBus;
 import com.github.sanctum.clans.bridge.internal.StashesAddon;
 import com.github.sanctum.clans.bridge.internal.VaultsAddon;
 import com.github.sanctum.clans.construct.DataManager;
-import com.github.sanctum.clans.construct.RankPriority;
+import com.github.sanctum.clans.construct.api.AbstractGameRule;
+import com.github.sanctum.clans.construct.api.Claim;
 import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClansAPI;
 import com.github.sanctum.clans.construct.api.Clearance;
 import com.github.sanctum.clans.construct.api.Teleport;
 import com.github.sanctum.clans.construct.extra.ClanDisplayName;
+import com.github.sanctum.clans.construct.extra.ComparatorUtil;
 import com.github.sanctum.clans.construct.extra.StringLibrary;
 import com.github.sanctum.clans.construct.impl.DefaultAssociate;
 import com.github.sanctum.clans.construct.impl.DefaultClan;
@@ -25,10 +27,9 @@ import com.github.sanctum.labyrinth.LabyrinthProvider;
 import com.github.sanctum.labyrinth.data.EconomyProvision;
 import com.github.sanctum.labyrinth.data.FileManager;
 import com.github.sanctum.labyrinth.data.LabyrinthUser;
-import com.github.sanctum.labyrinth.formatting.PaginatedList;
+import com.github.sanctum.labyrinth.formatting.pagination.EasyPagination;
 import com.github.sanctum.labyrinth.interfacing.Nameable;
 import com.github.sanctum.labyrinth.library.HUID;
-import com.github.sanctum.labyrinth.library.Message;
 import com.github.sanctum.labyrinth.library.TextLib;
 import com.github.sanctum.labyrinth.task.Schedule;
 import java.io.File;
@@ -36,17 +37,15 @@ import java.math.BigDecimal;
 import java.text.MessageFormat;
 import java.text.NumberFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.Location;
-import org.bukkit.OfflinePlayer;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.entity.ArmorStand;
@@ -81,12 +80,12 @@ public class ClanAction extends StringLibrary {
 				String newID = generateCleanClanCode();
 				DefaultClan instance = new DefaultClan(newID);
 				instance.setName(clanName);
-				boolean war = ClansAPI.getDataInstance().getConfig().read(c -> c.getString("Clans.mode-change.default").equalsIgnoreCase("peace"));
+				boolean war = LabyrinthProvider.getInstance().getLocalPrintManager().getPrint(ClansAPI.getInstance().getLocalPrintKey()).getString(AbstractGameRule.DEFAULT_WAR_MODE).equalsIgnoreCase("peace");
 				instance.setPeaceful(war);
 				if (password != null) {
 					instance.setPassword(password);
 				}
-				instance.add(new DefaultAssociate(owner, RankPriority.HIGHEST, instance));
+				instance.add(new DefaultAssociate(owner, Clan.Rank.HIGHEST, instance));
 				instance.save();
 				API.getClanManager().load(instance);
 				if (!LabyrinthProvider.getInstance().isLegacy()) {
@@ -110,6 +109,8 @@ public class ClanAction extends StringLibrary {
 		for (int i = 0; i < 3; i++) {
 			if (allids.contains(code.toString())) {
 				code = HUID.randomID();
+			} else {
+				break;
 			}
 		}
 		return code.toString();
@@ -139,24 +140,29 @@ public class ClanAction extends StringLibrary {
 			}
 			switch (associate.getPriority()) {
 				case HIGHEST:
+					for (Claim c : associate.getClan().getClaims()) {
+						c.remove();
+					}
 					clanIndex.getRelation().getAlliance().get(Clan.class).forEach(a -> a.getRelation().getAlliance().remove(clanIndex));
 					clanIndex.getRelation().getRivalry().get(Clan.class).forEach(a -> a.getRelation().getRivalry().remove(clanIndex));
 					FileManager regions = API.getClaimManager().getFile();
 					regions.write(t -> t.set(associate.getClan().getId().toString(), null));
-					String clanName = clan.getRoot().getString("name");
-					for (String s : associate.getClan().getKeys()) {
-						associate.getClan().removeValue(s);
-					}
-					API.getClanManager().delete(clanIndex);
-					String format = MessageFormat.format(ClansAPI.getDataInstance().getMessageResponse("deletion"), clanName);
-					Bukkit.broadcastMessage(color(getPrefix() + " " + format));
-					API.getClaimManager().refresh();
+					Schedule.sync(() -> {
+						String clanName = clan.getRoot().getString("name");
+						for (String s : associate.getClan().getKeys()) {
+							associate.getClan().removeValue(s);
+						}
+						API.getClanManager().delete(clanIndex);
+						String format = MessageFormat.format(ClansAPI.getDataInstance().getMessageResponse("deletion"), clanName);
+						Bukkit.broadcastMessage(color(getPrefix() + " " + format));
+						API.getClaimManager().refresh();
+					}).waitReal(1);
 					break;
 				case HIGHER:
 				case NORMAL:
 				case HIGH:
 					clanIndex.broadcast(MessageFormat.format(ClansAPI.getDataInstance().getMessageResponse("member-leave"), Bukkit.getOfflinePlayer(target).getName()));
-					clan.write(t -> t.set("user-data." + target.toString(), null));
+					clan.write(t -> t.set("user-data." + target, null));
 					Schedule.sync(associate::remove).run();
 					break;
 			}
@@ -186,7 +192,7 @@ public class ClanAction extends StringLibrary {
 					}
 					if (c.getPassword() == null) {
 						Clan clanIndex = API.getClanManager().getClan(API.getClanManager().getClanID(clanName));
-						clanIndex.add(new DefaultAssociate(target, RankPriority.NORMAL, clanIndex));
+						clanIndex.add(new DefaultAssociate(target, Clan.Rank.NORMAL, clanIndex));
 						clanIndex.broadcast(MessageFormat.format(ClansAPI.getDataInstance().getMessageResponse("member-join"), Bukkit.getOfflinePlayer(target).getName()));
 						if (!LabyrinthProvider.getInstance().isLegacy()) {
 							if (ClansAPI.getDataInstance().isDisplayTagsAllowed()) {
@@ -199,7 +205,7 @@ public class ClanAction extends StringLibrary {
 					}
 					if (c.getPassword().equals(password)) {
 						Clan clanIndex = API.getClanManager().getClan(API.getClanManager().getClanID(clanName));
-						clanIndex.add(new DefaultAssociate(target, RankPriority.NORMAL, clanIndex));
+						clanIndex.add(new DefaultAssociate(target, Clan.Rank.NORMAL, clanIndex));
 						clanIndex.broadcast(MessageFormat.format(ClansAPI.getDataInstance().getMessageResponse("member-join"), Bukkit.getOfflinePlayer(target).getName()));
 						if (!LabyrinthProvider.getInstance().isLegacy()) {
 							if (ClansAPI.getDataInstance().isDisplayTagsAllowed()) {
@@ -223,7 +229,7 @@ public class ClanAction extends StringLibrary {
 				}
 				if (c.getPassword() == null) {
 					Clan clanIndex = API.getClanManager().getClan(API.getClanManager().getClanID(clanName));
-					Clan.Associate a = new DefaultAssociate(target, RankPriority.NORMAL, clanIndex);
+					Clan.Associate a = new DefaultAssociate(target, Clan.Rank.NORMAL, clanIndex);
 					clanIndex.add(a);
 					a.save();
 					clanIndex.broadcast(MessageFormat.format(ClansAPI.getDataInstance().getMessageResponse("member-join"), a.getName()));
@@ -238,7 +244,7 @@ public class ClanAction extends StringLibrary {
 				}
 				if (c.getPassword().equals(password)) {
 					Clan clanIndex = API.getClanManager().getClan(API.getClanManager().getClanID(clanName));
-					Clan.Associate a = new DefaultAssociate(target, RankPriority.NORMAL, clanIndex);
+					Clan.Associate a = new DefaultAssociate(target, Clan.Rank.NORMAL, clanIndex);
 					clanIndex.add(a);
 					a.save();
 					clanIndex.broadcast(MessageFormat.format(ClansAPI.getDataInstance().getMessageResponse("member-join"), a.getName()));
@@ -263,6 +269,7 @@ public class ClanAction extends StringLibrary {
 	}
 
 	public UUID getUserID(String playerName) {
+		if (getAllClanNames().contains(playerName)) return null;
 		LabyrinthUser user = LabyrinthUser.get(playerName);
 		if (user != null && user.isValid()) {
 			return user.getId();
@@ -277,14 +284,14 @@ public class ClanAction extends StringLibrary {
 	public void demotePlayer(UUID target) {
 		Clan.Associate associate = API.getAssociate(target).orElse(null);
 		if (associate != null) {
-			RankPriority priority = null;
-			if (associate.getPriority().toInt() < 3) {
-				switch (associate.getPriority().toInt()) {
+			Clan.Rank priority = null;
+			if (associate.getPriority().toLevel() < 3) {
+				switch (associate.getPriority().toLevel()) {
 					case 2:
-						priority = RankPriority.HIGH;
+						priority = Clan.Rank.HIGH;
 						break;
 					case 1:
-						priority = RankPriority.NORMAL;
+						priority = Clan.Rank.NORMAL;
 						break;
 				}
 			}
@@ -303,14 +310,14 @@ public class ClanAction extends StringLibrary {
 	public void promotePlayer(UUID target) {
 		Clan.Associate associate = API.getAssociate(target).orElse(null);
 		if (associate != null) {
-			RankPriority priority = null;
-			if (associate.getPriority().toInt() < 2) {
-				switch (associate.getPriority().toInt()) {
+			Clan.Rank priority = null;
+			if (associate.getPriority().toLevel() < 2) {
+				switch (associate.getPriority().toLevel()) {
 					case 0:
-						priority = RankPriority.HIGH;
+						priority = Clan.Rank.HIGH;
 						break;
 					case 1:
-						priority = RankPriority.HIGHER;
+						priority = Clan.Rank.HIGHER;
 						break;
 				}
 			}
@@ -539,7 +546,7 @@ public class ClanAction extends StringLibrary {
 
 	public List<Clan> getMostPowerful() {
 		List<Clan> c = ClansAPI.getInstance().getClanManager().getClans().list();
-		c.sort(Comparator.comparingDouble(Clan::getPower));
+		c.sort(ComparatorUtil.comparingByPower());
 		Collections.reverse(c);
 		return Collections.unmodifiableList(c);
 	}
@@ -573,9 +580,9 @@ public class ClanAction extends StringLibrary {
 		String owner = clan.getOwner().getName();
 		String password = clan.getPassword();
 
-		List<String> members = clan.getMembers().stream().filter(a -> a.getPriority().toInt() != 3).map(Clan.Associate::getId).map(UUID::toString).collect(Collectors.toList());
-		List<String> mods = clan.getMembers().stream().filter(a -> a.getPriority().toInt() == 1).map(Nameable::getName).collect(Collectors.toList());
-		List<String> admins = clan.getMembers().stream().filter(a -> a.getPriority().toInt() == 2).map(Nameable::getName).collect(Collectors.toList());
+		List<String> members = clan.getMembers().stream().filter(a -> a.getPriority().toLevel() != 3).map(Clan.Associate::getId).map(UUID::toString).collect(Collectors.toList());
+		List<String> mods = clan.getMembers().stream().filter(a -> a.getPriority().toLevel() == 1).map(Nameable::getName).collect(Collectors.toList());
+		List<String> admins = clan.getMembers().stream().filter(a -> a.getPriority().toLevel() == 2).map(Nameable::getName).collect(Collectors.toList());
 		List<String> allies = clan.getRelation().getAlliance().stream().map(Nameable::getName).collect(Collectors.toList());
 		List<String> enemies = clan.getRelation().getRivalry().stream().map(Nameable::getName).collect(Collectors.toList());
 
@@ -667,119 +674,102 @@ public class ClanAction extends StringLibrary {
 	}
 
 	public void getPlayerboard(Player p, int page) {
-		Message msg = Message.form(p);
-		new PaginatedList<>(Arrays.stream(Bukkit.getOfflinePlayers()).map(OfflinePlayer::getName).collect(Collectors.toList())).limit(10)
-				.finish(b -> b.setPage(page).setPlayer(p).setPrefix("&7&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬").setSuffix("&7&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬"))
-				.start((pagination, page1, max) -> msg.send("&7&m------------&7&l[&6&oPlayer List&7&l]&7&m------------"))
-				.compare(String::compareTo)
-				.decorate((pagination, object, page1, max, placement) -> msg.build(TextLib.getInstance().textRunnable("&aI am", " &6" + object, "&7Click to view my clan info.", "c info " + object))).get(page);
+		EasyPagination<? extends Player> test = new EasyPagination<>(p, Bukkit.getOnlinePlayers());
+		test.limit(menuSize());
+		test.setHeader((player, chunks) -> {
+			if (LabyrinthProvider.getInstance().isNew()) {
+				chunks.then("&7&m------------&7&l[&#ff7700&oPlayer List&7&l]&7&m------------");
+			} else {
+				chunks.then("&7&m------------&7&l[&6&oPlayer List&7&l]&7&m------------");
+			}
+		});
+		test.setFormat((player, index, chunks) -> {
+			chunks.then("#").color(ChatColor.GRAY).then(index).color(ChatColor.GOLD).then(" ").then(player.getName()).then(" ").then("-").then(" ").then(ClansAPI.getInstance().getAssociate(player).isPresent() ? "&aIn clan" : "&cNot in clan");
+		});
+		test.setFooter((player, chunks) -> {
+			chunks.then("&7&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬");
+		});
+		test.send(page);
 	}
 
 	public void getLeaderboard(LeaderboardType type, Player p, int pageNum) {
 		switch (type) {
 			case MONEY:
-				if (!Bukkit.getPluginManager().isPluginEnabled("Vault") && !Bukkit.getPluginManager().isPluginEnabled("Enterprise")) {
+				if (!EconomyProvision.getInstance().isValid()) {
 					getLeaderboard(LeaderboardType.POWER, p, pageNum);
 					break;
 				}
 
-				PaginatedList<Clan> help = new PaginatedList<>(new ArrayList<>(ClansAPI.getInstance().getClanManager().getClans().list()))
-						.limit(menuSize())
-						.compare((o1, o2) -> Double.compare(o2.getBalanceDouble(), o1.getBalanceDouble()))
-						.start((pagination, page, max) -> {
-							if (Bukkit.getVersion().contains("1.17") || Bukkit.getVersion().contains("1.16")) {
-								Message.form(p).send("&7&m------------&7&l[&#ff7700&oMost Money&7&l]&7&m------------");
-							} else {
-								Message.form(p).send("&7&m------------&7&l[&6&oMost Money&7&l]&7&m------------");
-							}
-						});
-
-				help.finish(builder -> builder.setPlayer(p)
-						.setPrefix("&7&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬")).decorate((pagination, clan, page, max, placement) -> {
-					if (Bukkit.getVersion().contains("1.17") || Bukkit.getVersion().contains("1.16")) {
-						Message.form(p).build(TextLib.getInstance().textRunnable("", " #787674# #0eaccc&l" + placement + " #00fffb&o" + clan.getName() + " #787674: #ff7700&l" + Clan.ACTION.format(pagination.format(clan.getBalanceDouble(), 2)), "&6Click to view &3&l" + clan.getName() + "'s &6info.", "c info " + clan.getName()));
+				EasyPagination<Clan> test = new EasyPagination<>(p, getMostPowerful(), ComparatorUtil.comparingByMoney());
+				test.limit(menuSize());
+				test.setHeader((player, chunks) -> {
+					if (LabyrinthProvider.getInstance().isNew()) {
+						chunks.then("&7&m------------&7&l[&#ff7700&oMost Money&7&l]&7&m------------");
 					} else {
-						Message.form(p).build(TextLib.getInstance().textRunnable("", " &7# &3&l" + placement + " &b&o" + clan.getName() + " &7: &6&l" + Clan.ACTION.format(pagination.format(clan.getBalanceDouble(), 2)), "&6Click to view &3&l" + clan.getName() + "'s &6info.", "c info " + clan.getName()));
+						chunks.then("&7&m------------&7&l[&6&oMost Money&7&l]&7&m------------");
 					}
-				}).get(pageNum);
+				});
+				test.setFormat((clan, index, chunks) -> {
+					chunks.then("#").color(ChatColor.GRAY).then(index).color(ChatColor.GOLD).then(" ").then(clan.getPalette().isGradient() ? clan.getPalette().toString(clan.getName()) : clan.getPalette() + clan.getName()).hover("&3Click for info.").command("c info " + clan.getName()).then(" ").then("-").then(" ").then(clan.getDescription());
+				});
+				test.setFooter((player, chunks) -> {
+					chunks.then("&7&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬");
+				});
+				test.send(pageNum);
 				break;
 			case WINS:
-
-				PaginatedList<Clan> help2 = new PaginatedList<>(new ArrayList<>(ClansAPI.getInstance().getClanManager().getClans().list()))
-						.limit(menuSize())
-						.compare((o1, o2) -> Integer.compare(o2.getWins(), o1.getWins()))
-						.start((pagination, page, max) -> {
-							if (Bukkit.getVersion().contains("1.17") || Bukkit.getVersion().contains("1.16")) {
-								Message.form(p).send("&7&m------------&7&l[&#ff7700&oMost Wins&7&l]&7&m------------");
-							} else {
-								Message.form(p).send("&7&m------------&7&l[&6&oMost Wins&7&l]&7&m------------");
-							}
-						});
-
-				help2.finish((builder -> builder.setPlayer(p)
-						.setPrefix("&7&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬"))).decorate((pagination, clan, page, max, placement) -> {
-					if (Bukkit.getVersion().contains("1.17") || Bukkit.getVersion().contains("1.16")) {
-						Message.form(p).build(TextLib.getInstance().textRunnable("", " #787674# #0eaccc&l" + placement + " #00fffb&o" + clan.getName() + " #787674: #ff7700&l" + clan.getWins(), "&6Click to view &3&l" + clan.getName() + "'s &6info.", "c info " + clan.getName()));
+				EasyPagination<Clan> test2 = new EasyPagination<>(p, getMostPowerful(), (o1, o2) -> Integer.compare(o2.getWins(), o1.getWins()));
+				test2.limit(menuSize());
+				test2.setHeader((player, chunks) -> {
+					if (LabyrinthProvider.getInstance().isNew()) {
+						chunks.then("&7&m------------&7&l[&#ff7700&oMost Wins&7&l]&7&m------------");
 					} else {
-						Message.form(p).build(TextLib.getInstance().textRunnable("", " &7# &3&l" + placement + " &b&o" + clan.getName() + " &7: &6&l" + clan.getWins(), "&6Click to view &3&l" + clan.getName() + "'s &6info.", "c info " + clan.getName()));
+						chunks.then("&7&m------------&7&l[&6&oMost Wins&7&l]&7&m------------");
 					}
-				}).get(pageNum);
+				});
+				test2.setFormat((clan, index, chunks) -> {
+					chunks.then("#").color(ChatColor.GRAY).then(index).color(ChatColor.GOLD).then(" ").then(clan.getPalette().isGradient() ? clan.getPalette().toString(clan.getName()) : clan.getPalette() + clan.getName()).hover("&3Click for info.").command("c info " + clan.getName()).then(" ").then("-").then(" ").then(clan.getDescription());
+				});
+				test2.setFooter((player, chunks) -> {
+					chunks.then("&7&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬");
+				});
+				test2.send(pageNum);
 				break;
 			case POWER:
-				PaginatedList<Clan> help4 = new PaginatedList<>(new ArrayList<>(ClansAPI.getInstance().getClanManager().getClans().list()))
-						.limit(menuSize())
-						.compare((o1, o2) -> Double.compare(o2.getPower(), o1.getPower()))
-						.start((pagination, page, max) -> {
-							if (Bukkit.getVersion().contains("1.17") || Bukkit.getVersion().contains("1.16")) {
-								Message.form(p).send("&7&m------------&7&l[&#ff7700&oMost Power&7&l]&7&m------------");
-							} else {
-								Message.form(p).send("&7&m------------&7&l[&6&oMost Power&7&l]&7&m------------");
-							}
-						});
-
-				help4.finish((builder -> builder.setPlayer(p)
-						.setPrefix("&7&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬"))).decorate((pagination, clan, page, max, placement) -> {
-					if (Bukkit.getVersion().contains("1.17") || Bukkit.getVersion().contains("1.16")) {
-						Message.form(p).build(TextLib.getInstance().textRunnable("", " #787674# #0eaccc&l" + placement + " #00fffb&o" + clan.getName() + " #787674: #ff7700&l" + Clan.ACTION.format(pagination.format(clan.getPower(), 2)), "&6Click to view &3&l" + clan.getName() + "'s &6info.", "c info " + clan.getName()));
+				EasyPagination<Clan> test3 = new EasyPagination<>(p, getMostPowerful(), ComparatorUtil.comparingByPower());
+				test3.limit(menuSize());
+				test3.setHeader((player, chunks) -> {
+					if (LabyrinthProvider.getInstance().isNew()) {
+						chunks.then("&7&m------------&7&l[&#ff7700&oMost Power&7&l]&7&m------------");
 					} else {
-						Message.form(p).build(TextLib.getInstance().textRunnable("", " &7# &3&l" + placement + " &b&o" + clan.getName() + " &7: &6&l" + Clan.ACTION.format(pagination.format(clan.getPower(), 2)), "&6Click to view &3&l" + clan.getName() + "'s &6info.", "c info " + clan.getName()));
+						chunks.then("&7&m------------&7&l[&6&oMost Power&7&l]&7&m------------");
 					}
-				}).get(pageNum);
+				});
+				test3.setFormat((clan, index, chunks) -> {
+					chunks.then("#").color(ChatColor.GRAY).then(index).color(ChatColor.GOLD).then(" ").then(clan.getPalette().isGradient() ? clan.getPalette().toString(clan.getName()) : clan.getPalette() + clan.getName()).hover("&3Click for info.").command("c info " + clan.getName()).then(" ").then("-").then(" ").then(clan.getDescription());
+				});
+				test3.setFooter((player, chunks) -> {
+					chunks.then("&7&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬");
+				});
+				test3.send(pageNum);
 				break;
 			case KILLS:
-				PaginatedList<Clan> help3 = new PaginatedList<>(new ArrayList<>(ClansAPI.getInstance().getClanManager().getClans().list()))
-						.limit(menuSize())
-						.compare((o1, o2) -> {
-							double kd1 = 0;
-							for (Clan.Associate associate : o1.getMembers()) {
-								kd1 += associate.getKD();
-							}
-							double kd2 = 0;
-							for (Clan.Associate associate : o2.getMembers()) {
-								kd2 += associate.getKD();
-							}
-							return Double.compare(kd2, kd1);
-						})
-						.start((pagination, page, max) -> {
-							if (Bukkit.getVersion().contains("1.17") || Bukkit.getVersion().contains("1.16")) {
-								Message.form(p).send("&7&m------------&7&l[&#ff7700&oHighest K/D&7&l]&7&m------------");
-							} else {
-								Message.form(p).send("&7&m------------&7&l[&6&oHighest K/D&7&l]&7&m------------");
-							}
-						});
-
-				help3.finish((builder -> builder.setPlayer(p)
-						.setPrefix("&7&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬"))).decorate((pagination, clan, page, max, placement) -> {
-					double kd = 0;
-					for (Clan.Associate associate : clan.getMembers()) {
-						kd += associate.getKD();
-					}
-					if (Bukkit.getVersion().contains("1.17") || Bukkit.getVersion().contains("1.16")) {
-						Message.form(p).build(TextLib.getInstance().textRunnable("", " #787674# #0eaccc&l" + placement + " #00fffb&o" + clan.getName() + " #787674: #ff7700&l" + pagination.format(kd, 2), "&6Click to view &3&l" + clan.getName() + "'s &6info.", "c info " + clan.getName()));
+				EasyPagination<Clan> test4 = new EasyPagination<>(p, getMostPowerful(), ComparatorUtil.comparingByEntity());
+				test4.limit(menuSize());
+				test4.setHeader((player, chunks) -> {
+					if (LabyrinthProvider.getInstance().isNew()) {
+						chunks.then("&7&m------------&7&l[&#ff7700&oHighest K/D&7&l]&7&m------------");
 					} else {
-						Message.form(p).build(TextLib.getInstance().textRunnable("", " &7# &3&l" + placement + " &b&o" + clan.getName() + " &7: &6&l" + pagination.format(kd, 2), "&6Click to view &3&l" + clan.getName() + "'s &6info.", "c info " + clan.getName()));
+						chunks.then("&7&m------------&7&l[&6&oHighest K/D&7&l]&7&m------------");
 					}
-				}).get(pageNum);
+				});
+				test4.setFormat((clan, index, chunks) -> {
+					chunks.then("#").color(ChatColor.GRAY).then(index).color(ChatColor.GOLD).then(" ").then(clan.getPalette().isGradient() ? clan.getPalette().toString(clan.getName()) : clan.getPalette() + clan.getName()).hover("&3Click for info.").command("c info " + clan.getName()).then(" ").then("-").then(" ").then(clan.getDescription());
+				});
+				test4.setFooter((player, chunks) -> {
+					chunks.then("&7&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬");
+				});
+				test4.send(pageNum);
 				break;
 		}
 	}

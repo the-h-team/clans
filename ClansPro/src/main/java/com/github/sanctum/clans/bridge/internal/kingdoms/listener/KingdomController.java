@@ -8,7 +8,6 @@ import com.github.sanctum.clans.bridge.internal.kingdoms.command.KingdomCommand;
 import com.github.sanctum.clans.bridge.internal.kingdoms.event.KingdomCreationEvent;
 import com.github.sanctum.clans.bridge.internal.kingdoms.event.KingdomQuestCompletionEvent;
 import com.github.sanctum.clans.bridge.internal.kingdoms.event.RoundTableQuestCompletionEvent;
-import com.github.sanctum.clans.construct.RankPriority;
 import com.github.sanctum.clans.construct.api.Claim;
 import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClansAPI;
@@ -48,6 +47,7 @@ import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerItemConsumeEvent;
 
 public class KingdomController implements Listener {
 
@@ -68,7 +68,7 @@ public class KingdomController implements Listener {
 
 	@Subscribe(priority = Vent.Priority.HIGH)
 	public void onClaim(ClaimResidentEvent e) {
-		Kingdom k = Kingdom.getKingdom(e.getClaim().getClan());
+		Kingdom k = Kingdom.getKingdom(((Clan)e.getClaim().getHolder()));
 		if (k != null) {
 			e.setClaimTitle("&6Kingdom&7: &r" + k.getName(), e.getClaimSubTitle());
 		}
@@ -98,6 +98,86 @@ public class KingdomController implements Listener {
 				}
 			}
 		}
+	}
+
+	@EventHandler
+	public void onConsume(PlayerItemConsumeEvent e) {
+		ClansAPI.getInstance().getAssociate(e.getPlayer()).ifPresent(associate -> {
+			Kingdom test = Kingdom.getKingdom(associate.getClan());
+			if (test != null) {
+				Quest quest = test.getQuest("Feed The Family");
+				if (quest != null) {
+					if (quest.activated(e.getPlayer())) {
+						double completion = quest.getProgression();
+						int count = 0;
+						for (Clan invasiveEntities : test.getMembers()) {
+							for (Clan.Associate ass : invasiveEntities.getMembers()) {
+								if (ass.getTag().isPlayer() && ass.getUser().isOnline()) {
+									count++;
+								}
+							}
+						}
+						if (completion < count) {
+							quest.progress(count);
+							associate.getClan().getMembers().forEach(ass -> {
+								Player online = ass.getUser().toBukkit().getPlayer();
+								if (online != null) {
+									addon.getMailer().accept(online).action(KingdomCommand.getProgressBar(((Number) quest.getProgression()).intValue(), ((Number) quest.getRequirement()).intValue(), 73)).deploy();
+								}
+							});
+						} else {
+							if (quest.isComplete()) {
+								associate.getClan().getMembers().forEach(ass -> {
+									Player n = ass.getUser().toBukkit().getPlayer();
+									if (n != null) {
+										quest.deactivate(n);
+									}
+								});
+							}
+						}
+					}
+				}
+			}
+		});
+	}
+
+	@Subscribe
+	public void onKillKing(PlayerKillPlayerEvent e) {
+
+		e.getApi().getAssociate(e.getPlayer()).ifPresent(associate -> {
+
+			e.getApi().getAssociate(e.getVictim()).ifPresent(victim -> {
+
+				Kingdom test = Kingdom.getKingdom(associate.getClan());
+				if (test != null) {
+					if (test.getMembers().contains(victim.getClan()) && !associate.getClan().equals(victim.getClan())) {
+						Quest quest = test.getQuest("Kill The King");
+						if (quest != null) {
+							if (quest.activated(e.getPlayer())) {
+								quest.progress(1.0);
+								associate.getClan().getMembers().forEach(ass -> {
+									Player online = ass.getUser().toBukkit().getPlayer();
+									if (online != null) {
+										addon.getMailer().accept(online).action(KingdomCommand.getProgressBar(((Number) quest.getProgression()).intValue(), ((Number) quest.getRequirement()).intValue(), 73)).deploy();
+									}
+								});
+								if (quest.isComplete()) {
+									associate.getClan().getMembers().forEach(ass -> {
+										Player n = ass.getUser().toBukkit().getPlayer();
+										if (n != null) {
+											quest.deactivate(n);
+										}
+									});
+								}
+							}
+						}
+					}
+				}
+
+			});
+
+		});
+
 	}
 
 	@EventHandler
@@ -735,7 +815,7 @@ public class KingdomController implements Listener {
 
 	@Subscribe
 	public void onClanLeave(AssociateQuitEvent e) {
-		if (e.getAssociate().getPriority() == RankPriority.HIGHEST) {
+		if (e.getAssociate().getPriority() == Clan.Rank.HIGHEST) {
 
 			Clan c = e.getAssociate().getClan();
 

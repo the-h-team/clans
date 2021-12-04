@@ -82,13 +82,13 @@ public class BorderTaskEvent extends Event implements Cancellable {
 					}
 					return;
 				}
-				if (claim.getClan().getRelation().isNeutral(associate.getClan())) {
+				if (((Clan)claim.getHolder()).getRelation().isNeutral(associate.getClan())) {
 					boundary.deploy(Cuboid.Boundary.Particle.WHITE);
 				} else {
-					if (claim.getClan().getRelation().getAlliance().has(associate.getClan())) {
+					if (((Clan)claim.getHolder()).getRelation().getAlliance().has(associate.getClan())) {
 						boundary.deploy(Cuboid.Boundary.Particle.GREEN);
 					}
-					if (claim.getClan().getRelation().getRivalry().has(associate.getClan())) {
+					if (((Clan)claim.getHolder()).getRelation().getRivalry().has(associate.getClan())) {
 						boundary.deploy(Cuboid.Boundary.Particle.RED);
 					}
 				}

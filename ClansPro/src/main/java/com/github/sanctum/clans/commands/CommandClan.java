@@ -4,7 +4,6 @@ import com.github.sanctum.clans.bridge.ClanAddon;
 import com.github.sanctum.clans.bridge.ClanAddonQuery;
 import com.github.sanctum.clans.bridge.ClanVentBus;
 import com.github.sanctum.clans.construct.DataManager;
-import com.github.sanctum.clans.construct.GUI;
 import com.github.sanctum.clans.construct.actions.ClanAction;
 import com.github.sanctum.clans.construct.api.Claim;
 import com.github.sanctum.clans.construct.api.Clan;
@@ -13,6 +12,7 @@ import com.github.sanctum.clans.construct.api.ClanSubCommand;
 import com.github.sanctum.clans.construct.api.ClansAPI;
 import com.github.sanctum.clans.construct.api.Clearance;
 import com.github.sanctum.clans.construct.api.ClearanceLog;
+import com.github.sanctum.clans.construct.api.GUI;
 import com.github.sanctum.clans.construct.api.Insignia;
 import com.github.sanctum.clans.construct.api.War;
 import com.github.sanctum.clans.construct.bank.BankAction;
@@ -35,15 +35,17 @@ import com.github.sanctum.labyrinth.data.EconomyProvision;
 import com.github.sanctum.labyrinth.data.FileManager;
 import com.github.sanctum.labyrinth.data.LabyrinthUser;
 import com.github.sanctum.labyrinth.formatting.Message;
-import com.github.sanctum.labyrinth.formatting.PaginatedList;
 import com.github.sanctum.labyrinth.formatting.TextChunk;
 import com.github.sanctum.labyrinth.formatting.ToolTip;
 import com.github.sanctum.labyrinth.formatting.component.OldComponent;
+import com.github.sanctum.labyrinth.formatting.pagination.EasyPagination;
 import com.github.sanctum.labyrinth.formatting.string.ColoredString;
 import com.github.sanctum.labyrinth.formatting.string.RandomID;
 import com.github.sanctum.labyrinth.interfacing.Nameable;
+import com.github.sanctum.labyrinth.library.Cooldown;
 import com.github.sanctum.labyrinth.library.HUID;
 import com.github.sanctum.labyrinth.library.Item;
+import com.github.sanctum.labyrinth.library.ListUtils;
 import com.github.sanctum.labyrinth.library.Mailer;
 import com.github.sanctum.labyrinth.library.StringUtils;
 import com.github.sanctum.labyrinth.library.TextLib;
@@ -63,6 +65,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentMap;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -115,9 +118,6 @@ public class CommandClan extends Command implements Message.Factory {
 		CommandInformationAdaptEvent e = ClanVentBus.call(new CommandInformationAdaptEvent(help));
 		return e.getMenu().stream().map(s -> s.replace("clan", label)).collect(Collectors.toList());
 	}
-
-
-
 
 
 	private boolean isAlphaNumeric(String s) {
@@ -342,7 +342,7 @@ public class CommandClan extends Command implements Message.Factory {
 						if (BankAction.VIEW_LOG.testForPlayer(clan, p)) {
 							arguments.add("viewlog");
 						}
-						if (associate.get().getPriority().toInt() == 3) {
+						if (associate.get().getPriority().toLevel() == 3) {
 							arguments.add("setperm");
 							arguments.add("viewperms");
 						}
@@ -407,7 +407,7 @@ public class CommandClan extends Command implements Message.Factory {
 					if (args[1].equalsIgnoreCase("setperm")) {
 						final Player player = (Player) sender;
 						ClansAPI.getInstance().getAssociate(player).ifPresent(a -> {
-							if (a.getPriority().toInt() == 3) {
+							if (a.getPriority().toLevel() == 3) {
 								arguments.add("balance");
 								arguments.add("deposit");
 								arguments.add("withdraw");
@@ -502,9 +502,13 @@ public class CommandClan extends Command implements Message.Factory {
 				for (ClanSubCommand subCommand : cycle.getContext().getCommands()) {
 					if (subCommand.getLabel() != null) {
 						if (length > 0) {
-							if (subCommand.getAliases().contains(args[0]) || subCommand.getLabel().equalsIgnoreCase(args[0])) {
-								List<String> t = new LinkedList<>(Arrays.asList(args));
-								t.removeIf(s -> StringUtils.use(s).containsIgnoreCase(subCommand.getLabel()));
+							if (ListUtils.use(subCommand.getAliases()).stringContainsIgnoreCase(args[0]) || subCommand.getLabel().equalsIgnoreCase(args[0])) {
+								List<String> t = new ArrayList<>();
+								for (String a : args) {
+									if (!a.equalsIgnoreCase(subCommand.getLabel())) {
+										t.add(a);
+									}
+								}
 								return subCommand.player(p, subCommand.getLabel(), t.toArray(new String[0]));
 							}
 						}
@@ -522,12 +526,13 @@ public class CommandClan extends Command implements Message.Factory {
 		if (length == 0) {
 			String ping = ClansAPI.getDataInstance().getMessageResponse("Commands.create");
 			List<String> list = new LinkedList<>(helpMenu(label));
-			new PaginatedList<>(list)
-					.limit(lib.menuSize())
-					.start((pagination, page, max) -> {
-						lib.sendMessage(p, lib.menuTitle());
-						Mailer.empty(p).chat(lib.menuBorder()).deploy();
-					}).finish(builder -> builder.setPlayer(p).setPrefix(lib.menuBorder())).decorate((pagination, string, page, max, placement) -> Mailer.empty(p).chat(string).deploy()).get(1);
+			EasyPagination<String> pagination = new EasyPagination<>(p, list);
+			pagination.limit(lib.menuSize());
+			pagination.setHeader((player, chunks) -> chunks.then(lib.menuBorder()));
+			pagination.setFormat((s, integer, chunks) -> chunks.then(s));
+			pagination.setFooter((player, chunks) -> chunks.then(lib.menuBorder()));
+			lib.sendMessage(p, lib.menuTitle());
+			pagination.send(1);
 
 			return true;
 		}
@@ -535,21 +540,34 @@ public class CommandClan extends Command implements Message.Factory {
 			lib.sendMessage(p, "&4&oClan features have been locked within this world.");
 			return true;
 		}
-		if (args[0].equalsIgnoreCase("bank")) {
-			if (!Bukkit.getPluginManager().isPluginEnabled("Vault") && !Bukkit.getPluginManager().isPluginEnabled("Enterprise")) {
-				sendMessage(p, "&c&oNo economy interface found. Bank feature disabled.");
-				return true;
-			}
-			if (BankPermissions.BANKS_USE.not(p)) {
-				sendMessage(p, Messages.PERM_NOT_PLAYER_COMMAND.toString());
-				return true;
-			} else {
-				sendMessage(p, lib.getPrefix() + Messages.BANKS_HEADER);
-			}
-		}
 		final Clan.Associate associate = ClansAPI.getInstance().getAssociate(p).orElse(null);
 		if (length == 1) {
 			String args0 = args[0];
+			if (args0.equalsIgnoreCase("version")) {
+
+				CompletableFuture.runAsync(() -> {
+
+					p.sendMessage(" ");
+					String info = ClansAPI.getInstance().isUpdated() ? "is up to date." : "needs updated.";
+					p.sendMessage(StringUtils.use("&b&oThis server is using pro version &r" + ClansAPI.getInstance().getPlugin().getDescription().getVersion() + " &b&owith &6Labyrinth &b&oversion &r" + LabyrinthProvider.getInstance().getPluginInstance().getDescription().getVersion() +  " &b&oand &e" + info).translate());
+					p.sendMessage(" ");
+
+				}).join();
+
+				return true;
+			}
+			if (args0.equalsIgnoreCase("bank")) {
+				if (!EconomyProvision.getInstance().isValid()) {
+					sendMessage(p, "&c&oNo economy interface found. Bank feature disabled.");
+					return true;
+				}
+				if (BankPermissions.BANKS_USE.not(p)) {
+					sendMessage(p, Messages.PERM_NOT_PLAYER_COMMAND.toString());
+					return true;
+				} else {
+					sendMessage(p, lib.getPrefix() + Messages.BANKS_HEADER);
+				}
+			}
 			if (args0.equalsIgnoreCase("bank")) { // "bank" print instructions
 				if (!Bukkit.getPluginManager().isPluginEnabled("Vault") && !Bukkit.getPluginManager().isPluginEnabled("Enterprise")) {
 					lib.sendMessage(p, "&c&oNo economy interface found. Bank feature disabled.");
@@ -603,7 +621,7 @@ public class CommandClan extends Command implements Message.Factory {
 							"clan bank viewlog"
 					));
 				}
-				if (associate.getPriority().toInt() == 3) {
+				if (associate.getPriority().toLevel() == 3) {
 					p.spigot().sendMessage(TextLib.getInstance().textSuggestable(
 							Messages.BANK_HELP_PREFIX + " ",
 							"&7setperm", "Set access to functions",
@@ -804,7 +822,21 @@ public class CommandClan extends Command implements Message.Factory {
 					if (current != null && current.isRunning()) {
 						GUI.ARENA_SURRENDER.get(current).open(p);
 					} else {
-						ClansAPI.getInstance().getArenaManager().leave(associate);
+						if (current != null) {
+							if (current.getQueue().getAssociates().length == 1) {
+								Cooldown test = LabyrinthProvider.getService(Service.COOLDOWNS).getCooldown("war-" + current.getId() + "-start");
+								if (test != null) {
+									current.stop();
+									current.reset();
+									Cooldown.remove(test);
+								} else {
+									ClansAPI.getInstance().getArenaManager().leave(associate);
+								}
+								return true;
+							} else {
+								ClansAPI.getInstance().getArenaManager().leave(associate);
+							}
+						}
 					}
 				} else {
 					lib.sendMessage(p, lib.notInClan());
@@ -1075,7 +1107,7 @@ public class CommandClan extends Command implements Message.Factory {
 								clan.setBase(event.getLocation());
 							}
 						} else {
-							lib.sendMessage(p, lib.notClaimOwner(ClansAPI.getInstance().getClaimManager().getClaim(p.getLocation()).getClan().getName()));
+							lib.sendMessage(p, lib.notClaimOwner(((Clan) ClansAPI.getInstance().getClaimManager().getClaim(p.getLocation()).getHolder()).getName()));
 						}
 					}
 				} else {
@@ -1175,14 +1207,14 @@ public class CommandClan extends Command implements Message.Factory {
 			try {
 
 				int pa = Integer.parseInt(args0);
-
 				List<String> list = new LinkedList<>(helpMenu(label));
-				new PaginatedList<>(list)
-						.limit(lib.menuSize())
-						.start((pagination, page, max) -> {
-							lib.sendMessage(p, lib.menuTitle());
-							Mailer.empty(p).chat(lib.menuBorder()).deploy();
-						}).finish(builder -> builder.setPlayer(p).setPrefix(lib.menuBorder())).decorate((pagination, string, page, max, placement) -> Mailer.empty(p).chat(string).deploy()).get(Math.max(pa, 1));
+				EasyPagination<String> pagination = new EasyPagination<>(p, list);
+				pagination.limit(lib.menuSize());
+				pagination.setHeader((player, chunks) -> chunks.then(lib.menuBorder()));
+				pagination.setFormat((s, integer, chunks) -> chunks.then(s));
+				pagination.setFooter((player, chunks) -> chunks.then(lib.menuBorder()));
+				lib.sendMessage(p, lib.menuTitle());
+				pagination.send(Math.min(Math.max(1, pa), pagination.size()));
 				return true;
 			} catch (Exception ignored) {
 			}
@@ -1376,7 +1408,7 @@ public class CommandClan extends Command implements Message.Factory {
 						return true;
 					}
 
-					new Insignia.Builder("Template:" + p.getUniqueId().toString()).setBorder("&f&l&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬").setColor("&2").setHeight(16).setWidth(16).draw(p);
+					new Insignia.Builder("Template:" + p.getUniqueId()).setBorder("&f&l&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬").setColor("&2").setHeight(16).setWidth(16).draw(p);
 					lib.sendMessage(p, "&eLoaded personal template.");
 					return true;
 				}
@@ -1498,7 +1530,7 @@ public class CommandClan extends Command implements Message.Factory {
 						return true;
 					}
 
-					Insignia i = Insignia.get("Template:" + p.getUniqueId().toString());
+					Insignia i = Insignia.get("Template:" + p.getUniqueId());
 					Insignia.copy(c.getId().toString(), i);
 					if (i != null) {
 
@@ -1648,7 +1680,7 @@ public class CommandClan extends Command implements Message.Factory {
 						}
 						return true;
 					case "setperm":
-						if (associate.getPriority().toInt() != 3) {
+						if (associate.getPriority().toLevel() != 3) {
 							sendMessage(p, Messages.PERM_NOT_PLAYER_COMMAND.toString());
 							return true;
 						}
@@ -1681,7 +1713,7 @@ public class CommandClan extends Command implements Message.Factory {
 						p.sendMessage(BankLog.getForClan(clan).getTransactions().stream().map(Object::toString).toArray(String[]::new));
 						return true;
 					case "viewperms":
-						if (associate.getPriority().toInt() != 3) {
+						if (associate.getPriority().toLevel() != 3) {
 							sendMessage(p, Messages.PERM_NOT_PLAYER_COMMAND.toString());
 							return true;
 						}
@@ -1959,7 +1991,7 @@ public class CommandClan extends Command implements Message.Factory {
 					UUID target = Clan.ACTION.getUserID(args1);
 					if (target != null) {
 
-						if (associate.getPriority().toInt() == 3) {
+						if (associate.getPriority().toLevel() == 3) {
 							if (!associate.getClan().transferOwnership(ClansAPI.getInstance().getAssociate(target).get())) {
 								sendMessage(p, lib.playerUnknown("clan member"));
 							} else {
@@ -1998,7 +2030,7 @@ public class CommandClan extends Command implements Message.Factory {
 				}
 				if (associate != null) {
 					Clan clan = ClansAPI.getInstance().getClanManager().getClan(p.getUniqueId());
-					if (associate.getPriority().toInt() >= Clan.ACTION.tagChangeClearance()) {
+					if (associate.getPriority().toLevel() >= Clan.ACTION.tagChangeClearance()) {
 						if (!isAlphaNumeric(args1)) {
 							lib.sendMessage(p, lib.nameInvalid(args1));
 							return true;
@@ -2122,7 +2154,7 @@ public class CommandClan extends Command implements Message.Factory {
 						}
 						Clan.Associate member = associate.getClan().getMember(m -> m.getId().equals(tid));
 						if (member == null) return true;
-						if (member.getPriority().toInt() >= 2) {
+						if (member.getPriority().toLevel() >= 2) {
 							lib.sendMessage(p, lib.alreadyMax(adminRank, ownerRank));
 							return true;
 						}
@@ -2151,7 +2183,7 @@ public class CommandClan extends Command implements Message.Factory {
 						}
 						Clan.Associate member = associate.getClan().getMember(m -> m.getId().equals(tid));
 						if (member == null) return true;
-						if (member.getPriority().toInt() >= associate.getPriority().toInt()) {
+						if (member.getPriority().toLevel() >= associate.getPriority().toLevel()) {
 							lib.sendMessage(p, lib.noClearance());
 							return true;
 						}
@@ -2234,7 +2266,7 @@ public class CommandClan extends Command implements Message.Factory {
 							lib.sendMessage(p, lib.playerUnknown(args1));
 							return true;
 						}
-						if (member.getPriority().toInt() > associate.getPriority().toInt()) {
+						if (member.getPriority().toLevel() > associate.getPriority().toLevel()) {
 							lib.sendMessage(p, lib.noClearance());
 							return true;
 						}
@@ -2289,19 +2321,19 @@ public class CommandClan extends Command implements Message.Factory {
 						return true;
 					}
 					if (associate != null && args1.equals(associate.getClan().getName())) {
-						AssociateDisplayInfoEvent ev = ClanVentBus.queue(new AssociateDisplayInfoEvent(associate, AssociateDisplayInfoEvent.Type.PERSONAL)).join();
+						AssociateDisplayInfoEvent ev = ClanVentBus.call(new AssociateDisplayInfoEvent(associate, AssociateDisplayInfoEvent.Type.PERSONAL));
 						if (!ev.isCancelled()) {
 							Clan.ACTION.getClanboard(p, 1);
 						}
 						return true;
 					}
 					Clan clan = ClansAPI.getInstance().getClanManager().getClan(ClansAPI.getInstance().getClanManager().getClanID(args1));
-					AssociateDisplayInfoEvent ev = ClanVentBus.queue(new AssociateDisplayInfoEvent(associate, p, clan, AssociateDisplayInfoEvent.Type.OTHER)).join();
+					AssociateDisplayInfoEvent ev = ClanVentBus.call(new AssociateDisplayInfoEvent(associate, p, clan, AssociateDisplayInfoEvent.Type.OTHER));
 					if (!ev.isCancelled()) {
 						for (String info : clan.getClanInfo()) {
 
-							if (ClansAPI.getInstance().isInClan(p.getUniqueId())) {
-								sendMessage(p, info.replace(ClansAPI.getInstance().getClanManager().getClan(p.getUniqueId()).getName(), "&6&lUS"));
+							if (associate != null) {
+								sendMessage(p, info.replace(associate.getClan().getName(), "&6&lUS"));
 							} else {
 								sendMessage(p, info);
 							}

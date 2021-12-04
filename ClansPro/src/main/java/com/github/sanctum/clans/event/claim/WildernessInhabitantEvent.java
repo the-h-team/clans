@@ -45,8 +45,8 @@ public class WildernessInhabitantEvent extends PlayerEvent {
 			if (!ClansAPI.getDataInstance().isInWild(p)) {
 				if (titlesAllowed) {
 					try {
-						titleContext.put("W-TITLE", MessageFormat.format(ClansAPI.getDataInstance().getConfig().getRoot().getString("Clans.land-claiming.wilderness.title"), res.getLastKnown().getClan().getName()));
-						titleContext.put("W-SUB-TITLE", MessageFormat.format(ClansAPI.getDataInstance().getConfig().getRoot().getString("Clans.land-claiming.wilderness.sub-title"), res.getLastKnown().getClan().getName()));
+						titleContext.put("W-TITLE", MessageFormat.format(ClansAPI.getDataInstance().getConfig().getRoot().getString("Clans.land-claiming.wilderness.title"), ((Clan)res.getLastKnown().getHolder()).getName()));
+						titleContext.put("W-SUB-TITLE", MessageFormat.format(ClansAPI.getDataInstance().getConfig().getRoot().getString("Clans.land-claiming.wilderness.sub-title"), ((Clan)res.getLastKnown().getHolder()).getName()));
 					} catch (NullPointerException e) {
 						titleContext.put("W-TITLE", MessageFormat.format(ClansAPI.getDataInstance().getConfig().getRoot().getString("Clans.land-claiming.wilderness.title"), "Un-claimed"));
 						titleContext.put("W-SUB-TITLE", MessageFormat.format(ClansAPI.getDataInstance().getConfig().getRoot().getString("Clans.land-claiming.wilderness.sub-title"), "Un-claimed"));
@@ -85,7 +85,7 @@ public class WildernessInhabitantEvent extends PlayerEvent {
 
 	@Override
 	public Clan getClan() {
-		return getPreviousClaim().getClan();
+		return ((Clan)getPreviousClaim().getHolder());
 	}
 
 	public boolean isTitlesAllowed() {

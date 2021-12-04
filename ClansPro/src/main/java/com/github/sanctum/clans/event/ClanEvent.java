@@ -10,15 +10,19 @@ import com.github.sanctum.labyrinth.event.custom.Vent;
  */
 public abstract class ClanEvent extends Vent {
 
-	private Clan clan;
+	private final Clan clan;
+	private final String name;
 
 	public ClanEvent(boolean isAsync) {
 		super(isAsync);
+		this.clan = null;
+		this.name = null;
 	}
 
 	public ClanEvent(Clan clan, boolean isAsync) {
-		this(isAsync);
+		super(isAsync);
 		this.clan = clan;
+		this.name = clan.getName();
 	}
 
 	/**
@@ -28,6 +32,10 @@ public abstract class ClanEvent extends Vent {
 	 */
 	public Clan getClan() {
 		return clan;
+	}
+
+	public String getClanName() {
+		return this.name;
 	}
 
 	public ClanAction getUtil() {

@@ -332,6 +332,7 @@ Formatting:
   # and you'll need to use the placeholders from the wiki within your chat management plugin.
   allow: true
   # What kind of file type should clans use for clan data?
+  #
   # If you are wanting to convert your in game data first go in game, use '/cla copy' after you do that
   # bring your server to a complete stop then change this value to JSON. After doing that delete the old yml files
   # and start your server! (Json -> Yaml Coming soon)
@@ -344,7 +345,6 @@ Formatting:
     # {0} = Clan color, {1} = Clan name
     text: '&7[{0}{1}&7] '
   # Change number formatting lang. [en = English, fr = French, de = german, nl = Dutch]
-  # NOTE: REQUIRES a full server restart.
   locale: en
   # Change the max size a clan tag can be.
   tag-size: 15
@@ -389,6 +389,7 @@ Formatting:
     Channel:
       # {0} = Clan rank formatting, {1} = Clan name w/ color
       # Example w/ WORDLESS: (•❂•) [Test] <Hempfest> Hello world!
+      # This section is useless when used in tandem with some chat plugins!
       global: '&8(&b{0}&8)&r &8[&3{1}&8]&r'
 
       clan:
@@ -521,4 +522,4 @@ Addon:
 ## -- DO NOT EDIT BELOW --
 # Authors: Hempfest, ms5984
 ##------------------------
-Version: 1.3.1
+Version: 1.3.2

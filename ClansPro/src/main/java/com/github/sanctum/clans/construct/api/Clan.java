@@ -1,7 +1,6 @@
 package com.github.sanctum.clans.construct.api;
 
 import com.github.sanctum.clans.construct.ClanManager;
-import com.github.sanctum.clans.construct.RankPriority;
 import com.github.sanctum.clans.construct.actions.ClanAction;
 import com.github.sanctum.clans.construct.extra.BukkitColor;
 import com.github.sanctum.clans.construct.extra.ClanError;
@@ -19,9 +18,10 @@ import com.github.sanctum.labyrinth.formatting.string.GradientColor;
 import com.github.sanctum.labyrinth.formatting.string.RandomHex;
 import com.github.sanctum.labyrinth.library.HUID;
 import com.github.sanctum.labyrinth.library.Mailer;
+import com.github.sanctum.labyrinth.library.TypeFlag;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.google.gson.reflect.TypeToken;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
@@ -38,6 +38,7 @@ import org.bukkit.Chunk;
 import org.bukkit.Location;
 import org.bukkit.configuration.serialization.ConfigurationSerializable;
 import org.bukkit.configuration.serialization.DelegateDeserialization;
+import org.bukkit.entity.Tameable;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -48,7 +49,7 @@ import org.jetbrains.annotations.Nullable;
 @NodePointer(value = "Clan",
 		type = DefaultClan.class)
 @DelegateDeserialization(DefaultClan.class)
-public interface Clan extends ClanBank, ConfigurationSerializable, EntityHolder, InvasiveEntity, JsonAdapter<Clan>, PersistentEntity, Relatable<Clan> {
+public interface Clan extends ClanBank, ConfigurationSerializable, EntityHolder, InvasiveEntity, JsonAdapter<Clan>, Relatable<Clan> {
 
 	ClanAction ACTION = new ClanAction();
 
@@ -175,14 +176,24 @@ public interface Clan extends ClanBank, ConfigurationSerializable, EntityHolder,
 	/**
 	 * Retrieve a value of specified type from this clans persistent data container.
 	 *
-	 * @param token The type of object to retrieve.
+	 * @param flag The type of object to retrieve.
 	 * @param key   The key delimiter for the object.
 	 * @param <R>   The desired serializable object.
 	 * @return The desired serializable object.
 	 */
-	@SuppressWarnings("unchecked")// <-- I'll show you unchecked..
-	default <R> R getValue(TypeToken<R> token, String key) {
-		return (R) getValue(token.getRawType(), key);
+	default <R> R getValue(TypeFlag<R> flag, String key) {
+		return getValue(flag.getType(), key);
+	}
+
+	/**
+	 * Retrieve a value of specified type from this clans persistent data container.
+	 *
+	 * @param key  The key delimiter for the object.
+	 * @param <R>  The desired serializable object.
+	 * @return The desired serializable object.
+	 */
+	default <R> R getValue(String key) {
+		return getValue(TypeFlag.get(), key);
 	}
 
 	/**
@@ -460,11 +471,44 @@ public interface Clan extends ClanBank, ConfigurationSerializable, EntityHolder,
 		DEFAULT, CUSTOM, UNKNOWN
 	}
 
+	enum Rank {
+
+		/**
+		 * Rank = Member
+		 */
+		NORMAL(0),
+		/**
+		 * Rank = Moderator
+		 */
+		HIGH(1),
+		/**
+		 * Rank = Admin
+		 */
+		HIGHER(2),
+		/**
+		 * Rank = Owner
+		 */
+		HIGHEST(3);
+
+		private final int priNum;
+
+		Rank(int priNum) {
+			this.priNum = priNum;
+		}
+
+		public int toLevel() {
+			int result;
+			result = this.priNum;
+			return result;
+		}
+
+	}
+
 
 	/**
 	 * A type of invasive entity that belongs to a parent entity known as a {@link Clan}.
 	 */
-	interface Associate extends InvasiveEntity, PersistentEntity {
+	interface Associate extends InvasiveEntity {
 
 		/**
 		 * @return The users display name.
@@ -532,7 +576,7 @@ public interface Clan extends ClanBank, ConfigurationSerializable, EntityHolder,
 		/**
 		 * @return Gets the user rank priority.
 		 */
-		RankPriority getPriority();
+		Clan.Rank getPriority();
 
 		/**
 		 * Gets the total amount of player kills within x amount of time of the specified
@@ -576,7 +620,7 @@ public interface Clan extends ClanBank, ConfigurationSerializable, EntityHolder,
 		 *
 		 * @param priority The rank priority to update the associate with.
 		 */
-		void setPriority(RankPriority priority);
+		void setPriority(Clan.Rank priority);
 
 		/**
 		 * Update the users clan biography.
@@ -595,13 +639,46 @@ public interface Clan extends ClanBank, ConfigurationSerializable, EntityHolder,
 		/**
 		 * Get the consultant for this associate object.
 		 *
-		 * The consultant could be this very object instance, if its not due to implementation then this method will attempt to return
-		 * a server provided consultant via {@link ClansAPI#getConsultant()}.
+		 * The consultant could be this very object instance if an animal entity.
+		 * If this is a normal clan associate then the closest relative consultant will attempt
+		 * to be returned (an owned animal).
 		 *
-		 * @return a message consultant object or null if none provided.
+		 * @return a message consultant object relative to this associate otherwise a server provided consultant via {@link ClansAPI#getConsultant()}
 		 */
 		default Consultant getConsultant() {
-			return isServer() || isTamable() ? (Consultant)this : ClansAPI.getInstance().getConsultant();
+			if (isServer() || isTamable()) {
+				return (Consultant) this;
+			}
+			for (InvasiveEntity entity : getClan()) {
+				if (entity.isTamable()) {
+					Tameable en = (Tameable) entity.getAsEntity();
+					if (en.getOwner() != null && en.getOwner().getUniqueId().equals(getId())) {
+						return entity.getAsAssociate().getConsultant();
+					}
+				}
+			}
+			return ClansAPI.getInstance().getConsultant();
+		}
+
+		/**
+		 * Get an array of consultants for this associate object.
+		 *
+		 * The consultants follow strict ruling of owned only, so any invasive entity not in relation to this one will not
+		 * be encountered in the search.
+		 *
+		 * @return an array of message consultant objects relative to this associate.
+		 */
+		default Consultant[] getConsultants() {
+			List<Consultant> consultants = new ArrayList<>();
+			for (InvasiveEntity entity : getClan()) {
+				if (entity.isTamable()) {
+					Tameable en = (Tameable) entity.getAsEntity();
+					if (en.getOwner() != null && en.getOwner().getUniqueId().equals(getId())) {
+						consultants.add(entity.getAsAssociate().getConsultant());
+					}
+				}
+			}
+			return consultants.toArray(new Consultant[0]);
 		}
 
 		/**
@@ -671,6 +748,7 @@ public interface Clan extends ClanBank, ConfigurationSerializable, EntityHolder,
 		 */
 		@Override
 		void save();
+
 	}
 
 	class Color implements CharSequence {
@@ -799,7 +877,7 @@ public interface Clan extends ClanBank, ConfigurationSerializable, EntityHolder,
 			Clan.Associate associate = clan.newAssociate(user);
 			if (associate != null) {
 				clan.add(associate);
-				associate.setPriority(RankPriority.valueOf(entry.getValue()));
+				associate.setPriority(Rank.valueOf(entry.getValue()));
 				associate.save();
 			}
 		}
@@ -807,9 +885,8 @@ public interface Clan extends ClanBank, ConfigurationSerializable, EntityHolder,
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")// <== shut up
-	default Class<Clan> getClassType() {
-		return (Class<Clan>) getClass();
+	default Class<? extends Clan> getSubClass() {
+		return getClass();
 	}
 
 	@Override
@@ -854,7 +931,7 @@ public interface Clan extends ClanBank, ConfigurationSerializable, EntityHolder,
 			Clan.Associate associate = clan.newAssociate(user);
 			if (associate != null) {
 				clan.add(associate);
-				associate.setPriority(RankPriority.valueOf(entry.getValue()));
+				associate.setPriority(Rank.valueOf(entry.getValue()));
 				associate.save();
 			}
 		}

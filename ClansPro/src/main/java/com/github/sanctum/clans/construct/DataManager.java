@@ -7,8 +7,10 @@ import com.github.sanctum.clans.construct.api.ClanCooldown;
 import com.github.sanctum.clans.construct.api.ClansAPI;
 import com.github.sanctum.clans.construct.extra.FancyLogoAppendage;
 import com.github.sanctum.clans.construct.impl.Resident;
+import com.github.sanctum.labyrinth.data.DataTable;
 import com.github.sanctum.labyrinth.data.FileList;
 import com.github.sanctum.labyrinth.data.FileManager;
+import com.github.sanctum.labyrinth.data.LabyrinthDataTable;
 import com.github.sanctum.labyrinth.formatting.FancyMessage;
 import com.github.sanctum.labyrinth.library.Items;
 import com.github.sanctum.labyrinth.library.StringUtils;
@@ -18,7 +20,6 @@ import com.github.sanctum.skulls.CustomHeadLoader;
 import java.io.File;
 import java.io.InputStream;
 import java.text.MessageFormat;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -37,17 +38,12 @@ import org.jetbrains.annotations.NotNull;
 
 public class DataManager {
 
-	private final List<String> WAR_BLOCKED_CMDS = new ArrayList<>();
-	private final List<String> CLAN_GUI_FORMAT = new LinkedList<>();
 	public final Map<Player, String> ID_MODE = new HashMap<>();
 	private final Set<Player> CHAT_SPY = new HashSet<>();
 	private final Set<Resident> RESIDENTS = new HashSet<>();
 	private final Set<Player> INHABITANTS = new HashSet<>();
 	private final List<ClanCooldown> COOLDOWNS = new LinkedList<>();
-
-	public DataManager() {
-		this.WAR_BLOCKED_CMDS.addAll(getConfig().getRoot().getStringList("Clans.war.blocked-commands"));
-	}
+	private final DataTable resetTable = new LabyrinthDataTable();
 
 	public static class Side {
 		public static final int LEFT = 1;
@@ -63,22 +59,8 @@ public class DataManager {
 		}
 	}
 
-	public List<String> getGUIFormat() {
-		return Collections.unmodifiableList(CLAN_GUI_FORMAT);
-	}
-
-	public List<String> getWarBlockedCommands() {
-		return WAR_BLOCKED_CMDS;
-	}
-
-	public void setBlockedWarCommands(List<String> commands) {
-		WAR_BLOCKED_CMDS.clear();
-		WAR_BLOCKED_CMDS.addAll(commands);
-	}
-
-	public void setGUIFormat(List<String> format) {
-		CLAN_GUI_FORMAT.clear();
-		CLAN_GUI_FORMAT.addAll(format);
+	public DataTable getResetTable() {
+		return this.resetTable;
 	}
 
 	public boolean isSpy(Player player) {

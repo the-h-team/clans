@@ -93,7 +93,25 @@ public final class ArenaManager implements Iterable<War> {
 		}
 		if (!free.isRunning()) {
 			if (can && q.getTeams().length == MAX_TEAMS) {
-				LabyrinthProvider.getService(Service.MESSENGER).getNewMessage().setPrefix(ClansAPI.getInstance().getPrefix().joined()).broadcast("&3A new clan war between clans &b[" + Arrays.stream(q.getTeams()).map(Clan::getName).collect(Collectors.joining(",")) + "] &3starts in 1 minute.");
+				Cooldown time = new Cooldown() {
+
+					private final long time;
+
+					{
+						this.time = abv(LabyrinthProvider.getInstance().getLocalPrintManager().getPrint(ClansAPI.getInstance().getLocalPrintKey()).getNumber("war_start_time").intValue());
+					}
+
+					@Override
+					public String getId() {
+						return null;
+					}
+
+					@Override
+					public long getCooldown() {
+						return this.time;
+					}
+				};
+				LabyrinthProvider.getService(Service.MESSENGER).getNewMessage().setPrefix(ClansAPI.getInstance().getPrefix().joined()).broadcast("&3A new clan war between clans &b[" + Arrays.stream(q.getTeams()).map(Clan::getName).collect(Collectors.joining(",")) + "] &3starts in " + time.getMinutesLeft() + " minute(s) & " + time.getSecondsLeft() + " second(s)");
 				free.stamp();
 				new Cooldown() {
 
@@ -101,7 +119,7 @@ public final class ArenaManager implements Iterable<War> {
 					private final String id;
 
 					{
-						this.time = abv(ClansAPI.getDataInstance().getConfigInt("Clans.war.start-wait"));
+						this.time = abv(LabyrinthProvider.getInstance().getLocalPrintManager().getPrint(ClansAPI.getInstance().getLocalPrintKey()).getNumber("war_start_time").intValue());
 						this.id = "war-" + free.getId() + "-start";
 					}
 

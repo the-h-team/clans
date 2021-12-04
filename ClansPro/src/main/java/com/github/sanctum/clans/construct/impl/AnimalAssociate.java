@@ -1,7 +1,6 @@
 package com.github.sanctum.clans.construct.impl;
 
 import com.github.sanctum.clans.bridge.ClanVentBus;
-import com.github.sanctum.clans.construct.RankPriority;
 import com.github.sanctum.clans.construct.api.Channel;
 import com.github.sanctum.clans.construct.api.Claim;
 import com.github.sanctum.clans.construct.api.Clan;
@@ -10,6 +9,7 @@ import com.github.sanctum.clans.construct.api.Consultant;
 import com.github.sanctum.clans.construct.api.IncomingConsultationListener;
 import com.github.sanctum.clans.construct.api.InvasiveEntity;
 import com.github.sanctum.clans.construct.api.OutgoingConsultationListener;
+import com.github.sanctum.clans.construct.api.PersistentEntity;
 import com.github.sanctum.clans.construct.api.Relation;
 import com.github.sanctum.clans.construct.api.Teleport;
 import com.github.sanctum.clans.construct.api.Ticket;
@@ -19,6 +19,7 @@ import com.github.sanctum.labyrinth.annotation.Ordinal;
 import com.github.sanctum.labyrinth.data.Atlas;
 import com.github.sanctum.labyrinth.data.AtlasMap;
 import com.github.sanctum.labyrinth.data.LabyrinthUser;
+import com.github.sanctum.labyrinth.data.MemorySpace;
 import com.github.sanctum.labyrinth.data.Node;
 import com.github.sanctum.labyrinth.data.service.Check;
 import com.github.sanctum.labyrinth.library.HUID;
@@ -30,6 +31,7 @@ import com.github.sanctum.skulls.SkullType;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -44,7 +46,7 @@ import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public final class AnimalAssociate implements Clan.Associate, Consultant {
+public final class AnimalAssociate implements PersistentEntity, Clan.Associate, Consultant {
 
 	private final Map<String, IncomingConsultationListener> incomingMessageListeners = new HashMap<>();
 	private final Map<String, OutgoingConsultationListener> outgoingResponseListeners = new HashMap<>();
@@ -54,13 +56,13 @@ public final class AnimalAssociate implements Clan.Associate, Consultant {
 	private String bio;
 	private String nickname;
 	private final Date join;
-	private RankPriority rank;
+	private Clan.Rank rank;
 	private Channel chat;
 	private final ItemStack head;
 	private final Object data;
 	private final Map<Long, Long> killMap;
 
-	public AnimalAssociate(InvasiveEntity entity, RankPriority priority, Clan clan) {
+	public AnimalAssociate(InvasiveEntity entity, Clan.Rank priority, Clan clan) {
 		Check.forNull(entity, "Parent entity cannot be null!");
 		Check.argument(entity.isEntity(), "Parent type is not an entity!");
 		Check.argument(entity.getAsEntity() instanceof Tameable, "Parent entity is not tamable!");
@@ -109,7 +111,7 @@ public final class AnimalAssociate implements Clan.Associate, Consultant {
 		return parent.getName();
 	}
 
-	public UUID getId() {
+	public @NotNull UUID getId() {
 		return UUID.fromString(parent.getTag().getId());
 	}
 
@@ -177,7 +179,7 @@ public final class AnimalAssociate implements Clan.Associate, Consultant {
 	/**
 	 * @return Gets the associates rank priority.
 	 */
-	public RankPriority getPriority() {
+	public Clan.Rank getPriority() {
 		return this.rank;
 	}
 
@@ -224,7 +226,7 @@ public final class AnimalAssociate implements Clan.Associate, Consultant {
 	 *
 	 * @param priority The rank priority to update the associate with.
 	 */
-	public void setPriority(RankPriority priority) {
+	public void setPriority(Clan.Rank priority) {
 		this.rank = priority;
 	}
 
@@ -346,30 +348,51 @@ public final class AnimalAssociate implements Clan.Associate, Consultant {
 
 	@Override
 	public boolean isNode(String key) {
-		Node user_data = getClan().getNode("user-data");
-		Node user = user_data.getNode(getPath());
-		return user.isNode(key);
+		Optional<MemorySpace> memorySpace = getClan().getMemorySpace();
+		if (memorySpace.isPresent()) {
+			Node user_data = memorySpace.get().getNode("user-data");
+			Node user = user_data.getNode(getPath());
+			return user.isNode(key);
+		}
+		return false;
 	}
 
 	@Override
 	public Node getNode(String key) {
-		Node user_data = getClan().getNode("user-data");
-		Node user = user_data.getNode(getPath());
-		return user.getNode(key);
+		Optional<MemorySpace> memorySpace = getClan().getMemorySpace();
+		if (memorySpace.isPresent()) {
+			Node user_data = memorySpace.get().getNode("user-data");
+			Node user = user_data.getNode(getPath());
+			return user.getNode(key);
+		}
+		return null;
 	}
 
 	@Override
 	public Set<String> getKeys(boolean deep) {
-		Node user_data = getClan().getNode("user-data");
-		Node user = user_data.getNode(getPath());
-		return user.getKeys(deep);
+		Optional<MemorySpace> memorySpace = getClan().getMemorySpace();
+		if (memorySpace.isPresent()) {
+			Node user_data = memorySpace.get().getNode("user-data");
+			Node user = user_data.getNode(getPath());
+			return user.getKeys(deep);
+		}
+		return new HashSet<>();
 	}
 
 	@Override
 	public Map<String, Object> getValues(boolean deep) {
-		Node user_data = getClan().getNode("user-data");
-		Node user = user_data.getNode(getPath());
-		return user.getValues(deep);
+		Optional<MemorySpace> memorySpace = getClan().getMemorySpace();
+		if (memorySpace.isPresent()) {
+			Node user_data = memorySpace.get().getNode("user-data");
+			Node user = user_data.getNode(getPath());
+			return user.getValues(deep);
+		}
+		return new HashMap<>();
+	}
+
+	@Override
+	public @NotNull Optional<MemorySpace> getMemorySpace() {
+		return Optional.of(this);
 	}
 
 	@Override

@@ -32,7 +32,7 @@ public class StashCommand extends ClanSubCommand {
 						Clan.ACTION.sendMessage(p, Clan.ACTION.noClearance());
 						return true;
 					}
-					if (!r.getCurrent().getClan().getId().toString().equals(clan.getId().toString())) {
+					if (!((Clan)r.getCurrent().getHolder()).getId().toString().equals(clan.getId().toString())) {
 						Clan.ACTION.sendMessage(p, "&c&oYou can only view the stash @ the clan base.");
 						return true;
 					}

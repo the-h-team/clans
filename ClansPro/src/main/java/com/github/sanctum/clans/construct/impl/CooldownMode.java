@@ -30,7 +30,11 @@ public class CooldownMode extends ClanCooldown {
 
 	@Override
 	public long getCooldown() {
-		return ClansAPI.getInstance().getClanManager().getClan(HUID.fromString(clanId)).getNode("cooldown").getNode("mode-switch").toPrimitive().getLong();
+		Clan c = ClansAPI.getInstance().getClanManager().getClan(HUID.fromString(clanId));
+		if (c.getMemorySpace().isPresent()) {
+			return c.getMemorySpace().get().getNode("cooldown").getNode("mode-switch").toPrimitive().getLong();
+		}
+		return 0L;
 	}
 
 	@Override
@@ -39,7 +43,7 @@ public class CooldownMode extends ClanCooldown {
 	}
 
 	@Override
-	public ClanCooldown getInstance() {
+	public ClanCooldown getAttached() {
 		return this;
 	}
 }

@@ -4,7 +4,7 @@ import com.github.sanctum.clans.construct.api.Channel;
 import com.github.sanctum.clans.construct.api.Clan;
 
 /**
- * Called when a clan associate receives a message from a chat channel
+ * Called when a clan associate receives a message from a chat channel on successful submission from {@link AssociateChatEvent}.
  */
 public class AssociateMessageReceiveEvent extends AssociateEvent {
 

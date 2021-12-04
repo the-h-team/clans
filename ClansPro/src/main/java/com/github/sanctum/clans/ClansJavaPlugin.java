@@ -6,13 +6,14 @@ import com.github.sanctum.clans.construct.ArenaManager;
 import com.github.sanctum.clans.construct.ClaimManager;
 import com.github.sanctum.clans.construct.ClanManager;
 import com.github.sanctum.clans.construct.DataManager;
-import com.github.sanctum.clans.construct.GUI;
 import com.github.sanctum.clans.construct.ShieldManager;
 import com.github.sanctum.clans.construct.actions.ClansUpdate;
+import com.github.sanctum.clans.construct.api.AbstractGameRule;
 import com.github.sanctum.clans.construct.api.Channel;
 import com.github.sanctum.clans.construct.api.Claim;
 import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClansAPI;
+import com.github.sanctum.clans.construct.api.GUI;
 import com.github.sanctum.clans.construct.api.InvasiveEntity;
 import com.github.sanctum.clans.construct.api.LogoGallery;
 import com.github.sanctum.clans.construct.api.LogoHolder;
@@ -48,6 +49,8 @@ import com.github.sanctum.labyrinth.task.Schedule;
 import com.github.sanctum.labyrinth.task.Task;
 import com.github.sanctum.skulls.CustomHead;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
@@ -122,17 +125,31 @@ public class ClansJavaPlugin extends JavaPlugin implements ClansAPI {
 	public void onEnable() {
 		initialize();
 
-		if (isInvalid()) return;
+		if (!isValid()) return;
 
 		Configurable.registerClass(Clan.class);
 		Configurable.registerClass(Claim.class);
 		ConfigurationSerialization.registerClass(Claim.class);
 		ConfigurationSerialization.registerClass(Clan.class);
 
+		LabyrinthProvider.getInstance().getLocalPrintManager().register(() -> {
+			Map<String, Object> map = new HashMap<>();
+			DataManager manager = ClansAPI.getDataInstance();
+			manager.getConfig().getRoot().reload();
+			manager.getMessages().getRoot().reload();
+			map.put(AbstractGameRule.WAR_START_TIME, manager.getConfigInt("Clans.war.start-wait"));
+			map.put(AbstractGameRule.BLOCKED_WAR_COMMANDS, manager.getConfig().getRoot().getStringList("Clans.war.blocked-commands"));
+			map.put(AbstractGameRule.MAX_CLANS, manager.getConfigInt("Clans.max-clans"));
+			map.put(AbstractGameRule.DEFAULT_WAR_MODE, manager.getConfigString("Clans.mode-change.default"));
+			map.putAll(manager.getResetTable().values());
+			manager.getResetTable().clear();
+			return map;
+		}, getLocalPrintKey());
+
+		getClaimManager().getFlagManager().register(DefaultClaimFlag.values());
+
 		OrdinalProcedure.process(new StartProcedure(this));
 
-		FileManager config = dataManager.getMessages();
-		dataManager.setGUIFormat(config.read(c -> c.getStringList("menu-format.clan")));
 		FileManager man = getFileList().get("heads", "Configuration", FileType.JSON);
 		if (!man.getRoot().exists()) {
 			origin.copy("heads.data", man);
@@ -150,8 +167,6 @@ public class ClansJavaPlugin extends JavaPlugin implements ClansAPI {
 			}
 			return null;
 		}).deploy();
-
-		getClaimManager().getFlagManager().register(DefaultClaimFlag.values());
 
 		Channel.CLAN.register(context -> {
 			String test = context;
@@ -199,7 +214,7 @@ public class ClansJavaPlugin extends JavaPlugin implements ClansAPI {
 		getLogoGallery().load(reserved4.getId(), reserved4.get());
 	}
 
-	private boolean isInvalid() {
+	private boolean isValid() {
 		String state = LabyrinthProvider.getInstance().getContainer(STATE).get(String.class, "toString");
 		if (state != null) {
 			boolean recorded = Boolean.parseBoolean(state);
@@ -223,13 +238,13 @@ public class ClansJavaPlugin extends JavaPlugin implements ClansAPI {
 						Bukkit.getConsoleSender().spigot().sendMessage(m.build());
 					}
 					getServer().getPluginManager().disablePlugin(this);
-					return true;
+					return false;
 				} else {
 					LabyrinthProvider.getInstance().getContainer(STATE).delete("toString");
 				}
 			}
 		}
-		return false;
+		return true;
 	}
 
 	public void onDisable() {
@@ -257,7 +272,7 @@ public class ClansJavaPlugin extends JavaPlugin implements ClansAPI {
 		} catch (Exception ignored) {
 		}
 
-		PlayerEventListener.STAND_REMOVAL.run(new Object()).deploy();
+		PlayerEventListener.STAND_REMOVAL.run(this).deploy();
 
 		getClanManager().getClans().list().forEach(c -> {
 			c.save();

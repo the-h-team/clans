@@ -1,11 +1,11 @@
 package com.github.sanctum.clans.construct.impl;
 
-import com.github.sanctum.clans.construct.RankPriority;
 import com.github.sanctum.clans.construct.api.Channel;
 import com.github.sanctum.clans.construct.api.Claim;
 import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClansAPI;
 import com.github.sanctum.clans.construct.api.InvasiveEntity;
+import com.github.sanctum.clans.construct.api.PersistentEntity;
 import com.github.sanctum.clans.construct.api.Relation;
 import com.github.sanctum.clans.construct.api.Teleport;
 import com.github.sanctum.clans.construct.extra.PrivateContainer;
@@ -14,6 +14,7 @@ import com.github.sanctum.labyrinth.annotation.Ordinal;
 import com.github.sanctum.labyrinth.data.Atlas;
 import com.github.sanctum.labyrinth.data.AtlasMap;
 import com.github.sanctum.labyrinth.data.LabyrinthUser;
+import com.github.sanctum.labyrinth.data.MemorySpace;
 import com.github.sanctum.labyrinth.data.Node;
 import com.github.sanctum.labyrinth.data.Primitive;
 import com.github.sanctum.labyrinth.library.HUID;
@@ -25,6 +26,7 @@ import java.text.MessageFormat;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -43,20 +45,20 @@ import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public final class DefaultAssociate implements Clan.Associate {
+public final class DefaultAssociate implements Clan.Associate, PersistentEntity {
 
 	private final String name;
 	private final UUID id;
 	private final Clan clanObject;
 	private final HUID clan;
-	private RankPriority rank;
+	private Clan.Rank rank;
 	private Channel chat;
 	private final ItemStack head;
 	private final Object data;
 	private final Tag tag;
 	private final Map<Long, Long> killMap;
 
-	public DefaultAssociate(UUID uuid, RankPriority priority, Clan clan) {
+	public DefaultAssociate(UUID uuid, Clan.Rank priority, Clan clan) {
 		this.clan = clan.getId();
 		this.clanObject = clan;
 		this.name = LabyrinthProvider.getOfflinePlayers().stream().filter(p -> p.getId().equals(uuid)).map(LabyrinthUser::getName).findFirst().orElseGet(() -> {
@@ -176,7 +178,7 @@ public final class DefaultAssociate implements Clan.Associate {
 	/**
 	 * @return Gets the associates rank priority.
 	 */
-	public RankPriority getPriority() {
+	public Clan.Rank getPriority() {
 		return this.rank;
 	}
 
@@ -223,7 +225,7 @@ public final class DefaultAssociate implements Clan.Associate {
 	 *
 	 * @param priority The rank priority to update the associate with.
 	 */
-	public void setPriority(RankPriority priority) {
+	public void setPriority(Clan.Rank priority) {
 		this.rank = priority;
 	}
 
@@ -231,33 +233,45 @@ public final class DefaultAssociate implements Clan.Associate {
 	 * @return Gets the associates clan nick-name, if one is not present their full user-name will be returned.
 	 */
 	public synchronized String getNickname() {
-		Node user_data = getClan().getNode("user-data");
-		Node user = user_data.getNode(getId().toString());
-		Node nickname = user.getNode("nickname");
-		Primitive n = nickname.toPrimitive();
-		return n.isString() ? n.getString() : getName();
+		Optional<MemorySpace> memorySpace = getClan().getMemorySpace();
+		if (memorySpace.isPresent()) {
+			Node user_data = memorySpace.get().getNode("user-data");
+			Node user = user_data.getNode(getId().toString());
+			Node nickname = user.getNode("nickname");
+			Primitive n = nickname.toPrimitive();
+			return n.isString() ? n.getString() : getName();
+		}
+		return getName();
 	}
 
 	/**
-	 * @return Gets the associates clan biography.
+	 * @return Gets the associates' clan biography.
 	 */
 	public synchronized String getBiography() {
-		Node user_data = getClan().getNode("user-data");
-		Node user = user_data.getNode(getId().toString());
-		Node bio = user.getNode("bio");
-		Primitive b = bio.toPrimitive();
-		return b.isString() ? b.getString() : "&fI much like other's, &fenjoy long walks on the beach.";
+		Optional<MemorySpace> memorySpace = getClan().getMemorySpace();
+		if (memorySpace.isPresent()) {
+			Node user_data = memorySpace.get().getNode("user-data");
+			Node user = user_data.getNode(getId().toString());
+			Node bio = user.getNode("bio");
+			Primitive b = bio.toPrimitive();
+			return b.isString() ? b.getString() : "&fI much like other's, &fenjoy long walks on the beach.";
+		}
+		return "&fI much like other's, &fenjoy long walks on the beach.";
 	}
 
 	/**
 	 * @return Gets the associates clan join date.
 	 */
 	public synchronized Date getJoinDate() {
-		Node user_data = getClan().getNode("user-data");
-		Node user = user_data.getNode(getId().toString());
-		Node date = user.getNode("join-date");
-		Primitive d = date.toPrimitive();
-		return d.isLong() ? new Date(d.getLong()) : new Date();
+		Optional<MemorySpace> memorySpace = getClan().getMemorySpace();
+		if (memorySpace.isPresent()) {
+			Node user_data = memorySpace.get().getNode("user-data");
+			Node user = user_data.getNode(getId().toString());
+			Node date = user.getNode("join-date");
+			Primitive d = date.toPrimitive();
+			return d.isLong() ? new Date(d.getLong()) : new Date();
+		}
+		return new Date();
 	}
 
 	/**
@@ -288,13 +302,16 @@ public final class DefaultAssociate implements Clan.Associate {
 	 * @param newBio The new biography to set to the associate
 	 */
 	public synchronized void setBio(String newBio) {
-		Node user_data = getClan().getNode("user-data");
-		Node user = user_data.getNode(getId().toString());
-		Node bio = user.getNode("bio");
-		bio.set(newBio);
-		bio.save();
-		if (getUser().toBukkit().isOnline()) {
-			Claim.ACTION.sendMessage(getUser().toBukkit().getPlayer(), MessageFormat.format(ClansAPI.getDataInstance().getMessageResponse("member-bio"), newBio));
+		Optional<MemorySpace> memorySpace = getClan().getMemorySpace();
+		if (memorySpace.isPresent()) {
+			Node user_data = memorySpace.get().getNode("user-data");
+			Node user = user_data.getNode(getId().toString());
+			Node bio = user.getNode("bio");
+			bio.set(newBio);
+			bio.save();
+			if (getUser().toBukkit().isOnline()) {
+				Claim.ACTION.sendMessage(getUser().toBukkit().getPlayer(), MessageFormat.format(ClansAPI.getDataInstance().getMessageResponse("member-bio"), newBio));
+			}
 		}
 	}
 
@@ -304,18 +321,21 @@ public final class DefaultAssociate implements Clan.Associate {
 	 * @param newName The new nick name
 	 */
 	public synchronized void setNickname(String newName) {
-		Node user_data = getClan().getNode("user-data");
-		Node user = user_data.getNode(getId().toString());
-		Node bio = user.getNode("nickname");
-		if (newName.equals("empty")) {
-			bio.set(getName());
-			newName = getUser().getName();
-		} else {
-			bio.set(newName);
-		}
-		bio.save();
-		if (getTag().isPlayer() && getTag().getPlayer().isOnline()) {
-			Clan.ACTION.sendMessage(getUser().toBukkit().getPlayer(), MessageFormat.format(ClansAPI.getDataInstance().getMessageResponse("nickname"), newName));
+		Optional<MemorySpace> memorySpace = getClan().getMemorySpace();
+		if (memorySpace.isPresent()) {
+			Node user_data = memorySpace.get().getNode("user-data");
+			Node user = user_data.getNode(getId().toString());
+			Node bio = user.getNode("nickname");
+			if (newName.equals("empty")) {
+				bio.set(getName());
+				newName = getUser().getName();
+			} else {
+				bio.set(newName);
+			}
+			bio.save();
+			if (getTag().isPlayer() && getTag().getPlayer().isOnline()) {
+				Clan.ACTION.sendMessage(getUser().toBukkit().getPlayer(), MessageFormat.format(ClansAPI.getDataInstance().getMessageResponse("nickname"), newName));
+			}
 		}
 	}
 
@@ -376,13 +396,17 @@ public final class DefaultAssociate implements Clan.Associate {
 
 	@Override
 	public void save() {
-		getNode("cached-name").set(getName());
-		getNode("entity").set(isEntity() && !isPlayer() ? "ENTITY" : "PLAYER");
-		if (isEntity() && !isPlayer()) {
-			getNode("entity-type").set(getAsEntity().getType().name());
-			getNode("last-location").set(getAsEntity().getLocation());
+		Optional<MemorySpace> memorySpace = getClan().getMemorySpace();
+		if (memorySpace.isPresent()) {
+			Node user_data = memorySpace.get().getNode("user-data");
+			getNode("cached-name").set(getName());
+			getNode("entity").set(isEntity() && !isPlayer() ? "ENTITY" : "PLAYER");
+			if (isEntity() && !isPlayer()) {
+				getNode("entity-type").set(getAsEntity().getType().name());
+				getNode("last-location").set(getAsEntity().getLocation());
+			}
+			user_data.save();
 		}
-		getClan().getNode("user-data").save();
 	}
 
 	@Override
@@ -397,29 +421,50 @@ public final class DefaultAssociate implements Clan.Associate {
 
 	@Override
 	public boolean isNode(String key) {
-		Node user_data = getClan().getNode("user-data");
-		Node user = user_data.getNode(getPath());
-		return user.isNode(key);
+		Optional<MemorySpace> memorySpace = getClan().getMemorySpace();
+		if (memorySpace.isPresent()) {
+			Node user_data = memorySpace.get().getNode("user-data");
+			Node user = user_data.getNode(getPath());
+			return user.isNode(key);
+		}
+		return false;
 	}
 
 	@Override
 	public Node getNode(String key) {
-		Node user_data = getClan().getNode("user-data");
-		Node user = user_data.getNode(getPath());
-		return user.getNode(key);
+		Optional<MemorySpace> memorySpace = getClan().getMemorySpace();
+		if (memorySpace.isPresent()) {
+			Node user_data = memorySpace.get().getNode("user-data");
+			Node user = user_data.getNode(getPath());
+			return user.getNode(key);
+		}
+		return null;
 	}
 
 	@Override
 	public Set<String> getKeys(boolean deep) {
-		Node user_data = getClan().getNode("user-data");
-		Node user = user_data.getNode(getPath());
-		return user.getKeys(deep);
+		Optional<MemorySpace> memorySpace = getClan().getMemorySpace();
+		if (memorySpace.isPresent()) {
+			Node user_data = memorySpace.get().getNode("user-data");
+			Node user = user_data.getNode(getPath());
+			return user.getKeys(deep);
+		}
+		return new HashSet<>();
 	}
 
 	@Override
 	public Map<String, Object> getValues(boolean deep) {
-		Node user_data = getClan().getNode("user-data");
-		Node user = user_data.getNode(getPath());
-		return user.getValues(deep);
+		Optional<MemorySpace> memorySpace = getClan().getMemorySpace();
+		if (memorySpace.isPresent()) {
+			Node user_data = memorySpace.get().getNode("user-data");
+			Node user = user_data.getNode(getPath());
+			return user.getValues(deep);
+		}
+		return new HashMap<>();
+	}
+
+	@Override
+	public @NotNull Optional<MemorySpace> getMemorySpace() {
+		return Optional.of(this);
 	}
 }

@@ -131,10 +131,10 @@ public class ClaimAction extends StringLibrary {
 				return false;
 			}
 			AssociateUnClaimEvent event = ClanVentBus.call(new AssociateUnClaimEvent(p, claim));
-			if (claim.getClan().getMembers().stream().anyMatch(a -> p.getName().equals(a.getName()))) {
+			if (((Clan)claim.getHolder()).getMembers().stream().anyMatch(a -> p.getName().equals(a.getName()))) {
 				if (!event.isCancelled()) {
 
-					if (associate.getPriority().toInt() < Clan.ACTION.claimingClearance()) {
+					if (associate.getPriority().toLevel() < Clan.ACTION.claimingClearance()) {
 						sendMessage(p, noClearance());
 						return false;
 					}
@@ -150,7 +150,7 @@ public class ClaimAction extends StringLibrary {
 			} else {
 				if (ClansAPI.getInstance().getShieldManager().isEnabled()) {
 					if (Clan.ACTION.overPowerBypass()) {
-						Clan owner = claim.getClan();
+						Clan owner = ((Clan)claim.getHolder());
 						if (clan.getPower() > owner.getPower() && !clan.equals(owner)) {
 							if (clan.isPeaceful()) {
 								sendMessage(p, peacefulDeny());
@@ -169,29 +169,31 @@ public class ClaimAction extends StringLibrary {
 								}
 								for (Chunk chunk : getChunksAroundLocation(owner.getBase(), -1, 0, 1).stream().filter(c -> ClansAPI.getInstance().getClaimManager().isInClaim(c.getX(), c.getZ(), c.getWorld().getName())).collect(Collectors.toList())) {
 									if (chunk.equals(p.getLocation().getChunk())) {
-										sendMessage(p, MessageFormat.format(ClansAPI.getDataInstance().getMessageResponse("safe-zone"), claim.getClan().getName()));
+										sendMessage(p, MessageFormat.format(ClansAPI.getDataInstance().getMessageResponse("safe-zone"), ((Clan)claim.getHolder()).getName()));
 										return false;
 									}
 								}
-								Node op = clan.getNode("over-powered");
-								if (unClaimCooldown(clan).isComplete()) {
-									int i = op.toPrimitive().getInt();
+								if (clan.getMemorySpace().isPresent()) {
+									Node op = clan.getMemorySpace().get().getNode("over-powered");
+									if (unClaimCooldown(clan).isComplete()) {
+										int i = op.toPrimitive().getInt();
 
-									if (i <= ClansAPI.getDataInstance().getConfigInt("Clans.land-claiming.over-powering.cooldown.after-uses")) {
-										i += 1;
-										int finalI = i;
-										op.set(finalI);
-										op.save();
+										if (i <= ClansAPI.getDataInstance().getConfigInt("Clans.land-claiming.over-powering.cooldown.after-uses")) {
+											i += 1;
+											int finalI = i;
+											op.set(finalI);
+											op.save();
+										} else {
+											op.set(0);
+											op.save();
+											unClaimCooldown(clan).save();
+											unClaimCooldown(clan).setCooldown();
+											sendMessage(p, ClansAPI.getDataInstance().getMessageResponse("un-claim-cooldown"));
+										}
 									} else {
-										op.set(0);
-										op.save();
-										unClaimCooldown(clan).save();
-										unClaimCooldown(clan).setCooldown();
-										sendMessage(p, ClansAPI.getDataInstance().getMessageResponse("un-claim-cooldown"));
+										sendMessage(p, unClaimCooldown(clan).fullTimeLeft());
+										return false;
 									}
-								} else {
-									sendMessage(p, unClaimCooldown(clan).fullTimeLeft());
-									return false;
 								}
 								claim.remove();
 								int x = p.getLocation().getChunk().getX();
@@ -210,7 +212,7 @@ public class ClaimAction extends StringLibrary {
 						return false;
 					}
 				} else {
-					Clan owner = claim.getClan();
+					Clan owner = ((Clan)claim.getHolder());
 					if (clan.getPower() > owner.getPower() && !clan.equals(owner)) {
 						if (clan.isPeaceful()) {
 							sendMessage(p, peacefulDeny());
@@ -230,29 +232,31 @@ public class ClaimAction extends StringLibrary {
 
 							for (Chunk chunk : getChunksAroundLocation(owner.getBase(), -1, 0, 1).stream().filter(c -> ClansAPI.getInstance().getClaimManager().isInClaim(c.getX(), c.getZ(), c.getWorld().getName())).collect(Collectors.toList())) {
 								if (chunk.equals(p.getLocation().getChunk())) {
-									sendMessage(p, MessageFormat.format(ClansAPI.getDataInstance().getMessageResponse("safe-zone"), claim.getClan().getName()));
+									sendMessage(p, MessageFormat.format(ClansAPI.getDataInstance().getMessageResponse("safe-zone"), ((Clan)claim.getHolder()).getName()));
 									return false;
 								}
 							}
-							Node op = clan.getNode("over-powered");
-							if (unClaimCooldown(clan).isComplete()) {
-								int i = op.toPrimitive().getInt();
+							if (clan.getMemorySpace().isPresent()) {
+								Node op = clan.getMemorySpace().get().getNode("over-powered");
+								if (unClaimCooldown(clan).isComplete()) {
+									int i = op.toPrimitive().getInt();
 
-								if (i <= ClansAPI.getDataInstance().getConfigInt("Clans.land-claiming.over-powering.cooldown.after-uses")) {
-									i += 1;
-									int finalI = i;
-									op.set(finalI);
-									op.save();
+									if (i <= ClansAPI.getDataInstance().getConfigInt("Clans.land-claiming.over-powering.cooldown.after-uses")) {
+										i += 1;
+										int finalI = i;
+										op.set(finalI);
+										op.save();
+									} else {
+										op.set(0);
+										op.save();
+										unClaimCooldown(clan).save();
+										unClaimCooldown(clan).setCooldown();
+										sendMessage(p, ClansAPI.getDataInstance().getMessageResponse("un-claim-cooldown"));
+									}
 								} else {
-									op.set(0);
-									op.save();
-									unClaimCooldown(clan).save();
-									unClaimCooldown(clan).setCooldown();
-									sendMessage(p, ClansAPI.getDataInstance().getMessageResponse("un-claim-cooldown"));
+									sendMessage(p, unClaimCooldown(clan).fullTimeLeft());
+									return false;
 								}
-							} else {
-								sendMessage(p, unClaimCooldown(clan).fullTimeLeft());
-								return false;
 							}
 							claim.remove();
 							int x = p.getLocation().getChunk().getX();
@@ -334,18 +338,30 @@ public class ClaimAction extends StringLibrary {
 						Claim.Flag match = claim.getFlag(f.getId());
 
 						m = new FancyMessage().then(f.getId() + ";").color(Color.OLIVE).then("Enable").color(match.isEnabled() ? Color.YELLOW : Color.AQUA).hover("Click to enable this flag.").action(() -> {
-							Arrays.stream(claim.getClan().getClaims()).forEach(claim1 -> Arrays.stream(claim1.getFlags()).forEach(flag -> {
-								if (flag.getId().equals(f.getId())) {
-									flag.setEnabled(true);
+							Arrays.stream(((Clan)claim.getHolder()).getClaims()).forEach(claim1 -> {
+								if (claim1.getFlag(f.getId()) == null) {
+									claim1.register(f);
+									claim1.getFlag(f.getId()).setEnabled(true);
 								}
-							}));
+								Arrays.stream(claim1.getFlags()).forEach(flag -> {
+									if (flag.getId().equals(f.getId())) {
+										flag.setEnabled(true);
+									}
+								});
+							});
 							Schedule.sync(() -> getFlags(p, claim).get(page)).waitReal(1);
 						}).then(" ").then("Disable").color(!match.isEnabled() ? Color.YELLOW : Color.AQUA).hover("Click to disallow this flag.").action(() -> {
-							Arrays.stream(claim.getClan().getClaims()).forEach(claim1 -> Arrays.stream(claim1.getFlags()).forEach(flag -> {
-								if (flag.getId().equals(f.getId())) {
-									flag.setEnabled(false);
+							Arrays.stream(((Clan)claim.getHolder()).getClaims()).forEach(claim1 -> {
+								if (claim1.getFlag(f.getId()) == null) {
+									claim1.register(f);
+									claim1.getFlag(f.getId()).setEnabled(false);
 								}
-							}));
+								Arrays.stream(claim1.getFlags()).forEach(flag -> {
+									if (flag.getId().equals(f.getId())) {
+										flag.setEnabled(false);
+									}
+								});
+							});
 							Schedule.sync(() -> getFlags(p, claim).get(page)).waitReal(1);
 						});
 						for (Message.Chunk c : m) {
@@ -358,7 +374,7 @@ public class ClaimAction extends StringLibrary {
 						m.send(p).deploy();
 					} else {
 						new FancyMessage("&c&m" + f.getId()).hover("Click to remove me i no longer work. (#").action(() -> {
-							Arrays.stream(claim.getClan().getClaims()).forEach(claim1 -> claim1.remove(f));
+							Arrays.stream(((Clan)claim.getHolder()).getClaims()).forEach(claim1 -> claim1.remove(f));
 							Schedule.sync(() -> getFlags(p, claim).get(page)).waitReal(1);
 						}).send(p).deploy();
 					}
@@ -405,7 +421,8 @@ public class ClaimAction extends StringLibrary {
 					} else {
 						new FancyMessage("&c&m" + f.getId()).hover("Click to remove me i no longer work.").action(() -> {
 							claim.remove(f);
-							Schedule.sync(() -> getFlags(p, claim, set).get(page)).waitReal(1);
+							Set<Claim.Flag> s = Arrays.stream(claim.getFlags()).sorted((o1, o2) -> String.CASE_INSENSITIVE_ORDER.compare(o1.getId(), o2.getId())).sorted(Claim.Flag::compareTo).sorted(Comparator.reverseOrder()).collect(Collectors.toCollection(LinkedHashSet::new));
+							Schedule.sync(() -> getFlags(p, claim, s).get(page)).waitReal(1);
 						}).send(p).deploy();
 					}
 				})

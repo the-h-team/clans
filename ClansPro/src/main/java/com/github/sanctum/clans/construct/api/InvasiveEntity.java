@@ -4,12 +4,14 @@ import com.github.sanctum.clans.construct.impl.AnimalAssociate;
 import com.github.sanctum.clans.construct.impl.ServerAssociate;
 import com.github.sanctum.labyrinth.annotation.Experimental;
 import com.github.sanctum.labyrinth.data.EconomyProvision;
+import com.github.sanctum.labyrinth.data.MemorySpace;
 import com.github.sanctum.labyrinth.interfacing.Nameable;
 import com.github.sanctum.labyrinth.library.HUID;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
@@ -757,6 +759,15 @@ public interface InvasiveEntity extends Nameable, LogoHolder, Comparable<Invasiv
 	@Nullable Teleport getTeleport();
 
 	/**
+	 * Get the optional memory space for this entity's persistent data.
+	 *
+	 * @return An optional memory space for this entity.
+	 */
+	@NotNull default Optional<MemorySpace> getMemorySpace() {
+		return Optional.empty();
+	}
+
+	/**
 	 * Create a brand-new teleportation for this entity.
 	 *
 	 * @param location The location to teleport [player, location]
@@ -812,7 +823,7 @@ public interface InvasiveEntity extends Nameable, LogoHolder, Comparable<Invasiv
 		}
 		if (this instanceof Clan.Associate) {
 			if (o instanceof Clan.Associate) {
-				if (((Clan.Associate)this).getPriority().toInt() > ((Clan.Associate)o).getPriority().toInt() || EconomyProvision.getInstance().isValid() && (EconomyProvision.getInstance().balance(((Clan.Associate)this).getUser().toBukkit()).get() > EconomyProvision.getInstance().balance(((Clan.Associate)o).getUser().toBukkit()).get())) {
+				if (((Clan.Associate)this).getPriority().toLevel() > ((Clan.Associate)o).getPriority().toLevel() || EconomyProvision.getInstance().isValid() && (EconomyProvision.getInstance().balance(((Clan.Associate)this).getUser().toBukkit()).get() > EconomyProvision.getInstance().balance(((Clan.Associate)o).getUser().toBukkit()).get())) {
 					return 1;
 				}
 			}

@@ -80,6 +80,7 @@ public class BlockEventListener implements Listener {
 					}
 					Set<ArmorStand> doubleCheck = LogoHolder.getStands(b.getLocation().add(0.5, 0, 0.5));
 					doubleCheck.forEach(Entity::remove);
+					test.getHolder().save();
 				}
 			}
 		}
@@ -107,6 +108,7 @@ public class BlockEventListener implements Listener {
 				}
 				Set<ArmorStand> doubleCheck = LogoHolder.getStands(event.getBlock().getLocation().add(0.5, 0, 0.5));
 				doubleCheck.forEach(Entity::remove);
+				test.getHolder().save();
 			}
 		}
 	}
@@ -141,6 +143,7 @@ public class BlockEventListener implements Listener {
 					e.setLine(1, StringUtils.use("&6&lLogo").translate());
 					e.setLine(2, a.getClan().getId().toString());
 					Clan.ACTION.sendMessage(e.getPlayer(), "&aClan logo now on display &r(&e#&2" + a.getClan().newCarrier(e.getBlock().getLocation()).getId() + "&r)");
+					a.getClan().save();
 				} else {
 					e.setLine(0, StringUtils.use("&4[Clan]").translate());
 					Clan.ACTION.sendMessage(e.getPlayer(), "&cFailed to display logo, not enough money.");
@@ -201,8 +204,8 @@ public class BlockEventListener implements Listener {
 					if (e.getBlock().getType().isInteractable()) {
 						if (!e.getClaim().getOwner().getTag().getId().equals(associate.getClan().getId().toString())) {
 							if (!e.getPlayer().hasPermission("clanspro.admin")) {
-								if (!e.getClaim().getClan().getRelation().getAlliance().has(associate.getClan())) {
-									e.getUtil().sendMessage(e.getPlayer(), MessageFormat.format(e.getUtil().notClaimOwner(e.getClaim().getClan().getName()), e.getClaim().getClan().getName()));
+								if (!((Clan)e.getClaim().getHolder()).getRelation().getAlliance().has(associate.getClan())) {
+									e.getUtil().sendMessage(e.getPlayer(), MessageFormat.format(e.getUtil().notClaimOwner(((Clan)e.getClaim().getHolder()).getName()), ((Clan)e.getClaim().getHolder()).getName()));
 									e.setCancelled(true);
 								}
 							}
@@ -225,8 +228,8 @@ public class BlockEventListener implements Listener {
 				case BUILD:
 					if (!e.getClaim().getOwner().getTag().getId().equals(associate.getClan().getId().toString())) {
 						if (!e.getPlayer().hasPermission("clanspro.admin")) {
-							if (!e.getClaim().getClan().getRelation().getAlliance().has(associate.getClan())) {
-								e.getUtil().sendMessage(e.getPlayer(), MessageFormat.format(e.getUtil().notClaimOwner(e.getClaim().getClan().getName()), e.getClaim().getClan().getName()));
+							if (!((Clan)e.getClaim().getHolder()).getRelation().getAlliance().has(associate.getClan())) {
+								e.getUtil().sendMessage(e.getPlayer(), MessageFormat.format(e.getUtil().notClaimOwner(((Clan)e.getClaim().getHolder()).getName()), ((Clan)e.getClaim().getHolder()).getName()));
 								e.setCancelled(true);
 							}
 						}
@@ -250,7 +253,7 @@ public class BlockEventListener implements Listener {
 				case USE:
 					if (e.getBlock().getType().isInteractable()) {
 						if (!e.getPlayer().hasPermission("clanspro.admin")) {
-							e.getUtil().sendMessage(e.getPlayer(), MessageFormat.format(e.getUtil().notClaimOwner(e.getClaim().getClan().getName()), e.getClaim().getClan().getName()));
+							e.getUtil().sendMessage(e.getPlayer(), MessageFormat.format(e.getUtil().notClaimOwner(((Clan)e.getClaim().getHolder()).getName()), ((Clan)e.getClaim().getHolder()).getName()));
 							e.setCancelled(true);
 						}
 					}
@@ -258,7 +261,7 @@ public class BlockEventListener implements Listener {
 				case BREAK:
 				case BUILD:
 					if (!e.getPlayer().hasPermission("clanspro.admin")) {
-						e.getUtil().sendMessage(e.getPlayer(), MessageFormat.format(e.getUtil().notClaimOwner(e.getClaim().getClan().getName()), e.getClaim().getClan().getName()));
+						e.getUtil().sendMessage(e.getPlayer(), MessageFormat.format(e.getUtil().notClaimOwner(((Clan)e.getClaim().getHolder()).getName()), ((Clan)e.getClaim().getHolder()).getName()));
 						e.setCancelled(true);
 					}
 					break;
@@ -274,7 +277,7 @@ public class BlockEventListener implements Listener {
 				ClaimInteractEvent e = new Vent.Call<>(Vent.Runtime.Synchronous, new ClaimInteractEvent(p, event.getEntity().getLocation(), ClaimInteractEvent.Type.USE)).run();
 				if (e.isCancelled()) {
 					if (event.getEntity().getType() != EntityType.TRIDENT) {
-						e.getUtil().sendMessage(e.getPlayer(), MessageFormat.format(e.getUtil().notClaimOwner(e.getClaim().getClan().getName()), e.getClaim().getClan().getName()));
+						e.getUtil().sendMessage(e.getPlayer(), MessageFormat.format(e.getUtil().notClaimOwner(((Clan)e.getClaim().getHolder()).getName()), ((Clan)e.getClaim().getHolder()).getName()));
 						event.getEntity().remove();
 					}
 				}

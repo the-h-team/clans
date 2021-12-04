@@ -9,7 +9,6 @@ import com.github.sanctum.clans.bridge.internal.kingdoms.Quest;
 import com.github.sanctum.clans.bridge.internal.kingdoms.RoundTable;
 import com.github.sanctum.clans.bridge.internal.kingdoms.event.KingdomCreatedEvent;
 import com.github.sanctum.clans.bridge.internal.kingdoms.event.KingdomCreationEvent;
-import com.github.sanctum.clans.construct.RankPriority;
 import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClanSubCommand;
 import com.github.sanctum.clans.construct.api.ClansAPI;
@@ -125,12 +124,14 @@ public class KingdomCommand extends ClanSubCommand implements Message.Factory {
 			message()
 					.append(text(" "))
 					.send(p).deploy();
+			return true;
 		}
 
 		if (args.length == 1) {
 
 			if (args[0].equalsIgnoreCase("start")) {
 				Clan.ACTION.sendMessage(p, "&cInvalid usage: &6/clan &7kingdom start <name>");
+				return true;
 			}
 
 			if (args[0].equalsIgnoreCase("leave")) {
@@ -145,7 +146,7 @@ public class KingdomCommand extends ClanSubCommand implements Message.Factory {
 
 					if (kindom != null) {
 
-						if (associate.getPriority().toInt() < 3) {
+						if (associate.getPriority().toLevel() < 3) {
 							Clan.ACTION.sendMessage(p, Clan.ACTION.noClearance());
 							return true;
 						}
@@ -166,7 +167,7 @@ public class KingdomCommand extends ClanSubCommand implements Message.Factory {
 
 					}
 				}
-
+				return true;
 			}
 
 			if (args[0].equalsIgnoreCase("jobs")) {
@@ -267,7 +268,7 @@ public class KingdomCommand extends ClanSubCommand implements Message.Factory {
 
 
 				}
-
+				return true;
 			}
 
 
@@ -278,7 +279,7 @@ public class KingdomCommand extends ClanSubCommand implements Message.Factory {
 					return true;
 				}
 			}
-
+			return true;
 		}
 
 		if (args.length == 2) {
@@ -301,7 +302,7 @@ public class KingdomCommand extends ClanSubCommand implements Message.Factory {
 							return true;
 						}
 
-						if (associate.getPriority().toInt() == 3) {
+						if (associate.getPriority().toLevel() == 3) {
 
 							k.getMembers().add(c);
 
@@ -318,7 +319,7 @@ public class KingdomCommand extends ClanSubCommand implements Message.Factory {
 				} else {
 					Clan.ACTION.sendMessage(p, "&cThis kingdom doesn't exist!");
 				}
-
+				return true;
 			}
 
 
@@ -339,7 +340,7 @@ public class KingdomCommand extends ClanSubCommand implements Message.Factory {
 
 					if (k == null) {
 
-						if (associate.getPriority().toInt() < 3) {
+						if (associate.getPriority().toLevel() < 3) {
 							Clan.ACTION.sendMessage(p, Clan.ACTION.noClearance());
 							return true;
 						}
@@ -373,7 +374,7 @@ public class KingdomCommand extends ClanSubCommand implements Message.Factory {
 
 
 				}
-
+				return true;
 			}
 
 			if (args[0].equalsIgnoreCase("roundtable")) {
@@ -418,7 +419,7 @@ public class KingdomCommand extends ClanSubCommand implements Message.Factory {
 					if (table.getUsers().isEmpty()) {
 
 						if (EconomyProvision.getInstance().balance(p).orElse(0.0) >= 10000) {
-							table.take(p.getUniqueId(), RankPriority.HIGHEST);
+							table.take(p.getUniqueId(), Clan.Rank.HIGHEST);
 							addon.getMailer().prefix().start(Clan.ACTION.getPrefix()).finish().announce(player -> true, p.getName() + " is now among the most powerful on the server.").deploy();
 						} else {
 							Clan.ACTION.sendMessage(p, "&cYou aren't powerful enough to start the table.");
@@ -442,7 +443,7 @@ public class KingdomCommand extends ClanSubCommand implements Message.Factory {
 					}
 				}
 
-
+				return true;
 			}
 
 			if (args[0].equalsIgnoreCase("name")) {
@@ -453,7 +454,7 @@ public class KingdomCommand extends ClanSubCommand implements Message.Factory {
 
 				if (associate != null) {
 
-					if (associate.getPriority().toInt() < 3) {
+					if (associate.getPriority().toLevel() < 3) {
 						Clan.ACTION.sendMessage(p, Clan.ACTION.noClearance());
 						return true;
 					}
@@ -472,7 +473,7 @@ public class KingdomCommand extends ClanSubCommand implements Message.Factory {
 
 					}
 				}
-
+				return true;
 			}
 
 			if (args[0].equalsIgnoreCase("work")) {
@@ -516,7 +517,7 @@ public class KingdomCommand extends ClanSubCommand implements Message.Factory {
 						}
 					}
 				}
-
+				return true;
 			}
 
 			if (args[0].equalsIgnoreCase("quit")) {
@@ -554,7 +555,9 @@ public class KingdomCommand extends ClanSubCommand implements Message.Factory {
 						}
 					}
 				}
+				return true;
 			}
+			return true;
 		}
 
 		if (args.length == 3) {
@@ -624,108 +627,107 @@ public class KingdomCommand extends ClanSubCommand implements Message.Factory {
 					}
 
 				}
-
+				return true;
 			}
+			return true;
 		}
-		if (args.length >= 3) {
-			if (args[0].equalsIgnoreCase("work")) {
+		if (args[0].equalsIgnoreCase("work")) {
 
 
-				ClansAPI API = ClansAPI.getInstance();
+			ClansAPI API = ClansAPI.getInstance();
 
-				Clan.Associate associate = API.getAssociate(p).orElse(null);
+			Clan.Associate associate = API.getAssociate(p).orElse(null);
 
-				if (associate != null) {
-
-
-					Clan c = associate.getClan();
-
-					String kingdom = c.getValue(String.class, "kingdom");
-
-					if (kingdom != null) {
-
-						Kingdom k = Kingdom.getKingdom(kingdom);
-						StringBuilder builder = new StringBuilder();
-						for (int i = 2; i < args.length; i++) {
-							if (i == args.length - 1) {
-								builder.append(args[i]);
-							} else {
-								builder.append(args[i]).append(" ");
-							}
-						}
-
-						Quest achievement = k.getQuest(builder.toString());
-
-						if (achievement != null) {
-
-							if (achievement.isComplete()) {
-								Clan.ACTION.sendMessage(p, "&cThis quest is already complete!");
-								return true;
-							}
-
-							if (achievement.activate(p)) {
-
-								p.sendTitle(StringUtils.use(achievement.getTitle()).translate(), StringUtils.use(achievement.getDescription()).translate(), 60, 10, 60);
+			if (associate != null) {
 
 
-							} else {
+				Clan c = associate.getClan();
 
-								Clan.ACTION.sendMessage(p, "&cYou are already working job &e" + achievement.getTitle());
+				String kingdom = c.getValue(String.class, "kingdom");
 
-							}
+				if (kingdom != null) {
 
+					Kingdom k = Kingdom.getKingdom(kingdom);
+					StringBuilder builder = new StringBuilder();
+					for (int i = 2; i < args.length; i++) {
+						if (i == args.length - 1) {
+							builder.append(args[i]);
+						} else {
+							builder.append(args[i]).append(" ");
 						}
 					}
-				}
 
-			}
+					Quest achievement = k.getQuest(builder.toString());
 
-			if (args[0].equalsIgnoreCase("quit")) {
+					if (achievement != null) {
 
-				ClansAPI API = ClansAPI.getInstance();
-
-				Clan.Associate associate = API.getAssociate(p).orElse(null);
-
-				if (associate != null) {
-
-
-					Clan c = associate.getClan();
-
-					String kingdom = c.getValue(String.class, "kingdom");
-
-					if (kingdom != null) {
-
-						Kingdom k = Kingdom.getKingdom(kingdom);
-
-						StringBuilder builder = new StringBuilder();
-						for (int i = 2; i < args.length; i++) {
-							if (i == args.length - 1) {
-								builder.append(args[i]);
-							} else {
-								builder.append(args[i]).append(" ");
-							}
+						if (achievement.isComplete()) {
+							Clan.ACTION.sendMessage(p, "&cThis quest is already complete!");
+							return true;
 						}
 
-						Quest achievement = k.getQuest(builder.toString());
+						if (achievement.activate(p)) {
 
-						if (achievement != null) {
-
-							if (achievement.deactivate(p)) {
-
-								Clan.ACTION.sendMessage(p, "&cYou are no longer working job &e" + achievement.getTitle());
+							p.sendTitle(StringUtils.use(achievement.getTitle()).translate(), StringUtils.use(achievement.getDescription()).translate(), 60, 10, 60);
 
 
-							} else {
+						} else {
 
-								Clan.ACTION.sendMessage(p, "&cYou aren't currently working job &e" + achievement.getTitle());
-
-							}
+							Clan.ACTION.sendMessage(p, "&cYou are already working job &e" + achievement.getTitle());
 
 						}
+
 					}
 				}
-
 			}
+			return true;
+		}
+
+		if (args[0].equalsIgnoreCase("quit")) {
+
+			ClansAPI API = ClansAPI.getInstance();
+
+			Clan.Associate associate = API.getAssociate(p).orElse(null);
+
+			if (associate != null) {
+
+
+				Clan c = associate.getClan();
+
+				String kingdom = c.getValue(String.class, "kingdom");
+
+				if (kingdom != null) {
+
+					Kingdom k = Kingdom.getKingdom(kingdom);
+
+					StringBuilder builder = new StringBuilder();
+					for (int i = 2; i < args.length; i++) {
+						if (i == args.length - 1) {
+							builder.append(args[i]);
+						} else {
+							builder.append(args[i]).append(" ");
+						}
+					}
+
+					Quest achievement = k.getQuest(builder.toString());
+
+					if (achievement != null) {
+
+						if (achievement.deactivate(p)) {
+
+							Clan.ACTION.sendMessage(p, "&cYou are no longer working job &e" + achievement.getTitle());
+
+
+						} else {
+
+							Clan.ACTION.sendMessage(p, "&cYou aren't currently working job &e" + achievement.getTitle());
+
+						}
+
+					}
+				}
+			}
+			return true;
 		}
 
 		return true;

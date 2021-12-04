@@ -39,7 +39,11 @@ public final class ClanManager {
 	 */
 	public String getClanName(HUID clanID) {
 		Clan c = getClan(clanID);
-		return c != null ? c.getNode("name").toPrimitive().getString() : null;
+		if (c == null) return null;
+		if (c.getMemorySpace().isPresent()) {
+			return c.getMemorySpace().get().getNode("name").toPrimitive().isString() ? c.getMemorySpace().get().getNode("name").toPrimitive().getString() : c.getName();
+		}
+		return c.getName();
 	}
 
 	/**

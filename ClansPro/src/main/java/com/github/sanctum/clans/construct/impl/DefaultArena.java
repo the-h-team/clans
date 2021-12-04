@@ -5,8 +5,6 @@ import com.github.sanctum.clans.construct.api.ClansAPI;
 import com.github.sanctum.clans.construct.api.Vote;
 import com.github.sanctum.clans.construct.api.War;
 import com.github.sanctum.clans.construct.extra.ClanDisplayName;
-import com.github.sanctum.labyrinth.data.service.AccessibleConstants;
-import com.github.sanctum.labyrinth.data.service.Constant;
 import com.github.sanctum.labyrinth.library.Cooldown;
 import com.github.sanctum.labyrinth.task.Schedule;
 import java.util.Comparator;
@@ -113,7 +111,6 @@ public final class DefaultArena implements War {
 	public boolean stop() {
 		if (getTimer() != null) {
 			ClansAPI.getInstance().getArenaManager().showAll(this);
-			getQueue().forEach(a -> getQueue().unque(a));
 			Cooldown.remove(getTimer());
 			this.timer = null;
 			return true;
@@ -131,8 +128,11 @@ public final class DefaultArena implements War {
 	@Override
 	public void reset() {
 		if (isRunning()) {
-			stop();
+			ClansAPI.getInstance().getArenaManager().showAll(this);
+			Cooldown.remove(getTimer());
+			this.timer = null;
 		}
+		this.time = 0;
 		getQueue().clear();
 		roster.clear();
 		pointMap.clear();
@@ -186,8 +186,17 @@ public final class DefaultArena implements War {
 
 	@Override
 	public Vote getVote(Team team) {
-		Constant<?> constant = AccessibleConstants.collect(this).get(team.name());
-		return constant != null ? (Vote) constant.getValue() : null;
+		switch (team) {
+			case A:
+				return this.A;
+			case B:
+				return this.B;
+			case C:
+				return this.C;
+			case D:
+				return this.D;
+		}
+		return null;
 	}
 
 	@Override

@@ -1,22 +1,20 @@
 package com.github.sanctum.clans.construct.api;
 
 import com.github.sanctum.clans.construct.extra.SpecialCarrierAdapter;
-import com.github.sanctum.clans.construct.impl.DefaultClan;
 import com.github.sanctum.labyrinth.annotation.Note;
-import com.github.sanctum.labyrinth.data.Node;
-import com.github.sanctum.labyrinth.interfacing.OrdinalProcedure;
 import com.github.sanctum.labyrinth.library.Deployable;
 import com.github.sanctum.labyrinth.library.HUID;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import org.bukkit.Chunk;
 import org.bukkit.Location;
 import org.bukkit.attribute.Attributable;
 import org.bukkit.entity.ArmorStand;
-import org.bukkit.entity.Entity;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -31,9 +29,14 @@ import org.jetbrains.annotations.NotNull;
  */
 public interface LogoHolder extends Savable {
 
+	/**
+	 * The local cache for all known logo carriers.
+	 */
+	Map<String, List<Carrier>> CACHE = new HashMap<>();
+
 	static Carrier getCarrier(Location location) {
-		if (DefaultClan.stands.get(location.getChunk().getX() + ";" + location.getChunk().getZ()) != null) {
-			for (Carrier l : DefaultClan.stands.get(location.getChunk().getX() + ";" + location.getChunk().getZ())) {
+		if (CACHE.get(location.getChunk().getX() + ";" + location.getChunk().getZ()) != null) {
+			for (Carrier l : CACHE.get(location.getChunk().getX() + ";" + location.getChunk().getZ())) {
 				if (!getStands(l.getTop()).isEmpty()) {
 					return l;
 				}
@@ -115,10 +118,6 @@ public interface LogoHolder extends Savable {
 		return this instanceof InvasiveEntity;
 	}
 
-	default boolean isPersistent() {
-		return this instanceof PersistentEntity;
-	}
-
 	/**
 	 * Im the object that keeps track of a singular "hologram" post.
 	 */
@@ -138,24 +137,6 @@ public interface LogoHolder extends Savable {
 
 		default Location getBottom() {
 			return getLines().toArray(new Line[0])[getLines().size()].getStand().getLocation();
-		}
-
-		default void removeAndSave() {
-			if (getHolder().isPersistent()) {
-				Node holo = ((Clan) getHolder()).getNode("hologram");
-				holo.set(null);
-				Node world = holo.getNode(getChunk().getWorld().getName());
-				Node c = world.getNode(getChunk().getX() + ";" + getChunk().getZ());
-				Node stat = c.getNode(OrdinalProcedure.select(this, 0).cast(() -> HUID.class).toString());
-				for (LogoHolder.Carrier.Line l : getLines()) {
-					Node line = stat.getNode(String.valueOf(l.getIndex()));
-					line.getNode("location").set(l.getStand().getLocation());
-					line.getNode("content").set(l.getStand().getCustomName());
-					l.destroy();
-				}
-				getStands(getTop()).forEach(Entity::remove);
-				holo.save();
-			}
 		}
 
 		default void remove() {

@@ -30,6 +30,7 @@ import com.github.sanctum.labyrinth.library.HUID;
 import com.github.sanctum.labyrinth.library.Item;
 import com.github.sanctum.labyrinth.library.Metrics;
 import com.github.sanctum.labyrinth.library.StringUtils;
+import com.github.sanctum.labyrinth.placeholders.PlaceholderRegistration;
 import com.github.sanctum.labyrinth.task.Schedule;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
@@ -145,28 +146,35 @@ public final class StartProcedure {
 		Schedule.sync(() -> {
 			instance.getLogger().info("- Checking for placeholders.");
 			if (Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI")) {
-				new ClanPlaceholders(instance).register();
+				new PapiPlaceholders(instance).register();
+				new LabyrinthPlaceholders(instance).register().deploy();
 				instance.getLogger().info("- PlaceholderAPI found! Loading clans placeholders");
 			} else {
-				instance.getLogger().info("- PlaceholderAPI not found, placeholders will not work!");
+				PlaceholderRegistration.getInstance().registerTranslation(new LabyrinthPlaceholders(instance)).deploy();
+				instance.getLogger().info("- PlaceholderAPI not found, loading labyrinth provision.");
 			}
 		}).wait(5);
-		new Item(Material.BLAZE_ROD, StringUtils.use("&r[&6Tamer stick&r]").translate()).setKey("tamer_stick")
-				.buildStack()
-				.attachLore(Arrays.asList("Right click a tamed animal", "to add it as a teammate.", " ", "This will not persist it is", "merely a way to momentarily keep track of", "any tamed animals."))
-				.setItem('U', Material.AIR)
-				.setItem('I', Material.BLAZE_ROD)
-				.setItem('G', Material.LEATHER)
-				.shapeRecipe("UGU", "UIU", "UIU")
-				.register();
-		new Item(Material.STICK, StringUtils.use("&r[&bRemover stick&r]").translate()).setKey("remover_stick")
-				.buildStack()
-				.attachLore(Arrays.asList("Right click a tamed animal teammate", "to remove it as a teammate."))
-				.setItem('U', Material.AIR)
-				.setItem('I', Material.STICK)
-				.setItem('G', Material.LEATHER)
-				.shapeRecipe("UGU", "UIU", "UIU")
-				.register();
+
+		try {
+			new Item(Material.BLAZE_ROD, StringUtils.use("&r[&6Tamer stick&r]").translate()).setKey("tamer_stick")
+					.buildStack()
+					.attachLore(Arrays.asList("Right click a tamed animal", "to add it as a teammate.", " ", "This will not persist it is", "merely a way to momentarily keep track of", "any tamed animals."))
+					.setItem('U', Material.AIR)
+					.setItem('I', Material.BLAZE_ROD)
+					.setItem('G', Material.LEATHER)
+					.shapeRecipe("UGU", "UIU", "UIU")
+					.register();
+			new Item(Material.STICK, StringUtils.use("&r[&bRemover stick&r]").translate()).setKey("remover_stick")
+					.buildStack()
+					.attachLore(Arrays.asList("Right click a tamed animal teammate", "to remove it as a teammate."))
+					.setItem('U', Material.AIR)
+					.setItem('I', Material.STICK)
+					.setItem('G', Material.LEATHER)
+					.shapeRecipe("UGU", "UIU", "UIU")
+					.register();
+		} catch (UnsupportedOperationException failed) {
+			instance.getLogger().severe("- For some reason we weren't able to register the tamer sticks. (Modded?)");
+		}
 	}
 
 	@Ordinal(7)

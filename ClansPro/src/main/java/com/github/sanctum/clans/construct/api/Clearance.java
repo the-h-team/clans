@@ -1,6 +1,5 @@
 package com.github.sanctum.clans.construct.api;
 
-import com.github.sanctum.clans.construct.RankPriority;
 import com.github.sanctum.labyrinth.annotation.Json;
 import com.github.sanctum.labyrinth.data.service.Check;
 import com.github.sanctum.labyrinth.data.service.Constant;
@@ -69,12 +68,12 @@ public final class Clearance implements Nameable, Comparable<Clearance>, JsonInt
 		if (entity == null) return false;
 		if (!entity.isAssociate()) return false;
 		ClearanceLog log = entity.getAsAssociate().getClan().getPermissions();
-		return entity.getAsAssociate().getPriority().toInt() >= log.get(this);
+		return entity.getAsAssociate().getPriority().toLevel() >= log.get(this);
 	}
 
-	public boolean test(RankPriority priority) {
+	public boolean test(Clan.Rank priority) {
 		if (priority == null) return false;
-		return priority.toInt() >= getDefault();
+		return priority.toLevel() >= getDefault();
 	}
 
 	public void update() {

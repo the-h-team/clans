@@ -1,6 +1,5 @@
 package com.github.sanctum.clans.construct.api;
 
-import com.github.sanctum.clans.construct.RankPriority;
 import com.github.sanctum.clans.construct.impl.DefaultAssociate;
 import com.github.sanctum.clans.construct.impl.DefaultClan;
 import com.github.sanctum.clans.construct.impl.ServerAssociate;
@@ -11,7 +10,7 @@ import org.bukkit.Bukkit;
 
 public final class ClanBuilder {
 
-	private final Map<UUID, RankPriority> memberList;
+	private final Map<UUID, Clan.Rank> memberList;
 
 	private Clan ticket;
 
@@ -34,7 +33,7 @@ public final class ClanBuilder {
 	 * the clan leader is within a clan during this time period they will be
 	 * forcefully removed.
 	 */
-	public ClanBuilder supply() {
+	public ClanBuilder build() {
 		if (ClansAPI.getInstance().isInClan(leader)) {
 			Clan.ACTION.removePlayer(leader);
 		}
@@ -47,11 +46,11 @@ public final class ClanBuilder {
 		boolean war = ClansAPI.getDataInstance().getConfig().read(c -> c.getString("Clans.mode-change.default").equalsIgnoreCase("peace"));
 		test.setPeaceful(war);
 		if (leader.equals(ClansAPI.getInstance().getSessionId())) {
-			test.add(new ServerAssociate(InvasiveEntity.wrapNonAssociated(Bukkit.getConsoleSender()), RankPriority.HIGHEST, test));
+			test.add(new ServerAssociate(InvasiveEntity.wrapNonAssociated(Bukkit.getConsoleSender()), Clan.Rank.HIGHEST, test));
 		} else {
-			test.add(new DefaultAssociate(leader, RankPriority.HIGHEST, test));
+			test.add(new DefaultAssociate(leader, Clan.Rank.HIGHEST, test));
 		}
-		for (Map.Entry<UUID, RankPriority> entry : memberList.entrySet()) {
+		for (Map.Entry<UUID, Clan.Rank> entry : memberList.entrySet()) {
 			if (ClansAPI.getInstance().isInClan(entry.getKey())) {
 				Clan.ACTION.removePlayer(entry.getKey());
 			}
@@ -68,7 +67,7 @@ public final class ClanBuilder {
 	}
 
 	/**
-	 * NOTE: Only use after {@link ClanBuilder#supply()} has been initialized
+	 * NOTE: Only use after {@link ClanBuilder#build()} has been initialized
 	 * Get the clan object created from the builder.
 	 *
 	 * @return The clan object from creation.
@@ -78,7 +77,7 @@ public final class ClanBuilder {
 	}
 
 	/**
-	 * NOTE: Only use after {@link ClanBuilder#supply()} has been initialized
+	 * NOTE: Only use after {@link ClanBuilder#build()} has been initialized
 	 * Get the clan object created from the builder.
 	 * <p>
 	 * Apply a desired amount of power to the clan by default
@@ -91,7 +90,7 @@ public final class ClanBuilder {
 	}
 
 	/**
-	 * NOTE: Only use after {@link ClanBuilder#supply()} has been initialized
+	 * NOTE: Only use after {@link ClanBuilder#build()} has been initialized
 	 * Get the clan object created from the builder.
 	 * <p>
 	 * Apply a desired amount of claims to the clan by default
@@ -104,7 +103,7 @@ public final class ClanBuilder {
 	}
 
 	/**
-	 * NOTE: Only use after {@link ClanBuilder#supply()} has been initialized
+	 * NOTE: Only use after {@link ClanBuilder#build()} has been initialized
 	 * Get the clan object created from the builder.
 	 * <p>
 	 * Set back a desired amount of power the clan has by default
@@ -117,7 +116,7 @@ public final class ClanBuilder {
 	}
 
 	/**
-	 * NOTE: Only use after {@link ClanBuilder#supply()} has been initialized
+	 * NOTE: Only use after {@link ClanBuilder#build()} has been initialized
 	 * Get the clan object created from the builder.
 	 * <p>
 	 * Set back a desired amount of claims the clan has by default
@@ -130,7 +129,7 @@ public final class ClanBuilder {
 	}
 
 	/**
-	 * NOTE: Only use after {@link ClanBuilder#supply()} has been initialized
+	 * NOTE: Only use after {@link ClanBuilder#build()} has been initialized
 	 * Get the clan object created from the builder.
 	 * <p>
 	 * Set the clans default description
@@ -145,7 +144,7 @@ public final class ClanBuilder {
 	/**
 	 * Change the clans friendly status
 	 * <p>
-	 * NOTE: Only use after {@link ClanBuilder#supply()} has been initialized
+	 * NOTE: Only use after {@link ClanBuilder#build()} has been initialized
 	 * Get the clan object created from the builder.
 	 * <p>
 	 * Setting this to false will make the clan switch

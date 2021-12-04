@@ -1,6 +1,7 @@
 package com.github.sanctum.clans.listener;
 
 import com.github.sanctum.clans.construct.api.Claim;
+import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClansAPI;
 import com.github.sanctum.clans.construct.api.InvasiveEntity;
 import com.github.sanctum.labyrinth.task.Schedule;
@@ -18,7 +19,7 @@ public class EntityEventListener implements Listener {
 		Claim claim = ClansAPI.getInstance().getClaimManager().getClaim(e.getLocation());
 		if (claim != null) {
 			if (claim.getFlag("no-explosives").isEnabled()) {
-				claim.getClan().broadcast("&6A &e" + e.getEntity().getName() + " &6went off in our claim, &a" + e.blockList().size() + " &6blocks were saved.");
+				((Clan)claim.getHolder()).broadcast("&6A &e" + e.getEntity().getName() + " &6went off in our claim, &a" + e.blockList().size() + " &6blocks were saved.");
 				e.blockList().clear();
 				e.setCancelled(true);
 			}

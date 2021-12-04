@@ -45,11 +45,11 @@ public interface Claim extends Savable, Iterable<Block>, ConfigurationSerializab
 	}
 
 	/**
-	 * Get the clan involved with this claim.
+	 * Get the entity holder for this claim, if default implementation this method will indefinitely return the owning clan object.
 	 *
-	 * @return The inherent owner of the claim.
+	 * @return Gets the inherent owner of the claim if provided.
 	 */
-	Clan getClan();
+	EntityHolder getHolder();
 
 	/**
 	 * Get the id for this claim.
@@ -60,6 +60,8 @@ public interface Claim extends Savable, Iterable<Block>, ConfigurationSerializab
 
 	/**
 	 * Get who owns this claim.
+	 * The average entity type for a claim owner is a clan but in special cases in the future
+	 * could return a clan associate.
 	 *
 	 * @return Gets the owner of the claim object.
 	 */
@@ -72,8 +74,19 @@ public interface Claim extends Savable, Iterable<Block>, ConfigurationSerializab
 	 */
 	Chunk getChunk();
 
+	/**
+	 * Get a flag registered to this claim.
+	 *
+	 * @param id The id of the flag to get
+	 * @return the flag or null if not present.
+	 */
 	Flag getFlag(String id);
 
+	/**
+	 * Get an array of flags for this claim.
+	 *
+	 * @return the array of registered flags for this claim
+	 */
 	Flag[] getFlags();
 
 	/**
@@ -101,8 +114,11 @@ public interface Claim extends Savable, Iterable<Block>, ConfigurationSerializab
 	 */
 	boolean isActive();
 
+	/**
+	 * @return true if this claim is owned by an associate directly instead of a clan.
+	 */
 	default boolean isPlayerOwned() {
-		return getOwner() instanceof Clan.Associate;
+		return getOwner().isAssociate();
 	}
 
 	/**
@@ -112,8 +128,18 @@ public interface Claim extends Savable, Iterable<Block>, ConfigurationSerializab
 	 */
 	void setActive(boolean active);
 
+	/**
+	 * Register flag(s) properties to this claim.
+	 *
+	 * @param flags The flag(s) to register.
+	 */
 	void register(Flag... flags);
 
+	/**
+	 * Remove a flag from this claim.
+	 *
+	 * @param flag The flag to remove.
+	 */
 	void remove(Flag flag);
 
 	/**
@@ -263,7 +289,7 @@ public interface Claim extends Savable, Iterable<Block>, ConfigurationSerializab
 	abstract class Flag implements Comparable<Flag>, Cloneable, Serializable {
 
 		private static final long serialVersionUID = 904348302141876668L;
-		private boolean loading;
+		protected boolean loading;
 		private boolean allowed;
 		private String id;
 
@@ -299,6 +325,10 @@ public interface Claim extends Savable, Iterable<Block>, ConfigurationSerializab
 
 		public void setEnabled(boolean allowed) {
 			this.allowed = allowed;
+		}
+
+		public void updateCustom() {
+			this.loading = false;
 		}
 
 		public final @NotNull String serialize() {

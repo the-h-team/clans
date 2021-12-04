@@ -22,6 +22,6 @@ public class ClanOverpowerClaimEvent extends ClaimEvent {
 	}
 
 	public Clan getVictim() {
-		return getClaim().getClan();
+		return ((Clan)getClaim().getHolder());
 	}
 }

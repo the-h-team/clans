@@ -137,7 +137,11 @@ public class Kingdom extends Progressive implements Iterable<Clan> {
 		city.setReward(Reward.ITEM_ARRAY, new ItemStack[]{new ItemStack(Material.MAP), Items.edit().setType(Material.ENCHANTED_BOOK).addEnchantment(Enchantment.MENDING, 1).build()});
 		Quest chunk = Quest.newQuest("Chunk 007", "Locate and conquer 7 enemy claims.", 0, 7);
 		chunk.setReward(Reward.ITEM_ARRAY, new ItemStack[]{new ItemStack(Material.DIAMOND, 8), new ItemStack(Material.IRON_INGOT, 128), new ItemStack(Material.EXPERIENCE_BOTTLE, Math.max(1, new Random().nextInt(14)))});
-		return new Quest[]{walls, gate, kills, spawner, farmer, beef, sky, color, miner, breaker, hotfeet, souless, dirt, barter, diamond, lumberjack, dark, city};
+		Quest commando = Quest.newQuest("Kill The King", "Kill the kingdom resident with the most money.", 0, 1);
+		commando.setReward(Reward.MONEY, 5849.81);
+		Quest cook = Quest.newQuest("Feed The Family", "Everyone online in the kingdom eats food.", 0, 1);
+		cook.setReward(Reward.ITEM, new ItemStack(Material.DIAMOND));
+		return new Quest[]{walls, gate, kills, spawner, farmer, beef, sky, color, miner, breaker, hotfeet, souless, dirt, barter, diamond, lumberjack, dark, city, chunk, commando};
 	}
 
 	public static Kingdom getKingdom(Clan clan) {

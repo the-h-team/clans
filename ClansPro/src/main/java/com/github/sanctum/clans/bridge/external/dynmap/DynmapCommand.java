@@ -43,7 +43,7 @@ public class DynmapCommand extends ClanSubCommand {
 					if (integration.getFailedAttempt() != null) {
 						lib.sendMessage(p, integration.getFailedAttempt());
 					}
-					if (associate.getPriority().toInt() >= 2) {
+					if (associate.getPriority().toLevel() >= 2) {
 						long time = System.currentTimeMillis();
 						integration.fillMap(Arrays.stream(clan.getClaims()).map(Claim::getId).toArray(String[]::new));
 						long complete = (System.currentTimeMillis() - time) / 1000;
@@ -65,7 +65,7 @@ public class DynmapCommand extends ClanSubCommand {
 						Claim claim = ClansAPI.getInstance().getClaimManager().getClaim(p.getLocation());
 						if (Arrays.stream(clan.getClaims()).anyMatch(c -> c.getId().equals(claim.getId()))) {
 							Set<AreaMarker> markers = integration.markerset.getAreaMarkers();
-							if (associate.getPriority().toInt() >= 2) {
+							if (associate.getPriority().toLevel() >= 2) {
 								for (AreaMarker am : markers) {
 									if (am.getMarkerID().equals(claim.getId())) {
 										am.deleteMarker();
@@ -92,7 +92,7 @@ public class DynmapCommand extends ClanSubCommand {
 			if (label.equalsIgnoreCase("unclaim")) {
 				if (ClansAPI.getInstance().getClanManager().getClanID(p.getUniqueId()) != null) {
 					Clan.Associate associate = ClansAPI.getInstance().getAssociate(p).orElse(null);
-					if (associate.getPriority().toInt() >= Clan.ACTION.claimingClearance()) {
+					if (associate.getPriority().toLevel() >= Clan.ACTION.claimingClearance()) {
 						Clan clan = associate.getClan();
 						Claim claim = ClansAPI.getInstance().getClaimManager().getClaim(p.getLocation());
 						if (claim != null) {
@@ -101,13 +101,13 @@ public class DynmapCommand extends ClanSubCommand {
 							} else {
 								if (ClansAPI.getInstance().getShieldManager().isEnabled()) {
 									if (Clan.ACTION.overPowerBypass()) {
-										Clan clan2 = claim.getClan();
+										Clan clan2 = ((Clan)claim.getHolder());
 										if (clan.getPower() > clan2.getPower()) {
 											integration.removeMarker(claim.getId());
 										}
 									}
 								} else {
-									Clan clan2 = claim.getClan();
+									Clan clan2 = ((Clan)claim.getHolder());
 									if (clan.getPower() > clan2.getPower()) {
 										integration.removeMarker(claim.getId());
 									}
@@ -126,7 +126,7 @@ public class DynmapCommand extends ClanSubCommand {
 					FileConfiguration d = regions.getConfig();
 					if (ClansAPI.getInstance().getClanManager().getClanID(p.getUniqueId()) != null) {
 						Clan.Associate associate = ClansAPI.getInstance().getAssociate(p).orElse(null);
-						if (associate.getPriority().toInt() >= Clan.ACTION.unclaimAllClearance()) {
+						if (associate.getPriority().toLevel() >= Clan.ACTION.unclaimAllClearance()) {
 							if (!d.isConfigurationSection(ClansAPI.getInstance().getClanManager().getClanID(p.getUniqueId()).toString() + ".Claims")) {
 								return false;
 							}

@@ -25,11 +25,15 @@ public class ClanDisplayName {
 			scoreboard.registerNewTeam(associate.getClan().getId().toString());
 			set(associate, prefix);
 		} else {
-			Team t = getTeam(associate.getUser().toBukkit().getPlayer());
-			t.setPrefix(Clan.ACTION.color(prefix));
-			t.setDisplayName(associate.getClan().getName());
-			t.setOption(Team.Option.NAME_TAG_VISIBILITY, Team.OptionStatus.ALWAYS);
-			t.addEntry(associate.getName());
+			try {
+				Team t = getTeam(associate.getUser().toBukkit().getPlayer());
+				t.setPrefix(Clan.ACTION.color(prefix));
+				t.setDisplayName(associate.getClan().getName());
+				t.setOption(Team.Option.NAME_TAG_VISIBILITY, Team.OptionStatus.ALWAYS);
+				t.addEntry(associate.getName());
+			} catch (IllegalArgumentException tooLong) {
+				ClansAPI.getInstance().getPlugin().getLogger().warning("- Unable to set above head display name for clan " + associate.getClan().getName());
+			}
 		}
 	}
 
@@ -45,11 +49,15 @@ public class ClanDisplayName {
 			scoreboard.registerNewTeam(associate.getClan().getId().toString());
 			set(player, prefix);
 		} else {
-			Team team = getTeam(player);
-			team.setPrefix(Clan.ACTION.color(prefix));
-			team.setDisplayName(associate.getClan().getName());
-			team.setOption(Team.Option.NAME_TAG_VISIBILITY, Team.OptionStatus.ALWAYS);
-			team.addEntry(player.getName());
+			try {
+				Team team = getTeam(player);
+				team.setPrefix(Clan.ACTION.color(prefix));
+				team.setDisplayName(associate.getClan().getName());
+				team.setOption(Team.Option.NAME_TAG_VISIBILITY, Team.OptionStatus.ALWAYS);
+				team.addEntry(player.getName());
+			} catch (IllegalArgumentException tooLong) {
+				ClansAPI.getInstance().getPlugin().getLogger().warning("- Unable to set above head display name for clan " + associate.getClan().getName());
+			}
 		}
 	}
 
@@ -60,10 +68,14 @@ public class ClanDisplayName {
 			return;
 		}
 		if (getTeam(player) != null) {
+			try {
 			Team team = getTeam(player);
 			team.setPrefix(Clan.ACTION.color(prefix));
 			team.setDisplayName(associate.getClan().getName());
 			team.setOption(Team.Option.NAME_TAG_VISIBILITY, Team.OptionStatus.ALWAYS);
+			} catch (IllegalArgumentException tooLong) {
+				ClansAPI.getInstance().getPlugin().getLogger().warning("- Unable to set above head display name for clan " + associate.getClan().getName());
+			}
 		}
 
 	}

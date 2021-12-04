@@ -3,7 +3,6 @@ package com.github.sanctum.clans.bridge.internal.kingdoms;
 import com.github.sanctum.clans.bridge.ClanAddon;
 import com.github.sanctum.clans.bridge.ClanAddonQuery;
 import com.github.sanctum.clans.bridge.internal.KingdomAddon;
-import com.github.sanctum.clans.construct.RankPriority;
 import com.github.sanctum.clans.construct.api.Claim;
 import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClansAPI;
@@ -36,7 +35,7 @@ public class RoundTable extends Progressive implements Iterable<Clan.Associate> 
 	public static final String KICK = "KICK";
 
 	private final String name;
-	private final Map<UUID, RankPriority> users = new HashMap<>();
+	private final Map<UUID, Clan.Rank> users = new HashMap<>();
 	private final Set<UUID> invites = new HashSet<>();
 	private final List<Quest> quests = new LinkedList<>();
 	private final Map<String, Clearance> perms = new HashMap<>();
@@ -62,7 +61,7 @@ public class RoundTable extends Progressive implements Iterable<Clan.Associate> 
 			if (!users.getRoot().getKeys(false).isEmpty()) {
 				for (String user : users.getRoot().getKeys(false)) {
 					UUID id = UUID.fromString(user);
-					this.users.put(id, RankPriority.valueOf(users.getRoot().getString(user + ".rank")));
+					this.users.put(id, Clan.Rank.valueOf(users.getRoot().getString(user + ".rank")));
 				}
 			}
 
@@ -123,13 +122,13 @@ public class RoundTable extends Progressive implements Iterable<Clan.Associate> 
 
 		if (isMember(target)) return false;
 
-		take(target, RankPriority.NORMAL);
+		take(target, Clan.Rank.NORMAL);
 		this.invites.remove(target);
 
 		return true;
 	}
 
-	public void take(UUID target, RankPriority rank) {
+	public void take(UUID target, Clan.Rank rank) {
 		this.users.put(target, rank);
 	}
 
@@ -170,7 +169,7 @@ public class RoundTable extends Progressive implements Iterable<Clan.Associate> 
 		return perms.get(id);
 	}
 
-	public RankPriority getRank(UUID user) {
+	public Clan.Rank getRank(UUID user) {
 		return this.users.get(user);
 	}
 
@@ -213,7 +212,7 @@ public class RoundTable extends Progressive implements Iterable<Clan.Associate> 
 
 		FileManager users = cycle.getFile(FileType.JSON, "users", "data");
 
-		for (Map.Entry<UUID, RankPriority> entry : this.users.entrySet()) {
+		for (Map.Entry<UUID, Clan.Rank> entry : this.users.entrySet()) {
 			users.getRoot().set(entry.getKey().toString() + ".rank", entry.getValue().name());
 		}
 

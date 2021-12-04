@@ -1,6 +1,7 @@
 package com.github.sanctum.clans.construct.api;
 
 import com.github.sanctum.clans.construct.impl.ServerAssociate;
+import java.util.UUID;
 import java.util.function.Supplier;
 import org.jetbrains.annotations.NotNull;
 
@@ -10,6 +11,20 @@ import org.jetbrains.annotations.NotNull;
  * @see ServerAssociate
  */
 public interface Consultant {
+
+	/**
+	 * Get the consultants name.
+	 *
+	 * @return the name of this consultant.
+	 */
+	@NotNull String getName();
+
+	/**
+	 * Get the consultants unique identification key.
+	 *
+	 * @return a valid universally unique id for this consultant.
+	 */
+	@NotNull UUID getId();
 
 	/**
 	 * Send an object of any type to this entity, the result of doing so afterwards depends on

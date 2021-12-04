@@ -3,6 +3,7 @@ package com.github.sanctum.clans.construct.impl;
 import com.github.sanctum.clans.construct.api.Claim;
 import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClansAPI;
+import com.github.sanctum.clans.construct.api.EntityHolder;
 import com.github.sanctum.clans.construct.api.InvasiveEntity;
 import com.github.sanctum.labyrinth.LabyrinthProvider;
 import com.github.sanctum.labyrinth.data.FileManager;
@@ -10,11 +11,14 @@ import com.github.sanctum.labyrinth.data.Node;
 import com.github.sanctum.labyrinth.library.HUID;
 import com.github.sanctum.labyrinth.task.Schedule;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Spliterator;
 import java.util.UUID;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
 import org.bukkit.Location;
@@ -25,7 +29,7 @@ import org.jetbrains.annotations.NotNull;
 @SerializableAs("Claim")
 public final class DefaultClaim implements Claim {
 
-	private final List<Flag> flags = new ArrayList<>();
+	private final Map<String, Flag> flags = new HashMap<>();
 	private final String[] id;
 	private final int[] pos;
 	private boolean active;
@@ -45,13 +49,8 @@ public final class DefaultClaim implements Claim {
 		this.active = active;
 	}
 
-	/**
-	 * Get who owns this claim.
-	 *
-	 * @return The owner of this claim.
-	 */
 	@Override
-	public Clan getClan() {
+	public EntityHolder getHolder() {
 		return ClansAPI.getInstance().getClanManager().getClan(HUID.fromString(getOwner().getTag().getId()));
 	}
 
@@ -92,12 +91,12 @@ public final class DefaultClaim implements Claim {
 
 	@Override
 	public Flag getFlag(String id) {
-		return flags.stream().filter(f -> f.getId().equals(id)).findFirst().orElse(null);
+		return flags.get(id);
 	}
 
 	@Override
 	public Flag[] getFlags() {
-		return flags.toArray(new Flag[0]);
+		return flags.values().toArray(new Flag[0]);
 	}
 
 	/**
@@ -150,14 +149,14 @@ public final class DefaultClaim implements Claim {
 	public void register(Flag... flags) {
 		for (Flag f : flags) {
 			try {
-				this.flags.add(f.clone());
+				this.flags.put(f.getId(), f.clone());
 			} catch (Exception ignored) {}
 		}
 	}
 
 	@Override
 	public void remove(Flag flag) {
-		flags.stream().filter(f -> f.getId().equals(flag.getId())).findFirst().ifPresent(fl -> Schedule.sync(() -> flags.remove(fl)).run());
+		flags.values().stream().filter(f -> f.getId().equals(flag.getId())).findFirst().ifPresent(fl -> Schedule.sync(() -> flags.remove(fl.getId())).run());
 		Node claim = ClansAPI.getInstance().getClaimManager().getFile().getRoot().getNode(getOwner().getTag().getId() + "." + getId());
 		if (claim.getNode("flags").getNode(flag.getId()).get() != null) {
 			claim.getNode("flags").getNode(flag.getId()).set(null);
@@ -191,13 +190,7 @@ public final class DefaultClaim implements Claim {
 	 */
 	@Override
 	public List<Resident> getResidents() {
-		List<Resident> query = new ArrayList<>();
-		for (Resident r : ClansAPI.getDataInstance().getResidents()) {
-			if (r.getCurrent().getId().equals(getId())) {
-				query.add(r);
-			}
-		}
-		return query;
+		return ClansAPI.getDataInstance().getResidents().stream().filter(r -> r.getCurrent().getId().equals(getId())).collect(Collectors.toList());
 	}
 
 	/**
@@ -208,7 +201,7 @@ public final class DefaultClaim implements Claim {
 	 */
 	@Override
 	public Resident getResident(String name) {
-		return getResidents().stream().filter(r -> r.getPlayer().getName().equals(name)).findFirst().orElse(null);
+		return ClansAPI.getDataInstance().getResidents().stream().filter(r -> r.getCurrent().getId().equals(getId()) && r.getPlayer().getName().equals(name)).findFirst().orElse(null);
 	}
 
 	/**
@@ -216,15 +209,20 @@ public final class DefaultClaim implements Claim {
 	 */
 	@Override
 	public void remove() {
-		ClansAPI.getInstance().getClaimManager().getFile().write(c -> c.set(getOwner().getTag().getId() + "." + getId(), null));
-		if (getClan() instanceof DefaultClan) {
-			DefaultClan cl = (DefaultClan) getClan();
+		if (!((Clan)getHolder()).isConsole()) {
+			Node n = ClansAPI.getInstance().getClaimManager().getFile().read(c -> c.getNode(getOwner().getTag().getId() + "." + getId()));
+			n.set(null);
+			n.save();
+		}
+		if (getHolder() instanceof DefaultClan) {
+			DefaultClan cl = (DefaultClan) getHolder();
 			cl.removeClaim(this);
 		}
 	}
 
 	@Override
 	public void save() {
+		if (((Clan)getHolder()).isConsole()) return;
 		FileManager file = ClansAPI.getInstance().getClaimManager().getFile();
 		Node claim = file.getRoot().getNode(getOwner().getTag().getId() + "." + getId());
 		claim.getNode("x").set(getChunk().getX());

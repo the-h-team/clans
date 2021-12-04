@@ -56,7 +56,7 @@ public enum BankAction {
 
     public boolean testForPlayer(Clan clan, Player player) {
         Clan.Associate associate = ClansAPI.getInstance().getAssociate(player).orElse(null);
-        return associate != null && associate.getPriority().toInt() >= AccessMap.getForClan(clan).acl.get(this);
+        return associate != null && associate.getPriority().toLevel() >= AccessMap.getForClan(clan).acl.get(this);
     }
 
     public void setRankForActionInClan(Clan clan, int rank) {

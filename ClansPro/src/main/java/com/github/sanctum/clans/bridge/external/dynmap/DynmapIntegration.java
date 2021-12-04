@@ -40,13 +40,13 @@ public class DynmapIntegration {
 			int cx2 = c.getChunk().getX() * 16 + 16;
 			int cz2 = c.getChunk().getZ() * 16 + 16;
 
-			AreaMarker am = markerset.createAreaMarker(c.getId(), c.getClan().getName(), false, c.getChunk().getWorld().getName(), new double[1000], new double[1000], false);
+			AreaMarker am = markerset.createAreaMarker(c.getId(), ((Clan)c.getHolder()).getName(), false, c.getChunk().getWorld().getName(), new double[1000], new double[1000], false);
 			double[] d1 = {cx1, cx2};
 			double[] d2 = {cz1, cz2};
 			try {
 				am.setCornerLocations(d1, d2);
 				am.setLabel(c.getId());
-				am.setDescription(c.getClan().getName() + " - " + c.getClan().getMembers().stream().map(Clan.Associate::getName).collect(Collectors.joining(", ")));
+				am.setDescription(((Clan)c.getHolder()).getName() + " - " + ((Clan)c.getHolder()).getMembers().stream().map(Clan.Associate::getName).collect(Collectors.joining(", ")));
 				int stroke = 1;
 				double strokeOpac = 0.0;
 				double Opac = 0.3;

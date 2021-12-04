@@ -15,7 +15,9 @@ public abstract class ClanCooldown {
 
 	public abstract long getCooldown();
 
-	public abstract ClanCooldown getInstance();
+	public ClanCooldown getAttached() {
+		return this;
+	}
 
 	public boolean isComplete() {
 		Long a = getCooldown();
@@ -53,8 +55,8 @@ public abstract class ClanCooldown {
 	}
 
 	public void save() {
-		if (!ClansAPI.getDataInstance().getCooldowns().contains(getInstance())) {
-			ClansAPI.getDataInstance().addCooldown(getInstance());
+		if (!ClansAPI.getDataInstance().getCooldowns().contains(this)) {
+			ClansAPI.getDataInstance().addCooldown(this);
 		}
 	}
 

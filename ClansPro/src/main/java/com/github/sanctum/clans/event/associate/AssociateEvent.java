@@ -31,7 +31,7 @@ public abstract class AssociateEvent extends PlayerEvent {
 	}
 
 	public boolean isOwner() {
-		return getAssociate().getPriority().toInt() == 3;
+		return getAssociate().getPriority().toLevel() == 3;
 	}
 
 }

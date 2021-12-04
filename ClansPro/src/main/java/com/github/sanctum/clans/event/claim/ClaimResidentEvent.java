@@ -69,7 +69,7 @@ public class ClaimResidentEvent extends ClaimEvent {
 
 	@Override
 	public Clan getClan() {
-		return getClaim().getClan();
+		return ((Clan)getClaim().getHolder());
 	}
 
 	@Override

@@ -1,6 +1,5 @@
 package com.github.sanctum.clans.event.associate;
 
-import com.github.sanctum.clans.construct.RankPriority;
 import com.github.sanctum.clans.construct.api.Clan;
 
 /**
@@ -8,28 +7,28 @@ import com.github.sanctum.clans.construct.api.Clan;
  */
 public class AssociateRankManagementEvent extends AssociateEvent {
 
-	private final RankPriority from;
-	private RankPriority to;
+	private final Clan.Rank from;
+	private Clan.Rank to;
 
-	public AssociateRankManagementEvent(Clan.Associate associate, RankPriority goal) {
+	public AssociateRankManagementEvent(Clan.Associate associate, Clan.Rank goal) {
 		super(associate, false);
 		this.from = associate.getPriority();
 		this.to = goal;
 	}
 
 	public boolean isPromotion() {
-		return from.toInt() < to.toInt();
+		return from.toLevel() < to.toLevel();
 	}
 
-	public void setTo(RankPriority to) {
+	public void setTo(Clan.Rank to) {
 		this.to = to;
 	}
 
-	public RankPriority getTo() {
+	public Clan.Rank getTo() {
 		return to;
 	}
 
-	public RankPriority getFrom() {
+	public Clan.Rank getFrom() {
 		return from;
 	}
 }

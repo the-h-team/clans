@@ -1,6 +1,5 @@
 package com.github.sanctum.clans.construct.impl;
 
-import com.github.sanctum.clans.construct.RankPriority;
 import com.github.sanctum.clans.construct.api.Channel;
 import com.github.sanctum.clans.construct.api.Claim;
 import com.github.sanctum.clans.construct.api.Clan;
@@ -17,7 +16,6 @@ import com.github.sanctum.labyrinth.annotation.Ordinal;
 import com.github.sanctum.labyrinth.data.Atlas;
 import com.github.sanctum.labyrinth.data.AtlasMap;
 import com.github.sanctum.labyrinth.data.LabyrinthUser;
-import com.github.sanctum.labyrinth.data.Node;
 import com.github.sanctum.labyrinth.library.Mailer;
 import com.github.sanctum.labyrinth.library.TimeWatch;
 import com.github.sanctum.labyrinth.task.Schedule;
@@ -46,7 +44,7 @@ public class ServerAssociate implements Clan.Associate, Consultant {
 	private final InvasiveEntity parent;
 	private final Clan clan;
 	private final Date join;
-	private RankPriority rank;
+	private Clan.Rank rank;
 	private Channel chat;
 	private final Object data;
 	private final Tag tag;
@@ -54,7 +52,7 @@ public class ServerAssociate implements Clan.Associate, Consultant {
 	private String nick;
 	private String bio;
 
-	public ServerAssociate(InvasiveEntity parent, RankPriority priority, Clan clan) {
+	public ServerAssociate(InvasiveEntity parent, Clan.Rank priority, Clan clan) {
 		this.clan = clan;
 		this.parent = parent;
 		this.join = new Date();
@@ -98,7 +96,7 @@ public class ServerAssociate implements Clan.Associate, Consultant {
 		return this.parent.getName();
 	}
 
-	public UUID getId() {
+	public @NotNull UUID getId() {
 		return UUID.fromString(getTag().getId());
 	}
 
@@ -166,7 +164,7 @@ public class ServerAssociate implements Clan.Associate, Consultant {
 	/**
 	 * @return Gets the associates rank priority.
 	 */
-	public RankPriority getPriority() {
+	public Clan.Rank getPriority() {
 		return this.rank;
 	}
 
@@ -213,7 +211,7 @@ public class ServerAssociate implements Clan.Associate, Consultant {
 	 *
 	 * @param priority The rank priority to update the associate with.
 	 */
-	public void setPriority(RankPriority priority) {
+	public void setPriority(Clan.Rank priority) {
 		this.rank = priority;
 	}
 
@@ -374,38 +372,5 @@ public class ServerAssociate implements Clan.Associate, Consultant {
 	public void remove() {
 		getClan().remove(this);
 		InvasiveEntity.removeNonAssociated(this.parent, false);
-	}
-
-	@Override
-	public String getPath() {
-		return getId().toString();
-	}
-
-	@Override
-	public boolean isNode(String key) {
-		Node user_data = getClan().getNode("user-data");
-		Node user = user_data.getNode(getPath());
-		return user.isNode(key);
-	}
-
-	@Override
-	public Node getNode(String key) {
-		Node user_data = getClan().getNode("user-data");
-		Node user = user_data.getNode(getPath());
-		return user.getNode(key);
-	}
-
-	@Override
-	public Set<String> getKeys(boolean deep) {
-		Node user_data = getClan().getNode("user-data");
-		Node user = user_data.getNode(getPath());
-		return user.getKeys(deep);
-	}
-
-	@Override
-	public Map<String, Object> getValues(boolean deep) {
-		Node user_data = getClan().getNode("user-data");
-		Node user = user_data.getNode(getPath());
-		return user.getValues(deep);
 	}
 }

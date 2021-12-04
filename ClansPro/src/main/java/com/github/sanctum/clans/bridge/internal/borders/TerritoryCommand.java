@@ -4,10 +4,9 @@ import com.github.sanctum.clans.bridge.internal.borders.task.BorderTask;
 import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClanSubCommand;
 import com.github.sanctum.clans.construct.api.ClansAPI;
-import com.github.sanctum.labyrinth.formatting.TabCompletion;
+import com.github.sanctum.labyrinth.formatting.completion.SimpleTabCompletion;
+import com.github.sanctum.labyrinth.formatting.completion.TabCompletionIndex;
 import com.github.sanctum.labyrinth.library.Message;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -119,8 +118,10 @@ public class TerritoryCommand extends ClanSubCommand {
 
 	@Override
 	public List<String> tab(Player player, String label, String[] args) {
-		return TabCompletion.build(getLabel()).forArgs(args).level(1).completeAt(getLabel()).filter(() -> Collections.singletonList("territory")).collect()
-				.level(2).completeAt(1).require(getLabel(), 0).filter(() -> Collections.singletonList("-f")).collect()
-				.level(3).completeAt(2).require(getLabel(), 0).filter(() -> Arrays.asList("base", "player", "spawn")).collect().get(args.length);
+		return SimpleTabCompletion.empty().fillArgs(args)
+				.then(TabCompletionIndex.ONE, "territory")
+				.then(TabCompletionIndex.TWO, "territory", TabCompletionIndex.ONE, "-f")
+				.then(TabCompletionIndex.THREE, "-f", TabCompletionIndex.TWO, "base", "player", "spawn")
+				.get();
 	}
 }

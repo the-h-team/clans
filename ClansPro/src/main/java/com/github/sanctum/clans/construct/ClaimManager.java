@@ -77,7 +77,7 @@ public final class ClaimManager {
 									}
 								}
 								if (ClansAPI.getDataInstance().isTrue("Clans.land-claiming.send-messages")) {
-									wild.getClaimUtil().sendMessage(p, MessageFormat.format(ClansAPI.getDataInstance().getConfig().getRoot().getString("Clans.land-claiming.wilderness.message"), res.getLastKnown().getClan().getName()));
+									wild.getClaimUtil().sendMessage(p, MessageFormat.format(ClansAPI.getDataInstance().getConfig().getRoot().getString("Clans.land-claiming.wilderness.message"), ((Clan)res.getLastKnown().getHolder()).getName()));
 								}
 								ClansAPI.getDataInstance().addWildernessInhabitant(p);
 							}
@@ -185,11 +185,23 @@ public final class ClaimManager {
 	}
 
 	public Claim getClaim(Location loc) {
-		return getId(loc) != null ? getClaim(getId(loc)) : null;
+		if (getId(loc) != null) {
+			Claim claim = getClaim(getId(loc));
+			for (Claim.Flag def : getFlagManager().getFlags()) {
+				if (claim.getFlag(def.getId()) == null) {
+					claim.register(def);
+				}
+			}
+			return claim;
+		}
+		return null;
 	}
 
 	public Claim getClaim(Chunk chunk) {
-		return getId(chunk.getX(), chunk.getZ(), chunk.getWorld().getName()) != null ? getClaim(getId(chunk.getX(), chunk.getZ(), chunk.getWorld().getName())) : null;
+		if (getId(chunk.getX(), chunk.getZ(), chunk.getWorld().getName()) != null) {
+			return getClaim(getId(chunk.getX(), chunk.getZ(), chunk.getWorld().getName()));
+		}
+		return null;
 	}
 
 	public boolean test(Player player, Block block) {
@@ -218,9 +230,14 @@ public final class ClaimManager {
 	}
 
 	public boolean load(Claim claim) {
+		for (Claim.Flag def : getFlagManager().getFlags()) {
+			if (claim.getFlag(def.getId()) == null) {
+				claim.register(def);
+			}
+		}
 		if (claim.getOwner() instanceof Clan) {
-			if (claim.getClan() instanceof DefaultClan) {
-				DefaultClan clan = (DefaultClan) claim.getClan();
+			if (claim.getHolder() instanceof DefaultClan) {
+				DefaultClan clan = (DefaultClan) claim.getHolder();
 				clan.addClaim(claim);
 				return true;
 			}

@@ -1,19 +1,16 @@
 package com.github.sanctum.clans.construct.impl;
 
 import com.github.sanctum.clans.bridge.ClanVentBus;
-import com.github.sanctum.clans.construct.RankPriority;
 import com.github.sanctum.clans.construct.api.BanksAPI;
 import com.github.sanctum.clans.construct.api.Claim;
 import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClanBank;
 import com.github.sanctum.clans.construct.api.ClanCooldown;
 import com.github.sanctum.clans.construct.api.ClansAPI;
-import com.github.sanctum.clans.construct.api.Clearance;
 import com.github.sanctum.clans.construct.api.ClearanceLog;
 import com.github.sanctum.clans.construct.api.InvasiveEntity;
 import com.github.sanctum.clans.construct.api.LogoHolder;
-import com.github.sanctum.clans.construct.api.Permission;
-import com.github.sanctum.clans.construct.api.PermissionLog;
+import com.github.sanctum.clans.construct.api.PersistentEntity;
 import com.github.sanctum.clans.construct.api.Relation;
 import com.github.sanctum.clans.construct.api.Savable;
 import com.github.sanctum.clans.construct.api.Teleport;
@@ -30,6 +27,7 @@ import com.github.sanctum.labyrinth.data.DataTable;
 import com.github.sanctum.labyrinth.data.EconomyProvision;
 import com.github.sanctum.labyrinth.data.FileManager;
 import com.github.sanctum.labyrinth.data.LabyrinthUser;
+import com.github.sanctum.labyrinth.data.MemorySpace;
 import com.github.sanctum.labyrinth.data.Node;
 import com.github.sanctum.labyrinth.event.custom.Vent;
 import com.github.sanctum.labyrinth.formatting.Message;
@@ -42,7 +40,6 @@ import com.github.sanctum.labyrinth.library.HUID;
 import com.github.sanctum.labyrinth.library.NamespacedKey;
 import com.github.sanctum.labyrinth.library.StringUtils;
 import com.github.sanctum.labyrinth.task.Schedule;
-import com.google.gson.reflect.TypeToken;
 import java.math.BigDecimal;
 import java.text.MessageFormat;
 import java.util.ArrayList;
@@ -78,9 +75,8 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 @SerializableAs("Clan")
-public final class DefaultClan implements Clan {
+public final class DefaultClan implements Clan, PersistentEntity {
 
-	public static final Map<String, List<LogoHolder.Carrier>> stands = new HashMap<>();
 	private final String clanID;
 	private boolean peaceful;
 	private boolean friendlyfire;
@@ -480,39 +476,13 @@ public final class DefaultClan implements Clan {
 				}
 			}
 			if (c.read(f -> f.isNode("members"))) {
-				// Look how simple the new format is...
 				for (String rank : c.read(f -> f.getNode("members").getKeys(false))) {
 
-					RankPriority priority = RankPriority.valueOf(rank);
+					Rank priority = Rank.valueOf(rank);
 					for (String mem : c.read(f -> f.getStringList("members." + rank))) {
 						associates.add(new DefaultAssociate(UUID.fromString(mem), priority, this));
 					}
 				}
-			} else {
-				// Cleaning up old format.
-				Map<UUID, RankPriority> map = new HashMap<>();
-				DataTable table = DataTable.newTable();
-				for (String m : c.read(f -> f.getStringList("members"))) {
-					map.put(UUID.fromString(m), RankPriority.NORMAL);
-				}
-				table.set("members", null);
-				for (String m : c.read(f -> f.getStringList("moderators"))) {
-					map.put(UUID.fromString(m), RankPriority.HIGH);
-				}
-				table.set("moderators", null);
-				for (String m : c.read(f -> f.getStringList("admins"))) {
-					map.put(UUID.fromString(m), RankPriority.HIGHER);
-				}
-				table.set("admins", null);
-				if (c.read(f -> f.isString("owner"))) {
-					map.put(UUID.fromString(c.read(f -> f.getString("owner"))), RankPriority.HIGHEST);
-					table.set("owner", null);
-				}
-				Schedule.sync(() -> c.write(table)).run();
-				for (Map.Entry<UUID, RankPriority> entry : map.entrySet()) {
-					associates.add(new DefaultAssociate(entry.getKey(), entry.getValue(), this));
-				}
-
 			}
 
 			if (c.read(f -> f.isDouble("bonus"))) {
@@ -530,14 +500,7 @@ public final class DefaultClan implements Clan {
 
 		ClearanceLog clog = getValue(ClearanceLog.class, "clearance");
 		if (clog == null) {
-			PermissionLog log = getValue(PermissionLog.class, "permissions");
 			ClearanceLog clearanceLog = new ClearanceLog();
-			if (log != null) {
-				for (Map.Entry<Permission, Integer> entry : log) {
-					clearanceLog.set(Clearance.valueOf(entry.getKey().name()), entry.getValue());
-				}
-				removeValue("permissions");
-			}
 			setValue("clearance", clearanceLog, false);
 		}
 
@@ -576,12 +539,12 @@ public final class DefaultClan implements Clan {
 						carriersToAdd.add(carrier);
 					}
 					carriersToAdd.forEach(station -> {
-						if (stands.get(station.getChunk().getX() + ";" + station.getChunk().getZ()) == null) {
+						if (CACHE.get(station.getChunk().getX() + ";" + station.getChunk().getZ()) == null) {
 							List<LogoHolder.Carrier> list = new ArrayList<>();
 							list.add(station);
-							stands.put(station.getChunk().getX() + ";" + station.getChunk().getZ(), list);
+							CACHE.put(station.getChunk().getX() + ";" + station.getChunk().getZ(), list);
 						} else {
-							stands.get(station.getChunk().getX() + ";" + station.getChunk().getZ()).add(station);
+							CACHE.get(station.getChunk().getX() + ";" + station.getChunk().getZ()).add(station);
 						}
 					});
 				}
@@ -602,20 +565,20 @@ public final class DefaultClan implements Clan {
 			if (test != null) {
 				PlayerJoinClanEvent event = ClanVentBus.call(new PlayerJoinClanEvent(test, this));
 				if (!event.isCancelled()) {
-					return new DefaultAssociate(target, RankPriority.NORMAL, this);
+					return new DefaultAssociate(target, Rank.NORMAL, this);
 				}
 			} else {
 				Tag temp = target::toString;
 				if (temp.isEntity() && !temp.isPlayer()) {
-					return new AnimalAssociate(InvasiveEntity.wrapNonAssociated(temp.getEntity()), RankPriority.NORMAL, this);
+					return new AnimalAssociate(InvasiveEntity.wrapNonAssociated(temp.getEntity()), Rank.NORMAL, this);
 				} else {
-					return new DefaultAssociate(target, RankPriority.NORMAL, this);
+					return new DefaultAssociate(target, Rank.NORMAL, this);
 				}
 			}
 
 		} else {
 			ACTION.removePlayer(target);
-			return new DefaultAssociate(target, RankPriority.NORMAL, this);
+			return new DefaultAssociate(target, Rank.NORMAL, this);
 		}
 		return null;
 	}
@@ -677,8 +640,8 @@ public final class DefaultClan implements Clan {
 			Associate owner = getOwner();
 			Associate mem = getMember(m -> m.getId().equals(target.getId()));
 			if (mem == null) return false;
-			owner.setPriority(RankPriority.NORMAL);
-			mem.setPriority(RankPriority.HIGHEST);
+			owner.setPriority(Rank.NORMAL);
+			mem.setPriority(Rank.HIGHEST);
 			save();
 			return true;
 		}
@@ -769,7 +732,7 @@ public final class DefaultClan implements Clan {
 
 	@Override
 	public synchronized @NotNull Clan.Associate getOwner() {
-		return associates.stream().filter(a -> a.getPriority() == RankPriority.HIGHEST).findFirst().get();
+		return associates.stream().filter(a -> a.getPriority() == Rank.HIGHEST).findFirst().get();
 	}
 
 	@Override
@@ -824,9 +787,9 @@ public final class DefaultClan implements Clan {
 			if (!getAllyRequests().isEmpty()) {
 				table.set("ally-requests", requests);
 			}
-			Map<RankPriority, List<Associate>> map = new HashMap<>();
+			Map<Rank, List<Associate>> map = new HashMap<>();
 
-			for (RankPriority v : RankPriority.values()) {
+			for (Rank v : Rank.values()) {
 				map.put(v, new ArrayList<>());
 			}
 
@@ -838,13 +801,25 @@ public final class DefaultClan implements Clan {
 				}
 			}
 
-			for (Map.Entry<RankPriority, List<Associate>> entry : map.entrySet()) {
+			for (Map.Entry<Rank, List<Associate>> entry : map.entrySet()) {
 				table.set("members." + entry.getKey().name(), entry.getValue().stream().map(Associate::getId).map(UUID::toString).collect(Collectors.toList()));
 			}
 
 			file.write(table);
 
-			getCarriers().forEach(LogoHolder.Carrier::removeAndSave);
+			Node holo = getNode("hologram");
+			holo.set(null);
+			getCarriers().forEach(carrier -> {
+				Node world = holo.getNode(carrier.getChunk().getWorld().getName());
+				Node c = world.getNode(carrier.getChunk().getX() + ";" + carrier.getChunk().getZ());
+				Node stat = c.getNode(OrdinalProcedure.select(carrier, 0).cast(() -> HUID.class).toString());
+				for (LogoHolder.Carrier.Line l : carrier.getLines()) {
+					Node line = stat.getNode(String.valueOf(l.getIndex()));
+					line.getNode("location").set(l.getStand().getLocation());
+					line.getNode("content").set(l.getStand().getCustomName());
+				}
+				holo.save();
+			});
 		}
 
 	}
@@ -854,7 +829,7 @@ public final class DefaultClan implements Clan {
 	public void remove(LogoHolder.Carrier carrier) {
 		if (carrier.getHolder().equals(this)) {
 			carrier.getLines().forEach(LogoHolder.Carrier.Line::destroy);
-			stands.get(carrier.getChunk().getX() + ";" + carrier.getChunk().getZ()).remove(carrier);
+			CACHE.get(carrier.getChunk().getX() + ";" + carrier.getChunk().getZ()).remove(carrier);
 			getNode("hologram").getNode(carrier.getChunk().getWorld().getName()).getNode(carrier.getChunk().getX() + ";" + carrier.getChunk().getZ()).getNode(OrdinalProcedure.select(carrier, 0).cast(() -> HUID.class).toString()).set(null);
 			getNode("hologram").getNode(carrier.getChunk().getWorld().getName()).save();
 		}
@@ -982,9 +957,9 @@ public final class DefaultClan implements Clan {
 	public synchronized String[] getClanInfo() {
 		List<String> array = new ArrayList<>();
 		String password = this.password;
-		List<String> members = getMembers().stream().filter(m -> m.getPriority().toInt() == 0).map(Associate::getName).collect(Collectors.toList());
-		List<String> mods = getMembers().stream().filter(m -> m.getPriority().toInt() == 1).map(Associate::getName).collect(Collectors.toList());
-		List<String> admins = getMembers().stream().filter(m -> m.getPriority().toInt() == 2).map(Associate::getName).collect(Collectors.toList());
+		List<String> members = getMembers().stream().filter(m -> m.getPriority().toLevel() == 0).map(Associate::getName).collect(Collectors.toList());
+		List<String> mods = getMembers().stream().filter(m -> m.getPriority().toLevel() == 1).map(Associate::getName).collect(Collectors.toList());
+		List<String> admins = getMembers().stream().filter(m -> m.getPriority().toLevel() == 2).map(Associate::getName).collect(Collectors.toList());
 		List<String> allies = getAllies().map(Clan::getId).map(HUID::toString).collect(Collectors.toList());
 		List<String> enemies = getEnemies().map(Clan::getId).map(HUID::toString).collect(Collectors.toList());
 		String status = "LOCKED";
@@ -1126,17 +1101,6 @@ public final class DefaultClan implements Clan {
 	public @Nullable Claim newClaim(Chunk c) {
 		Claim claim = null;
 		if (!ClansAPI.getInstance().getClaimManager().isInClaim(c)) {
-			int chunkCount = 0;
-			for (Chunk chunk : Claim.ACTION.getChunksAroundChunk(c, -1, 0, 1).stream().filter(chunk -> ClansAPI.getInstance().getClaimManager().isInClaim(chunk.getX(), chunk.getZ(), chunk.getWorld().getName())).collect(Collectors.toList())) {
-				if (isOwner(chunk)) {
-					chunkCount++;
-				}
-			}
-			if (ClansAPI.getDataInstance().isTrue("Clans.land-claiming.claim-connections")) {
-				if (getClaims().length >= 1 && chunkCount == 0) {
-					return null;
-				}
-			}
 			if (getClaims().length == getClaimLimit()) return null;
 			String claimID = new RandomID(6, "AKZ0123456789").generate();
 			int x = c.getX();
@@ -1144,14 +1108,16 @@ public final class DefaultClan implements Clan {
 			String world = c.getWorld().getName();
 			FileManager d = ClansAPI.getInstance().getClaimManager().getFile();
 			DataTable table = DataTable.newTable();
-			table.set(getId() + ".Claims." + claimID + ".X", x);
-			table.set(getId() + ".Claims." + claimID + ".Z", z);
-			table.set(getId() + ".Claims." + claimID + ".World", world);
+			table.set(getId() + "." + claimID + ".X", x);
+			table.set(getId() + "." + claimID + ".Z", z);
+			table.set(getId() + "." + claimID + ".World", world);
 			d.write(table);
 			claim = new DefaultClaim(x, z, clanID, claimID, world, true);
+			Claim finalClaim = claim;
+			ClansAPI.getInstance().getClaimManager().getFlagManager().getFlags().forEach(finalClaim::register);
 			ClansAPI.getInstance().getClaimManager().load(claim);
 			broadcast(Claim.ACTION.claimed(x, z, world));
-			new Vent.Call<>(Vent.Runtime.Synchronous, new AssociateObtainLandEvent(null, claim)).run();
+			new Vent.Call<>(Vent.Runtime.Synchronous, new AssociateObtainLandEvent(claim)).run();
 		}
 		return claim;
 	}
@@ -1391,13 +1357,12 @@ public final class DefaultClan implements Clan {
 	}
 
 	public List<String> getLogo() {
-		return DefaultClan.this.getValue(new TypeToken<List<String>>() {
-		}, "logo");
+		return DefaultClan.this.getValue("logo");
 	}
 
 	public List<LogoHolder.Carrier> getCarriers() {
 		List<LogoHolder.Carrier> list = new ArrayList<>();
-		for (List<LogoHolder.Carrier> s : stands.values()) {
+		for (List<LogoHolder.Carrier> s : CACHE.values()) {
 			s.forEach(c -> {
 				if (c.getHolder().equals(this)) {
 					list.add(c);
@@ -1408,7 +1373,7 @@ public final class DefaultClan implements Clan {
 	}
 
 	public List<LogoHolder.Carrier> getCarriers(Chunk chunk) {
-		return stands.computeIfAbsent(chunk.getX() + ";" + chunk.getZ(), chunk1 -> new ArrayList<>()).stream().filter(c -> c.getHolder().equals(this)).collect(Collectors.toList());
+		return CACHE.computeIfAbsent(chunk.getX() + ";" + chunk.getZ(), chunk1 -> new ArrayList<>()).stream().filter(c -> c.getHolder().equals(this)).collect(Collectors.toList());
 	}
 
 	@Override
@@ -1436,11 +1401,11 @@ public final class DefaultClan implements Clan {
 					s.setCustomNameVisible(true);
 					s.setCustomName(event.getContent());
 				});
-				stands.computeIfAbsent(loc.getChunk().getX() + ";" + loc.getChunk().getZ(), k -> new ArrayList<>());
+				CACHE.computeIfAbsent(loc.getChunk().getX() + ";" + loc.getChunk().getZ(), k -> new ArrayList<>());
 				carrier.add(stand);
 			}
 		}
-		stands.get(carrier.getChunk().getX() + ";" + carrier.getChunk().getZ()).add(carrier);
+		CACHE.get(carrier.getChunk().getX() + ";" + carrier.getChunk().getZ()).add(carrier);
 		return carrier;
 	}
 
@@ -1481,10 +1446,12 @@ public final class DefaultClan implements Clan {
 		if (entity.isAssociate()) {
 			associates.add(entity.getAsAssociate());
 			if (ClansAPI.getInstance().getClanManager().getClans().exists(c -> c.equals(this)) && !entity.isTamable()) {
-				Node join_date = entity.getAsAssociate().getNode("join-date");
-				Date now = new Date();
-				join_date.set(now.getTime());
-				join_date.save();
+				if (entity.getMemorySpace().isPresent()) {
+					Node join_date = entity.getMemorySpace().get().getNode("join-date");
+					Date now = new Date();
+					join_date.set(now.getTime());
+					join_date.save();
+				}
 			}
 			return true;
 		}
@@ -1554,6 +1521,16 @@ public final class DefaultClan implements Clan {
 	@Override
 	public void clear() {
 		getMembers().forEach(Savable::remove);
+	}
+
+	@Override
+	public @NotNull Optional<MemorySpace> getMemorySpace() {
+		return Optional.of(this);
+	}
+
+	@Override
+	public Class<Clan> getClassType() {
+		return Clan.class;
 	}
 
 	final class Carrier implements LogoHolder.Carrier {

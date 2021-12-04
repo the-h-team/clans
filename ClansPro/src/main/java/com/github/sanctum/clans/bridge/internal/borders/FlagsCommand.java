@@ -1,9 +1,9 @@
 package com.github.sanctum.clans.bridge.internal.borders;
 
 import com.github.sanctum.clans.construct.api.ClanSubCommand;
-import com.github.sanctum.labyrinth.formatting.TabCompletion;
+import com.github.sanctum.labyrinth.formatting.completion.SimpleTabCompletion;
+import com.github.sanctum.labyrinth.formatting.completion.TabCompletionIndex;
 import com.github.sanctum.labyrinth.library.Message;
-import java.util.Collections;
 import java.util.List;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -30,6 +30,6 @@ public class FlagsCommand extends ClanSubCommand {
 
 	@Override
 	public List<String> tab(Player player, String label, String[] args) {
-		return TabCompletion.build(getLabel()).forArgs(args).level(1).completeAt(getLabel()).filter(() -> Collections.singletonList("flags")).collect().get(args.length);
+		return SimpleTabCompletion.empty().fillArgs(args).then(TabCompletionIndex.ONE, "flags").get();
 	}
 }

@@ -1,6 +1,5 @@
 package com.github.sanctum.clans.event.claim;
 
-import com.github.sanctum.clans.construct.RankPriority;
 import com.github.sanctum.clans.construct.api.Channel;
 import com.github.sanctum.clans.construct.api.Claim;
 import com.github.sanctum.clans.construct.api.Clan;
@@ -10,14 +9,11 @@ import com.github.sanctum.clans.construct.api.Teleport;
 import com.github.sanctum.clans.construct.impl.Resident;
 import com.github.sanctum.clans.event.associate.AssociateEvent;
 import com.github.sanctum.labyrinth.data.LabyrinthUser;
-import com.github.sanctum.labyrinth.data.Node;
 import com.github.sanctum.labyrinth.library.Mailer;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import org.bukkit.Bukkit;
@@ -33,31 +29,6 @@ import org.jetbrains.annotations.Nullable;
 public abstract class ClaimEvent extends AssociateEvent {
 
 	protected static final Clan.Associate dummy = new Clan.Associate() {
-
-		@Override
-		public String getPath() {
-			return null;
-		}
-
-		@Override
-		public boolean isNode(String key) {
-			return false;
-		}
-
-		@Override
-		public Node getNode(String key) {
-			return null;
-		}
-
-		@Override
-		public Set<String> getKeys(boolean deep) {
-			return null;
-		}
-
-		@Override
-		public Map<String, Object> getValues(boolean deep) {
-			return null;
-		}
 
 		@Override
 		public List<String> getLogo() {
@@ -361,7 +332,7 @@ public abstract class ClaimEvent extends AssociateEvent {
 		}
 
 		@Override
-		public RankPriority getPriority() {
+		public Clan.Rank getPriority() {
 			return null;
 		}
 
@@ -396,7 +367,7 @@ public abstract class ClaimEvent extends AssociateEvent {
 		}
 
 		@Override
-		public void setPriority(RankPriority priority) {
+		public void setPriority(Clan.Rank priority) {
 
 		}
 

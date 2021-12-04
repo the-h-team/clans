@@ -55,7 +55,7 @@ public class ClaimInteractEvent extends ClaimEvent {
 
 	@Override
 	public Clan getClan() {
-		return getClaim().getClan();
+		return ((Clan)getClaim().getHolder());
 	}
 
 	public enum Type {

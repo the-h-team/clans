@@ -43,7 +43,7 @@ public class CooldownCreate extends ClanCooldown {
 	}
 
 	@Override
-	public ClanCooldown getInstance() {
+	public ClanCooldown getAttached() {
 		return this;
 	}
 }

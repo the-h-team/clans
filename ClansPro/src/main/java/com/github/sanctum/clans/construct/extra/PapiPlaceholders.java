@@ -3,6 +3,7 @@ package com.github.sanctum.clans.construct.extra;
 import com.github.sanctum.clans.ClansJavaPlugin;
 import com.github.sanctum.clans.bridge.ClanAddon;
 import com.github.sanctum.clans.bridge.ClanAddonQuery;
+import com.github.sanctum.clans.bridge.internal.map.MapController;
 import com.github.sanctum.clans.construct.api.Claim;
 import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClansAPI;
@@ -11,11 +12,11 @@ import me.clip.placeholderapi.expansion.PlaceholderExpansion;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
-public class ClanPlaceholders extends PlaceholderExpansion {
+public class PapiPlaceholders extends PlaceholderExpansion {
 
 	public ClansJavaPlugin plugin;
 
-	public ClanPlaceholders(ClansJavaPlugin plugin) {
+	public PapiPlaceholders(ClansJavaPlugin plugin) {
 		this.plugin = plugin;
 	}
 
@@ -99,6 +100,27 @@ public class ClanPlaceholders extends PlaceholderExpansion {
 
 		Clan.Associate associate = ClansAPI.getInstance().getAssociate(player).orElse(null);
 
+		if (identifier.equals("land_chunk_map_line1")) {
+			return MapController.getMapLine(player, 5, 5, 0);
+		}
+
+		if (identifier.equals("land_chunk_map_line2")) {
+			return MapController.getMapLine(player, 5, 5, 1);
+		}
+
+		if (identifier.equals("land_chunk_map_line3")) {
+			return MapController.getMapLine(player, 5, 5, 2);
+		}
+
+		if (identifier.equals("land_chunk_map_line4")) {
+			return MapController.getMapLine(player, 5, 5, 3);
+		}
+
+		if (identifier.equals("land_chunk_map_line5")) {
+			return MapController.getMapLine(player, 5, 5, 4);
+		}
+
+
 		if (associate == null) {
 			return "";
 		}
@@ -141,6 +163,14 @@ public class ClanPlaceholders extends PlaceholderExpansion {
 			return c.getName();
 		}
 
+		if (identifier.equals("clan_nick_name")) {
+			return c.getNickname() != null ? c.getNickname() : c.getName();
+		}
+
+		if (identifier.equals("clan_nick_name_colored")) {
+			return c.getPalette().isGradient() ? c.getPalette().toString(c.getNickname() != null ? c.getNickname() : c.getName()) : c.getPalette() + (c.getNickname() != null ? c.getNickname() : c.getName());
+		}
+
 		if (identifier.equals("clan_name_colored")) {
 			return c.getPalette().isGradient() ? c.getPalette().toGradient().context(c.getName()).translate() : c.getPalette() + c.getName();
 		}
@@ -152,13 +182,13 @@ public class ClanPlaceholders extends PlaceholderExpansion {
 		if (identifier.equals("land_status")) {
 			Claim claim = ClansAPI.getInstance().getClaimManager().getClaim(player.getLocation());
 			if (claim != null) {
-				if (claim.getClan().getId().equals(c.getId())) {
+				if (((Clan)claim.getHolder()).getId().equals(c.getId())) {
 					return "Owned";
 				}
-				if (claim.getClan().getRelation().getAlliance().has(c)) {
+				if (((Clan)claim.getHolder()).getRelation().getAlliance().has(c)) {
 					return "Allied";
 				}
-				if (claim.getClan().getRelation().getRivalry().has(c)) {
+				if (((Clan)claim.getHolder()).getRelation().getRivalry().has(c)) {
 					return "Rivaled";
 				}
 			}

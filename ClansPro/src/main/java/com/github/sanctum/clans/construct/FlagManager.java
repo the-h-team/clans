@@ -29,8 +29,8 @@ public final class FlagManager {
 	public void unregister(Claim.Flag flag) {
 		for (Claim c : claimManager.getClaims()) {
 			c.remove(flag);
-			flags.remove(flag);
 		}
+		flags.remove(flag);
 	}
 
 }

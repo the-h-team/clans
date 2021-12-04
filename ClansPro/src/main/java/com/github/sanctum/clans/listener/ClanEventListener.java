@@ -2,18 +2,18 @@ package com.github.sanctum.clans.listener;
 
 import com.github.sanctum.clans.bridge.internal.stashes.events.StashInteractEvent;
 import com.github.sanctum.clans.bridge.internal.vaults.events.VaultInteractEvent;
-import com.github.sanctum.clans.construct.GUI;
+import com.github.sanctum.clans.construct.api.AbstractGameRule;
 import com.github.sanctum.clans.construct.api.Claim;
 import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClanBlueprint;
 import com.github.sanctum.clans.construct.api.ClanCooldown;
 import com.github.sanctum.clans.construct.api.ClansAPI;
 import com.github.sanctum.clans.construct.api.Consultant;
+import com.github.sanctum.clans.construct.api.GUI;
 import com.github.sanctum.clans.construct.api.War;
 import com.github.sanctum.clans.construct.extra.AnimalConsultantListener;
 import com.github.sanctum.clans.construct.impl.CooldownCreate;
 import com.github.sanctum.clans.construct.impl.SimpleEntry;
-import com.github.sanctum.clans.event.associate.AssociateChatEvent;
 import com.github.sanctum.clans.event.associate.AssociateDisplayInfoEvent;
 import com.github.sanctum.clans.event.associate.AssociateFromAnimalEvent;
 import com.github.sanctum.clans.event.associate.AssociateMessageReceiveEvent;
@@ -43,6 +43,7 @@ import com.github.sanctum.labyrinth.task.Schedule;
 import java.math.BigDecimal;
 import java.util.Random;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -73,7 +74,7 @@ public class ClanEventListener implements Listener {
 				Claim.Flag f = e.getClaim().getFlag("owner-only");
 				if (f.isValid()) {
 					if (f.isEnabled()) {
-						if (e.getAssociate().getPriority().toInt() != 3) {
+						if (e.getAssociate().getPriority().toLevel() != 3) {
 							Clan.ACTION.sendMessage(e.getPlayer(), "&cThis is a clan owner only chunk! You can't do this here.");
 							e.setCancelled(true);
 						}
@@ -97,12 +98,32 @@ public class ClanEventListener implements Listener {
 				}
 			}
 		}
+	}
 
+	@Subscribe(priority = Vent.Priority.LOW)
+	public void onFix(ClaimResidentEvent e) {
+		Claim c = e.getClaim();
+		for (Claim.Flag loading : e.getApi().getClaimManager().getFlagManager().getFlags()) {
+			if (c.getFlag(loading.getId()) == null) {
+				c.register(loading);
+			}
+		}
+	}
+
+	@Subscribe(priority = Vent.Priority.LOW)
+	public void onFix(WildernessInhabitantEvent e) {
+		if (e.getPreviousClaim() == null) return;
+		Claim c = e.getPreviousClaim();
+		for (Claim.Flag loading : e.getApi().getClaimManager().getFlagManager().getFlags()) {
+			if (c.getFlag(loading.getId()) == null) {
+				c.register(loading);
+			}
+		}
 	}
 
 	@Subscribe(priority = Vent.Priority.HIGHEST)
 	public void onTitle(ClaimResidentEvent e) {
-		Clan owner = e.getClaim().getClan();
+		Clan owner = ((Clan) e.getClaim().getHolder());
 		if (e.getClaim().getFlag("custom-titles").isEnabled()) {
 			if (owner.getValue(String.class, "claim_title") != null) {
 				if (owner.getValue(String.class, "claim_sub_title") != null) {
@@ -133,7 +154,7 @@ public class ClanEventListener implements Listener {
 	public void onAnimal(AssociateFromAnimalEvent e) {
 		Consultant consultant = e.getAssociate().getConsultant();
 		if (!consultant.hasIncomingListener(e.getAssociate().getTag())) {
-			AnimalConsultantListener listener = new AnimalConsultantListener(e.getAssociate());
+			AnimalConsultantListener listener = new AnimalConsultantListener(e.getAssociate()); // Register the default animal consultant listeners.
 			consultant.registerOutgoingListener(e.getAssociate().getTag(), listener);
 			consultant.registerIncomingListener(e.getAssociate().getTag(), listener);
 		}
@@ -141,7 +162,7 @@ public class ClanEventListener implements Listener {
 
 	@Subscribe(priority = Vent.Priority.READ_ONLY)
 	public void onClaim(AssociateObtainLandEvent e) {
-		for (Claim.Flag f : ClansAPI.getInstance().getClaimManager().getFlagManager().getFlags()) {
+		for (Claim.Flag f : e.getApi().getClaimManager().getFlagManager().getFlags()) {
 			if (e.getClaim().getFlag(f.getId()) == null) {
 				e.getClaim().register(f);
 			} else {
@@ -157,8 +178,8 @@ public class ClanEventListener implements Listener {
 	public void onLoad(ClansLoadingProcedureEvent e) {
 		if (e.getClans().stream().noneMatch(c -> c.getName().equals("Labyrinth"))) {
 			UUID server = e.getApi().getSessionId();
-			ClanBlueprint blueprint = new ClanBlueprint("Labyrinth", true).setLeader(server);
-			Clan clan = blueprint.toBuilder().supply().givePower(4.2).getClan();
+			ClanBlueprint blueprint = new ClanBlueprint("Labyrinth", true).setLeader(server); //TODO: fix blueprint to allow consumers.
+			Clan clan = blueprint.toBuilder().build().givePower(4.2).getClan();
 			e.insert(clan);
 		}
 		if (ClansAPI.getDataInstance().isTrue("Formatting.console-debug")) {
@@ -166,20 +187,12 @@ public class ClanEventListener implements Listener {
 		}
 	}
 
-	@Subscribe(priority = Vent.Priority.READ_ONLY)
-	public void onChat(AssociateChatEvent e) {
-		Consultant server = e.getApi().getConsultant();
-		if (server != null) {
-			server.sendMessage(e::getMessage);
-		}
-	}
-
-	@Subscribe(priority = Vent.Priority.READ_ONLY)
+	@Subscribe(priority = Vent.Priority.LOW)
 	public void onChat(AssociateMessageReceiveEvent e) {
 		Schedule.sync(() -> {
 			Consultant server = e.getAssociate().getConsultant();
-			if (server != null) {
-				server.sendMessage(() -> new SimpleEntry<>(e.getMessage(), new SimpleEntry<>(e.getChannel(), e.getSender())));
+			if (server != null) { // Our server associate isn't null
+				server.sendMessage(() -> new SimpleEntry<>(e.getMessage(), new SimpleEntry<>(e.getChannel(), e.getSender()))); // Send them the message & ticket a response from the server.
 			}
 		}).run();
 	}
@@ -364,29 +377,35 @@ public class ClanEventListener implements Listener {
 	@Subscribe
 	public void onWarStart(WarStartEvent e) {
 		War w = e.getWar();
+		if (w.getQueue().getAssociates().length == 0) {
+			e.setCancelled(true);
+			return;
+		}
 		TimeWatch.Recording r = e.getRecording();
 		Cooldown test = LabyrinthProvider.getService(Service.COOLDOWNS).getCooldown("war-" + w.getId() + "-start");
 		if (test != null) {
-			String time = calc(r.getMinutes()) + ":" + calc(r.getSeconds());
-			if (time.equals("01:00")) {
+			long msec = TimeUnit.MINUTES.toSeconds(r.getMinutes());
+			long sec = r.getSeconds();
+			if ((msec + sec) >= LabyrinthProvider.getInstance().getLocalPrintManager().getPrint(e.getApi().getLocalPrintKey()).getNumber("war_start_time").intValue()) {
 				e.start();
 				Cooldown.remove(test);
+				e.setCancelled(true);
 			} else {
 				Mailer m = LabyrinthProvider.getService(Service.MESSENGER).getEmptyMailer();
 				String t = calc(test.getMinutesLeft()) + ":" + calc(test.getSecondsLeft());
-				w.forEach(a -> {
+				Schedule.sync(() -> w.forEach(a -> {
 					Player p = a.getUser().toBukkit().getPlayer();
 					if (p != null) {
 						m.accept(p).action("&2War start&f: &e" + t).deploy();
 					}
-				});
+				})).run();
 			}
 		}
 	}
 
 	@Subscribe
 	public void onResidency(ClaimResidentEvent e) {
-		Clan owner = e.getClaim().getClan();
+		Clan owner = e.getClan();
 		if (owner.getMember(m -> m.getName().equals(e.getResident().getPlayer().getName())) == null) {
 			if (!e.getResident().getPlayer().hasPermission("clanspro.claim.bypass")) {
 				e.getResident().getPlayer().addPotionEffect(new PotionEffect(PotionEffectType.SLOW_DIGGING, 225, -1, false, false));
@@ -470,6 +489,11 @@ public class ClanEventListener implements Listener {
 	public void onClanCreate(PlayerCreateClanEvent event) {
 		if (event.getPlayer() != null) {
 			Player p = event.getPlayer();
+			if (Clan.ACTION.getAllClanNames().size() >= LabyrinthProvider.getInstance().getLocalPrintManager().getPrint(event.getApi().getLocalPrintKey()).getNumber(AbstractGameRule.MAX_CLANS).intValue()) {
+				event.getUtil().sendMessage(p, "&cYour server has reached it's maxed allowed amount of clans.");
+				event.setCancelled(true);
+				return;
+			}
 			if (ClansAPI.getInstance().isNameBlackListed(event.getClanName())) {
 				String command = ClansAPI.getDataInstance().getConfig().getRoot().getString("Clans.name-blacklist." + event.getClanName().toLowerCase() + ".action");
 				event.getUtil().sendMessage(p, "&c&oThis name is not allowed!");
@@ -477,6 +501,7 @@ public class ClanEventListener implements Listener {
 					Bukkit.dispatchCommand(Bukkit.getConsoleSender(), Clan.ACTION.format(command, "{PLAYER}", p.getName()));
 				}
 				event.setCancelled(true);
+				return;
 			}
 			if (p != null && ClansAPI.getDataInstance().isTrue("Clans.creation.cooldown.enabled")) {
 				if (creationCooldown(p.getUniqueId()).isComplete()) {

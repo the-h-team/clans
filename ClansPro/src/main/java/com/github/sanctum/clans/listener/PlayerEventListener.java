@@ -70,6 +70,7 @@ import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerAnimationEvent;
 import org.bukkit.event.player.PlayerBucketEmptyEvent;
 import org.bukkit.event.player.PlayerBucketFillEvent;
+import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerPortalEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
@@ -379,7 +380,7 @@ public class PlayerEventListener implements Listener {
 	public void onAnimate(PlayerAnimationEvent e) {
 		Claim claim = ClansAPI.getInstance().getClaimManager().getClaim(e.getPlayer().getLocation());
 		if (claim != null) {
-			if (claim.getClan().getMember(m -> m.getName().equals(e.getPlayer().getName())) == null) {
+			if (((Clan)claim.getHolder()).getMember(m -> m.getName().equals(e.getPlayer().getName())) == null) {
 				e.setCancelled(true);
 			}
 		}
@@ -480,30 +481,27 @@ public class PlayerEventListener implements Listener {
 		}
 	}
 
-	@Subscribe
-	public void onCommandWar(DefaultEvent.Communication e) {
-		if (e.getCommunicationType() == DefaultEvent.Communication.Type.COMMAND) {
-			e.getCommand().ifPresent(cmd -> ClansAPI.getInstance().getAssociate(e.getPlayer()).ifPresent(a -> {
+	@EventHandler
+	public void onProcess(PlayerCommandPreprocessEvent e) {
+		ClansAPI.getInstance().getAssociate(e.getPlayer()).ifPresent(a -> {
 
-				War w = ClansAPI.getInstance().getArenaManager().get(a);
-				if (w != null) {
-					if (w.isRunning()) {
-						for (String c : ClansAPI.getDataInstance().getWarBlockedCommands()) {
-							if (StringUtils.use(cmd.getText()).containsIgnoreCase(c)) {
-								e.setCancelled(true);
-							}
-						}
-					} else {
-						if (cmd.get().length >= 1) {
-							if (!(cmd.getText().equals("c"))) {
-								Clan.ACTION.sendMessage(e.getPlayer(), "&cYou cannot do this while queued for a match! Use &6/c surrender &cto safely leave queue.");
-								e.setCancelled(true);
-							}
+			War w = ClansAPI.getInstance().getArenaManager().get(a);
+			if (w != null) {
+				if (w.isRunning()) {
+					for (String c : LabyrinthProvider.getInstance().getLocalPrintManager().getPrint(ClansAPI.getInstance().getLocalPrintKey()).getStringList("blocked_commands_war")) {
+						if (Arrays.equals(c.split(" "), e.getMessage().split(" "))) {
+							Clan.ACTION.sendMessage(e.getPlayer(), "&cYou cannot do this while in a match! Use &6/c surrender &ror &6truce &cto call a vote.");
+							e.setCancelled(true);
 						}
 					}
+				} else {
+					if (!StringUtils.use(e.getMessage()).containsIgnoreCase("c surrender", "c forfeit", "c war teleport")) {
+						Clan.ACTION.sendMessage(e.getPlayer(), "&cYou cannot do this while queued for a match! Use &6/c surrender &cto safely leave queue.");
+						e.setCancelled(true);
+					}
 				}
-			}));
-		}
+			}
+		});
 	}
 
 	@Subscribe(priority = Vent.Priority.HIGH, processCancelled = true)

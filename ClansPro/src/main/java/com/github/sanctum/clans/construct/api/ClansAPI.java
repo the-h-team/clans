@@ -6,7 +6,6 @@ import com.github.sanctum.clans.construct.ArenaManager;
 import com.github.sanctum.clans.construct.ClaimManager;
 import com.github.sanctum.clans.construct.ClanManager;
 import com.github.sanctum.clans.construct.DataManager;
-import com.github.sanctum.clans.construct.GUI;
 import com.github.sanctum.clans.construct.ShieldManager;
 import com.github.sanctum.clans.construct.extra.MessagePrefix;
 import com.github.sanctum.labyrinth.annotation.Experimental;
@@ -17,6 +16,7 @@ import com.github.sanctum.labyrinth.data.container.KeyedServiceManager;
 import com.github.sanctum.labyrinth.data.service.Check;
 import com.github.sanctum.labyrinth.gui.unity.construct.Menu;
 import com.github.sanctum.labyrinth.library.HUID;
+import com.github.sanctum.labyrinth.library.NamespacedKey;
 import com.github.sanctum.labyrinth.paste.PasteManager;
 import com.github.sanctum.labyrinth.paste.operative.PasteResponse;
 import com.github.sanctum.labyrinth.paste.type.Hastebin;
@@ -266,6 +266,10 @@ public interface ClansAPI {
 	@Nullable ClanAddon getAddon(String name);
 
 	@Nullable Menu getMenu(GUI gui, InvasiveEntity entity);
+
+	default NamespacedKey getLocalPrintKey() {
+		return new NamespacedKey(getPlugin(), "reload_data");
+	}
 
 	/**
 	 * Debug an invasive entity to check all parameters for stability.

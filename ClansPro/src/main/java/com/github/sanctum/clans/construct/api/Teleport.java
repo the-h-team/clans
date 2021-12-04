@@ -12,8 +12,11 @@ import java.util.Set;
 import org.bukkit.Location;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
+import org.jetbrains.annotations.NotNull;
 
 public abstract class Teleport {
+
+	protected final Set<SuccessOperator> successOperators = new HashSet<>();
 
 	public abstract State getState();
 
@@ -31,12 +34,23 @@ public abstract class Teleport {
 
 	public abstract void cancel();
 
+	public void register(@NotNull SuccessOperator operator) {
+		this.successOperators.add(operator);
+	}
+
 	public static Teleport get(InvasiveEntity entity) {
 		return Impl.REQUESTS.stream().filter(r -> r.getEntity().equals(entity)).findFirst().orElse(null);
 	}
 
 	public static Teleport get(Player player) {
 		return get(InvasiveEntity.wrapNonAssociated(player));
+	}
+
+	@FunctionalInterface
+	public interface SuccessOperator {
+
+		void onTeleportSuccess(InvasiveEntity parent);
+
 	}
 
 	public static class Impl extends Teleport {
@@ -114,6 +128,7 @@ public abstract class Teleport {
 						if (getState() == State.TELEPORTING) {
 							AssociateTeleportEvent event = ClanVentBus.call(new AssociateTeleportEvent(getEntity().getAsAssociate(), new TeleportationTarget(this.target)));
 							if (!event.isCancelled()) {
+								successOperators.forEach(operator -> operator.onTeleportSuccess(entity));
 								entity.getAsAssociate().getUser().toBukkit().getPlayer().teleport(event.getTarget().getAsPlayer(), org.bukkit.event.player.PlayerTeleportEvent.TeleportCause.COMMAND);
 								cancel();
 								entity.getAsAssociate().getUser().toBukkit().getPlayer().getWorld().playSound(entity.getAsAssociate().getUser().toBukkit().getPlayer().getLocation(), Sound.ENTITY_VILLAGER_AMBIENT, 10, 1);
@@ -131,6 +146,7 @@ public abstract class Teleport {
 						if (getState() == State.TELEPORTING) {
 							AssociateTeleportEvent event = ClanVentBus.call(new AssociateTeleportEvent(getEntity().getAsAssociate(), new TeleportationTarget(this.location)));
 							if (!event.isCancelled()) {
+								successOperators.forEach(operator -> operator.onTeleportSuccess(entity));
 								entity.getAsAssociate().getUser().toBukkit().getPlayer().teleport(event.getTarget().getAsLocation(), org.bukkit.event.player.PlayerTeleportEvent.TeleportCause.COMMAND);
 								cancel();
 								entity.getAsAssociate().getUser().toBukkit().getPlayer().getWorld().playSound(entity.getAsAssociate().getUser().toBukkit().getPlayer().getLocation(), Sound.ENTITY_VILLAGER_AMBIENT, 10, 1);
@@ -154,6 +170,7 @@ public abstract class Teleport {
 								if (getState() == State.TELEPORTING) {
 									AssociateTeleportEvent event = ClanVentBus.call(new AssociateTeleportEvent(a, new TeleportationTarget(this.target)));
 									if (!event.isCancelled()) {
+										successOperators.forEach(operator -> operator.onTeleportSuccess(a));
 										a.getUser().toBukkit().getPlayer().teleport(event.getTarget().getAsPlayer(), org.bukkit.event.player.PlayerTeleportEvent.TeleportCause.COMMAND);
 										cancel();
 										a.getUser().toBukkit().getPlayer().getWorld().playSound(entity.getAsAssociate().getUser().toBukkit().getPlayer().getLocation(), Sound.ENTITY_VILLAGER_AMBIENT, 10, 1);
@@ -174,6 +191,7 @@ public abstract class Teleport {
 								if (getState() == State.TELEPORTING) {
 									AssociateTeleportEvent event = ClanVentBus.call(new AssociateTeleportEvent(a, new TeleportationTarget(this.location)));
 									if (!event.isCancelled()) {
+										successOperators.forEach(operator -> operator.onTeleportSuccess(a));
 										a.getUser().toBukkit().getPlayer().teleport(event.getTarget().getAsLocation());
 										cancel();
 										a.getUser().toBukkit().getPlayer().getWorld().playSound(entity.getAsAssociate().getUser().toBukkit().getPlayer().getLocation(), Sound.ENTITY_VILLAGER_AMBIENT, 10, 1);
@@ -197,6 +215,7 @@ public abstract class Teleport {
 							if (getState() == State.TELEPORTING) {
 								PlayerTeleportEvent event = ClanVentBus.call(new PlayerTeleportEvent(getEntity().getAsPlayer().getPlayer(), new TeleportationTarget(this.target)));
 								if (!event.isCancelled()) {
+									successOperators.forEach(operator -> operator.onTeleportSuccess(entity));
 									getEntity().getAsPlayer().getPlayer().teleport(event.getTarget().getAsPlayer());
 									cancel();
 									getEntity().getAsPlayer().getPlayer().getWorld().playSound(getEntity().getAsPlayer().getPlayer().getLocation(), Sound.ENTITY_VILLAGER_AMBIENT, 10, 1);
@@ -214,6 +233,7 @@ public abstract class Teleport {
 							if (getState() == State.TELEPORTING) {
 								PlayerTeleportEvent event = ClanVentBus.call(new PlayerTeleportEvent(getEntity().getAsPlayer().getPlayer(), new TeleportationTarget(this.location)));
 								if (!event.isCancelled()) {
+									successOperators.forEach(operator -> operator.onTeleportSuccess(entity));
 									getEntity().getAsPlayer().getPlayer().teleport(event.getTarget().getAsLocation());
 									cancel();
 									getEntity().getAsPlayer().getPlayer().getWorld().playSound(getEntity().getAsPlayer().getPlayer().getLocation(), Sound.ENTITY_VILLAGER_AMBIENT, 10, 1);

@@ -1,6 +1,5 @@
 package com.github.sanctum.clans.construct.api;
 
-import com.github.sanctum.clans.construct.RankPriority;
 import com.github.sanctum.labyrinth.formatting.string.RandomID;
 import java.util.HashMap;
 import java.util.Locale;
@@ -10,7 +9,7 @@ import org.bukkit.entity.Player;
 
 public class ClanBlueprint {
 
-	private final Map<UUID, RankPriority> memberList = new HashMap<>();
+	private final Map<UUID, Clan.Rank> memberList = new HashMap<>();
 
 	private final String clanName;
 
@@ -39,7 +38,7 @@ public class ClanBlueprint {
 	 * @param priority The rank priority of the player
 	 * @return The same blueprint object with the newly applied values.
 	 */
-	public ClanBlueprint addMember(UUID uuid, RankPriority priority) {
+	public ClanBlueprint addMember(UUID uuid, Clan.Rank priority) {
 		this.memberList.put(uuid, priority);
 		return this;
 	}
@@ -50,7 +49,7 @@ public class ClanBlueprint {
 	 * @param members The local map object to apply changes from
 	 * @return The same blueprint object with the newly applied values.
 	 */
-	public ClanBlueprint addMembers(Map<UUID, RankPriority> members) {
+	public ClanBlueprint addMembers(Map<UUID, Clan.Rank> members) {
 		this.memberList.putAll(members);
 		return this;
 	}
@@ -104,7 +103,7 @@ public class ClanBlueprint {
 		return new ClanBuilder(this);
 	}
 
-	protected Map<UUID, RankPriority> getMemberList() {
+	protected Map<UUID, Clan.Rank> getMemberList() {
 		return this.memberList;
 	}
 
