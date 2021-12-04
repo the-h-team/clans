@@ -277,16 +277,16 @@ public final class StartProcedure {
 	@Ordinal(10)
 	void j() {
 		if (bail) return;
-		final Permission balance = new Permission(BankPermissions.BANKS_BALANCE.node);
-		final Permission deposit = new Permission(BankPermissions.BANKS_DEPOSIT.node);
-		final Permission withdraw = new Permission(BankPermissions.BANKS_WITHDRAW.node);
-		final Permission use = new Permission(BankPermissions.BANKS_USE.node);
+		final Permission balance = new Permission(BankPermissions.BANKS_BALANCE.getNode());
+		final Permission deposit = new Permission(BankPermissions.BANKS_DEPOSIT.getNode());
+		final Permission withdraw = new Permission(BankPermissions.BANKS_WITHDRAW.getNode());
+		final Permission use = new Permission(BankPermissions.BANKS_USE.getNode());
 		balance.addParent(use, true);
-		final Permission useStar = new Permission(BankPermissions.BANKS_USE_STAR.node);
+		final Permission useStar = new Permission(BankPermissions.BANKS_USE_STAR.getNode());
 		use.addParent(useStar, true);
 		deposit.addParent(useStar, true);
 		withdraw.addParent(useStar, true);
-		final Permission star = new Permission(BankPermissions.BANKS_STAR.node);
+		final Permission star = new Permission(BankPermissions.BANKS_STAR.getNode());
 		useStar.addParent(star, true);
 		instance.getServer().getPluginManager().addPermission(star);
 		instance.getServer().getPluginManager().addPermission(useStar);
