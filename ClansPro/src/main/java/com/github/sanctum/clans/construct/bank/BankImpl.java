@@ -26,7 +26,7 @@ public class BankImpl implements ClanBank {
 
     @Override // TODO: remove player from this signature
     public boolean deposit(Player player, BigDecimal amount) {
-        if (!backend.readEnabled().join()) return false;
+        if (!backend.readIsDisabled().join()) return false;
         if (amount.signum() != 1) return false;
         return new Vent.Call<>(Vent.Runtime.Synchronous, new BankPreTransactionEvent(
                 player,
@@ -40,7 +40,7 @@ public class BankImpl implements ClanBank {
 
     @Override // TODO: remove player from this signature
     public boolean withdraw(Player player, BigDecimal amount) {
-        if (!backend.readEnabled().join()) return false;
+        if (!backend.readIsDisabled().join()) return false;
         if (amount.signum() != 1) return false;
         return new Vent.Call<>(Vent.Runtime.Synchronous, new BankPreTransactionEvent(
                 player,
@@ -69,6 +69,6 @@ public class BankImpl implements ClanBank {
     }
 
     public void setEnabled(boolean enabled) {
-        backend.updateEnabled(enabled).join();
+        backend.updateIsDisabled(enabled).join();
     }
 }

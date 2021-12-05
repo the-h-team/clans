@@ -43,34 +43,36 @@ public interface BankBackend {
     CompletableFuture<Integer> compareBalance(@NotNull BigDecimal testAmount);
 
     /**
-     * Read if the bank is enabled from the backend.
+     * Read if the bank has been disabled from the backend.
      *
-     * @return true if the bank is enabled
+     * @return a CompletableFuture expressing if the bank has been disabled
      */
-    CompletableFuture<Boolean> readEnabled();
+    CompletableFuture<Boolean> readIsDisabled();
 
     /**
-     * Update if the bank is enabled on the backend.
+     * Update if the bank is disabled on the backend.
      *
-     * @param enabled whether the bank is enabled
+     * @param isDisabled whether the bank is enabled
+     * @return a CompletableFuture expressing the previous disabled state
      */
-    CompletableFuture<Void> updateEnabled(boolean enabled);
+    CompletableFuture<Boolean> updateIsDisabled(boolean isDisabled);
 
     // Moving from BankMeta
     /**
-     * Read the bank's access map from the backend.
+     * Read the bank's access level for a particular action from the backend.
      *
-     * @return a CompletableFuture expressing the bank's access map
+     * @return a CompletableFuture expressing the action's access level
      */
-    CompletableFuture<BankAction.AccessMap> readAccessMap();
+    CompletableFuture<Integer> readAccess(BankAction action);
 
     /**
-     * Update the bank's access map on the backend.
+     * Update the bank's access level for a particular action on the backend.
      *
-     * @param accessMap a modified access map
-     * @return a CompletableFuture indicating the update's completion status
+     * @param action an action
+     * @param level a clan access level
+     * @return a CompletableFuture expressing the previous access level
      */
-    CompletableFuture<Void> updateAccessMap(BankAction.AccessMap accessMap);
+    CompletableFuture<Integer> updateAccess(BankAction action, int level);
 
     /**
      * Read the bank's transaction data from the backend.
@@ -86,12 +88,4 @@ public interface BankBackend {
      * @return a CompletableFuture indicating the completion status of the add
      */
     CompletableFuture<Void> addTransaction(BankLog.Transaction transaction);
-
-    /**
-     * Update the bank's log on the backend.
-     *
-     * @param bankLog a bank log object
-     * @return a CompletableFuture indicating the update's completion status
-     */
-    CompletableFuture<Void> updateBankLog(BankLog bankLog);
 }

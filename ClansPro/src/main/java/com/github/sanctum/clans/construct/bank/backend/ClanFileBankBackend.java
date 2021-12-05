@@ -58,32 +58,42 @@ public class ClanFileBankBackend implements BankBackend {
     }
 
     @Override
-    public CompletableFuture<Boolean> readEnabled() {
-        return CompletableFuture.supplyAsync(this::readEnabledFunction);
+    public CompletableFuture<Boolean> readIsDisabled() {
+        return CompletableFuture.supplyAsync(this::readIsDisabledFunction);
     }
 
-    boolean readEnabledFunction() {
-        final Node node = clanFile.getNode("bank-data.enabled");
+    boolean readIsDisabledFunction() {
+        final Node node = clanFile.getNode("bank-data.disabled");
         if (node.exists()) {
             final Primitive primitive = node.toPrimitive();
             if (primitive.isBoolean()) {
                 return primitive.getBoolean();
             }
         }
-        return true; // default to true
+        return false; // default to false
     }
 
     @Override
-    public CompletableFuture<Void> updateEnabled(boolean enabled) {
-        return CompletableFuture.runAsync(() -> {
-            clanFile.set("bank-data.enabled", enabled);
-            clanFile.save();
+    public CompletableFuture<Boolean> updateIsDisabled(boolean isDisabled) {
+        return readIsDisabled().thenApply(b -> {
+            if (b != isDisabled) {
+                clanFile.set("bank-data.disabled", isDisabled);
+                clanFile.save();
+            }
+            return b;
         });
     }
 
     @Override
-    public CompletableFuture<BankAction.AccessMap> readAccessMap() {
-        return CompletableFuture.supplyAsync(this::readAccessMapFunction);
+    public CompletableFuture<Integer> readAccess(BankAction action) {
+        return CompletableFuture.supplyAsync(() -> {
+            final Node node = clanFile.getNode("bank-data.access-map." + action.name());
+            if (node.exists()) {
+                final Primitive primitive = node.toPrimitive();
+                if (primitive.isInt()) return primitive.getInt();
+            }
+            return null;
+        });
     }
 
     BankAction.AccessMap readAccessMapFunction() {
@@ -116,7 +126,16 @@ public class ClanFileBankBackend implements BankBackend {
     }
 
     @Override
-    public CompletableFuture<Void> updateAccessMap(BankAction.AccessMap accessMap) {
+    public CompletableFuture<Integer> updateAccess(BankAction action, int level) {
+        return readAccess(action).thenApply(ogLvl -> {
+            if (level != ogLvl) {
+                clanFile.set("bank-data.access-map." + action.name(), level);
+            }
+            return ogLvl;
+        });
+    }
+
+    CompletableFuture<Void> updateAccessMap(BankAction.AccessMap accessMap) {
         final Map<BankAction, Integer> internal;
         // cue ugly reflection because i can't change the class yet:D
         try {
@@ -157,7 +176,6 @@ public class ClanFileBankBackend implements BankBackend {
         });
     }
 
-    @Override
     public CompletableFuture<Void> updateBankLog(BankLog bankLog) {
         return CompletableFuture.runAsync(() -> {
             final List<String> representations = new ArrayList<>();
