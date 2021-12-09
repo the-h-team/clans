@@ -6,6 +6,6 @@ import org.bukkit.World;
 
 public class BorderRegion extends Region {
 	public BorderRegion(int xmin, int xmax, int ymin, int ymax, int zmin, int zmax, World world, HUID id) {
-		super(xmin, xmax, ymin, ymax, zmin, zmax, world, id);
+		super(world, xmin, xmax, ymin, ymax, zmin, zmax, id);
 	}
 }

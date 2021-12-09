@@ -1116,7 +1116,7 @@ public class CommandClan extends Command implements Message.Factory {
 				}
 				return true;
 			}
-			if (args0.equalsIgnoreCase("info") || args0.equalsIgnoreCase("i")) {
+			if (args0.equalsIgnoreCase("i") || args0.equalsIgnoreCase("info")) {
 				if (!p.hasPermission(this.getPermission() + "." + DataManager.Security.getPermission("info"))) {
 					lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("info")));
 					return true;
@@ -1145,7 +1145,7 @@ public class CommandClan extends Command implements Message.Factory {
 				if (Clearance.MANAGE_FRIENDLY_FIRE.test(associate)) {
 					if (!(associate.getClan() instanceof DefaultClan))
 						return true;
-					DefaultClan c = (DefaultClan) ClansAPI.getInstance().getClanManager().getClan(p.getUniqueId());
+					DefaultClan c = (DefaultClan) associate.getClan();
 					if (ClansAPI.getDataInstance().isTrue("Clans.friendly-fire.timer.use")) {
 
 						if (c.isFriendlyFire()) {

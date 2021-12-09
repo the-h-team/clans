@@ -12,7 +12,6 @@ import com.github.sanctum.clans.construct.api.Claim;
 import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClansAPI;
 import com.github.sanctum.labyrinth.LabyrinthProvider;
-import com.github.sanctum.labyrinth.data.Region;
 import com.github.sanctum.labyrinth.event.custom.Subscribe;
 import com.github.sanctum.labyrinth.event.custom.Vent;
 import com.github.sanctum.labyrinth.formatting.string.ColoredString;
@@ -20,7 +19,7 @@ import com.github.sanctum.labyrinth.library.DirectivePoint;
 import com.github.sanctum.labyrinth.library.HUID;
 import com.github.sanctum.labyrinth.library.StringUtils;
 import com.github.sanctum.labyrinth.library.TextLib;
-import com.github.sanctum.labyrinth.task.Schedule;
+import com.github.sanctum.labyrinth.task.TaskScheduler;
 import com.google.common.base.Strings;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -366,120 +365,43 @@ public class MapController implements Listener {
 					for (MapPoint p : point) {
 						if (!p.isCenter()) {
 							if (p.getClan() == null) {
+								if (!p.getColor().equals("&c") || !p.getColor().equals("&2")) {
+									p.setHover(StringUtils.use("&4Wilderness").translate());
+									p.setColor("&8");
+									p.setRepresentation('⬜');
+									try {
+										Location location = (new Location(e.getPlayer().getWorld(), (p.chunkPosition.x << 4), 110, (p.chunkPosition.z << 4))).add(7.0D, 0.0D, 7.0D);
+										if (Claim.ACTION.getChunksAroundLocation(location, -1, 0, 1).stream().anyMatch(c -> ClansAPI.getInstance().getClaimManager().isInClaim(c))) {
+											p.setAppliance(() -> {
+												Clan c = ClansAPI.getInstance().getClanManager().getClan(e.getPlayer().getUniqueId());
+												if (c != null) {
+													Claim claim = c.newClaim(e.getPlayer().getWorld().getChunkAt(p.chunkPosition.x, p.chunkPosition.z));
+													if (claim != null) {
+														if (actionWait.containsKey(e.getPlayer())) {
+															if (actionWait.get(e.getPlayer())) {
+																Clan.ACTION.sendMessage(e.getPlayer(), "&cNot so fast!");
+																return;
+															}
+														}
+														actionWait.put(e.getPlayer(), true);
+														TaskScheduler.of(() -> {
 
-								Location location = (new Location(e.getPlayer().getWorld(), (p.chunkPosition.x << 4), 110, (p.chunkPosition.z << 4))).add(7.0D, 0.0D, 7.0D);
+															e.getPlayer().performCommand("c map");
+															actionWait.remove(e.getPlayer());
 
-								Optional<Region.Spawn> rg = Region.spawn();
-
-								if (rg.isPresent()) {
-									if (rg.get().contains(location, 5)) {
-										Region r = rg.get();
-										if (!r.isPassthrough()) {
-											p.setHover(StringUtils.use("&4Spawn").translate());
-											p.setColor("&c");
-											p.setRepresentation('⬛');
-										}
-									} else {
-										Optional<Region> reg = Region.match(location).filter(r -> !(r instanceof Region.Spawn));
-										if (reg.isPresent()) {
-											Region r = reg.get();
-											if (!r.isPassthrough()) {
-												p.setHover(StringUtils.use("&2Region: &7" + r.getName()).translate());
-												p.setColor("&2");
-												p.setRepresentation('⬛');
-											} else {
-												if (e.getPlayer().isOp()) {
-													if (!p.getColor().equals("&c")) {
-														p.setColor("#d4d2cd");
-														p.setRepresentation('⬜');
+														}).scheduleLater(2);
+														Clan.ACTION.sendMessage(e.getPlayer(), "&aChunk &6&7(&3X: &f" + claim.getChunk().getX() + " &3Z: &f" + claim.getChunk().getZ() + "&7) &ais now owned by our clan.");
+													} else {
+														if (c.getClaims().length == c.getClaimLimit()) {
+															Clan.ACTION.sendMessage(e.getPlayer(), Claim.ACTION.alreadyMaxClaims());
+														}
 													}
 												}
-											}
-										} else {
-											if (!p.getColor().equals("&c") || !p.getColor().equals("&2")) {
-												p.setHover(StringUtils.use("&4Wilderness").translate());
-												if (Claim.ACTION.getChunksAroundLocation(location, -1, 0, 1).stream().anyMatch(c -> ClansAPI.getInstance().getClaimManager().isInClaim(c))) {
-													p.setAppliance(() -> {
-														Clan c = ClansAPI.getInstance().getClanManager().getClan(e.getPlayer().getUniqueId());
-														if (c != null) {
-															Claim claim = c.newClaim(e.getPlayer().getWorld().getChunkAt(p.chunkPosition.x, p.chunkPosition.z));
-															if (claim != null) {
-																if (actionWait.containsKey(e.getPlayer())) {
-																	if (actionWait.get(e.getPlayer())) {
-																		Clan.ACTION.sendMessage(e.getPlayer(), "&cNot so fast!");
-																		return;
-																	}
-																}
-																actionWait.put(e.getPlayer(), true);
-																Schedule.sync(() -> {
-
-																	e.getPlayer().performCommand("c map");
-																	actionWait.remove(e.getPlayer());
-
-																}).wait(2);
-																Clan.ACTION.sendMessage(e.getPlayer(), "&aChunk &6&7(&3X: &f" + claim.getChunk().getX() + " &3Z: &f" + claim.getChunk().getZ() + "&7) &ais now owned by our clan.");
-															} else {
-																if (c.getClaims().length == c.getClaimLimit()) {
-																	Clan.ACTION.sendMessage(e.getPlayer(), Claim.ACTION.alreadyMaxClaims());
-																}
-															}
-														}
-													});
-												}
-												p.setColor("&8");
-												p.setRepresentation('⬜');
-											}
+											});
 										}
+									} catch (Exception ignored) {
 									}
-								} else {
-									Optional<Region> reg = Region.match(location).filter(r -> !(r instanceof Region.Spawn));
-									if (reg.isPresent()) {
-										Region r = reg.get();
-										if (!r.isPassthrough()) {
-											p.setHover(StringUtils.use("&2Region: &7" + r.getName()).translate());
-											p.setColor("&2");
-											p.setRepresentation('⬛');
-										}
-									} else {
-										if (!p.getColor().equals("&c") || !p.getColor().equals("&2")) {
-											p.setHover(StringUtils.use("&4Wilderness").translate());
-											p.setColor("&8");
-											p.setRepresentation('⬜');
-											try {
-												if (Claim.ACTION.getChunksAroundLocation(location, -1, 0, 1).stream().anyMatch(c -> ClansAPI.getInstance().getClaimManager().isInClaim(c))) {
-													p.setAppliance(() -> {
-														Clan c = ClansAPI.getInstance().getClanManager().getClan(e.getPlayer().getUniqueId());
-														if (c != null) {
-															Claim claim = c.newClaim(e.getPlayer().getWorld().getChunkAt(p.chunkPosition.x, p.chunkPosition.z));
-															if (claim != null) {
-																if (actionWait.containsKey(e.getPlayer())) {
-																	if (actionWait.get(e.getPlayer())) {
-																		Clan.ACTION.sendMessage(e.getPlayer(), "&cNot so fast!");
-																		return;
-																	}
-																}
-																actionWait.put(e.getPlayer(), true);
-																Schedule.sync(() -> {
 
-																	e.getPlayer().performCommand("c map");
-																	actionWait.remove(e.getPlayer());
-
-																}).wait(2);
-																Clan.ACTION.sendMessage(e.getPlayer(), "&aChunk &6&7(&3X: &f" + claim.getChunk().getX() + " &3Z: &f" + claim.getChunk().getZ() + "&7) &ais now owned by our clan.");
-															} else {
-																if (c.getClaims().length == c.getClaimLimit()) {
-																	Clan.ACTION.sendMessage(e.getPlayer(), Claim.ACTION.alreadyMaxClaims());
-																}
-															}
-														}
-													});
-												}
-											} catch (Exception ignored) {
-
-											}
-
-										}
-									}
 								}
 							} else {
 								Clan c = p.getClan();

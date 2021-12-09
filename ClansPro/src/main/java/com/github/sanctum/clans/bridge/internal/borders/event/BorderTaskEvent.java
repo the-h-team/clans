@@ -60,8 +60,7 @@ public class BorderTaskEvent extends Event implements Cancellable {
 			int cx2 = claim.getChunk().getX() * 16 + 16;
 			int cz2 = claim.getChunk().getZ() * 16 + 16;
 			Region r = new BorderRegion(cx1, cx2, cy2, cy1, cz1, cz2, claim.getChunk().getWorld(), HUID.randomID());
-			Cuboid.Boundary boundary = r.getBoundary();
-			boundary.target(p);
+			Cuboid.Boundary boundary = r.getBoundary(p);
 			if (associate != null) {
 
 				if (claim.getOwner().getTag().getId().equals(associate.getClan().getId().toString())) {
@@ -103,7 +102,7 @@ public class BorderTaskEvent extends Event implements Cancellable {
 			int cx2 = p.getLocation().getChunk().getX() * 16 + 16;
 			int cz2 = p.getLocation().getChunk().getZ() * 16 + 16;
 			Region r = new BorderRegion(cx1, cx2, cy2, cy1, cz1, cz2, p.getWorld(), HUID.randomID());
-			Cuboid.Boundary boundary = r.getBoundary();
+			Cuboid.Boundary boundary = r.getBoundary(p);
 			boundary.target(p);
 			boundary.deploy(Cuboid.Boundary.Particle.YELLOW);
 			if (associate != null) {

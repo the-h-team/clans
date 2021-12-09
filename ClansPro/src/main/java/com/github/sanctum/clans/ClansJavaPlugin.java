@@ -2,6 +2,8 @@ package com.github.sanctum.clans;
 
 import com.github.sanctum.clans.bridge.ClanAddon;
 import com.github.sanctum.clans.bridge.ClanAddonQuery;
+import com.github.sanctum.clans.bridge.internal.StashesAddon;
+import com.github.sanctum.clans.bridge.internal.VaultsAddon;
 import com.github.sanctum.clans.construct.ArenaManager;
 import com.github.sanctum.clans.construct.ClaimManager;
 import com.github.sanctum.clans.construct.ClanManager;
@@ -45,8 +47,8 @@ import com.github.sanctum.labyrinth.library.NamespacedKey;
 import com.github.sanctum.labyrinth.library.StringUtils;
 import com.github.sanctum.labyrinth.paste.PasteManager;
 import com.github.sanctum.labyrinth.paste.type.Hastebin;
-import com.github.sanctum.labyrinth.task.Schedule;
 import com.github.sanctum.labyrinth.task.Task;
+import com.github.sanctum.labyrinth.task.TaskScheduler;
 import com.github.sanctum.skulls.CustomHead;
 import java.io.IOException;
 import java.util.HashMap;
@@ -186,8 +188,10 @@ public class ClansJavaPlugin extends JavaPlugin implements ClansAPI {
 			return test;
 		});
 
-		Schedule.sync(() -> {
+		TaskScheduler.of(() -> {
 			for (Clan owner : getClanManager().getClans()) {
+				VaultsAddon.getVault(owner.getName());
+				StashesAddon.getStash(owner.getName());
 				for (Claim c : owner.getClaims()) {
 					for (Claim.Flag f : getClaimManager().getFlagManager().getFlags()) {
 						if (c.getFlag(f.getId()) == null) {
@@ -203,7 +207,7 @@ public class ClansJavaPlugin extends JavaPlugin implements ClansAPI {
 					}
 				}
 			}
-		}).waitReal(12);
+		}).scheduleLater(120);
 
 		CustomHead.Manager.newLoader(man.getRoot()).look("My_heads").complete();
 		ReservedLogoCarrier reserved2 = ReservedLogoCarrier.SUMMER;
