@@ -45,11 +45,11 @@ public class SQLBankBackend implements BankBackend {
     transient final PreparedStatement insertTransaction;
 //    transient final PreparedStatement insertTransactionAutoTime;
 
-    public SQLBankBackend(String clanId, Connection connection, String tablePrefix) throws SQLException {
+    public SQLBankBackend(String clanId, Connection connection, String tablePrefix) throws SQLException, IllegalArgumentException {
         this.clanId = clanId;
         this.connection = connection;
-        table = tablePrefix + "bank_data";
-        transactionTable = tablePrefix + "bank_transactions";
+        table = validateTableSubstring(tablePrefix) + "bank_data";
+        transactionTable = validateTableSubstring(tablePrefix) + "bank_transactions";
         // Check for existing entry
         if (!hasEntry()) {
             initBank();
@@ -92,10 +92,66 @@ public class SQLBankBackend implements BankBackend {
 //        insertTransactionAutoTime.setString(1, clanId);
     }
 
+    void createTables(String clan_data_table) throws SQLException, IllegalArgumentException {
+        validateTableSubstring(clan_data_table);
+        synchronized (connection) {
+            connection.setAutoCommit(false);
+            final Statement statement = connection.createStatement();
+            // create tables
+            statement.addBatch("CREATE TABLE `" + table + "` (" +
+                    "`clan_id` varchar(14) NOT NULL COMMENT 'The clan''s id'," +
+                    " `balance` decimal(30,4) NOT NULL DEFAULT 0.0000 COMMENT 'The balance of the clan bank'," +
+                    " `balance_level` tinyint(4) NOT NULL DEFAULT 0 COMMENT 'The clan level needed to check its bank balance'," +
+                    " `deposit_level` tinyint(4) NOT NULL DEFAULT 1 COMMENT 'The clan level needed to deposit money'," +
+                    " `withdraw_level` tinyint(4) NOT NULL DEFAULT 2 COMMENT 'The clan level needed to withdraw money'," +
+                    " `viewlog_level` tinyint(4) NOT NULL DEFAULT 3 COMMENT 'The clan level needed to view bank logs'," +
+                    " `disabled` tinyint(1) NOT NULL DEFAULT 0 COMMENT 'Indicates whether this clan bank has been disabled'" +
+                    ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='Main bank data'");
+            statement.addBatch("CREATE TABLE `" + transactionTable + "` (" +
+                    "`id` int(11) NOT NULL," +
+                    " `clan_id` varchar(14) NOT NULL COMMENT 'The clan id'," +
+                    " `entity` varchar(36) NOT NULL DEFAULT '?' COMMENT 'The formatted name of the involved entity'," +
+                    " `type` enum('DEPOSIT','WITHDRAWAL') NOT NULL COMMENT 'The transaction type'," +
+                    " `amount` decimal(30,4) NOT NULL COMMENT 'The amount of the transaction'," +
+                    " `t_time` timestamp NOT NULL DEFAULT current_timestamp() COMMENT 'The exact time the transaction took place'" +
+                    ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='All bank transactions'"
+            );
+            // add indices
+            statement.addBatch("ALTER TABLE `" + table + "`" +
+                    " ADD PRIMARY KEY (`clan_id`)," +
+                    " ADD KEY `balance` (`balance`)," +
+                    " ADD KEY `balances` (`clan_id`,`balance`) USING BTREE"
+            );
+            statement.addBatch("ALTER TABLE `" + transactionTable + "`" +
+                    " ADD PRIMARY KEY (`id`)," +
+                    " ADD KEY `parties` (`clan_id`,`entity`) USING BTREE," +
+                    " ADD KEY `types` (`clan_id`,`type`) USING BTREE," +
+                    " ADD KEY `timestamp` (`clan_id`,`t_time`) USING BTREE," +
+                    " ADD KEY `amount` (`amount`)," +
+                    " ADD KEY `entity` (`entity`)," +
+                    " ADD KEY `t_time` (`t_time`)"
+            );
+            // set field a_i
+            statement.addBatch("ALTER TABLE `" + transactionTable + "` MODIFY `id` int(11) NOT NULL AUTO_INCREMENT");
+            // setup foreign keys
+            statement.addBatch("ALTER TABLE `" + table + "` ADD CONSTRAINT `bank_data_ibfk_1`" +
+                    " FOREIGN KEY (`clan_id`) REFERENCES `" + clan_data_table + "` (`clan_id`)"
+            );
+            statement.addBatch("ALTER TABLE `" + transactionTable + "` ADD CONSTRAINT `bank_transactions_ibfk_1`" +
+                    " FOREIGN KEY (`clan_id`) REFERENCES `" + clan_data_table + "` (`clan_id`) ON DELETE CASCADE ON UPDATE CASCADE"
+            );
+            statement.executeBatch();
+            connection.commit();
+            connection.setAutoCommit(true);
+        }
+    }
+
     boolean hasEntry() throws SQLException {
         final PreparedStatement statement = connection.prepareStatement("SELECT * FROM " + table + " WHERE clan_id = ?");
         statement.setString(1, clanId);
-        return statement.executeQuery().next();
+        try (final ResultSet resultSet = statement.executeQuery()) {
+            return resultSet.next();
+        }
     }
 
     void initBank() throws SQLException {
@@ -116,8 +172,7 @@ public class SQLBankBackend implements BankBackend {
     }
 
     BigDecimal readBalanceFromSql() {
-        try {
-            final ResultSet resultSet = readBalance.executeQuery();
+        try (final ResultSet resultSet = readBalance.executeQuery()) {
             return resultSet.next() ? resultSet.getBigDecimal(1) : null;
         } catch (SQLException e) {
             throw new IllegalStateException("Error reading from database.", e);
@@ -149,8 +204,7 @@ public class SQLBankBackend implements BankBackend {
     }
 
     boolean readIsDisabledFunction() {
-        try {
-            final ResultSet resultSet = readIsDisabled.executeQuery();
+        try (final ResultSet resultSet = readIsDisabled.executeQuery()) {
             return resultSet.next() && resultSet.getBoolean(1);
         } catch (SQLException e) {
             throw new IllegalStateException("Error reading from database.", e);
@@ -192,8 +246,7 @@ public class SQLBankBackend implements BankBackend {
                 default:
                     throw new IllegalStateException("Unsupported action!");
             }
-            try {
-                final ResultSet resultSet = statement.executeQuery();
+            try (final ResultSet resultSet = statement.executeQuery()) {
                 return resultSet.next() ? resultSet.getInt(1) : null;
             } catch (SQLException e) {
                 throw new IllegalStateException("Error reading from database.", e);
@@ -249,9 +302,9 @@ public class SQLBankBackend implements BankBackend {
 
     List<BankLog.Transaction> readTransactionsFunction() {
         final ResultSet resultSet;
-        try {
-            resultSet = readTransactions.executeQuery();
-            if (!resultSet.next()) return ImmutableList.of();
+        try (ResultSet tempResultSet = readTransactions.executeQuery()) {
+            if (!tempResultSet.next()) return ImmutableList.of();
+            resultSet = tempResultSet;
         } catch (SQLException e) {
             throw new IllegalStateException("Error reading from database.", e);
         }
@@ -274,6 +327,7 @@ public class SQLBankBackend implements BankBackend {
                 }
                 transactions.add(new BankLog.Transaction(entity, type, amount, timestamp.toLocalDateTime()));
             } while(resultSet.next());
+            resultSet.close();
         } catch (SQLException e) {
             throw new IllegalStateException("Error reading from database.", e);
         }
@@ -295,5 +349,12 @@ public class SQLBankBackend implements BankBackend {
                 }
             }
         });
+    }
+
+    static String validateTableSubstring(String tableName) throws IllegalArgumentException {
+        if (tableName.contains(" ") || tableName.contains("`")) {
+            throw new IllegalArgumentException("Illegal table substring.");
+        }
+        return tableName;
     }
 }
