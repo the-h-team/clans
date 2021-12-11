@@ -48,52 +48,52 @@ public class SQLBankBackend implements BankBackend {
     public SQLBankBackend(String clanId, Connection connection, String tablePrefix) throws SQLException, IllegalArgumentException {
         this.clanId = clanId;
         this.connection = connection;
-        table = validateTableSubstring(tablePrefix) + "bank_data";
-        transactionTable = validateTableSubstring(tablePrefix) + "bank_transactions";
+        table = validateQuotedSubstring(tablePrefix) + "bank_data";
+        transactionTable = validateQuotedSubstring(tablePrefix) + "bank_transactions";
         // Check for existing entry
         if (!hasEntry()) {
             initBank();
         }
         // balance
-        hasBalance = connection.prepareStatement("SELECT balance FROM " + table + " WHERE clan_id = ? AND balance >= ?");
+        hasBalance = connection.prepareStatement("SELECT balance FROM `" + table + "` WHERE clan_id = ? AND balance >= ?");
         hasBalance.setString(1, clanId);
-        readBalance = connection.prepareStatement("SELECT balance FROM " + table + " WHERE clan_id = ?");
+        readBalance = connection.prepareStatement("SELECT balance FROM `" + table + "` WHERE clan_id = ?");
         readBalance.setString(1, clanId);
-        updateBalance = connection.prepareStatement("UPDATE " + table + " SET balance = ? WHERE " + table + ".clan_id = ?");
+        updateBalance = connection.prepareStatement("UPDATE `" + table + "` SET balance = ? WHERE `" + table + "`.clan_id = ?");
         updateBalance.setString(2, clanId);
         // levels
-        readBalanceLevel = connection.prepareStatement("SELECT balance_level FROM " + table + " WHERE clan_id = ?");
+        readBalanceLevel = connection.prepareStatement("SELECT balance_level FROM `" + table + "` WHERE clan_id = ?");
         readBalanceLevel.setString(1, clanId);
-        updateBalanceLevel = connection.prepareStatement("UPDATE " + table + " SET balance_level = ? WHERE " + table + ".clan_id = ?");
+        updateBalanceLevel = connection.prepareStatement("UPDATE `" + table + "` SET balance_level = ? WHERE `" + table + "`.clan_id = ?");
         updateBalanceLevel.setString(2, clanId);
-        readDepositLevel = connection.prepareStatement("SELECT deposit_level FROM " + table + " WHERE clan_id = ?");
+        readDepositLevel = connection.prepareStatement("SELECT deposit_level FROM `" + table + "` WHERE clan_id = ?");
         readDepositLevel.setString(1, clanId);
-        updateDepositLevel = connection.prepareStatement("UPDATE " + table + " SET deposit_level = ? WHERE " + table + ".clan_id = ?");
+        updateDepositLevel = connection.prepareStatement("UPDATE `" + table + "` SET deposit_level = ? WHERE `" + table + "`.clan_id = ?");
         updateDepositLevel.setString(2, clanId);
-        readWithdrawLevel = connection.prepareStatement("SELECT withdraw_level FROM " + table + " WHERE clan_id = ?");
+        readWithdrawLevel = connection.prepareStatement("SELECT withdraw_level FROM `" + table + "` WHERE clan_id = ?");
         readWithdrawLevel.setString(1, clanId);
-        updateWithdrawLevel = connection.prepareStatement("UPDATE " + table + " SET withdraw_level = ? WHERE " + table + ".clan_id = ?");
+        updateWithdrawLevel = connection.prepareStatement("UPDATE `" + table + "` SET withdraw_level = ? WHERE `" + table + "`.clan_id = ?");
         updateWithdrawLevel.setString(2, clanId);
-        readViewlogLevel = connection.prepareStatement("SELECT viewlog_level FROM " + table + " WHERE clan_id = ?");
+        readViewlogLevel = connection.prepareStatement("SELECT viewlog_level FROM `" + table + "` WHERE clan_id = ?");
         readViewlogLevel.setString(1, clanId);
-        updateViewlogLevel = connection.prepareStatement("UPDATE " + table + " SET viewlog_level = ? WHERE " + table + ".clan_id = ?");
+        updateViewlogLevel = connection.prepareStatement("UPDATE `" + table + "` SET viewlog_level = ? WHERE `" + table + "`.clan_id = ?");
         updateViewlogLevel.setString(2, clanId);
         // disabled
-        readIsDisabled = connection.prepareStatement("SELECT disabled FROM " + table + " WHERE clan_id = ?");
+        readIsDisabled = connection.prepareStatement("SELECT disabled FROM `" + table + "` WHERE clan_id = ?");
         readIsDisabled.setString(1, clanId);
-        updateIsDisabled = connection.prepareStatement("UPDATE " + table + " SET disabled = ? WHERE " + table + ".clan_id = ?");
+        updateIsDisabled = connection.prepareStatement("UPDATE `" + table + "` SET disabled = ? WHERE `" + table + "`.clan_id = ?");
         updateIsDisabled.setString(2, clanId);
         // transactions
-        readTransactions = connection.prepareStatement("SELECT id, entity, type, amount, t_time FROM " + transactionTable + " WHERE clan_id = ? ORDER BY t_time");
+        readTransactions = connection.prepareStatement("SELECT id, entity, type, amount, t_time FROM `" + transactionTable + "` WHERE clan_id = ? ORDER BY t_time");
         readTransactions.setString(1, clanId);
-        insertTransaction = connection.prepareStatement("INSERT INTO " + transactionTable + " (clan_id, entity, type, amount, t_time) VALUES (?, ?, ?, ?, ?)");
+        insertTransaction = connection.prepareStatement("INSERT INTO `" + transactionTable + "` (clan_id, entity, type, amount, t_time) VALUES (?, ?, ?, ?, ?)");
         insertTransaction.setString(1, clanId);
 //        insertTransactionAutoTime = connection.prepareStatement("INSERT INTO " + transactionTable + " (clan_id, entity, type, amount) VALUES (?, ?, ?, ?)");
 //        insertTransactionAutoTime.setString(1, clanId);
     }
 
     void createTables(String clan_data_table) throws SQLException, IllegalArgumentException {
-        validateTableSubstring(clan_data_table);
+        validateQuotedSubstring(clan_data_table);
         synchronized (connection) {
             connection.setAutoCommit(false);
             final Statement statement = connection.createStatement();
@@ -141,22 +141,85 @@ public class SQLBankBackend implements BankBackend {
                     " FOREIGN KEY (`clan_id`) REFERENCES `" + clan_data_table + "` (`clan_id`) ON DELETE CASCADE ON UPDATE CASCADE"
             );
             statement.executeBatch();
+            statement.close();
             connection.commit();
             connection.setAutoCommit(true);
         }
     }
 
+    //<editor-fold desc="Cleanup method" defaultstate="collapsed">
+    public void shutdown() throws SQLException {
+        // cleanup prepared statements
+        // balance
+        synchronized (hasBalance) {
+            hasBalance.close();
+        }
+        synchronized (readBalance) {
+            readBalance.close();
+        }
+        synchronized (updateBalance) {
+            updateBalance.close();
+        }
+        // levels
+        synchronized (readBalanceLevel) {
+            readBalanceLevel.close();
+        }
+        synchronized (updateBalanceLevel) {
+            updateBalanceLevel.close();
+        }
+        synchronized (readDepositLevel) {
+            readDepositLevel.close();
+        }
+        synchronized (updateDepositLevel) {
+            updateDepositLevel.close();
+        }
+        synchronized (readWithdrawLevel) {
+            readWithdrawLevel.close();
+        }
+        synchronized (updateWithdrawLevel) {
+            updateWithdrawLevel.close();
+        }
+        synchronized (readViewlogLevel) {
+            readViewlogLevel.close();
+        }
+        synchronized (updateViewlogLevel) {
+            updateViewlogLevel.close();
+        }
+        // disabled
+        synchronized (readIsDisabled) {
+            readIsDisabled.close();
+        }
+        synchronized (updateIsDisabled) {
+            updateIsDisabled.close();
+        }
+        // transaction
+        synchronized (readTransactions) {
+            readTransactions.close();
+        }
+        synchronized (insertTransaction) {
+            insertTransaction.close();
+        }
+    }
+    //</editor-fold>
+
     boolean hasEntry() throws SQLException {
-        final PreparedStatement statement = connection.prepareStatement("SELECT * FROM " + table + " WHERE clan_id = ?");
+        final PreparedStatement statement;
+        synchronized (connection) {
+            statement = connection.prepareStatement("SELECT * FROM `" + table + "` WHERE clan_id = ?");
+        }
         statement.setString(1, clanId);
         try (final ResultSet resultSet = statement.executeQuery()) {
             return resultSet.next();
+        } finally {
+            statement.close();
         }
     }
 
     void initBank() throws SQLException {
         final PreparedStatement initBank;
-        initBank = connection.prepareStatement("INSERT INTO " + table + " (clan_id, balance, balance_level, deposit_level, withdraw_level, viewlog_level) VALUES (?, ?, ?, ?, ?, ?)");
+        synchronized (connection) {
+            initBank = connection.prepareStatement("INSERT INTO `" + table + "` (clan_id, balance, balance_level, deposit_level, withdraw_level, viewlog_level) VALUES (?, ?, ?, ?, ?, ?)");
+        }
         initBank.setString(1, clanId);
         initBank.setBigDecimal(2, ClansAPI.getBankInstance().startingBalance());
         initBank.setInt(3, ClansAPI.getDataInstance().getConfigInt("Clans.banks.default-access.balance"));
@@ -164,6 +227,7 @@ public class SQLBankBackend implements BankBackend {
         initBank.setInt(5, ClansAPI.getDataInstance().getConfigInt("Clans.banks.default-access.withdraw"));
         initBank.setInt(6, ClansAPI.getDataInstance().getConfigInt("Clans.banks.default-access.view-log"));
         initBank.executeUpdate();
+        initBank.close();
     }
 
     @Override
@@ -172,10 +236,12 @@ public class SQLBankBackend implements BankBackend {
     }
 
     BigDecimal readBalanceFromSql() {
-        try (final ResultSet resultSet = readBalance.executeQuery()) {
-            return resultSet.next() ? resultSet.getBigDecimal(1) : null;
-        } catch (SQLException e) {
-            throw new IllegalStateException("Error reading from database.", e);
+        synchronized (readBalance) {
+            try (final ResultSet resultSet = readBalance.executeQuery()) {
+                return resultSet.next() ? resultSet.getBigDecimal(1) : null;
+            } catch (SQLException e) {
+                throw new IllegalStateException("Error reading from database.", e);
+            }
         }
     }
 
@@ -204,10 +270,12 @@ public class SQLBankBackend implements BankBackend {
     }
 
     boolean readIsDisabledFunction() {
-        try (final ResultSet resultSet = readIsDisabled.executeQuery()) {
-            return resultSet.next() && resultSet.getBoolean(1);
-        } catch (SQLException e) {
-            throw new IllegalStateException("Error reading from database.", e);
+        synchronized (readIsDisabled) {
+            try (final ResultSet resultSet = readIsDisabled.executeQuery()) {
+                return resultSet.next() && resultSet.getBoolean(1);
+            } catch (SQLException e) {
+                throw new IllegalStateException("Error reading from database.", e);
+            }
         }
     }
 
@@ -216,8 +284,10 @@ public class SQLBankBackend implements BankBackend {
         return readIsDisabled().thenApply(d -> {
             if (d != isDisabled) {
                 try {
-                    updateIsDisabled.setBoolean(1, isDisabled);
-                    updateIsDisabled.executeUpdate();
+                    synchronized (updateIsDisabled) {
+                        updateIsDisabled.setBoolean(1, isDisabled);
+                        updateIsDisabled.executeUpdate();
+                    }
                 } catch (SQLException e) {
                     throw new IllegalStateException("Error updating bank state", e);
                 }
@@ -229,25 +299,35 @@ public class SQLBankBackend implements BankBackend {
     @Override
     public CompletableFuture<Integer> readAccess(BankAction action) {
         return CompletableFuture.supplyAsync(() -> {
-            final PreparedStatement statement;
-            switch (action) {
-                case BALANCE:
-                    statement = readBalanceLevel;
-                    break;
-                case DEPOSIT:
-                    statement = readDepositLevel;
-                    break;
-                case WITHDRAW:
-                    statement = readWithdrawLevel;
-                    break;
-                case VIEW_LOG:
-                    statement = readViewlogLevel;
-                    break;
-                default:
-                    throw new IllegalStateException("Unsupported action!");
-            }
-            try (final ResultSet resultSet = statement.executeQuery()) {
-                return resultSet.next() ? resultSet.getInt(1) : null;
+            final ResultSet resultSet;
+            try {
+                switch (action) {
+                    case BALANCE:
+                        synchronized (readBalanceLevel) {
+                            resultSet = readBalanceLevel.executeQuery();
+                        }
+                        break;
+                    case DEPOSIT:
+                        synchronized (readDepositLevel) {
+                            resultSet = readDepositLevel.executeQuery();
+                        }
+                        break;
+                    case WITHDRAW:
+                        synchronized (readWithdrawLevel) {
+                            resultSet = readWithdrawLevel.executeQuery();
+                        }
+                        break;
+                    case VIEW_LOG:
+                        synchronized (readViewlogLevel) {
+                            resultSet = readViewlogLevel.executeQuery();
+                        }
+                        break;
+                    default:
+                        throw new IllegalStateException("Unsupported action!");
+                }
+                final Integer access = resultSet.next() ? resultSet.getInt(1) : null;
+                resultSet.close();
+                return access;
             } catch (SQLException e) {
                 throw new IllegalStateException("Error reading from database.", e);
             }
@@ -302,11 +382,13 @@ public class SQLBankBackend implements BankBackend {
 
     List<BankLog.Transaction> readTransactionsFunction() {
         final ResultSet resultSet;
-        try (ResultSet tempResultSet = readTransactions.executeQuery()) {
-            if (!tempResultSet.next()) return ImmutableList.of();
-            resultSet = tempResultSet;
-        } catch (SQLException e) {
-            throw new IllegalStateException("Error reading from database.", e);
+        synchronized (readTransactions) {
+            try (ResultSet tempResultSet = readTransactions.executeQuery()) {
+                if (!tempResultSet.next()) return ImmutableList.of();
+                resultSet = tempResultSet;
+            } catch (SQLException e) {
+                throw new IllegalStateException("Error reading from database.", e);
+            }
         }
         final ArrayList<BankLog.Transaction> transactions = new ArrayList<>();
         try {
@@ -351,7 +433,7 @@ public class SQLBankBackend implements BankBackend {
         });
     }
 
-    static String validateTableSubstring(String tableName) throws IllegalArgumentException {
+    static String validateQuotedSubstring(String tableName) throws IllegalArgumentException {
         if (tableName.contains(" ") || tableName.contains("`")) {
             throw new IllegalArgumentException("Illegal table substring.");
         }
