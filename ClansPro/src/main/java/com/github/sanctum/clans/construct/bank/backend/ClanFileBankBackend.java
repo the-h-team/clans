@@ -10,8 +10,6 @@ import com.github.sanctum.clans.event.bank.BankTransactionEvent;
 import com.github.sanctum.labyrinth.data.Configurable;
 import com.github.sanctum.labyrinth.data.Node;
 import com.github.sanctum.labyrinth.data.Primitive;
-import org.jetbrains.annotations.NotNull;
-
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -21,6 +19,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Clan file based backend for banks.
@@ -191,14 +190,16 @@ public class ClanFileBankBackend implements BankBackend {
     public static void saveOldFormat(Clan clan) {
         final ClanFileBankBackend backend = new ClanFileBankBackend(clan);
         final BankMeta bankMeta = BankMeta.get(clan);
-        bankMeta.getBank().map(b -> backend.updateBalance(b.getBalance())).ifPresent(CompletableFuture::join);
-        bankMeta.getAccessMap().ifPresent(am -> {
-            backend.updateAccess(BankAction.BALANCE, BankAction.BALANCE.getValueInClan(clan)).join();
-            backend.updateAccess(BankAction.DEPOSIT, BankAction.DEPOSIT.getValueInClan(clan)).join();
-            backend.updateAccess(BankAction.WITHDRAW, BankAction.WITHDRAW.getValueInClan(clan)).join();
-            backend.updateAccess(BankAction.VIEW_LOG, BankAction.VIEW_LOG.getValueInClan(clan)).join();
-        });
-        bankMeta.getBankLog().map(backend::updateBankLog).ifPresent(CompletableFuture::join);
+        if (!clan.isConsole()) {
+            bankMeta.getBank().map(b -> backend.updateBalance(b.getBalance())).ifPresent(CompletableFuture::join);
+            bankMeta.getAccessMap().ifPresent(am -> {
+                backend.updateAccess(BankAction.BALANCE, BankAction.BALANCE.getValueInClan(clan)).join();
+                backend.updateAccess(BankAction.DEPOSIT, BankAction.DEPOSIT.getValueInClan(clan)).join();
+                backend.updateAccess(BankAction.WITHDRAW, BankAction.WITHDRAW.getValueInClan(clan)).join();
+                backend.updateAccess(BankAction.VIEW_LOG, BankAction.VIEW_LOG.getValueInClan(clan)).join();
+            });
+            bankMeta.getBankLog().map(backend::updateBankLog).ifPresent(CompletableFuture::join);
+        }
     }
 
     // csv

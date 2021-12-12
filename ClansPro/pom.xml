@@ -136,37 +136,37 @@
         <dependency>
             <groupId>com.github.the-h-team</groupId>
             <artifactId>labyrinth-placeholders</artifactId>
-            <version>1.7.3-SNAPSHOT</version>
+            <version>1.7.3</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>com.github.the-h-team</groupId>
             <artifactId>labyrinth-gui</artifactId>
-            <version>1.7.3-SNAPSHOT</version>
+            <version>1.7.3</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>com.github.the-h-team</groupId>
             <artifactId>labyrinth-regions</artifactId>
-            <version>1.7.3-SNAPSHOT</version>
+            <version>1.7.3</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>com.github.the-h-team</groupId>
             <artifactId>labyrinth-paste</artifactId>
-            <version>1.7.3-SNAPSHOT</version>
+            <version>1.7.3</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>com.github.the-h-team</groupId>
             <artifactId>labyrinth-common</artifactId>
-            <version>1.7.3-SNAPSHOT</version>
+            <version>1.7.3</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>com.github.the-h-team</groupId>
             <artifactId>labyrinth-skulls</artifactId>
-            <version>1.7.3-SNAPSHOT</version>
+            <version>1.7.3</version>
             <scope>provided</scope>
         </dependency>
     </dependencies>

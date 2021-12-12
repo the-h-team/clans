@@ -5,13 +5,13 @@ import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClanSubCommand;
 import com.github.sanctum.clans.construct.api.ClansAPI;
 import com.github.sanctum.clans.construct.extra.StringLibrary;
+import com.github.sanctum.labyrinth.data.Configurable;
 import com.github.sanctum.labyrinth.data.FileManager;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import org.bukkit.command.CommandSender;
-import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.dynmap.markers.AreaMarker;
 
@@ -123,15 +123,15 @@ public class DynmapCommand extends ClanSubCommand {
 			if (label.equalsIgnoreCase("unclaim")) {
 				if (args[0].equalsIgnoreCase("all")) {
 					FileManager regions = ClansAPI.getInstance().getClaimManager().getFile();
-					FileConfiguration d = regions.getConfig();
+					Configurable d = regions.getRoot();
 					if (ClansAPI.getInstance().getClanManager().getClanID(p.getUniqueId()) != null) {
 						Clan.Associate associate = ClansAPI.getInstance().getAssociate(p).orElse(null);
 						if (associate.getPriority().toLevel() >= Clan.ACTION.unclaimAllClearance()) {
-							if (!d.isConfigurationSection(ClansAPI.getInstance().getClanManager().getClanID(p.getUniqueId()).toString() + ".Claims")) {
+							if (!d.isNode(ClansAPI.getInstance().getClanManager().getClanID(p.getUniqueId()).toString() + ".Claims")) {
 								return false;
 							}
-							if (!Objects.requireNonNull(d.getConfigurationSection(ClansAPI.getInstance().getClanManager().getClanID(p.getUniqueId()).toString() + ".Claims")).getKeys(false).isEmpty()) {
-								for (String claimID : d.getConfigurationSection(ClansAPI.getInstance().getClanManager().getClanID(p.getUniqueId()).toString() + ".Claims").getKeys(false)) {
+							if (!Objects.requireNonNull(d.getNode(ClansAPI.getInstance().getClanManager().getClanID(p.getUniqueId()).toString() + ".Claims")).getKeys(false).isEmpty()) {
+								for (String claimID : d.getNode(ClansAPI.getInstance().getClanManager().getClanID(p.getUniqueId()).toString() + ".Claims").getKeys(false)) {
 									integration.removeMarker(claimID);
 								}
 							}

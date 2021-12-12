@@ -249,7 +249,7 @@ public class StringLibrary {
 	}
 
 	public String defaultMode() {
-		return ClansAPI.getDataInstance().getConfig().getConfig().getString("Clans.mode-change.default");
+		return ClansAPI.getDataInstance().getConfig().getRoot().getString("Clans.mode-change.default");
 	}
 
 	public String peacefulDenyOther(String name) {

@@ -34,7 +34,7 @@ import org.jetbrains.annotations.Nullable;
  */
 public interface InvasiveEntity extends Nameable, LogoHolder, Comparable<InvasiveEntity> {
 
-	@Experimental("Utility method for retaining cached entity references.")
+	@Experimental(dueTo = "Utility method for retaining cached entity references.")
 	static @NotNull InvasiveEntity wrapNonAssociated(@NotNull ServerOperator entity) {
 		if (entity instanceof OfflinePlayer) {
 			if (ClansAPI.getInstance().getAssociate((OfflinePlayer) entity).isPresent()) {
@@ -336,7 +336,7 @@ public interface InvasiveEntity extends Nameable, LogoHolder, Comparable<Invasiv
 		});
 	}
 
-	@Experimental("Utility method for retaining cached entity references.")
+	@Experimental(dueTo = "Utility method for retaining cached entity references.")
 	static @NotNull InvasiveEntity wrapNonAssociated(@NotNull ServerOperator entity, String displayName) {
 		if (entity instanceof OfflinePlayer) {
 			if (ClansAPI.getInstance().getAssociate((OfflinePlayer) entity).isPresent()) {

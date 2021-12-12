@@ -50,7 +50,7 @@ public class BountyCommand extends ClanSubCommand {
 								Bukkit.broadcastMessage(StringUtils.use(format).translate());
 								FileManager clanFile = ClansAPI.getDataInstance().getClanFile(c);
 								clanFile.getRoot().set("bounties." + Clan.ACTION.getUserID(args[1]).toString(), amount);
-								clanFile.refreshConfig();
+								clanFile.getRoot().save();
 							} else {
 								Clan.ACTION.sendMessage(p, "&c&oYou don't have enough money for a bounty this big!");
 							}

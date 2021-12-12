@@ -31,6 +31,7 @@ import com.github.sanctum.labyrinth.library.Item;
 import com.github.sanctum.labyrinth.library.Metrics;
 import com.github.sanctum.labyrinth.library.StringUtils;
 import com.github.sanctum.labyrinth.placeholders.PlaceholderRegistration;
+import com.github.sanctum.labyrinth.task.TaskPredicate;
 import com.github.sanctum.labyrinth.task.TaskScheduler;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
@@ -154,7 +155,13 @@ public final class StartProcedure {
 				PlaceholderRegistration.getInstance().registerTranslation(new LabyrinthPlaceholders(instance)).deploy();
 				instance.getLogger().info("- PlaceholderAPI not found, loading labyrinth provision.");
 			}
-		}).scheduleLater(38);
+		}).scheduleLater(38, TaskPredicate.cancelAfter(task -> {
+			if (!instance.isEnabled()) {
+				task.cancel();
+				return false;
+			}
+			return true;
+		}));
 
 		try {
 			new Item(Material.BLAZE_ROD, StringUtils.use("&r[&6Tamer stick&r]").translate()).setKey("tamer_stick")

@@ -191,8 +191,10 @@ public class ClansJavaPlugin extends JavaPlugin implements ClansAPI {
 
 		TaskScheduler.of(() -> {
 			for (Clan owner : getClanManager().getClans()) {
-				VaultsAddon.getVault(owner.getName());
-				StashesAddon.getStash(owner.getName());
+				TaskScheduler.of(() -> {
+					VaultsAddon.getVault(owner.getName());
+					StashesAddon.getStash(owner.getName());
+				}).scheduleLaterAsync(1);
 				for (Claim c : owner.getClaims()) {
 					for (Claim.Flag f : getClaimManager().getFlagManager().getFlags()) {
 						if (c.getFlag(f.getId()) == null) {

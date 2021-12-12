@@ -385,7 +385,7 @@ public interface ClansAPI {
 		return (Consultant) getAssociate(getSessionId()).orElse(null);
 	}
 
-	@Experimental("This involves usage of the brand new api! Use at your own risk.")
+	@Experimental(dueTo = "Involving usage of the brand new api! Use at your own risk.")
 	default List<InvasiveEntity> getEntities() {
 		List<InvasiveEntity> list = new ArrayList<>();
 		getClanManager().getClans().forEach(c -> {

@@ -47,7 +47,7 @@ public enum BankAction {
     }
 
     public int getConfigDefault() {
-        return ClansAPI.getDataInstance().getConfig().getConfig().getInt("Clans.banks.default-access." + line, 2);
+        return ClansAPI.getDataInstance().getConfig().getRoot().getInt("Clans.banks.default-access." + line);
     }
 
     public int getValueInClan(Clan clan) {
