@@ -20,6 +20,7 @@ import com.github.sanctum.clans.construct.api.InvasiveEntity;
 import com.github.sanctum.clans.construct.api.LogoGallery;
 import com.github.sanctum.clans.construct.api.LogoHolder;
 import com.github.sanctum.clans.construct.bank.BankMeta;
+import com.github.sanctum.clans.construct.bank.backend.ClanFileBankBackend;
 import com.github.sanctum.clans.construct.extra.AsynchronousLoanableTask;
 import com.github.sanctum.clans.construct.extra.MessagePrefix;
 import com.github.sanctum.clans.construct.extra.ReservedLogoCarrier;
@@ -280,6 +281,7 @@ public class ClansJavaPlugin extends JavaPlugin implements ClansAPI {
 
 		getClanManager().getClans().list().forEach(c -> {
 			c.save();
+			ClanFileBankBackend.saveOldFormat(c);
 			for (Clan.Associate a : c.getMembers()) {
 				if (!(a instanceof AnimalAssociate)) {
 					a.save();

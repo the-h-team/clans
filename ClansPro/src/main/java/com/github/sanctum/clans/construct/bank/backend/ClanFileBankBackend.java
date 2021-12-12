@@ -5,6 +5,7 @@ import com.github.sanctum.clans.construct.api.ClansAPI;
 import com.github.sanctum.clans.construct.bank.BankAction;
 import com.github.sanctum.clans.construct.bank.BankBackend;
 import com.github.sanctum.clans.construct.bank.BankLog;
+import com.github.sanctum.clans.construct.bank.BankMeta;
 import com.github.sanctum.clans.event.bank.BankTransactionEvent;
 import com.github.sanctum.labyrinth.data.Configurable;
 import com.github.sanctum.labyrinth.data.Node;
@@ -185,6 +186,19 @@ public class ClanFileBankBackend implements BankBackend {
             clanFile.set("bank-data.transactions", representations);
             clanFile.save();
         });
+    }
+
+    public static void saveOldFormat(Clan clan) {
+        final ClanFileBankBackend backend = new ClanFileBankBackend(clan);
+        final BankMeta bankMeta = BankMeta.get(clan);
+        bankMeta.getBank().ifPresent(b -> backend.updateBalance(b.getBalance()));
+        bankMeta.getAccessMap().ifPresent(am -> {
+            backend.updateAccess(BankAction.BALANCE, BankAction.BALANCE.getValueInClan(clan));
+            backend.updateAccess(BankAction.DEPOSIT, BankAction.DEPOSIT.getValueInClan(clan));
+            backend.updateAccess(BankAction.WITHDRAW, BankAction.WITHDRAW.getValueInClan(clan));
+            backend.updateAccess(BankAction.VIEW_LOG, BankAction.VIEW_LOG.getValueInClan(clan));
+        });
+        bankMeta.getBankLog().ifPresent(backend::updateBankLog);
     }
 
     // csv
