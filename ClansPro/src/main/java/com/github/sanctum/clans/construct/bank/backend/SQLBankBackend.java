@@ -45,6 +45,24 @@ public class SQLBankBackend implements BankBackend {
     }
 
     @Override
+    public CompletableFuture<Boolean> hasBalance(BigDecimal amount) {
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                synchronized (connector.ps) {
+                    final PreparedStatement hasBalance = connector.ps.get(BankSQL.HAS_BALANCE);
+                    hasBalance.setString(1, clanId);
+                    hasBalance.setBigDecimal(2, amount);
+                    try (final ResultSet resultSet = hasBalance.executeQuery()) {
+                        return resultSet.next();
+                    }
+                }
+            } catch (SQLException e) {
+                throw new IllegalStateException("Error reading from database.", e);
+            }
+        });
+    }
+
+    @Override
     public CompletableFuture<BigDecimal> readBalance() {
         return CompletableFuture.supplyAsync(this::readBalanceFromSql);
     }

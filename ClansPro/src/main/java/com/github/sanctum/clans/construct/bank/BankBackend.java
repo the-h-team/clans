@@ -15,6 +15,16 @@ import java.util.concurrent.CompletableFuture;
  * @since 1.3.3
  */
 public interface BankBackend {
+    /**
+     * Test if the bank has at least the specified amount.
+     *
+     * @param amount an amount to test
+     * @return a CompletableFuture expressing balance &gt;= <code>amount</code>
+     */
+    default CompletableFuture<Boolean> hasBalance(BigDecimal amount) {
+        return compareBalance(amount).thenApply(i -> i >= 0);
+    }
+
     // Replacing fields from Bank.class
     /**
      * Read the bank's balance from the backend.
