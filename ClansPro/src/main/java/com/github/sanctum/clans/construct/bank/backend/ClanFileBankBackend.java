@@ -191,14 +191,14 @@ public class ClanFileBankBackend implements BankBackend {
     public static void saveOldFormat(Clan clan) {
         final ClanFileBankBackend backend = new ClanFileBankBackend(clan);
         final BankMeta bankMeta = BankMeta.get(clan);
-        bankMeta.getBank().ifPresent(b -> backend.updateBalance(b.getBalance()));
+        bankMeta.getBank().map(b -> backend.updateBalance(b.getBalance())).ifPresent(CompletableFuture::join);
         bankMeta.getAccessMap().ifPresent(am -> {
-            backend.updateAccess(BankAction.BALANCE, BankAction.BALANCE.getValueInClan(clan));
-            backend.updateAccess(BankAction.DEPOSIT, BankAction.DEPOSIT.getValueInClan(clan));
-            backend.updateAccess(BankAction.WITHDRAW, BankAction.WITHDRAW.getValueInClan(clan));
-            backend.updateAccess(BankAction.VIEW_LOG, BankAction.VIEW_LOG.getValueInClan(clan));
+            backend.updateAccess(BankAction.BALANCE, BankAction.BALANCE.getValueInClan(clan)).join();
+            backend.updateAccess(BankAction.DEPOSIT, BankAction.DEPOSIT.getValueInClan(clan)).join();
+            backend.updateAccess(BankAction.WITHDRAW, BankAction.WITHDRAW.getValueInClan(clan)).join();
+            backend.updateAccess(BankAction.VIEW_LOG, BankAction.VIEW_LOG.getValueInClan(clan)).join();
         });
-        bankMeta.getBankLog().ifPresent(backend::updateBankLog);
+        bankMeta.getBankLog().map(backend::updateBankLog).ifPresent(CompletableFuture::join);
     }
 
     // csv
