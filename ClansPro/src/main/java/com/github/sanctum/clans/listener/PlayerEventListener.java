@@ -86,8 +86,10 @@ public class PlayerEventListener implements Listener {
 			task.stop();
 			return;
 		}
-		ClanVentBus.call(new TimerEvent(p.getUniqueId(), true){});
-		task.synchronize(() -> ClanVentBus.call(new TimerEvent(p.getUniqueId(), false){}));
+		ClanVentBus.call(new TimerEvent(p, true) {
+		});
+		task.synchronize(() -> ClanVentBus.call(new TimerEvent(p, false) {
+		}));
 	});
 
 	@Subscribe(priority = Vent.Priority.LOW)
@@ -149,7 +151,7 @@ public class PlayerEventListener implements Listener {
 	public void onTimer(TimerEvent e) {
 		if (!e.isAsynchronous()) {
 			Player p = e.getPlayer();
-			ClansAPI.getInstance().getAssociate(p).ifPresent(a -> {
+			ClansAPI.getInstance().getAssociate(p.getName()).ifPresent(a -> {
 				Teleport teleport = Teleport.get(a);
 				if (teleport != null) {
 					if (p.getLocation().distance(teleport.getLocationBeforeTeleport()) > 0) {

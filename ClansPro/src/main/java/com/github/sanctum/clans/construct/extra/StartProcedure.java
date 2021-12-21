@@ -22,11 +22,11 @@ import com.github.sanctum.labyrinth.annotation.Ordinal;
 import com.github.sanctum.labyrinth.api.Service;
 import com.github.sanctum.labyrinth.command.CommandRegistration;
 import com.github.sanctum.labyrinth.data.EconomyProvision;
+import com.github.sanctum.labyrinth.data.FileList;
 import com.github.sanctum.labyrinth.data.FileManager;
 import com.github.sanctum.labyrinth.data.FileType;
 import com.github.sanctum.labyrinth.data.Registry;
 import com.github.sanctum.labyrinth.event.custom.Vent;
-import com.github.sanctum.labyrinth.library.HUID;
 import com.github.sanctum.labyrinth.library.Item;
 import com.github.sanctum.labyrinth.library.Metrics;
 import com.github.sanctum.labyrinth.library.StringUtils;
@@ -126,19 +126,18 @@ public final class StartProcedure {
 	void d() {
 		if (bail) return;
 		sendBorder();
+		instance.getLogger().info("- Cleaning misc files.");
+		final FileList fileList = instance.getFileList();
+		for (String id : Clan.ACTION.getAllClanIDs()) {
+			if (fileList.get(id, "Clans", instance.TYPE).read(c -> !c.getNode("name").toPrimitive().isString())) {
+				FileManager clan = fileList.get(id, "Clans", instance.TYPE);
+				clan.getRoot().delete();
+			}
+		}
+		sendBorder();
 		instance.getLogger().info("- Loading clans and claims, please be patient...");
 		instance.getLogger().info("- Loaded (" + instance.getClanManager().refresh() + ") clans ");
 		instance.getLogger().info("- Loaded (" + instance.getClaimManager().refresh() + ") claims");
-		sendBorder();
-		instance.getLogger().info("- Cleaning misc files.");
-		for (String id : Clan.ACTION.getAllClanIDs()) {
-			if (ClansAPI.getInstance().getClanManager().getClanName(HUID.fromString(id)) == null) {
-				Clan o = ClansAPI.getInstance().getClanManager().getClan(HUID.fromString(id));
-				FileManager clan = ClansAPI.getDataInstance().getClanFile(o);
-				clan.getRoot().delete();
-				o.remove();
-			}
-		}
 	}
 
 	@Ordinal(6)

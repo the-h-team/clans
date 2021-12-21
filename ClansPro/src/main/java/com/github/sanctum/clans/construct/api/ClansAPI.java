@@ -22,7 +22,6 @@ import com.github.sanctum.labyrinth.paste.operative.PasteResponse;
 import com.github.sanctum.labyrinth.paste.type.Hastebin;
 import com.github.sanctum.labyrinth.task.Schedule;
 import java.text.MessageFormat;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
@@ -387,12 +386,11 @@ public interface ClansAPI {
 
 	@Experimental(dueTo = "Involving usage of the brand new api! Use at your own risk.")
 	default List<InvasiveEntity> getEntities() {
-		List<InvasiveEntity> list = new ArrayList<>();
+		List<InvasiveEntity> list = InoperableSpecialMemory.ENTITY_MAP.values().stream().collect(Collectors.toList());
 		getClanManager().getClans().forEach(c -> {
 			list.addAll(c.getMembers());
 			list.add(c);
 		});
-		list.addAll(InoperableSpecialMemory.ENTITY_MAP.values());
 		return Collections.unmodifiableList(list);
 	}
 

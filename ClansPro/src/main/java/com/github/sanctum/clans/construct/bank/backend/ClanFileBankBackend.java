@@ -92,7 +92,7 @@ public class ClanFileBankBackend implements BankBackend {
                 final Primitive primitive = node.toPrimitive();
                 if (primitive.isInt()) return primitive.getInt();
             }
-            return null;
+            return -1;
         });
     }
 

@@ -117,10 +117,10 @@ public abstract class Teleport {
 
 		public void teleport() {
 			if (entity.isAssociate()) {
-				start = entity.getAsAssociate().getUser().toBukkit().getPlayer().getLocation();
+				start = entity.getAsAssociate().getTag().getPlayer().getPlayer().getLocation();
 				if (this.target != null) {
 					getEntity().getAsAssociate().getMailer().chat("&aTeleporting in 10 seconds, don't move.").deploy();
-					Clan.ACTION.sendMessage(getTarget().getAsPlayer(), "&a" + entity.getAsAssociate().getUser().getName() + " is teleporting to you.");
+					Clan.ACTION.sendMessage(getTarget().getAsPlayer(), "&a" + entity.getAsAssociate().getName() + " is teleporting to you.");
 					this.state = State.TELEPORTING;
 					this.accepted = new Date();
 					Schedule.sync(() -> {
@@ -129,9 +129,9 @@ public abstract class Teleport {
 							AssociateTeleportEvent event = ClanVentBus.call(new AssociateTeleportEvent(getEntity().getAsAssociate(), new TeleportationTarget(this.target)));
 							if (!event.isCancelled()) {
 								successOperators.forEach(operator -> operator.onTeleportSuccess(entity));
-								entity.getAsAssociate().getUser().toBukkit().getPlayer().teleport(event.getTarget().getAsPlayer(), org.bukkit.event.player.PlayerTeleportEvent.TeleportCause.COMMAND);
+								entity.getAsAssociate().getTag().getPlayer().getPlayer().teleport(event.getTarget().getAsPlayer(), org.bukkit.event.player.PlayerTeleportEvent.TeleportCause.COMMAND);
 								cancel();
-								entity.getAsAssociate().getUser().toBukkit().getPlayer().getWorld().playSound(entity.getAsAssociate().getUser().toBukkit().getPlayer().getLocation(), Sound.ENTITY_VILLAGER_AMBIENT, 10, 1);
+								entity.getAsAssociate().getTag().getPlayer().getPlayer().getWorld().playSound(entity.getAsAssociate().getTag().getPlayer().getPlayer().getLocation(), Sound.ENTITY_VILLAGER_AMBIENT, 10, 1);
 							}
 						} else {
 							cancel();
@@ -147,9 +147,9 @@ public abstract class Teleport {
 							AssociateTeleportEvent event = ClanVentBus.call(new AssociateTeleportEvent(getEntity().getAsAssociate(), new TeleportationTarget(this.location)));
 							if (!event.isCancelled()) {
 								successOperators.forEach(operator -> operator.onTeleportSuccess(entity));
-								entity.getAsAssociate().getUser().toBukkit().getPlayer().teleport(event.getTarget().getAsLocation(), org.bukkit.event.player.PlayerTeleportEvent.TeleportCause.COMMAND);
+								entity.getAsAssociate().getTag().getPlayer().getPlayer().teleport(event.getTarget().getAsLocation(), org.bukkit.event.player.PlayerTeleportEvent.TeleportCause.COMMAND);
 								cancel();
-								entity.getAsAssociate().getUser().toBukkit().getPlayer().getWorld().playSound(entity.getAsAssociate().getUser().toBukkit().getPlayer().getLocation(), Sound.ENTITY_VILLAGER_AMBIENT, 10, 1);
+								entity.getAsAssociate().getTag().getPlayer().getPlayer().getWorld().playSound(entity.getAsAssociate().getTag().getPlayer().getPlayer().getLocation(), Sound.ENTITY_VILLAGER_AMBIENT, 10, 1);
 							}
 						} else {
 							cancel();
@@ -160,9 +160,9 @@ public abstract class Teleport {
 				if (entity.isClan()) {
 					if (this.target != null) {
 						getEntity().getAsClan().getMembers().forEach(a -> {
-							if (!a.getUser().isOnline()) return;
+							if (a.getTag().isPlayer() && !a.getTag().getPlayer().isOnline()) return;
 							a.getMailer().chat("&aTeleporting in 10 seconds, don't move.").deploy();
-							Clan.ACTION.sendMessage(getTarget().getAsPlayer(), "&a" + a.getUser().getName() + " is teleporting to you.");
+							Clan.ACTION.sendMessage(getTarget().getAsPlayer(), "&a" + a.getName() + " is teleporting to you.");
 							this.state = State.TELEPORTING;
 							this.accepted = new Date();
 							Schedule.sync(() -> {
@@ -171,9 +171,9 @@ public abstract class Teleport {
 									AssociateTeleportEvent event = ClanVentBus.call(new AssociateTeleportEvent(a, new TeleportationTarget(this.target)));
 									if (!event.isCancelled()) {
 										successOperators.forEach(operator -> operator.onTeleportSuccess(a));
-										a.getUser().toBukkit().getPlayer().teleport(event.getTarget().getAsPlayer(), org.bukkit.event.player.PlayerTeleportEvent.TeleportCause.COMMAND);
+										a.getTag().getPlayer().getPlayer().teleport(event.getTarget().getAsPlayer(), org.bukkit.event.player.PlayerTeleportEvent.TeleportCause.COMMAND);
 										cancel();
-										a.getUser().toBukkit().getPlayer().getWorld().playSound(entity.getAsAssociate().getUser().toBukkit().getPlayer().getLocation(), Sound.ENTITY_VILLAGER_AMBIENT, 10, 1);
+										a.getTag().getPlayer().getPlayer().getWorld().playSound(entity.getAsAssociate().getTag().getPlayer().getPlayer().getLocation(), Sound.ENTITY_VILLAGER_AMBIENT, 10, 1);
 									}
 								} else {
 									cancel();
@@ -182,7 +182,7 @@ public abstract class Teleport {
 						});
 					} else {
 						getEntity().getAsClan().getMembers().forEach(a -> {
-							if (!a.getUser().isOnline()) return;
+							if (a.getTag().isPlayer() && !a.getTag().getPlayer().isOnline()) return;
 							a.getMailer().chat("&aTeleporting in 10 seconds, don't move.").deploy();
 							this.state = State.TELEPORTING;
 							this.accepted = new Date();
@@ -192,9 +192,9 @@ public abstract class Teleport {
 									AssociateTeleportEvent event = ClanVentBus.call(new AssociateTeleportEvent(a, new TeleportationTarget(this.location)));
 									if (!event.isCancelled()) {
 										successOperators.forEach(operator -> operator.onTeleportSuccess(a));
-										a.getUser().toBukkit().getPlayer().teleport(event.getTarget().getAsLocation());
+										a.getTag().getPlayer().getPlayer().teleport(event.getTarget().getAsLocation());
 										cancel();
-										a.getUser().toBukkit().getPlayer().getWorld().playSound(entity.getAsAssociate().getUser().toBukkit().getPlayer().getLocation(), Sound.ENTITY_VILLAGER_AMBIENT, 10, 1);
+										a.getTag().getPlayer().getPlayer().getWorld().playSound(entity.getAsAssociate().getTag().getPlayer().getPlayer().getLocation(), Sound.ENTITY_VILLAGER_AMBIENT, 10, 1);
 									}
 								} else {
 									cancel();
@@ -207,7 +207,7 @@ public abstract class Teleport {
 					start = getEntity().getAsPlayer().getPlayer().getLocation();
 					if (this.target != null) {
 						Clan.ACTION.sendMessage(getEntity().getAsPlayer().getPlayer(), "&aTeleporting in 10 seconds, don't move.");
-						Clan.ACTION.sendMessage(getTarget().getAsPlayer(), "&a" + entity.getAsAssociate().getUser().getName() + " is teleporting to you.");
+						Clan.ACTION.sendMessage(getTarget().getAsPlayer(), "&a" + entity.getAsAssociate().getName() + " is teleporting to you.");
 						this.state = State.TELEPORTING;
 						this.accepted = new Date();
 						Schedule.sync(() -> {
@@ -248,6 +248,7 @@ public abstract class Teleport {
 		}
 
 		public void cancel() {
+			setState(State.EXPIRED);
 			REQUESTS.remove(this);
 		}
 	}

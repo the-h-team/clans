@@ -7,7 +7,6 @@ import com.github.sanctum.clans.construct.api.ClansAPI;
 import com.github.sanctum.clans.construct.extra.StringLibrary;
 import com.github.sanctum.clans.event.associate.AssociateChatEvent;
 import com.github.sanctum.clans.event.associate.AssociateMessageReceiveEvent;
-import com.github.sanctum.labyrinth.data.LabyrinthUser;
 import com.github.sanctum.labyrinth.event.custom.Subscribe;
 import com.github.sanctum.labyrinth.event.custom.Vent;
 import com.github.sanctum.labyrinth.library.Message;
@@ -20,7 +19,6 @@ import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 import net.md_5.bungee.api.chat.BaseComponent;
-import org.bukkit.OfflinePlayer;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -40,10 +38,10 @@ public class ChatEventListener implements Listener {
 		e.setMessage(message);
 		Clan.Associate associate = e.getAssociate();
 		String color = associate.getClan().getPalette().toString();
-		String name = associate.getClan().getPalette().isGradient() ? associate.getClan().getPalette().toString(associate.getClan().getNickname() != null ? associate.getNickname() : associate.getClan().getName()) : color + (associate.getClan().getNickname() != null ? associate.getNickname() : associate.getClan().getName());
+		String name = associate.getClan().getPalette().isGradient() ? associate.getClan().getPalette().toString(associate.getClan().getNickname() != null ? associate.getClan().getNickname() : associate.getClan().getName()) : color + (associate.getClan().getNickname() != null ? associate.getClan().getNickname() : associate.getClan().getName());
 		if (e.getChannel().equals(Channel.ALLY)) {
 			List<BaseComponent> list = new ArrayList<>();
-			list.add(TextLib.getInstance().textHoverable(MessageFormat.format(ClansAPI.getDataInstance().getConfig().getRoot().getString("Formatting.Chat.Channel.ally.prefix"), associate.getNickname(), name, color, associate.getRankFull(), (associate.getClan().getNickname() != null ? associate.getNickname() : associate.getClan().getName())), MessageFormat.format(ClansAPI.getDataInstance().getConfig().getRoot().getString("Formatting.Chat.Channel.ally.highlight"), associate.getNickname(), name, color, associate.getRankFull(), (associate.getClan().getNickname() != null ? associate.getNickname() : associate.getClan().getName())), MessageFormat.format(ClansAPI.getDataInstance().getConfig().getRoot().getString("Formatting.Chat.Channel.ally.divider") + message, associate.getNickname(), name, color, associate.getRankFull(), (associate.getClan().getNickname() != null ? associate.getNickname() : associate.getClan().getName())), MessageFormat.format(ClansAPI.getDataInstance().getConfig().getRoot().getString("Formatting.Chat.Channel.ally.hover"), associate.getNickname(), name, color, associate.getRankFull(), (associate.getClan().getNickname() != null ? associate.getNickname() : associate.getClan().getName()))));
+			list.add(TextLib.getInstance().textHoverable(MessageFormat.format(ClansAPI.getDataInstance().getConfig().getRoot().getString("Formatting.Chat.Channel.ally.prefix"), associate.getNickname(), name, color, associate.getRankFull(), (associate.getClan().getNickname() != null ? associate.getClan().getNickname() : associate.getClan().getName())), MessageFormat.format(ClansAPI.getDataInstance().getConfig().getRoot().getString("Formatting.Chat.Channel.ally.highlight"), associate.getNickname(), name, color, associate.getRankFull(), (associate.getClan().getNickname() != null ? associate.getClan().getNickname() : associate.getClan().getName())), MessageFormat.format(ClansAPI.getDataInstance().getConfig().getRoot().getString("Formatting.Chat.Channel.ally.divider") + message, associate.getNickname(), name, color, associate.getRankFull(), (associate.getClan().getNickname() != null ? associate.getClan().getNickname() : associate.getClan().getName())), MessageFormat.format(ClansAPI.getDataInstance().getConfig().getRoot().getString("Formatting.Chat.Channel.ally.hover"), associate.getNickname(), name, color, associate.getRankFull(), (associate.getClan().getNickname() != null ? associate.getClan().getNickname() : associate.getClan().getName()))));
 			e.setPingSound(Sound.ENTITY_VILLAGER_YES);
 			e.setComponents(list.toArray(new BaseComponent[0]));
 		}
@@ -58,7 +56,7 @@ public class ChatEventListener implements Listener {
 	@EventHandler(priority = EventPriority.HIGH)
 	public void onFormat(AsyncPlayerChatEvent event) throws ExecutionException, InterruptedException {
 		Player p = event.getPlayer();
-		Clan.Associate associate = ClansAPI.getInstance().getAssociate(p).orElse(null);
+		Clan.Associate associate = ClansAPI.getInstance().getAssociate(p.getName()).orElse(null);
 		if (associate != null) {
 			if (ClansAPI.getDataInstance().isTrue("Formatting.allow")) {
 				if (associate.getChannel().equals(Channel.GLOBAL)) {
@@ -84,7 +82,7 @@ public class ChatEventListener implements Listener {
 			}
 
 			if (associate.getChannel().equals(Channel.CLAN)) {
-				Set<Player> players = associate.getClan().getMembers().stream().filter(m -> m.getTag().isPlayer() && m.getUser().toBukkit().isOnline()).map(Clan.Associate::getUser).map(LabyrinthUser::toBukkit).map(OfflinePlayer::getPlayer).collect(Collectors.toSet());
+				Set<Player> players = associate.getClan().getMembers().stream().filter(m -> m.getTag().isPlayer() && m.getTag().getPlayer().isOnline()).map(associate1 -> associate1.getTag().getPlayer().getPlayer()).collect(Collectors.toSet());
 				players.addAll(ClansAPI.getDataInstance().getSpies());
 				AssociateChatEvent e = ClanVentBus.call(new AssociateChatEvent(associate, players, event.getMessage()));
 				if (!e.isCancelled()) {
@@ -104,9 +102,9 @@ public class ChatEventListener implements Listener {
 			if (associate.getChannel().equals(Channel.ALLY)) {
 				Set<Player> players = new HashSet<>(ClansAPI.getDataInstance().getSpies());
 				for (Clan c : associate.getClan().getRelation().getAlliance().get(Clan.class)) {
-					players.addAll(c.getMembers().stream().filter(m -> m.getTag().isPlayer() && m.getUser().toBukkit().isOnline()).map(Clan.Associate::getUser).map(LabyrinthUser::toBukkit).map(OfflinePlayer::getPlayer).collect(Collectors.toSet()));
+					players.addAll(c.getMembers().stream().filter(m -> m.getTag().isPlayer() && m.getTag().getPlayer().isOnline()).map(associate1 -> associate1.getTag().getPlayer().getPlayer()).collect(Collectors.toSet()));
 				}
-				players.addAll(associate.getClan().getMembers().stream().filter(m -> m.getTag().isPlayer() && m.getUser().toBukkit().isOnline()).map(Clan.Associate::getUser).map(LabyrinthUser::toBukkit).map(OfflinePlayer::getPlayer).collect(Collectors.toSet()));
+				players.addAll(associate.getClan().getMembers().stream().filter(m -> m.getTag().isPlayer() && m.getTag().getPlayer().isOnline()).map(associate1 -> associate1.getTag().getPlayer().getPlayer()).collect(Collectors.toSet()));
 				AssociateChatEvent e = ClanVentBus.call(new AssociateChatEvent(associate, players, event.getMessage()));
 				if (!e.isCancelled()) {
 					if (ClansAPI.getDataInstance().isTrue("Formatting.chat-spy-console")) {
@@ -127,7 +125,7 @@ public class ChatEventListener implements Listener {
 			}
 			if (!associate.getChannel().isDefault()) {
 				Set<Player> players = new HashSet<>(ClansAPI.getDataInstance().getSpies());
-				players.addAll(associate.getChannel().getAudience().stream().filter(associate1 -> associate1.getTag().isPlayer() && associate1.getUser().isOnline()).map(Clan.Associate::getUser).map(LabyrinthUser::toBukkit).map(OfflinePlayer::getPlayer).collect(Collectors.toSet()));
+				players.addAll(associate.getChannel().getAudience().stream().filter(associate1 -> associate1.getTag().isPlayer() && associate1.getTag().getPlayer().isOnline()).map(associate1 -> associate1.getTag().getPlayer().getPlayer()).collect(Collectors.toSet()));
 				players.add(p);
 				AssociateChatEvent e = ClanVentBus.call(new AssociateChatEvent(associate, players, event.getMessage()));
 				if (!e.isCancelled()) {

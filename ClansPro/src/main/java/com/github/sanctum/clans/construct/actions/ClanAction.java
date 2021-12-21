@@ -12,7 +12,7 @@ import com.github.sanctum.clans.construct.api.ClansAPI;
 import com.github.sanctum.clans.construct.api.Clearance;
 import com.github.sanctum.clans.construct.api.Teleport;
 import com.github.sanctum.clans.construct.extra.ClanDisplayName;
-import com.github.sanctum.clans.construct.extra.ComparatorUtil;
+import com.github.sanctum.clans.construct.extra.ClansComparators;
 import com.github.sanctum.clans.construct.extra.StringLibrary;
 import com.github.sanctum.clans.construct.impl.DefaultAssociate;
 import com.github.sanctum.clans.construct.impl.DefaultClan;
@@ -26,12 +26,13 @@ import com.github.sanctum.clans.event.player.PlayerJoinClanEvent;
 import com.github.sanctum.labyrinth.LabyrinthProvider;
 import com.github.sanctum.labyrinth.data.EconomyProvision;
 import com.github.sanctum.labyrinth.data.FileManager;
-import com.github.sanctum.labyrinth.data.LabyrinthUser;
+import com.github.sanctum.labyrinth.data.service.PlayerSearch;
 import com.github.sanctum.labyrinth.formatting.pagination.EasyPagination;
 import com.github.sanctum.labyrinth.interfacing.Nameable;
 import com.github.sanctum.labyrinth.library.HUID;
 import com.github.sanctum.labyrinth.library.TextLib;
 import com.github.sanctum.labyrinth.task.Schedule;
+import com.github.sanctum.labyrinth.task.TaskScheduler;
 import java.io.File;
 import java.math.BigDecimal;
 import java.text.MessageFormat;
@@ -131,10 +132,10 @@ public class ClanAction extends StringLibrary {
 			}
 
 			FileManager clan = ClansAPI.getDataInstance().getClanFile(clanIndex);
-			if (associate.getTag().isPlayer() && associate.getUser().toBukkit().isOnline()) {
+			if (associate.getTag().isPlayer() && associate.getTag().getPlayer().isOnline()) {
 				if (!LabyrinthProvider.getInstance().isLegacy()) {
 					if (ClansAPI.getDataInstance().isDisplayTagsAllowed()) {
-						ClanDisplayName.remove(associate.getUser().toBukkit().getPlayer());
+						ClanDisplayName.remove(associate.getTag().getPlayer().getPlayer());
 					}
 				}
 			}
@@ -147,7 +148,7 @@ public class ClanAction extends StringLibrary {
 					clanIndex.getRelation().getRivalry().get(Clan.class).forEach(a -> a.getRelation().getRivalry().remove(clanIndex));
 					FileManager regions = API.getClaimManager().getFile();
 					regions.write(t -> t.set(associate.getClan().getId().toString(), null));
-					Schedule.sync(() -> {
+					TaskScheduler.of(() -> {
 						String clanName = clan.getRoot().getString("name");
 						for (String s : associate.getClan().getKeys()) {
 							associate.getClan().removeValue(s);
@@ -156,7 +157,7 @@ public class ClanAction extends StringLibrary {
 						String format = MessageFormat.format(ClansAPI.getDataInstance().getMessageResponse("deletion"), clanName);
 						Bukkit.broadcastMessage(color(getPrefix() + " " + format));
 						API.getClaimManager().refresh();
-					}).waitReal(1);
+					}).scheduleLater("ClansPro-deletion;" + target, 1);
 					break;
 				case HIGHER:
 				case NORMAL:
@@ -235,8 +236,8 @@ public class ClanAction extends StringLibrary {
 					clanIndex.broadcast(MessageFormat.format(ClansAPI.getDataInstance().getMessageResponse("member-join"), a.getName()));
 					if (!LabyrinthProvider.getInstance().isLegacy()) {
 						if (ClansAPI.getDataInstance().isDisplayTagsAllowed()) {
-							if (!a.isEntity() && a.getUser().isOnline()) {
-								ClanDisplayName.set(a.getUser().toBukkit().getPlayer(), ClansAPI.getDataInstance().formatDisplayTag(a.getClan().getPalette().toString(), clanName));
+							if (!a.isEntity() && a.getTag().getPlayer().isOnline()) {
+								ClanDisplayName.set(a.getTag().getPlayer().getPlayer(), ClansAPI.getDataInstance().formatDisplayTag(a.getClan().getPalette().toString(), clanName));
 							}
 						}
 					}
@@ -250,8 +251,8 @@ public class ClanAction extends StringLibrary {
 					clanIndex.broadcast(MessageFormat.format(ClansAPI.getDataInstance().getMessageResponse("member-join"), a.getName()));
 					if (!LabyrinthProvider.getInstance().isLegacy()) {
 						if (ClansAPI.getDataInstance().isDisplayTagsAllowed()) {
-							if (!a.isEntity() && a.getUser().isOnline()) {
-								ClanDisplayName.set(a.getUser().toBukkit().getPlayer(), ClansAPI.getDataInstance().formatDisplayTag(a.getClan().getPalette().toString(), clanName));
+							if (!a.isEntity() && a.getTag().getPlayer().isOnline()) {
+								ClanDisplayName.set(a.getTag().getPlayer().getPlayer(), ClansAPI.getDataInstance().formatDisplayTag(a.getClan().getPalette().toString(), clanName));
 							}
 						}
 					}
@@ -269,16 +270,15 @@ public class ClanAction extends StringLibrary {
 	}
 
 	public UUID getUserID(String playerName) {
-		if (getAllClanNames().contains(playerName)) return null;
-		LabyrinthUser user = LabyrinthUser.get(playerName);
-		if (user != null && user.isValid()) {
-			return user.getId();
+		PlayerSearch user = PlayerSearch.of(playerName);
+		if (user != null) {
+			return user.getRecordedId();
 		}
 		return null;
 	}
 
 	public List<UUID> getAllUsers() {
-		return LabyrinthProvider.getOfflinePlayers().stream().map(LabyrinthUser::getId).collect(Collectors.toList());
+		return PlayerSearch.values().stream().map(PlayerSearch::getRecordedId).collect(Collectors.toList());
 	}
 
 	public void demotePlayer(UUID target) {
@@ -336,16 +336,23 @@ public class ClanAction extends StringLibrary {
 	public void kickPlayer(UUID target) {
 		Clan.Associate associate = API.getAssociate(target).orElse(null);
 		if (associate != null) {
-			ClanKickAssociateEvent event = ClanVentBus.call(new ClanKickAssociateEvent(associate));
-			if (!event.isCancelled()) {
-				if (ClansAPI.getDataInstance().isDisplayTagsAllowed()) {
-					if (Bukkit.getPlayer(target) != null) {
-						ClanDisplayName.remove(Bukkit.getPlayer(target));
+			Clan.Associate c = associate.getClan().getOwner();
+			if (associate.equals(c)) {
+				removePlayer(target);
+			} else {
+				ClanKickAssociateEvent event = ClanVentBus.call(new ClanKickAssociateEvent(associate));
+				if (!event.isCancelled()) {
+					if (ClansAPI.getDataInstance().isDisplayTagsAllowed()) {
+						if (Bukkit.getPlayer(target) != null) {
+							ClanDisplayName.remove(Bukkit.getPlayer(target));
+						}
 					}
+					FileManager clan = ClansAPI.getDataInstance().getClanFile(associate.getClan());
+					if (!associate.getClan().isConsole()) {
+						clan.write(t -> t.set("user-data." + target.toString(), null));
+					}
+					Schedule.sync(() -> associate.getClan().remove(associate)).wait(1);
 				}
-				FileManager clan = ClansAPI.getDataInstance().getClanFile(associate.getClan());
-				clan.write(t -> t.set("user-data." + target.toString(), null));
-				Schedule.sync(() -> associate.getClan().remove(associate)).wait(1);
 			}
 		}
 	}
@@ -546,7 +553,7 @@ public class ClanAction extends StringLibrary {
 
 	public List<Clan> getMostPowerful() {
 		List<Clan> c = ClansAPI.getInstance().getClanManager().getClans().list();
-		c.sort(ComparatorUtil.comparingByPower());
+		c.sort(ClansComparators.comparingByPower());
 		Collections.reverse(c);
 		return Collections.unmodifiableList(c);
 	}
@@ -700,7 +707,7 @@ public class ClanAction extends StringLibrary {
 					break;
 				}
 
-				EasyPagination<Clan> test = new EasyPagination<>(p, getMostPowerful(), ComparatorUtil.comparingByMoney());
+				EasyPagination<Clan> test = new EasyPagination<>(p, getMostPowerful(), ClansComparators.comparingByMoney());
 				test.limit(menuSize());
 				test.setHeader((player, chunks) -> {
 					if (LabyrinthProvider.getInstance().isNew()) {
@@ -736,7 +743,7 @@ public class ClanAction extends StringLibrary {
 				test2.send(pageNum);
 				break;
 			case POWER:
-				EasyPagination<Clan> test3 = new EasyPagination<>(p, getMostPowerful(), ComparatorUtil.comparingByPower());
+				EasyPagination<Clan> test3 = new EasyPagination<>(p, getMostPowerful(), ClansComparators.comparingByPower());
 				test3.limit(menuSize());
 				test3.setHeader((player, chunks) -> {
 					if (LabyrinthProvider.getInstance().isNew()) {
@@ -754,7 +761,7 @@ public class ClanAction extends StringLibrary {
 				test3.send(pageNum);
 				break;
 			case KILLS:
-				EasyPagination<Clan> test4 = new EasyPagination<>(p, getMostPowerful(), ComparatorUtil.comparingByEntity());
+				EasyPagination<Clan> test4 = new EasyPagination<>(p, getMostPowerful(), ClansComparators.comparingByEntity());
 				test4.limit(menuSize());
 				test4.setHeader((player, chunks) -> {
 					if (LabyrinthProvider.getInstance().isNew()) {

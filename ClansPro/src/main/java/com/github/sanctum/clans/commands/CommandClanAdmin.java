@@ -11,10 +11,8 @@ import com.github.sanctum.clans.construct.api.ClansAPI;
 import com.github.sanctum.clans.construct.api.GUI;
 import com.github.sanctum.clans.construct.api.War;
 import com.github.sanctum.clans.construct.extra.StringLibrary;
-import com.github.sanctum.labyrinth.LabyrinthProvider;
 import com.github.sanctum.labyrinth.data.FileManager;
 import com.github.sanctum.labyrinth.data.FileType;
-import com.github.sanctum.labyrinth.data.LabyrinthUser;
 import com.github.sanctum.labyrinth.formatting.PaginatedList;
 import com.github.sanctum.labyrinth.library.HUID;
 import com.github.sanctum.labyrinth.library.Message;
@@ -42,7 +40,7 @@ public class CommandClanAdmin extends Command {
 
 	public CommandClanAdmin() {
 		super("clansadmin");
-		setDescription("Base command for staff commands.");
+		setDescription("Used to modify clan settings.");
 		setAliases(Arrays.asList("ca", "cla", "clanadmin"));
 		setPermission("clanspro.admin");
 	}
@@ -59,12 +57,12 @@ public class CommandClanAdmin extends Command {
 		help.add("&7|&e) &6/" + label + " &fspy <&7chatName&f>");
 		help.add("&7|&e) &6/" + label + " &fkick <&7playerName&f>");
 		help.add("&7|&e) &6/" + label + " &fput <&7playerName&f> <&7clanName&f>");
-		help.add("&7|&e) &6/" + label + " &fview <&7clanName&f> <&7power, money, claims, vault, stash&f>");
+		help.add("&7|&e) &6/" + label + " &fview <&7clanName&f> <&7power, money, claims, vault, stash, password&f>");
 		help.add("&7|&e) &6/" + label + " &dsettings");
 		help.add("&7|&e) &6/" + label + " &ftphere <&7claneName&f>");
 		help.add("&7|&e) &6/" + label + " &fgive <&7clanName&f> <power, money, claims, color> <&7amount&f, &7color&f>");
 		help.add("&7|&e) &6/" + label + " &ftake <&7clanName&f> <power, money, claims> <&7amount&f>");
-		help.add("&7|&e) &6/" + label + " &fset <&7clanName&f> <money> <&7amount&f>");
+		help.add("&7|&e) &6/" + label + " &fset <&7clanName&f> <money> <&7amount&f> | &8[logo]");
 		return help;
 	}
 
@@ -142,7 +140,7 @@ public class CommandClanAdmin extends Command {
 			if (args[0].equalsIgnoreCase("edit")) {
 				arguments.clear();
 				List<String> toAdd = new ArrayList<>(Clan.ACTION.getAllClanNames());
-				toAdd.addAll(LabyrinthProvider.getOfflinePlayers().stream().map(LabyrinthUser::getName).collect(Collectors.toList()));
+				toAdd.addAll(Arrays.stream(Bukkit.getOfflinePlayers()).map(OfflinePlayer::getName).collect(Collectors.toList()));
 				arguments.addAll(toAdd);
 				for (String a : arguments) {
 					if (a.toLowerCase().startsWith(args[1].toLowerCase()))
@@ -253,7 +251,7 @@ public class CommandClanAdmin extends Command {
 			}
 			if (args[0].equalsIgnoreCase("view")) {
 				arguments.clear();
-				arguments.addAll(Arrays.asList("money", "claims", "power", "stash", "vault"));
+				arguments.addAll(Arrays.asList("money", "claims", "power", "stash", "vault", "password"));
 				for (String a : arguments) {
 					if (a.toLowerCase().startsWith(args[2].toLowerCase()))
 						result.add(a);
@@ -436,7 +434,7 @@ public class CommandClanAdmin extends Command {
 					for (Clan.Associate id : target.getMembers()) {
 						if (id.getPriority().toLevel() == 3) {
 							target.broadcast("&8(&e!&8) &4&oOur clan has been forcibly closed by a staff member.");
-							Clan.ACTION.removePlayer(id.getUser().getId());
+							Clan.ACTION.removePlayer(id.getId());
 							break;
 						}
 					}
@@ -514,8 +512,8 @@ public class CommandClanAdmin extends Command {
 				Clan c = ClansAPI.getInstance().getClanManager().getClan(targetId);
 				if (targetId != null) {
 					for (Clan.Associate associate : c.getMembers()) {
-						if (associate.getUser().isOnline()) {
-							associate.getUser().toBukkit().getPlayer().teleport(p);
+						if (associate.getTag().getPlayer().isOnline()) {
+							associate.getTag().getPlayer().getPlayer().teleport(p);
 							associate.getMailer().chat("&aYou've been teleported by a staff member.").deploy();
 						}
 					}
@@ -608,7 +606,9 @@ public class CommandClanAdmin extends Command {
 						Claim.ACTION.getChunksAroundChunk(p.getLocation().getChunk(), -1, 0, 1).forEach(chunk -> {
 							Claim test = ClansAPI.getInstance().getClaimManager().getClaim(chunk);
 							if (test != null) {
-								if (owner[0] == null) { owner[0] = ((Clan)test.getHolder()); }
+								if (owner[0] == null) {
+									owner[0] = ((Clan) test.getHolder());
+								}
 								test.remove();
 							}
 						});
@@ -715,6 +715,15 @@ public class CommandClanAdmin extends Command {
 						if (id != null) {
 							Clan target = ClansAPI.getInstance().getClanManager().getClan(id);
 							lib.sendMessage(p, "Clan: &5" + target.getName() + " &dhas a power level of &5&l" + Clan.ACTION.format(target.getPower()));
+						} else {
+							lib.sendMessage(p, lib.clanUnknown(args1));
+							return true;
+						}
+						break;
+					case "password":
+						if (id != null) {
+							Clan target = ClansAPI.getInstance().getClanManager().getClan(id);
+							lib.sendMessage(p, "Clan: &5" + target.getName() + " &dpassword: &5&l" + target.getPassword());
 						} else {
 							lib.sendMessage(p, lib.clanUnknown(args1));
 							return true;

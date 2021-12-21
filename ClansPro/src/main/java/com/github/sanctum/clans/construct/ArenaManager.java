@@ -148,10 +148,10 @@ public final class ArenaManager implements Iterable<War> {
 	@Note("Hide this associate completely from a given war instance")
 	public void hide(Clan.Associate associate, War war) {
 		Plugin plugin = ClansAPI.getInstance().getPlugin();
-		Player pla = associate.getUser().toBukkit().getPlayer();
+		Player pla = associate.getTag().getPlayer().getPlayer();
 		if (pla != null) {
 			war.forEach(ass -> {
-				Player pl = ass.getUser().toBukkit().getPlayer();
+				Player pl = ass.getTag().getPlayer().getPlayer();
 				if (pl != null) {
 					if (pl.canSee(pla)) {
 						pl.hidePlayer(plugin, pla);
@@ -174,7 +174,7 @@ public final class ArenaManager implements Iterable<War> {
 	@Note("Show this associate to anyone who can't already see them, visa versa.")
 	public void show(Clan.Associate associate) {
 		Plugin plugin = ClansAPI.getInstance().getPlugin();
-		Player pl = associate.getUser().toBukkit().getPlayer();
+		Player pl = associate.getTag().getPlayer().getPlayer();
 		if (pl != null) {
 			for (Player p : Bukkit.getOnlinePlayers()) {
 
@@ -194,7 +194,7 @@ public final class ArenaManager implements Iterable<War> {
 		Plugin plugin = ClansAPI.getInstance().getPlugin();
 		for (Player p : Bukkit.getOnlinePlayers()) {
 			war.forEach(a -> {
-				Player pl = a.getUser().toBukkit().getPlayer();
+				Player pl = a.getTag().getPlayer().getPlayer();
 				if (pl != null) {
 					if (!pl.canSee(p)) {
 						Clan.Associate as = ClansAPI.getInstance().getAssociate(pl).orElse(null);

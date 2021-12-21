@@ -207,7 +207,7 @@ public class PapiPlaceholders extends PlaceholderExpansion {
 			String result;
 			int count = 0;
 			for (Clan.Associate associate1 : c.getMembers()) {
-				if (associate1.getTag().isPlayer() && associate1.getUser().isOnline()) {
+				if (associate1.getTag().isPlayer() && associate1.getTag().getPlayer().isOnline()) {
 					count++;
 				}
 			}

@@ -197,7 +197,7 @@ public interface War extends Iterable<Clan.Associate> {
 		 */
 		public boolean que(Clan.Associate associate) {
 			if (!pool.containsKey(associate)) {
-				Player p = associate.getUser().toBukkit().getPlayer();
+				Player p = associate.getTag().getPlayer().getPlayer();
 				if (p == null) return false;
 				pool.put(associate, p.getLocation());
 				return true;
@@ -212,7 +212,7 @@ public interface War extends Iterable<Clan.Associate> {
 		 */
 		public void updateReturnLocation(Clan.Associate associate) {
 			if (!pool.containsKey(associate)) return;
-			pool.put(associate, associate.getUser().toBukkit().getPlayer().getLocation());
+			pool.put(associate, associate.getTag().getPlayer().getPlayer().getLocation());
 		}
 
 		/**
@@ -225,7 +225,7 @@ public interface War extends Iterable<Clan.Associate> {
 		public boolean unque(Clan.Associate associate) {
 			if (pool.containsKey(associate)) {
 				Location loc = pool.get(associate);
-				Player p = associate.getUser().toBukkit().getPlayer();
+				Player p = associate.getTag().getPlayer().getPlayer();
 				if (p == null) {
 					Schedule.sync(() -> pool.remove(associate)).run();
 					return false;

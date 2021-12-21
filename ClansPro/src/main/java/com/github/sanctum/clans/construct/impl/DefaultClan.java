@@ -112,7 +112,7 @@ public final class DefaultClan implements Clan, PersistentEntity {
 		this.dock = null;
 	}
 
-	public DefaultClan(String clanID) {
+	public DefaultClan(String clanID, boolean server) {
 		this.clanID = clanID;
 		this.dock = new Relation() {
 
@@ -498,8 +498,9 @@ public final class DefaultClan implements Clan, PersistentEntity {
 
 		}
 
+
 		ClearanceLog clog = getValue(ClearanceLog.class, "clearance");
-		if (clog == null) {
+		if (clog == null && !server) {
 			ClearanceLog clearanceLog = new ClearanceLog();
 			setValue("clearance", clearanceLog, false);
 		}
@@ -550,7 +551,10 @@ public final class DefaultClan implements Clan, PersistentEntity {
 				}
 			}
 		}
+	}
 
+	public DefaultClan(String clanID) {
+		this(clanID, false);
 	}
 
 	public LogoHolder.Carrier newCarrier(HUID id) {
@@ -712,7 +716,7 @@ public final class DefaultClan implements Clan, PersistentEntity {
 
 	@Override
 	public synchronized @NotNull HUID getId() {
-		return HUID.fromString(clanID);
+		return HUID.parseID(clanID).toID();
 	}
 
 	@Override
@@ -1067,7 +1071,7 @@ public final class DefaultClan implements Clan, PersistentEntity {
 	public void broadcast(String message) {
 		getMembers().forEach(a -> {
 			if (a.isEntity()) return;
-			Optional.ofNullable(a.getUser().toBukkit().getPlayer()).ifPresent(pl -> pl.sendMessage(ACTION.color("&7[&6&l" + getName() + "&7] " + message)));
+			Optional.ofNullable(a.getTag().getPlayer().getPlayer()).ifPresent(pl -> pl.sendMessage(ACTION.color("&7[&6&l" + getName() + "&7] " + message)));
 		});
 	}
 
@@ -1075,7 +1079,7 @@ public final class DefaultClan implements Clan, PersistentEntity {
 	public void broadcast(BaseComponent... message) {
 		getMembers().forEach(a -> {
 			if (a.isEntity()) return;
-			Optional.ofNullable(a.getUser().toBukkit().getPlayer()).ifPresent(pl -> pl.spigot().sendMessage(message));
+			Optional.ofNullable(a.getTag().getPlayer().getPlayer()).ifPresent(pl -> pl.spigot().sendMessage(message));
 		});
 	}
 
@@ -1083,7 +1087,7 @@ public final class DefaultClan implements Clan, PersistentEntity {
 	public void broadcast(Message... message) {
 		getMembers().forEach(a -> {
 			if (a.isEntity()) return;
-			Optional.ofNullable(a.getUser().toBukkit().getPlayer()).ifPresent(pl -> Arrays.stream(message).forEach(m -> m.send(pl).deploy()));
+			Optional.ofNullable(a.getTag().getPlayer().getPlayer()).ifPresent(pl -> Arrays.stream(message).forEach(m -> m.send(pl).deploy()));
 		});
 	}
 
@@ -1092,7 +1096,7 @@ public final class DefaultClan implements Clan, PersistentEntity {
 		getMembers().forEach(a -> {
 			if (a.isEntity()) return;
 			if (predicate.test(a)) {
-				Optional.ofNullable(a.getUser().toBukkit().getPlayer()).ifPresent(pl -> pl.sendMessage(ACTION.color(message)));
+				Optional.ofNullable(a.getTag().getPlayer().getPlayer()).ifPresent(pl -> pl.sendMessage(ACTION.color(message)));
 			}
 		});
 	}

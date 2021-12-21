@@ -23,6 +23,8 @@ public abstract class AbstractGameRule {
 	public static final String WAR_START_TIME = "war_start_time";
 	public static final String MAX_CLANS = "max_clans";
 	public static final String DEFAULT_WAR_MODE = "mode_default";
+	public static final String CLAN_ROSTER_TITLE = "clan_roster_title";
+	public static final String CLAN_ROSTER_TOP_TITLE = "clan_roster_top_title";
 
 	private final FingerPrint print;
 
@@ -40,7 +42,7 @@ public abstract class AbstractGameRule {
 		if (InoperableSpecialMemory.SCANNER_MAP.isEmpty()) {
 			LabyrinthProvider.getInstance().getLocalPrintManager().getPrints(ClansAPI.getInstance().getPlugin()).forEach(AbstractGameRule::of);
 		}
-		return InoperableSpecialMemory.SCANNER_MAP.entrySet().stream().filter(entry -> entry.getKey().getKey().equals(ClansAPI.getInstance().getLocalPrintKey())).map(Map.Entry::getValue).toArray(AbstractGameRule[]::new);
+		return InoperableSpecialMemory.SCANNER_MAP.entries().stream().filter(entry -> entry.getKey().getKey().equals(ClansAPI.getInstance().getLocalPrintKey())).map(Map.Entry::getValue).toArray(AbstractGameRule[]::new);
 	}
 
 	public void set(@MagicConstant(valuesFromClass = AbstractGameRule.class) String key, Object o) {
@@ -150,8 +152,6 @@ public abstract class AbstractGameRule {
 							c.setCancelled(true);
 							c.setHotbarAllowed(false);
 							if (c.getSlot() == 2) {
-								if (!c.getParent().getName().equalsIgnoreCase("peace") || !c.getParent().getName().equalsIgnoreCase("war"))
-									return;
 								ClansAPI.getDataInstance().getResetTable().set(key, c.getParent().getName());
 								print.reload().deploy();
 								Clan.ACTION.sendMessage(c.getElement(), "&6Field &r" + key + " &5overwritten");

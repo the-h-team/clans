@@ -154,11 +154,11 @@ public class DataManager {
 	}
 
 	private ItemStack improvise(String value) {
-		Material mat = Material.getMaterial(value);
+		Material mat = Items.findMaterial(value);
 		if (mat != null) {
 			return new ItemStack(mat);
 		} else {
-			if (value.length() < 16) {
+			if (value.length() < 26) {
 				return CustomHead.Manager.getHeads().stream().filter(h -> StringUtils.use(h.name()).containsIgnoreCase(value)).map(CustomHead::get).findFirst().orElse(null);
 			} else {
 				return CustomHeadLoader.provide(value);

@@ -1,7 +1,7 @@
 #==================================================#
 ##  ██╗  ██╗███████╗██╗     ██████╗
 ##  ██║  ██║██╔════╝██║     ██╔══██╗
-##  ███████║█████╗  ██║     ██████╔╝  v[1.3.3]
+##  ███████║█████╗  ██║     ██████╔╝  v[1.3.5]
 ##  ██╔══██║██╔══╝  ██║     ██╔═══╝
 ##  ██║  ██║███████╗███████╗██║
 ##  ╚═╝  ╚═╝╚══════╝╚══════╝╚═╝
@@ -285,6 +285,7 @@ Response:
   nick: '&7|&e) &fInvalid usage : /clan nickname <newNickname>'
   promote: '&7|&e) &fInvalid usage : /clan promote <playerName>'
   demote: '&7|&e) &fInvalid usage : /clan demote <playerName>'
+  display: '&7|&e) &fInvalid usage : /clan display <clanNickname>'
   permit: '&7|&e) &fInvalid usage : /clan permit <permission> <level>'
   ally: '&7|&e) &fInvalid usage : /clan ally <clanName>'
   enemy: '&7|&e) &fInvalid usage : /clan enemy <clanName>'
@@ -328,21 +329,79 @@ Response:
 pagination-size: THREE
 
 menu-format:
-  clan: [ ] # This section is being removed for performance reasons.
+  home-screen:
+    clan_list_button:
+      title: '&6Clan Roster'
+      lore:
+        - '▬▬▬▬▬▬▬▬▬▬▬▬▬▬'
+        - '&eView clans'
+        - '▬▬▬▬▬▬▬▬▬▬▬▬▬▬'
+      destination: 'clan list'
+    my_info_button:
+      title: '&fMy Info'
+      lore:
+        - '▬▬▬▬▬▬▬▬▬▬▬▬▬'
+        - '&bView info'
+        - '▬▬▬▬▬▬▬▬▬▬▬▬▬'
+      destination: 'clan info {0}' # 0 = Player name
+    clan_commands_button:
+      title: '&eCommands'
+      lore:
+        - '▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬'
+        - '&3View commands'
+        - '▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬'
+      destination: 'clan help'
+    clan_question_button:
+      title: '&9Ask a question'
+      lore:
+        - '▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬'
+        - '&fAsk a question, get an answer.'
+        - '▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬'
+      destination: 'N/A'
+    clan_relations_button:
+      title: '&9Clan relations'
+      lore:
+        - '▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬'
+        - '&dView clan relations.'
+        - '▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬'
+      destination: 'N/A'
+    clan_vault_button:
+      title: '&4Clan vault'
+      lore:
+        - '▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬'
+        - '&cView the clan vault'
+        - '▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬'
+      destination: 'clan vault'
+    clan_chat_button:
+      title: '&3Clan chat'
+      lore:
+        - '▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬'
+        - '&bSwitch clan chat channels'
+        - '▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬'
+      destination: 'clan chat'
 
 menu-items:
   # Setup custom heads from the "heads.data" file.
   navigate_left: Left_Button
   navigate_right: Right_Button
-  back: BARRIER
-  top-list: GOLD_BLOCK
-  roster-list: PAPER
+  home-screen-list: goldblock
+  home-screen-info: glasspane
+  home-screen-relations: bucket
+  home-screen-question: bone
+  home-screen-vault: chest
+  home-screen-chat: paper
+  home-screen-commands: commandblock
+  background-theme: Clan
+  back: barrier
+  top-list: goldblock
+  roster-list: paper
   clan: Clan
-  player: PLAYER_HEAD
+  player: playerhead
 
 menu-titles:
-  top-list: '&3&oClan Leaderboard &0&l»'
-  roster-list: '&3&oComplete Server Roster &0&l»'
+  home-screen: '&6Welcome to clans {0}! &0&l»'
+  top-list: '&3&oTop clans &0&l» &0{0}/{1}'
+  roster-list: '&3&oComplete Roster &0&l» &0{0}/{1}'
   member-list: 'Members &0&l»'
   # {0} = Clan Associate
   member-information: '{0}''s &3&oclan information &0&l»'
@@ -351,10 +410,10 @@ menu-titles:
 menu-categories:
   top-list: '&7[&6Leaderboard&7]'
   roster-list: '&7[&bRoster&7]'
-  # {0} = Clan BukkitColor
+  # {0} = Clan color
   # {1} = Clan Name
   # {2} = Clan ID Short
-  clan: '&6&lTag: {0}{1} {0}(&3#{0}{2})'
+  clan: '&6&lName: {0}{1} {0}(&3#{0}{2})'
 
 gui-navigation:
   back: '&eClick to: &cgo back.'

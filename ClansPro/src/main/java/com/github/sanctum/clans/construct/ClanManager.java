@@ -1,22 +1,25 @@
 package com.github.sanctum.clans.construct;
 
+import com.github.sanctum.clans.ClansJavaPlugin;
 import com.github.sanctum.clans.bridge.ClanVentBus;
 import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClansAPI;
 import com.github.sanctum.clans.construct.extra.ClanRosterElement;
 import com.github.sanctum.clans.construct.impl.DefaultClan;
 import com.github.sanctum.clans.event.clan.ClansLoadingProcedureEvent;
+import com.github.sanctum.labyrinth.data.FileList;
 import com.github.sanctum.labyrinth.data.FileManager;
 import com.github.sanctum.labyrinth.data.LabyrinthUser;
 import com.github.sanctum.labyrinth.formatting.UniformedComponents;
 import com.github.sanctum.labyrinth.library.HUID;
-import com.github.sanctum.labyrinth.task.Schedule;
+import com.github.sanctum.labyrinth.task.TaskScheduler;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import org.bukkit.OfflinePlayer;
+import org.bukkit.plugin.java.JavaPlugin;
 
 public final class ClanManager {
 
@@ -160,11 +163,11 @@ public final class ClanManager {
 				}
 			}
 			final FileManager m = ClansAPI.getDataInstance().getClanFile(c);
-			Schedule.sync(() -> {
+			TaskScheduler.of(() -> {
 				if (!m.getRoot().delete()) {
-					ClansAPI.getInstance().getPlugin().getLogger().warning("- Something is wrong server side a clan failed to delete.");
+					ClansAPI.getInstance().getPlugin().getLogger().warning("- A non existent clan file was attempted to be removed, ignoring...");
 				}
-			}).run();
+			}).scheduleLater("ClansPro-removal;" + c.getId(), 1L);
 			return CLANS.remove(c);
 		} catch (Exception e) {
 			return false;
@@ -183,9 +186,12 @@ public final class ClanManager {
 		}
 		CLANS.clear();
 		Set<Clan> clans = new HashSet<>();
+		final FileList fileList = ClansAPI.getInstance().getFileList();
 		for (String clanID : Clan.ACTION.getAllClanIDs()) {
-			DefaultClan instance = new DefaultClan(clanID);
-			clans.add(instance);
+			if (fileList.get(clanID, "Clans", JavaPlugin.getPlugin(ClansJavaPlugin.class).TYPE).read(c -> c.getNode("name").toPrimitive().isString())) {
+				DefaultClan instance = new DefaultClan(clanID);
+				clans.add(instance);
+			}
 		}
 		ClansLoadingProcedureEvent loading = ClanVentBus.call(new ClansLoadingProcedureEvent(clans));
 		loading.getClans().forEach(this::load);

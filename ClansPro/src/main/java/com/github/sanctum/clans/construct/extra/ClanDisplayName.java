@@ -19,14 +19,14 @@ public class ClanDisplayName {
 	}
 
 	public static void set(Clan.Associate associate, String prefix) {
-		Scoreboard scoreboard = associate.getUser().toBukkit().getPlayer().getScoreboard();
-		Team team = getTeam(associate.getUser().toBukkit().getPlayer());
+		Scoreboard scoreboard = associate.getTag().getPlayer().getPlayer().getScoreboard();
+		Team team = getTeam(associate.getTag().getPlayer().getPlayer());
 		if (team == null) {
 			scoreboard.registerNewTeam(associate.getClan().getId().toString());
 			set(associate, prefix);
 		} else {
 			try {
-				Team t = getTeam(associate.getUser().toBukkit().getPlayer());
+				Team t = getTeam(associate.getTag().getPlayer().getPlayer());
 				t.setPrefix(Clan.ACTION.color(prefix));
 				t.setDisplayName(associate.getClan().getName());
 				t.setOption(Team.Option.NAME_TAG_VISIBILITY, Team.OptionStatus.ALWAYS);
@@ -84,9 +84,9 @@ public class ClanDisplayName {
 
 		if (!associate.isValid()) return;
 
-		Scoreboard scoreboard = associate.getUser().toBukkit().getPlayer().getScoreboard();
+		Scoreboard scoreboard = associate.getTag().getPlayer().getPlayer().getScoreboard();
 		try {
-			Team team = getTeam(associate.getUser().toBukkit().getPlayer());
+			Team team = getTeam(associate.getTag().getPlayer().getPlayer());
 			if (team != null) {
 				if (!team.getEntries().isEmpty()) {
 					if (team.getEntries().contains(associate.getName())) {

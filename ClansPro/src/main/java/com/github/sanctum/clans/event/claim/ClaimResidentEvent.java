@@ -69,12 +69,17 @@ public class ClaimResidentEvent extends ClaimEvent {
 
 	@Override
 	public Clan getClan() {
-		return ((Clan)getClaim().getHolder());
+		return ((Clan) getClaim().getHolder());
 	}
 
 	@Override
 	public @Nullable Clan.Associate getAssociate() {
 		return ClansAPI.getInstance().getAssociate(getResident().getPlayer()).orElse(super.getAssociate());
+	}
+
+	@Override
+	public Player getPlayer() {
+		return this.p;
 	}
 
 	public Collection<Chunk> getChunksAroundPlayer(int xoff, int yoff, int zoff) {

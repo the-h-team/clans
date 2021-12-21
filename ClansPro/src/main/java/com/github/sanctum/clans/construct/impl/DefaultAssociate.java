@@ -9,14 +9,13 @@ import com.github.sanctum.clans.construct.api.PersistentEntity;
 import com.github.sanctum.clans.construct.api.Relation;
 import com.github.sanctum.clans.construct.api.Teleport;
 import com.github.sanctum.clans.construct.extra.PrivateContainer;
-import com.github.sanctum.labyrinth.LabyrinthProvider;
 import com.github.sanctum.labyrinth.annotation.Ordinal;
 import com.github.sanctum.labyrinth.data.Atlas;
 import com.github.sanctum.labyrinth.data.AtlasMap;
-import com.github.sanctum.labyrinth.data.LabyrinthUser;
 import com.github.sanctum.labyrinth.data.MemorySpace;
 import com.github.sanctum.labyrinth.data.Node;
 import com.github.sanctum.labyrinth.data.Primitive;
+import com.github.sanctum.labyrinth.data.service.PlayerSearch;
 import com.github.sanctum.labyrinth.library.HUID;
 import com.github.sanctum.labyrinth.library.Items;
 import com.github.sanctum.labyrinth.library.Mailer;
@@ -48,6 +47,7 @@ import org.jetbrains.annotations.Nullable;
 public final class DefaultAssociate implements Clan.Associate, PersistentEntity {
 
 	private final String name;
+	private final PlayerSearch search;
 	private final UUID id;
 	private final Clan clanObject;
 	private final HUID clan;
@@ -61,10 +61,11 @@ public final class DefaultAssociate implements Clan.Associate, PersistentEntity 
 	public DefaultAssociate(UUID uuid, Clan.Rank priority, Clan clan) {
 		this.clan = clan.getId();
 		this.clanObject = clan;
-		this.name = LabyrinthProvider.getOfflinePlayers().stream().filter(p -> p.getId().equals(uuid)).map(LabyrinthUser::getName).findFirst().orElseGet(() -> {
+		this.name = Optional.ofNullable(Bukkit.getOfflinePlayer(uuid).getName()).orElseGet(() -> {
 			Entity test = Bukkit.getEntity(uuid);
 			return test != null ? test.getName() : null;
 		});
+		this.search = PlayerSearch.of(name);
 		this.id = uuid;
 		this.tag = uuid::toString;
 		this.data = new Object() {
@@ -108,11 +109,7 @@ public final class DefaultAssociate implements Clan.Associate, PersistentEntity 
 	}
 
 	public UUID getId() {
-		return isEntity() ? id : getUser().getId();
-	}
-
-	public LabyrinthUser getUser() {
-		return LabyrinthUser.get(getName());
+		return search.getRecordedId();
 	}
 
 	/**
@@ -147,14 +144,14 @@ public final class DefaultAssociate implements Clan.Associate, PersistentEntity 
 
 	@Override
 	public Mailer getMailer() {
-		return Mailer.empty(getUser().toBukkit().getPlayer()).prefix().start(ClansAPI.getInstance().getPrefix().joined()).finish();
+		return Mailer.empty(getTag().getPlayer().getPlayer()).prefix().start(ClansAPI.getInstance().getPrefix().joined()).finish();
 	}
 
 	/**
 	 * @return Gets the associates possible claim information. If the player is not in a claim this will return empty.
 	 */
 	public Optional<Resident> toResident() {
-		return getUser() != null && getUser().isValid() ? !getUser().toBukkit().isOnline() ? Optional.empty() : Optional.ofNullable(Claim.getResident(getUser().toBukkit().getPlayer())) : Optional.empty();
+		return isValid() ? !getTag().getPlayer().isOnline() ? Optional.empty() : Optional.ofNullable(Claim.getResident(getTag().getPlayer().getPlayer())) : Optional.empty();
 	}
 
 	/**
@@ -164,7 +161,7 @@ public final class DefaultAssociate implements Clan.Associate, PersistentEntity 
 		if (isEntity() && !isPlayer()) {
 			return getClan() != null && getAsEntity() != null && getAsEntity().isValid();
 		}
-		return getClan() != null && getUser() != null && getUser().isValid();
+		return getClan() != null;
 	}
 
 	@Ordinal(1)
@@ -279,7 +276,7 @@ public final class DefaultAssociate implements Clan.Associate, PersistentEntity 
 	 */
 	public synchronized double getKD() {
 		if (isEntity()) return 0.0;
-		OfflinePlayer player = getUser().toBukkit();
+		OfflinePlayer player = getTag().getPlayer();
 		if (!Bukkit.getVersion().contains("1.14") || !Bukkit.getVersion().contains("1.15") || !Bukkit.getVersion().contains("1.16")
 				|| !Bukkit.getVersion().contains("1.17")) {
 			return 0.0;
@@ -309,8 +306,8 @@ public final class DefaultAssociate implements Clan.Associate, PersistentEntity 
 			Node bio = user.getNode("bio");
 			bio.set(newBio);
 			bio.save();
-			if (getUser().toBukkit().isOnline()) {
-				Claim.ACTION.sendMessage(getUser().toBukkit().getPlayer(), MessageFormat.format(ClansAPI.getDataInstance().getMessageResponse("member-bio"), newBio));
+			if (getTag().getPlayer().isOnline()) {
+				Claim.ACTION.sendMessage(getTag().getPlayer().getPlayer(), MessageFormat.format(ClansAPI.getDataInstance().getMessageResponse("member-bio"), newBio));
 			}
 		}
 	}
@@ -328,13 +325,13 @@ public final class DefaultAssociate implements Clan.Associate, PersistentEntity 
 			Node bio = user.getNode("nickname");
 			if (newName.equals("empty")) {
 				bio.set(getName());
-				newName = getUser().getName();
+				newName = getName();
 			} else {
 				bio.set(newName);
 			}
 			bio.save();
 			if (getTag().isPlayer() && getTag().getPlayer().isOnline()) {
-				Clan.ACTION.sendMessage(getUser().toBukkit().getPlayer(), MessageFormat.format(ClansAPI.getDataInstance().getMessageResponse("nickname"), newName));
+				Clan.ACTION.sendMessage(getTag().getPlayer().getPlayer(), MessageFormat.format(ClansAPI.getDataInstance().getMessageResponse("nickname"), newName));
 			}
 		}
 	}
@@ -366,7 +363,7 @@ public final class DefaultAssociate implements Clan.Associate, PersistentEntity 
 
 	@Override
 	public int getClaimLimit() {
-		return getUser().isOnline() ? Claim.ACTION.claimHardcap(getUser().toBukkit().getPlayer()) : getClan().getClaimLimit();
+		return search.getPlayer().isOnline() ? Claim.ACTION.claimHardcap(getTag().getPlayer().getPlayer()) : getClan().getClaimLimit();
 	}
 
 	@Override

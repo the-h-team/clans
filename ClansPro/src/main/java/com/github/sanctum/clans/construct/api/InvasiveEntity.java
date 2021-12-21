@@ -670,7 +670,7 @@ public interface InvasiveEntity extends Nameable, LogoHolder, Comparable<Invasiv
 		return (o1, o2) -> {
 			if (o1.isClan()) {
 				if (o2.isClan()) {
-					return Double.compare(o1.getAsClan().getPower(), o2.getAsClan().getPower());
+					return Double.compare(o2.getAsClan().getPower(), o1.getAsClan().getPower());
 				}
 				return Double.compare(o1.getAsClan().getPower(), o2.getAsAssociate().getClan().getPower());
 			}
@@ -690,12 +690,12 @@ public interface InvasiveEntity extends Nameable, LogoHolder, Comparable<Invasiv
 		return (o1, o2) -> {
 			if (o1.isClan()) {
 				if (o2.isClan()) {
-					return Double.compare(o1.getAsClan().getBalanceDouble(), o2.getAsClan().getBalanceDouble());
+					return Double.compare(o2.getAsClan().getBalanceDouble(), o1.getAsClan().getBalanceDouble());
 				}
 				return Double.compare(o1.getAsClan().getBalanceDouble(), o2.getAsAssociate().getClan().getBalanceDouble());
 			}
 			if (EconomyProvision.getInstance().isValid()) {
-				return Double.compare(EconomyProvision.getInstance().balance(o1.getAsAssociate().getUser().toBukkit()).orElse(0.0), EconomyProvision.getInstance().balance(o2.getAsAssociate().getUser().toBukkit()).orElse(0.0));
+				return Double.compare(EconomyProvision.getInstance().balance(o1.getAsAssociate().getTag().getPlayer()).orElse(0.0), EconomyProvision.getInstance().balance(o2.getAsAssociate().getTag().getPlayer()).orElse(0.0));
 			} else
 			return Double.compare(o1.getAsAssociate().getClan().getBalanceDouble(), o2.getAsAssociate().getClan().getBalanceDouble());
 		};
@@ -823,7 +823,7 @@ public interface InvasiveEntity extends Nameable, LogoHolder, Comparable<Invasiv
 		}
 		if (this instanceof Clan.Associate) {
 			if (o instanceof Clan.Associate) {
-				if (((Clan.Associate)this).getPriority().toLevel() > ((Clan.Associate)o).getPriority().toLevel() || EconomyProvision.getInstance().isValid() && (EconomyProvision.getInstance().balance(((Clan.Associate)this).getUser().toBukkit()).get() > EconomyProvision.getInstance().balance(((Clan.Associate)o).getUser().toBukkit()).get())) {
+				if (((Clan.Associate) this).getPriority().toLevel() > ((Clan.Associate) o).getPriority().toLevel() || EconomyProvision.getInstance().isValid() && (EconomyProvision.getInstance().balance(((Clan.Associate) this).getTag().getPlayer()).get() > EconomyProvision.getInstance().balance(((Clan.Associate) o).getTag().getPlayer()).get())) {
 					return 1;
 				}
 			}

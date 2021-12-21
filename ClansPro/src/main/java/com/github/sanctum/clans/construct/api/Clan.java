@@ -521,11 +521,6 @@ public interface Clan extends ClanBank, ConfigurationSerializable, EntityHolder,
 		UUID getId();
 
 		/**
-		 * @return The users labyrinth object.
-		 */
-		LabyrinthUser getUser();
-
-		/**
 		 * @return The users cached head skin.
 		 */
 		ItemStack getHead();

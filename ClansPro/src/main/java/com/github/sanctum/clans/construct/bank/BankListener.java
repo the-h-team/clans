@@ -2,6 +2,7 @@ package com.github.sanctum.clans.construct.bank;
 
 import com.github.sanctum.clans.construct.api.BanksAPI;
 import com.github.sanctum.clans.construct.api.ClanBank;
+import com.github.sanctum.clans.construct.api.ClansAPI;
 import com.github.sanctum.clans.event.bank.AsyncNewBankEvent;
 import com.github.sanctum.clans.event.bank.BankPreTransactionEvent;
 import com.github.sanctum.clans.event.bank.BankSetBalanceEvent;
@@ -24,12 +25,14 @@ public class BankListener {
 	public void onCreate(AsyncNewBankEvent e) {
 		final ClanBank bank = e.getClanBank();
 		if (!(bank instanceof Bank)) return; // Only react on our ClanBank implementation
-		new BukkitRunnable() {
-			@Override
-			public void run() {
-				BankMeta.get(e.getClan()).storeBank((Bank) bank);
-			}
-		}.runTask(p);
+		if (ClansAPI.getInstance().getPlugin().isEnabled()) {
+			new BukkitRunnable() {
+				@Override
+				public void run() {
+					BankMeta.get(e.getClan()).storeBank((Bank) bank);
+				}
+			}.runTask(p);
+		}
 	}
 
 	@Subscribe(priority = Vent.Priority.HIGHEST)

@@ -57,7 +57,7 @@ public final class DefaultArena implements War {
 			getQueue().forEach(a -> {
 				Team t = roster.get(a.getClan());
 				Schedule.sync(() -> {
-					Player p = a.getUser().toBukkit().getPlayer();
+					Player p = a.getTag().getPlayer().getPlayer();
 					if (p != null) {
 						getQueue().updateReturnLocation(a);
 						ClanDisplayName.set(a, "&7[&a" + t.name() + "&7]");

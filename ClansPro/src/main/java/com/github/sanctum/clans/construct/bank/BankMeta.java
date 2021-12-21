@@ -33,7 +33,7 @@ public class BankMeta implements Serializable {
 
 	public Clan getClan() {
 		if (clan == null) {
-			clan = ClansAPI.getInstance().getClanManager().getClan(HUID.fromString(clanId));
+			clan = ClansAPI.getInstance().getClanManager().getClan(HUID.parseID(clanId).toID());
 		}
 		return clan;
 	}

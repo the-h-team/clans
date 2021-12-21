@@ -18,7 +18,6 @@ import com.github.sanctum.clans.event.associate.AssociateFromAnimalEvent;
 import com.github.sanctum.labyrinth.annotation.Ordinal;
 import com.github.sanctum.labyrinth.data.Atlas;
 import com.github.sanctum.labyrinth.data.AtlasMap;
-import com.github.sanctum.labyrinth.data.LabyrinthUser;
 import com.github.sanctum.labyrinth.data.MemorySpace;
 import com.github.sanctum.labyrinth.data.Node;
 import com.github.sanctum.labyrinth.data.service.Check;
@@ -113,10 +112,6 @@ public final class AnimalAssociate implements PersistentEntity, Clan.Associate, 
 
 	public @NotNull UUID getId() {
 		return UUID.fromString(parent.getTag().getId());
-	}
-
-	public LabyrinthUser getUser() {
-		return null;
 	}
 
 	/**

@@ -227,9 +227,9 @@ public final class LocalFileQuest implements Quest, Message.Factory {
 					@Override
 					public void give(Clan.Associate associate) {
 						if (EconomyProvision.getInstance().isValid()) {
-							EconomyProvision.getInstance().deposit(BigDecimal.valueOf(get()), associate.getUser().toBukkit());
+							EconomyProvision.getInstance().deposit(BigDecimal.valueOf(get()), associate.getTag().getPlayer());
 						}
-						Optional.ofNullable(associate.getUser().toBukkit().getPlayer()).ifPresent(p -> {
+						Optional.ofNullable(associate.getTag().getPlayer().getPlayer()).ifPresent(p -> {
 							int random = new Random().nextInt(246);
 							p.giveExp(random);
 						});
@@ -260,7 +260,7 @@ public final class LocalFileQuest implements Quest, Message.Factory {
 
 						@Override
 						public void give(Clan.Associate associate) {
-							Optional.ofNullable(associate.getUser().toBukkit().getPlayer()).ifPresent(p -> {
+							Optional.ofNullable(associate.getTag().getPlayer().getPlayer()).ifPresent(p -> {
 								p.getWorld().dropItem(p.getLocation(), get());
 								int random = new Random().nextInt(246);
 								p.giveExp(random);
@@ -291,7 +291,7 @@ public final class LocalFileQuest implements Quest, Message.Factory {
 
 						@Override
 						public void give(Clan.Associate associate) {
-							Optional.ofNullable(associate.getUser().toBukkit().getPlayer()).ifPresent(p -> {
+							Optional.ofNullable(associate.getTag().getPlayer().getPlayer()).ifPresent(p -> {
 								for (ItemStack item : get()) {
 									p.getWorld().dropItem(p.getLocation(), item);
 								}

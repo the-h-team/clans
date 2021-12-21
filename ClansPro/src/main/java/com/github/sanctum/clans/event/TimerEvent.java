@@ -3,7 +3,8 @@ package com.github.sanctum.clans.event;
 import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.event.player.PlayerEvent;
 import com.github.sanctum.labyrinth.event.custom.Vent;
-import java.util.UUID;
+import org.bukkit.OfflinePlayer;
+import org.bukkit.entity.Player;
 
 /**
  * A both asynchronous & synchronous concurrent timer abstraction.
@@ -16,8 +17,21 @@ import java.util.UUID;
  */
 public abstract class TimerEvent extends PlayerEvent {
 
-	public TimerEvent(UUID id, boolean isAsync) {
-		super(id, isAsync);
+	private final Player cached;
+
+	public TimerEvent(Player target, boolean isAsync) {
+		super(target.getUniqueId(), isAsync);
+		this.cached = target;
+	}
+
+	@Override
+	public OfflinePlayer getOfflinePlayer() {
+		return cached;
+	}
+
+	@Override
+	public Player getPlayer() {
+		return cached;
 	}
 
 	@Override

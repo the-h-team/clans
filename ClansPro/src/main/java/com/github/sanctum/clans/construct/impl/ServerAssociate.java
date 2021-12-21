@@ -15,7 +15,6 @@ import com.github.sanctum.clans.construct.extra.PrivateContainer;
 import com.github.sanctum.labyrinth.annotation.Ordinal;
 import com.github.sanctum.labyrinth.data.Atlas;
 import com.github.sanctum.labyrinth.data.AtlasMap;
-import com.github.sanctum.labyrinth.data.LabyrinthUser;
 import com.github.sanctum.labyrinth.library.Mailer;
 import com.github.sanctum.labyrinth.library.TimeWatch;
 import com.github.sanctum.labyrinth.task.Schedule;
@@ -98,10 +97,6 @@ public class ServerAssociate implements Clan.Associate, Consultant {
 
 	public @NotNull UUID getId() {
 		return UUID.fromString(getTag().getId());
-	}
-
-	public LabyrinthUser getUser() {
-		return null;
 	}
 
 	/**

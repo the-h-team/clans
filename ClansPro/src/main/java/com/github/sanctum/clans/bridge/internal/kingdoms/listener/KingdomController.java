@@ -61,7 +61,7 @@ public class KingdomController implements Listener {
 	public void onCreation(KingdomCreationEvent e) {
 		if (e.getAssociate().getClan().getPower() < ClansAPI.getDataInstance().getConfig().read(c -> c.getNode("Addon").getNode("Kingdoms").getNode("required-creation-power").toPrimitive().getDouble())) {
 			double req = ClansAPI.getDataInstance().getConfig().read(c -> c.getNode("Addon").getNode("Kingdoms").getNode("required-creation-power").toPrimitive().getDouble()) - e.getAssociate().getClan().getPower();
-			e.getUtil().sendMessage(e.getAssociate().getUser().toBukkit().getPlayer(), "&cWe aren't powerful enough to start a kingdom! We need " + Clan.ACTION.format(req) + " more power.");
+			e.getUtil().sendMessage(e.getAssociate().getTag().getPlayer().getPlayer(), "&cWe aren't powerful enough to start a kingdom! We need " + Clan.ACTION.format(req) + " more power.");
 			e.setCancelled(true);
 		}
 	}
@@ -83,14 +83,14 @@ public class KingdomController implements Listener {
 			if (over != null) {
 				over.progress(1.0);
 				c.getMembers().forEach(ass -> {
-					Player online = ass.getUser().toBukkit().getPlayer();
+					Player online = ass.getTag().getPlayer().getPlayer();
 					if (online != null) {
 						addon.getMailer().accept(online).action(KingdomCommand.getProgressBar(((Number) over.getProgression()).intValue(), ((Number) over.getRequirement()).intValue(), 73)).deploy();
 					}
 				});
 				if (over.isComplete()) {
 					c.getMembers().forEach(ass -> {
-						Player n = ass.getUser().toBukkit().getPlayer();
+						Player n = ass.getTag().getPlayer().getPlayer();
 						if (n != null) {
 							over.deactivate(n);
 						}
@@ -112,7 +112,7 @@ public class KingdomController implements Listener {
 						int count = 0;
 						for (Clan invasiveEntities : test.getMembers()) {
 							for (Clan.Associate ass : invasiveEntities.getMembers()) {
-								if (ass.getTag().isPlayer() && ass.getUser().isOnline()) {
+								if (ass.getTag().isPlayer() && ass.getTag().getPlayer().isOnline()) {
 									count++;
 								}
 							}
@@ -120,7 +120,7 @@ public class KingdomController implements Listener {
 						if (completion < count) {
 							quest.progress(count);
 							associate.getClan().getMembers().forEach(ass -> {
-								Player online = ass.getUser().toBukkit().getPlayer();
+								Player online = ass.getTag().getPlayer().getPlayer();
 								if (online != null) {
 									addon.getMailer().accept(online).action(KingdomCommand.getProgressBar(((Number) quest.getProgression()).intValue(), ((Number) quest.getRequirement()).intValue(), 73)).deploy();
 								}
@@ -128,7 +128,7 @@ public class KingdomController implements Listener {
 						} else {
 							if (quest.isComplete()) {
 								associate.getClan().getMembers().forEach(ass -> {
-									Player n = ass.getUser().toBukkit().getPlayer();
+									Player n = ass.getTag().getPlayer().getPlayer();
 									if (n != null) {
 										quest.deactivate(n);
 									}
@@ -156,14 +156,14 @@ public class KingdomController implements Listener {
 							if (quest.activated(e.getPlayer())) {
 								quest.progress(1.0);
 								associate.getClan().getMembers().forEach(ass -> {
-									Player online = ass.getUser().toBukkit().getPlayer();
+									Player online = ass.getTag().getPlayer().getPlayer();
 									if (online != null) {
 										addon.getMailer().accept(online).action(KingdomCommand.getProgressBar(((Number) quest.getProgression()).intValue(), ((Number) quest.getRequirement()).intValue(), 73)).deploy();
 									}
 								});
 								if (quest.isComplete()) {
 									associate.getClan().getMembers().forEach(ass -> {
-										Player n = ass.getUser().toBukkit().getPlayer();
+										Player n = ass.getTag().getPlayer().getPlayer();
 										if (n != null) {
 											quest.deactivate(n);
 										}
@@ -194,14 +194,14 @@ public class KingdomController implements Listener {
 						if (upside.activated((Player) e.getEntity())) {
 							upside.progress(1.0);
 							a.getClan().getMembers().forEach(ass -> {
-								Player online = ass.getUser().toBukkit().getPlayer();
+								Player online = ass.getTag().getPlayer().getPlayer();
 								if (online != null) {
 									addon.getMailer().accept(online).action(KingdomCommand.getProgressBar(((Number) upside.getProgression()).intValue(), ((Number) upside.getRequirement()).intValue(), 73)).deploy();
 								}
 							});
 							if (upside.isComplete()) {
 								a.getClan().getMembers().forEach(ass -> {
-									Player n = ass.getUser().toBukkit().getPlayer();
+									Player n = ass.getTag().getPlayer().getPlayer();
 									if (n != null) {
 										upside.deactivate(n);
 									}
@@ -226,14 +226,14 @@ public class KingdomController implements Listener {
 					if (upside.activated(e.getPlayer())) {
 						upside.progress(1.0);
 						a.getClan().getMembers().forEach(ass -> {
-							Player online = ass.getUser().toBukkit().getPlayer();
+							Player online = ass.getTag().getPlayer().getPlayer();
 							if (online != null) {
 								addon.getMailer().accept(online).action(KingdomCommand.getProgressBar(((Number) upside.getProgression()).intValue(), ((Number) upside.getRequirement()).intValue(), 73)).deploy();
 							}
 						});
 						if (upside.isComplete()) {
 							a.getClan().getMembers().forEach(ass -> {
-								Player n = ass.getUser().toBukkit().getPlayer();
+								Player n = ass.getTag().getPlayer().getPlayer();
 								if (n != null) {
 									upside.deactivate(n);
 								}
@@ -260,14 +260,14 @@ public class KingdomController implements Listener {
 								if (kill.activated(e.getPlayer())) {
 									kill.progress(1.0);
 									a.getClan().getMembers().forEach(ass -> {
-										Player online = ass.getUser().toBukkit().getPlayer();
+										Player online = ass.getTag().getPlayer().getPlayer();
 										if (online != null) {
 											addon.getMailer().accept(online).action(KingdomCommand.getProgressBar(((Number) kill.getProgression()).intValue(), ((Number) kill.getRequirement()).intValue(), 73)).deploy();
 										}
 									});
 									if (kill.isComplete()) {
 										a.getClan().getMembers().forEach(ass -> {
-											Player n = ass.getUser().toBukkit().getPlayer();
+											Player n = ass.getTag().getPlayer().getPlayer();
 											if (n != null) {
 												kill.deactivate(n);
 											}
@@ -296,14 +296,14 @@ public class KingdomController implements Listener {
 							if (sheep.activated(p)) {
 								sheep.progress(1.0);
 								a.getClan().getMembers().forEach(ass -> {
-									Player online = ass.getUser().toBukkit().getPlayer();
+									Player online = ass.getTag().getPlayer().getPlayer();
 									if (online != null) {
 										addon.getMailer().accept(online).action(KingdomCommand.getProgressBar(((Number) sheep.getProgression()).intValue(), ((Number) sheep.getRequirement()).intValue(), 73)).deploy();
 									}
 								});
 								if (sheep.isComplete()) {
 									a.getClan().getMembers().forEach(ass -> {
-										Player n = ass.getUser().toBukkit().getPlayer();
+										Player n = ass.getTag().getPlayer().getPlayer();
 										if (n != null) {
 											sheep.deactivate(n);
 										}
@@ -350,7 +350,7 @@ public class KingdomController implements Listener {
 							if (container.get(Boolean.class, "quests.farmer." + e.getBlock().getType().name()) == null) {
 								farmer.progress(1.0);
 								a.getClan().getMembers().forEach(ass -> {
-									Player online = ass.getUser().toBukkit().getPlayer();
+									Player online = ass.getTag().getPlayer().getPlayer();
 									if (online != null) {
 										addon.getMailer().accept(online).action(KingdomCommand.getProgressBar(((Number) farmer.getProgression()).intValue(), ((Number) farmer.getRequirement()).intValue(), 73)).deploy();
 									}
@@ -358,7 +358,7 @@ public class KingdomController implements Listener {
 								if (farmer.isComplete()) {
 									a.getClan().getMembers().forEach(ass -> {
 										OrdinalProcedure.select(a, 1, 420).select(32).cast(() -> PrivateContainer.class).set("quests.farmer", null);
-										Player n = ass.getUser().toBukkit().getPlayer();
+										Player n = ass.getTag().getPlayer().getPlayer();
 										if (n != null) {
 											farmer.deactivate(n);
 										}
@@ -379,14 +379,14 @@ public class KingdomController implements Listener {
 						if (miner.activated(e.getPlayer())) {
 							miner.progress(1.0);
 							a.getClan().getMembers().forEach(ass -> {
-								Player online = ass.getUser().toBukkit().getPlayer();
+								Player online = ass.getTag().getPlayer().getPlayer();
 								if (online != null) {
 									addon.getMailer().accept(online).action(KingdomCommand.getProgressBar(((Number) miner.getProgression()).intValue(), ((Number) miner.getRequirement()).intValue(), 73)).deploy();
 								}
 							});
 							if (miner.isComplete()) {
 								a.getClan().getMembers().forEach(ass -> {
-									Player n = ass.getUser().toBukkit().getPlayer();
+									Player n = ass.getTag().getPlayer().getPlayer();
 									if (n != null) {
 										miner.deactivate(n);
 									}
@@ -405,14 +405,14 @@ public class KingdomController implements Listener {
 						if (miner.activated(e.getPlayer())) {
 							miner.progress(1.0);
 							a.getClan().getMembers().forEach(ass -> {
-								Player online = ass.getUser().toBukkit().getPlayer();
+								Player online = ass.getTag().getPlayer().getPlayer();
 								if (online != null) {
 									addon.getMailer().accept(online).action(KingdomCommand.getProgressBar(((Number) miner.getProgression()).intValue(), ((Number) miner.getRequirement()).intValue(), 73)).deploy();
 								}
 							});
 							if (miner.isComplete()) {
 								a.getClan().getMembers().forEach(ass -> {
-									Player n = ass.getUser().toBukkit().getPlayer();
+									Player n = ass.getTag().getPlayer().getPlayer();
 									if (n != null) {
 										miner.deactivate(n);
 									}
@@ -437,14 +437,14 @@ public class KingdomController implements Listener {
 						if (bread.activated((Player) e.getWhoClicked())) {
 							bread.progress(e.getCurrentItem().getAmount());
 							a.getClan().getMembers().forEach(ass -> {
-								Player online = ass.getUser().toBukkit().getPlayer();
+								Player online = ass.getTag().getPlayer().getPlayer();
 								if (online != null) {
 									addon.getMailer().accept(online).action(KingdomCommand.getProgressBar(((Number) bread.getProgression()).intValue(), ((Number) bread.getRequirement()).intValue(), 73)).deploy();
 								}
 							});
 							if (bread.isComplete()) {
 								a.getClan().getMembers().forEach(ass -> {
-									Player n = ass.getUser().toBukkit().getPlayer();
+									Player n = ass.getTag().getPlayer().getPlayer();
 									if (n != null) {
 										bread.deactivate(n);
 									}
@@ -474,14 +474,14 @@ public class KingdomController implements Listener {
 								if (!pig.isBaby()) return;
 								kill.progress(1.0);
 								a.getClan().getMembers().forEach(ass -> {
-									Player online = ass.getUser().toBukkit().getPlayer();
+									Player online = ass.getTag().getPlayer().getPlayer();
 									if (online != null) {
 										addon.getMailer().accept(online).action(KingdomCommand.getProgressBar(((Number) kill.getProgression()).intValue(), ((Number) kill.getRequirement()).intValue(), 73)).deploy();
 									}
 								});
 								if (kill.isComplete()) {
 									a.getClan().getMembers().forEach(ass -> {
-										Player n = ass.getUser().toBukkit().getPlayer();
+										Player n = ass.getTag().getPlayer().getPlayer();
 										if (n != null) {
 											kill.deactivate(n);
 										}
@@ -507,14 +507,14 @@ public class KingdomController implements Listener {
 							if (kill.activated(killer)) {
 								kill.progress(1.0);
 								a.getClan().getMembers().forEach(ass -> {
-									Player online = ass.getUser().toBukkit().getPlayer();
+									Player online = ass.getTag().getPlayer().getPlayer();
 									if (online != null) {
 										addon.getMailer().accept(online).action(KingdomCommand.getProgressBar(((Number) kill.getProgression()).intValue(), ((Number) kill.getRequirement()).intValue(), 73)).deploy();
 									}
 								});
 								if (kill.isComplete()) {
 									a.getClan().getMembers().forEach(ass -> {
-										Player n = ass.getUser().toBukkit().getPlayer();
+										Player n = ass.getTag().getPlayer().getPlayer();
 										if (n != null) {
 											kill.deactivate(n);
 										}
@@ -540,14 +540,14 @@ public class KingdomController implements Listener {
 							if (kill.activated(killer)) {
 								kill.progress(1.0);
 								a.getClan().getMembers().forEach(ass -> {
-									Player online = ass.getUser().toBukkit().getPlayer();
+									Player online = ass.getTag().getPlayer().getPlayer();
 									if (online != null) {
 										addon.getMailer().accept(online).action(KingdomCommand.getProgressBar(((Number) kill.getProgression()).intValue(), ((Number) kill.getRequirement()).intValue(), 73)).deploy();
 									}
 								});
 								if (kill.isComplete()) {
 									a.getClan().getMembers().forEach(ass -> {
-										Player n = ass.getUser().toBukkit().getPlayer();
+										Player n = ass.getTag().getPlayer().getPlayer();
 										if (n != null) {
 											kill.deactivate(n);
 										}
@@ -574,14 +574,14 @@ public class KingdomController implements Listener {
 							if (kill.activated((Player) killer.getShooter())) {
 								kill.progress(1.0);
 								a.getClan().getMembers().forEach(ass -> {
-									Player online = ass.getUser().toBukkit().getPlayer();
+									Player online = ass.getTag().getPlayer().getPlayer();
 									if (online != null) {
 										addon.getMailer().accept(online).action(KingdomCommand.getProgressBar(((Number) kill.getProgression()).intValue(), ((Number) kill.getRequirement()).intValue(), 73)).deploy();
 									}
 								});
 								if (kill.isComplete()) {
 									a.getClan().getMembers().forEach(ass -> {
-										Player n = ass.getUser().toBukkit().getPlayer();
+										Player n = ass.getTag().getPlayer().getPlayer();
 										if (n != null) {
 											kill.deactivate(n);
 										}
@@ -608,14 +608,14 @@ public class KingdomController implements Listener {
 							if (light.activated(e.getPlayer())) {
 								light.progress(1.0);
 								a.getClan().getMembers().forEach(ass -> {
-									Player online = ass.getUser().toBukkit().getPlayer();
+									Player online = ass.getTag().getPlayer().getPlayer();
 									if (online != null) {
 										addon.getMailer().accept(online).action(KingdomCommand.getProgressBar(((Number) light.getProgression()).intValue(), ((Number) light.getRequirement()).intValue(), 73)).deploy();
 									}
 								});
 								if (light.isComplete()) {
 									a.getClan().getMembers().forEach(ass -> {
-										Player n = ass.getUser().toBukkit().getPlayer();
+										Player n = ass.getTag().getPlayer().getPlayer();
 										if (n != null) {
 											light.deactivate(n);
 										}
@@ -634,7 +634,7 @@ public class KingdomController implements Listener {
 		Reward<?> reward = e.getQuest().getReward();
 		if (reward != null) {
 			e.getTable().forEach(a -> {
-				Player online = a.getUser().toBukkit().getPlayer();
+				Player online = a.getTag().getPlayer().getPlayer();
 				if (online != null) {
 					reward.give(a);
 					new FancyMessage(ClansAPI.getInstance().getPrefix().joined() + " &bQuest &e" + e.getQuest().getTitle() + " &bcomplete.").send(online).deploy();
@@ -660,14 +660,14 @@ public class KingdomController implements Listener {
 								if (q.activated((Player) e.getWhoClicked())) {
 									q.progress(1.0);
 									c.getMembers().forEach(ass -> {
-										Player online = ass.getUser().toBukkit().getPlayer();
+										Player online = ass.getTag().getPlayer().getPlayer();
 										if (online != null) {
 											addon.getMailer().accept(online).action(KingdomCommand.getProgressBar(((Number) q.getProgression()).intValue(), ((Number) q.getRequirement()).intValue(), 73)).deploy();
 										}
 									});
 									if (q.isComplete()) {
 										c.getMembers().forEach(ass -> {
-											Player n = ass.getUser().toBukkit().getPlayer();
+											Player n = ass.getTag().getPlayer().getPlayer();
 											if (n != null) {
 												q.deactivate(n);
 											}
@@ -698,14 +698,14 @@ public class KingdomController implements Listener {
 							if (q.activated(e.getPlayer())) {
 								q.progress(1.0);
 								c.getMembers().forEach(ass -> {
-									Player online = ass.getUser().toBukkit().getPlayer();
+									Player online = ass.getTag().getPlayer().getPlayer();
 									if (online != null) {
 										addon.getMailer().accept(online).action(KingdomCommand.getProgressBar(((Number) q.getProgression()).intValue(), ((Number) q.getRequirement()).intValue(), 73)).deploy();
 									}
 								});
 								if (q.isComplete()) {
 									c.getMembers().forEach(ass -> {
-										Player n = ass.getUser().toBukkit().getPlayer();
+										Player n = ass.getTag().getPlayer().getPlayer();
 										if (n != null) {
 											q.deactivate(n);
 										}
@@ -729,14 +729,14 @@ public class KingdomController implements Listener {
 							if (q.activated(e.getPlayer())) {
 								q.progress(1.0);
 								c.getMembers().forEach(ass -> {
-									Player online = ass.getUser().toBukkit().getPlayer();
+									Player online = ass.getTag().getPlayer().getPlayer();
 									if (online != null) {
 										addon.getMailer().accept(online).action(KingdomCommand.getProgressBar(((Number) q.getProgression()).intValue(), ((Number) q.getRequirement()).intValue(), 73)).deploy();
 									}
 								});
 								if (q.isComplete()) {
 									c.getMembers().forEach(ass -> {
-										Player n = ass.getUser().toBukkit().getPlayer();
+										Player n = ass.getTag().getPlayer().getPlayer();
 										if (n != null) {
 											q.deactivate(n);
 										}
@@ -760,14 +760,14 @@ public class KingdomController implements Listener {
 							if (q.activated(e.getPlayer())) {
 								q.progress(1.0);
 								c.getMembers().forEach(ass -> {
-									Player online = ass.getUser().toBukkit().getPlayer();
+									Player online = ass.getTag().getPlayer().getPlayer();
 									if (online != null) {
 										addon.getMailer().accept(online).action(KingdomCommand.getProgressBar(((Number) q.getProgression()).intValue(), ((Number) q.getRequirement()).intValue(), 73)).deploy();
 									}
 								});
 								if (q.isComplete()) {
 									c.getMembers().forEach(ass -> {
-										Player n = ass.getUser().toBukkit().getPlayer();
+										Player n = ass.getTag().getPlayer().getPlayer();
 										if (n != null) {
 											q.deactivate(n);
 										}
@@ -791,14 +791,14 @@ public class KingdomController implements Listener {
 							if (q.activated(e.getPlayer())) {
 								q.progress(1.0);
 								c.getMembers().forEach(ass -> {
-									Player online = ass.getUser().toBukkit().getPlayer();
+									Player online = ass.getTag().getPlayer().getPlayer();
 									if (online != null) {
 										addon.getMailer().accept(online).action(KingdomCommand.getProgressBar(((Number) q.getProgression()).intValue(), ((Number) q.getRequirement()).intValue(), 73)).deploy();
 									}
 								});
 								if (q.isComplete()) {
 									c.getMembers().forEach(ass -> {
-										Player n = ass.getUser().toBukkit().getPlayer();
+										Player n = ass.getTag().getPlayer().getPlayer();
 										if (n != null) {
 											q.deactivate(n);
 										}
@@ -876,7 +876,7 @@ public class KingdomController implements Listener {
 								achievement.progress(1);
 
 								c.getMembers().forEach(a -> {
-									Player online = a.getUser().toBukkit().getPlayer();
+									Player online = a.getTag().getPlayer().getPlayer();
 									if (online != null) {
 										addon.getMailer().accept(online).action(KingdomCommand.getProgressBar(((Number) achievement.getProgression()).intValue(), ((Number) achievement.getRequirement()).intValue(), 73)).deploy();
 									}
@@ -886,7 +886,7 @@ public class KingdomController implements Listener {
 							} else {
 
 								c.getMembers().forEach(ass -> {
-									Player n = ass.getUser().toBukkit().getPlayer();
+									Player n = ass.getTag().getPlayer().getPlayer();
 									if (n != null) {
 										achievement.deactivate(n);
 									}
@@ -932,7 +932,7 @@ public class KingdomController implements Listener {
 									achievement.unprogress(1);
 
 									c.getMembers().forEach(a -> {
-										Player online = a.getUser().toBukkit().getPlayer();
+										Player online = a.getTag().getPlayer().getPlayer();
 										if (online != null) {
 											addon.getMailer().accept(online).action(KingdomCommand.getProgressBar(((Number) achievement.getProgression()).intValue(), ((Number) achievement.getRequirement()).intValue(), 73)).deploy();
 										}
@@ -952,7 +952,7 @@ public class KingdomController implements Listener {
 									achievement.unprogress(1);
 
 									c.getMembers().forEach(a -> {
-										Player online = a.getUser().toBukkit().getPlayer();
+										Player online = a.getTag().getPlayer().getPlayer();
 										if (online != null) {
 											addon.getMailer().accept(online).action(KingdomCommand.getProgressBar(((Number) achievement.getProgression()).intValue(), ((Number) achievement.getRequirement()).intValue(), 73)).deploy();
 										}

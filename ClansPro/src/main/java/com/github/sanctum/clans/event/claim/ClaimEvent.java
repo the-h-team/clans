@@ -8,7 +8,6 @@ import com.github.sanctum.clans.construct.api.Relation;
 import com.github.sanctum.clans.construct.api.Teleport;
 import com.github.sanctum.clans.construct.impl.Resident;
 import com.github.sanctum.clans.event.associate.AssociateEvent;
-import com.github.sanctum.labyrinth.data.LabyrinthUser;
 import com.github.sanctum.labyrinth.library.Mailer;
 import java.util.Collection;
 import java.util.Date;
@@ -74,12 +73,6 @@ public abstract class ClaimEvent extends AssociateEvent {
 		public UUID getId() {
 			return UUID.randomUUID();
 		}
-
-		@Override
-		public LabyrinthUser getUser() {
-			return null;
-		}
-
 		@Override
 		public ItemStack getHead() {
 			return null;

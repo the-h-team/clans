@@ -394,7 +394,7 @@ public class ClanEventListener implements Listener {
 				Mailer m = LabyrinthProvider.getService(Service.MESSENGER).getEmptyMailer();
 				String t = calc(test.getMinutesLeft()) + ":" + calc(test.getSecondsLeft());
 				Schedule.sync(() -> w.forEach(a -> {
-					Player p = a.getUser().toBukkit().getPlayer();
+					Player p = a.getTag().getPlayer().getPlayer();
 					if (p != null) {
 						m.accept(p).action("&2War start&f: &e" + t).deploy();
 					}
@@ -429,6 +429,7 @@ public class ClanEventListener implements Listener {
 
 	@Subscribe
 	public void onWilderness(WildernessInhabitantEvent e) {
+		if (e.getPlayer() == null) return;
 		if (e.getPlayer().hasPotionEffect(PotionEffectType.SLOW_DIGGING)) {
 			e.getPlayer().removePotionEffect(PotionEffectType.SLOW_DIGGING);
 		}
@@ -439,7 +440,7 @@ public class ClanEventListener implements Listener {
 		Cooldown timer = e.getWar().getTimer();
 		Mailer msg = LabyrinthProvider.getService(Service.MESSENGER).getEmptyMailer();
 		e.getWar().forEach(a -> {
-			Player p = a.getUser().toBukkit().getPlayer();
+			Player p = a.getTag().getPlayer().getPlayer();
 			if (p != null) {
 				War.Team t = e.getWar().getTeam(a.getClan());
 				int points = e.getWar().getPoints(t);
@@ -503,16 +504,6 @@ public class ClanEventListener implements Listener {
 				event.setCancelled(true);
 				return;
 			}
-			if (p != null && ClansAPI.getDataInstance().isTrue("Clans.creation.cooldown.enabled")) {
-				if (creationCooldown(p.getUniqueId()).isComplete()) {
-					creationCooldown(p.getUniqueId()).setCooldown();
-				} else {
-					event.setCancelled(true);
-					event.getUtil().sendMessage(p, "&c&oYou can't do this right now.");
-					event.getUtil().sendMessage(p, creationCooldown(p.getUniqueId()).fullTimeLeft());
-					return;
-				}
-			}
 			if (ClansAPI.getDataInstance().isTrue("Clans.creation.charge")) {
 				double amount = ClansAPI.getDataInstance().getConfig().getRoot().getDouble("Clans.creation.amount");
 
@@ -520,6 +511,16 @@ public class ClanEventListener implements Listener {
 				if (!success) {
 					event.setCancelled(true);
 					event.getUtil().sendMessage(p, "&c&oYou don't have enough money. Amount needed: &6" + amount);
+				}
+				return;
+			}
+			if (p != null && ClansAPI.getDataInstance().isTrue("Clans.creation.cooldown.enabled")) {
+				if (creationCooldown(p.getUniqueId()).isComplete()) {
+					creationCooldown(p.getUniqueId()).setCooldown();
+				} else {
+					event.setCancelled(true);
+					event.getUtil().sendMessage(p, "&c&oYou can't do this right now.");
+					event.getUtil().sendMessage(p, creationCooldown(p.getUniqueId()).fullTimeLeft());
 				}
 			}
 		}

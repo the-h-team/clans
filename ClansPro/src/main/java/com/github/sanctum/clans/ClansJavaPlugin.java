@@ -19,6 +19,7 @@ import com.github.sanctum.clans.construct.api.GUI;
 import com.github.sanctum.clans.construct.api.InvasiveEntity;
 import com.github.sanctum.clans.construct.api.LogoGallery;
 import com.github.sanctum.clans.construct.api.LogoHolder;
+import com.github.sanctum.clans.construct.api.QnA;
 import com.github.sanctum.clans.construct.bank.BankMeta;
 import com.github.sanctum.clans.construct.bank.backend.ClanFileBankBackend;
 import com.github.sanctum.clans.construct.extra.AsynchronousLoanableTask;
@@ -39,6 +40,7 @@ import com.github.sanctum.labyrinth.data.FileType;
 import com.github.sanctum.labyrinth.data.Node;
 import com.github.sanctum.labyrinth.data.container.KeyedServiceManager;
 import com.github.sanctum.labyrinth.data.container.PersistentContainer;
+import com.github.sanctum.labyrinth.formatting.FancyMessage;
 import com.github.sanctum.labyrinth.formatting.FancyMessageChain;
 import com.github.sanctum.labyrinth.formatting.Message;
 import com.github.sanctum.labyrinth.gui.unity.construct.Menu;
@@ -56,9 +58,11 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Random;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
@@ -144,6 +148,8 @@ public class ClansJavaPlugin extends JavaPlugin implements ClansAPI {
 			map.put(AbstractGameRule.BLOCKED_WAR_COMMANDS, manager.getConfig().getRoot().getStringList("Clans.war.blocked-commands"));
 			map.put(AbstractGameRule.MAX_CLANS, manager.getConfigInt("Clans.max-clans"));
 			map.put(AbstractGameRule.DEFAULT_WAR_MODE, manager.getConfigString("Clans.mode-change.default"));
+			map.put(AbstractGameRule.CLAN_ROSTER_TOP_TITLE, manager.getMenuTitle("top-list"));
+			map.put(AbstractGameRule.CLAN_ROSTER_TITLE, manager.getMenuTitle("roster-list"));
 			map.putAll(manager.getResetTable().values());
 			manager.getResetTable().clear();
 			return map;
@@ -189,6 +195,42 @@ public class ClansJavaPlugin extends JavaPlugin implements ClansAPI {
 			return test;
 		});
 
+		QnA.register((player, question) -> {
+			StringUtils utils = StringUtils.use(question);
+			if (utils.containsIgnoreCase("make a clan", "create a clan", "start a clan", "start clan", "make clan", "create clan")) {
+				player.closeInventory();
+				String message = "To make a clan you require the permission clanspro." + DataManager.Security.getPermission("create") + ", if you have permission this message will be white.";
+				if (!player.hasPermission("clanspro." + DataManager.Security.getPermission("create"))) {
+					Clan.ACTION.sendMessage(player, "&c" + message);
+				} else {
+					Clan.ACTION.sendMessage(player, message);
+					String[] examples = new String[]{"Panthers", "Eggnog", "Dumplin", "Potato"};
+					new FancyMessage("Click here to see an example").color(ChatColor.AQUA).style(ChatColor.ITALIC).suggest("/clan create " + examples[new Random().nextInt(examples.length)] + " (password here if you want)").send(player).queue();
+				}
+				return false;
+			}
+			if (utils.containsIgnoreCase("whats the raidshield", "what is raidshield", "what is raid shield", "raid shield", "raidshield")) {
+				player.closeInventory();
+				String message = "The default settings will start the raidshield at dawn and the raidshield will go down at dusk. Once the raidshield goes down this enables players in other clans with more clan power than yours to then overpower the land unclaiming and taking it as their own if they choose. Either way it enables raiding.";
+				Clan.ACTION.sendMessage(player, message);
+				Clan.ACTION.sendMessage(player, "When the raidshield is down and you indefinitely have more power than a targeted enemy clan, use &c/c unclaim &fto over power their land.");
+				return false;
+			}
+			if (utils.containsIgnoreCase("how do i raid", "how to raid", "raiding", "raid")) {
+				if (Claim.ACTION.isEnabled()) {
+					Clan.ACTION.sendMessage(player, "&cClan land claiming is disabled on this server! Therefore raiding becomes inherently impossible.");
+				} else {
+					Clan.ACTION.sendMessage(player, "&eRaiding can be achieved by simply overpowering a target clan's land, un-claiming an individual chunk allows you to access the containers within as well as build/break.");
+				}
+				return false;
+			}
+			if (utils.containsIgnoreCase("gain power", "how do i get more power", "more power", "get power")) {
+				Clan.ACTION.sendMessage(player, "&6You can gain power by increasing the overall size of your clan (more members), having more money in the clan bank, owning more clan claims & killing enemy clan associates as well any third party ways to achieve power gains.");
+				return false;
+			}
+			return true;
+		});
+
 		TaskScheduler.of(() -> {
 			for (Clan owner : getClanManager().getClans()) {
 				TaskScheduler.of(() -> {
@@ -213,12 +255,13 @@ public class ClansJavaPlugin extends JavaPlugin implements ClansAPI {
 		}).scheduleLater(120);
 
 		CustomHead.Manager.newLoader(man.getRoot()).look("My_heads").complete();
+		LogoGallery gallery = getLogoGallery();
 		ReservedLogoCarrier reserved2 = ReservedLogoCarrier.SUMMER;
-		getLogoGallery().load(reserved2.getId(), reserved2.get());
+		gallery.load(reserved2.getId(), reserved2.get());
 		ReservedLogoCarrier reserved3 = ReservedLogoCarrier.HALLOWEEN;
-		getLogoGallery().load(reserved3.getId(), reserved3.get());
+		gallery.load(reserved3.getId(), reserved3.get());
 		ReservedLogoCarrier reserved4 = ReservedLogoCarrier.BIG_LANDSCAPE;
-		getLogoGallery().load(reserved4.getId(), reserved4.get());
+		gallery.load(reserved4.getId(), reserved4.get());
 	}
 
 	private boolean isValid() {
@@ -428,7 +471,7 @@ public class ClansJavaPlugin extends JavaPlugin implements ClansAPI {
 	@Override
 	public boolean kickUser(UUID uuid) {
 		boolean success = false;
-		if (isInClan(uuid) && !getClanManager().getClan(uuid).getOwner().getUser().getId().equals(uuid)) {
+		if (isInClan(uuid) && !getClanManager().getClan(uuid).getOwner().getId().equals(uuid)) {
 			success = true;
 			Clan.ACTION.removePlayer(uuid);
 		}

@@ -99,9 +99,9 @@ public final class AnimalConsultantListener implements IncomingConsultationListe
 			ch.replace("%MESSAGE%", r);
 		}
 		for (Clan.Associate a : tag.getClan().getMembers()) {
-			if (a.getTag().isPlayer() && a.getUser().isOnline()) {
+			if (a.getTag().isPlayer() && a.getTag().getPlayer().isOnline()) {
 				if (a.getChannel().getId().equals(chan.getKey().getId())) {
-					Mailer.empty(a.getUser().toBukkit().getPlayer()).chat(ar.build()).queue(TimeUnit.SECONDS.toMillis(Math.max(1, new Random().nextInt(2))));
+					Mailer.empty(a.getTag().getPlayer().getPlayer()).chat(ar.build()).queue(TimeUnit.SECONDS.toMillis(Math.max(1, new Random().nextInt(2))));
 				}
 			}
 		}
