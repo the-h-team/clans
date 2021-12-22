@@ -267,79 +267,39 @@ public final class ClaimManager {
 		Map<InvasiveEntity.Tag, List<Claim>> map = new HashMap<>();
 		for (String clan : d.getKeys(false)) {
 			Node cl = d.getNode(clan);
-			if (cl.isNode("Claims")) {
-				Node claims = cl.getNode("Claims");
-				for (String claimID : claims.getKeys(false)) {
-					Node claim = claims.getNode(claimID);
-					int x = claim.getNode("X").toPrimitive().getInt();
-					int z = claim.getNode("Z").toPrimitive().getInt();
-					String w = claim.getNode("World").toPrimitive().getString();
-					Claim c = new DefaultClaim(x, z, clan, claimID, w, true);
-					if (claim.isNode("flags")) {
-						for (String id : claim.getNode("flags").getKeys(false)) {
-							boolean allowed = claim.getNode("flags").getNode(id).toPrimitive().getBoolean();
-							Claim.Flag loading = new Claim.Flag(id, true) {
+			InvasiveEntity.Tag c = () -> clan;
+			for (String claimID : cl.getKeys(false)) {
+				Node claim = cl.getNode(claimID);
+				int x = claim.getNode("x").toPrimitive().getInt();
+				int z = claim.getNode("z").toPrimitive().getInt();
+				String world = claim.getNode("world").toPrimitive().getString();
+				boolean active = claim.getNode("active").toPrimitive().getBoolean();
+				Claim cla = new DefaultClaim(x, z, clan, claimID, world, active);
+				if (claim.isNode("flags")) {
+					for (String id : claim.getNode("flags").getKeys(false)) {
+						boolean allowed = claim.getNode("flags").getNode(id).toPrimitive().getBoolean();
+						Claim.Flag loading = new Claim.Flag(id, false) {
 
-								private static final long serialVersionUID = -5092886817202966276L;
+							private static final long serialVersionUID = -5092886817202966276L;
 
-								{
-									setEnabled(allowed);
-								}
+							{
+								setEnabled(allowed);
+							}
 
-								@Override
-								public @NotNull String getId() {
-									return id;
-								}
-							};
-							c.register(loading);
-						}
+							@Override
+							public @NotNull String getId() {
+								return id;
+							}
+						};
+						cla.register(loading);
 					}
-					if (map.get(c.getOwner().getTag()) != null) {
-						map.get(c.getOwner().getTag()).add(c);
-					} else {
-						List<Claim> list = new ArrayList<>();
-						list.add(c);
-						map.put(c.getOwner().getTag(), list);
-					}
-					claim.set(null);
 				}
-				claims.set(null);
-				claims.save();
-			} else {
-				InvasiveEntity.Tag c = () -> clan;
-				for (String claimID : cl.getKeys(false)) {
-					Node claim = cl.getNode(claimID);
-					int x = claim.getNode("x").toPrimitive().getInt();
-					int z = claim.getNode("z").toPrimitive().getInt();
-					String world = claim.getNode("world").toPrimitive().getString();
-					boolean active = claim.getNode("active").toPrimitive().getBoolean();
-					Claim cla = new DefaultClaim(x, z, clan, claimID, world, active);
-					if (claim.isNode("flags")) {
-						for (String id : claim.getNode("flags").getKeys(false)) {
-							boolean allowed = claim.getNode("flags").getNode(id).toPrimitive().getBoolean();
-							Claim.Flag loading = new Claim.Flag(id, true) {
-
-								private static final long serialVersionUID = -5092886817202966276L;
-
-								{
-									setEnabled(allowed);
-								}
-
-								@Override
-								public @NotNull String getId() {
-									return id;
-								}
-							};
-							cla.register(loading);
-						}
-					}
-					if (map.get(c) != null) {
-						map.get(c).add(cla);
-					} else {
-						List<Claim> list = new ArrayList<>();
-						list.add(cla);
-						map.put(c, list);
-					}
+				if (map.get(c) != null) {
+					map.get(c).add(cla);
+				} else {
+					List<Claim> list = new ArrayList<>();
+					list.add(cla);
+					map.put(c, list);
 				}
 			}
 		}

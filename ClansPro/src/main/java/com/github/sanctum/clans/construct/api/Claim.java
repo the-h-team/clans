@@ -5,6 +5,7 @@ import com.github.sanctum.clans.construct.impl.DefaultClaim;
 import com.github.sanctum.clans.construct.impl.Resident;
 import com.github.sanctum.labyrinth.data.JsonAdapter;
 import com.github.sanctum.labyrinth.data.NodePointer;
+import com.github.sanctum.labyrinth.data.service.Check;
 import com.github.sanctum.labyrinth.library.HFEncoded;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -296,7 +297,7 @@ public interface Claim extends Savable, Iterable<Block>, ConfigurationSerializab
 		public Flag() {}
 
 		public Flag(Flag otherFlag) {
-			this.id = otherFlag.getId();
+			this.id = Check.forNull(otherFlag.getId(), "Flag id cannot be null in cloning process!");
 			this.allowed = otherFlag.allowed;
 			this.loading = otherFlag.loading;
 		}
@@ -350,8 +351,7 @@ public interface Claim extends Savable, Iterable<Block>, ConfigurationSerializab
 
 		@Override
 		public Flag clone() throws CloneNotSupportedException {
-			Flag clone = (Flag) super.clone();
-			return new Flag(clone) {
+			return new Flag(this) {
 				private static final long serialVersionUID = 2214098531471796215L;
 			};
 		}

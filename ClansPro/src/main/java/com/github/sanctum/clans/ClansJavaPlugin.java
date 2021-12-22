@@ -239,17 +239,12 @@ public class ClansJavaPlugin extends JavaPlugin implements ClansAPI {
 				}).scheduleLaterAsync(1);
 				for (Claim c : owner.getClaims()) {
 					for (Claim.Flag f : getClaimManager().getFlagManager().getFlags()) {
-						if (c.getFlag(f.getId()) == null) {
+						Claim.Flag temp = c.getFlag(f.getId());
+						if (temp == null) {
 							c.register(f);
-						} else {
-							Claim.Flag temp = c.getFlag(f.getId());
-							if (!temp.isValid()) {
-								f.setEnabled(temp.isEnabled());
-								c.remove(temp);
-								c.register(f);
-							}
 						}
 					}
+					c.save();
 				}
 			}
 		}).scheduleLater(120);

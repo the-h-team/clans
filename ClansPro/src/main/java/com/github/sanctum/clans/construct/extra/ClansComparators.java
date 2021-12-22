@@ -7,7 +7,7 @@ import java.util.Comparator;
 /**
  * A utility for grouping together all known comparator's in the clans plugin.
  */
-public final class ComparatorUtil {
+public final class ClansComparators {
 
 	/**
 	 * Compare entities by their logo's

@@ -81,6 +81,6 @@ public class BountyCommand extends ClanSubCommand {
 
 	@Override
 	public List<String> tab(Player player, String label, String[] args) {
-		return SimpleTabCompletion.of(args).then(TabCompletionIndex.ONE, Arrays.stream(Bukkit.getOfflinePlayers()).map(OfflinePlayer::getName).collect(Collectors.toList())).get();
+		return SimpleTabCompletion.of(args).then(TabCompletionIndex.TWO, getLabel(), TabCompletionIndex.ONE, Arrays.stream(Bukkit.getOfflinePlayers()).map(OfflinePlayer::getName).collect(Collectors.toList())).get();
 	}
 }

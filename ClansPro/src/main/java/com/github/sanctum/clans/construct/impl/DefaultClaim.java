@@ -9,6 +9,7 @@ import com.github.sanctum.labyrinth.LabyrinthProvider;
 import com.github.sanctum.labyrinth.data.FileManager;
 import com.github.sanctum.labyrinth.data.Node;
 import com.github.sanctum.labyrinth.library.HUID;
+import com.github.sanctum.labyrinth.library.ParsedHUID;
 import com.github.sanctum.labyrinth.task.Schedule;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -72,9 +73,9 @@ public final class DefaultClaim implements Claim {
 	@Override
 	public InvasiveEntity getOwner() {
 		String id = this.id[0];
-		HUID test = HUID.fromString(id);
-		if (test != null) {
-			return ClansAPI.getInstance().getClanManager().getClan(test);
+		ParsedHUID test = HUID.parseID(id);
+		if (test.isValid()) {
+			return ClansAPI.getInstance().getClanManager().getClan(test.toID());
 		}
 		return ClansAPI.getInstance().getAssociate(UUID.fromString(id)).orElse(null);
 	}
@@ -150,7 +151,9 @@ public final class DefaultClaim implements Claim {
 		for (Flag f : flags) {
 			try {
 				this.flags.put(f.getId(), f.clone());
-			} catch (Exception ignored) {}
+			} catch (CloneNotSupportedException e) {
+				e.printStackTrace();
+			}
 		}
 	}
 
