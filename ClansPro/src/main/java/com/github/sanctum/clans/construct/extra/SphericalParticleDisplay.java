@@ -1,23 +1,28 @@
 package com.github.sanctum.clans.construct.extra;
 
-import com.github.sanctum.clans.construct.api.ClansAPI;
+import com.github.sanctum.labyrinth.task.LabyrinthApplicable;
+import com.github.sanctum.labyrinth.task.Task;
+import com.github.sanctum.labyrinth.task.TaskMonitor;
+import com.github.sanctum.labyrinth.task.TaskPredicate;
 import java.util.ArrayList;
 import java.util.List;
+import org.bukkit.Bukkit;
 import org.bukkit.Color;
 import org.bukkit.Location;
 import org.bukkit.Particle;
 import org.bukkit.entity.Player;
-import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
 
 public class SphericalParticleDisplay {
 
 	private final Particle particle;
 	private final Location location;
+	private TaskPredicate<?>[] flags = new TaskPredicate<?>[0];
 	private final List<Location> toSpawn = new ArrayList<>();
+	private final TaskMonitor monitor = TaskMonitor.getLocalInstance();
 
-	public SphericalParticleDisplay(Particle particle, Location location) {
-		this.particle = particle;
+	public SphericalParticleDisplay(Location location) {
+		this.particle = Particle.REDSTONE;
 		location.subtract(0, 9, 0);
 		this.location = location;
 	}
@@ -33,14 +38,48 @@ public class SphericalParticleDisplay {
 		return this;
 	}
 
-	public void spawn(Player target) {
+	public SphericalParticleDisplay configure(TaskPredicate<?>... flags) {
+		this.flags = flags;
+		return this;
+	}
 
+	public boolean shutdown() {
+		boolean result = false;
+		for (Player online : Bukkit.getOnlinePlayers()) {
+			String taskId = "ClansPro:particle-display;sphere:" + online.getUniqueId();
+			Task task = monitor.get(taskId);
+			if (task != null) {
+				task.cancel();
+				if (!result) {
+					result = true;
+				}
+			}
+		}
+		return result;
+	}
 
-		new BukkitRunnable() {
+	public boolean remove(Player target) {
+		String taskId = "ClansPro:particle-display;sphere:" + target.getUniqueId();
+		Task task = monitor.get(taskId);
+		if (task == null) return false;
+		task.cancel();
+		return true;
+	}
+
+	public boolean spawn(Player target) {
+
+		String taskId = "ClansPro:particle-display;sphere:" + target.getUniqueId();
+
+		if (monitor.get(taskId) != null) {
+			return false;
+		}
+
+		new LabyrinthApplicable(taskId) {
+
+			private static final long serialVersionUID = 6931896334112633137L;
 
 			double t = 0;
 			final double r = 2;
-
 
 			private Vector rotateAroundAxisX(Vector v, double angle) {
 				angle = Math.toRadians(angle);
@@ -91,19 +130,19 @@ public class SphericalParticleDisplay {
 					v = rotateAroundAxisX(v, 10);
 					loc.add(v.getX(), v.getY(), v.getZ());
 					target.spawnParticle(particle, loc.getX(), loc.getY(), loc.getZ(), 1, new Particle.DustOptions(Color.MAROON, 2));
-					target.spawnParticle(Particle.FLASH, loc, 1);
+					target.spawnParticle(Particle.CRIT, loc, 1);
 					loc.subtract(v.getX(), v.getY(), v.getZ());
 
 					v = rotateAroundAxisY(v, 10);
 					loc.add(v.getX(), v.getY(), v.getZ());
 					target.spawnParticle(particle, loc.getX(), loc.getY(), loc.getZ(), 1, new Particle.DustOptions(Color.RED, 2));
-					target.spawnParticle(Particle.FLASH, loc, 1);
+					target.spawnParticle(Particle.CRIT, loc, 1);
 					loc.subtract(v.getX(), v.getY(), v.getZ());
 
 					v = rotateAroundAxisZ(v, 10);
 					loc.add(v.getX(), v.getY(), v.getZ());
 					target.spawnParticle(particle, loc.getX(), loc.getY(), loc.getZ(), 1, new Particle.DustOptions(Color.MAROON, 2));
-					target.spawnParticle(Particle.FLASH, loc, 1);
+					target.spawnParticle(Particle.CRIT, loc, 1);
 					loc.subtract(v.getX(), v.getY(), v.getZ());
 
 					if (t > Math.PI * 8) {
@@ -112,7 +151,8 @@ public class SphericalParticleDisplay {
 				}
 
 			}
-		}.runTaskTimer(ClansAPI.getInstance().getPlugin(), 0, 1);
+		}.scheduleTimer(0, 1, flags);
+		return true;
 	}
 
 
