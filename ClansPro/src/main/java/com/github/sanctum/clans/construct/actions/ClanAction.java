@@ -50,7 +50,6 @@ import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.entity.ArmorStand;
-import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -272,13 +271,13 @@ public class ClanAction extends StringLibrary {
 	public UUID getUserID(String playerName) {
 		PlayerSearch user = PlayerSearch.of(playerName);
 		if (user != null) {
-			return user.getRecordedId();
+			return user.getId();
 		}
 		return null;
 	}
 
 	public List<UUID> getAllUsers() {
-		return PlayerSearch.values().stream().map(PlayerSearch::getRecordedId).collect(Collectors.toList());
+		return PlayerSearch.values().stream().map(PlayerSearch::getId).collect(Collectors.toList());
 	}
 
 	public void demotePlayer(UUID target) {
@@ -361,26 +360,11 @@ public class ClanAction extends StringLibrary {
 		Clan clan = API.getClanManager().getClan(p.getUniqueId());
 		if (clan != null) {
 			if (location != null) {
-				boolean waiting = false;
-				for (Entity e : p.getNearbyEntities(30, 30, 30)) {
-					if (e instanceof Player) {
-						if (clan.getMember(a -> a.getId().equals(e.getUniqueId())) != null) {
-							waiting = true;
-							break;
-						}
-					}
-				}
-				if (!waiting) {
-					p.teleport(location);
+				Teleport request = Teleport.get(API.getAssociate(p).get());
+				if (request != null) {
+					sendMessage(p, "&cYou already have a pending teleportation in progress.");
 				} else {
-					Teleport request = Teleport.get(API.getAssociate(p).get());
-					if (request != null) {
-						sendMessage(p, "&cYou already have a pending teleportation in progress.");
-					} else {
-						sendMessage(p, "&cSomeone is nearby...");
-						request = new Teleport.Impl(API.getAssociate(p).get(), location);
-						request.teleport();
-					}
+					new Teleport.Impl(API.getAssociate(p).get(), location).teleport();
 				}
 			} else {
 				sendMessage(p, "&cThis location doesn't exist.");

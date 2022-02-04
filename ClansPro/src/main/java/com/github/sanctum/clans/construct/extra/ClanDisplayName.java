@@ -23,7 +23,15 @@ public class ClanDisplayName {
 		Team team = getTeam(associate.getTag().getPlayer().getPlayer());
 		if (team == null) {
 			scoreboard.registerNewTeam(associate.getClan().getId().toString());
-			set(associate, prefix);
+			try {
+				Team t = getTeam(associate.getTag().getPlayer().getPlayer());
+				t.setPrefix(Clan.ACTION.color(prefix));
+				t.setDisplayName(associate.getClan().getName());
+				t.setOption(Team.Option.NAME_TAG_VISIBILITY, Team.OptionStatus.ALWAYS);
+				t.addEntry(associate.getName());
+			} catch (IllegalArgumentException tooLong) {
+				ClansAPI.getInstance().getPlugin().getLogger().warning("- Unable to set above head display name for clan " + associate.getClan().getName());
+			}
 		} else {
 			try {
 				Team t = getTeam(associate.getTag().getPlayer().getPlayer());

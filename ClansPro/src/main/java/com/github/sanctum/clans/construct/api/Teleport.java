@@ -119,42 +119,68 @@ public abstract class Teleport {
 			if (entity.isAssociate()) {
 				start = entity.getAsAssociate().getTag().getPlayer().getPlayer().getLocation();
 				if (this.target != null) {
-					getEntity().getAsAssociate().getMailer().chat("&aTeleporting in 10 seconds, don't move.").deploy();
-					Clan.ACTION.sendMessage(getTarget().getAsPlayer(), "&a" + entity.getAsAssociate().getName() + " is teleporting to you.");
-					this.state = State.TELEPORTING;
-					this.accepted = new Date();
-					Schedule.sync(() -> {
+					if (entity.getAsAssociate().getTag().getPlayer().getPlayer().getNearbyEntities(30, 0, 30).stream().noneMatch(e -> e instanceof Player && getEntity().getAsAssociate().getClan().getMember(m -> m.getName().equals(e.getName())) == null)) {
+						this.state = State.TELEPORTING;
+						this.accepted = new Date();
 						if (!REQUESTS.contains(this)) return;
-						if (getState() == State.TELEPORTING) {
-							AssociateTeleportEvent event = ClanVentBus.call(new AssociateTeleportEvent(getEntity().getAsAssociate(), new TeleportationTarget(this.target)));
-							if (!event.isCancelled()) {
-								successOperators.forEach(operator -> operator.onTeleportSuccess(entity));
-								entity.getAsAssociate().getTag().getPlayer().getPlayer().teleport(event.getTarget().getAsPlayer(), org.bukkit.event.player.PlayerTeleportEvent.TeleportCause.COMMAND);
-								cancel();
-								entity.getAsAssociate().getTag().getPlayer().getPlayer().getWorld().playSound(entity.getAsAssociate().getTag().getPlayer().getPlayer().getLocation(), Sound.ENTITY_VILLAGER_AMBIENT, 10, 1);
-							}
-						} else {
+						Clan.ACTION.sendMessage(getTarget().getAsPlayer(), "&a" + entity.getAsAssociate().getName() + " is teleporting to you.");
+						AssociateTeleportEvent event = ClanVentBus.call(new AssociateTeleportEvent(getEntity().getAsAssociate(), new TeleportationTarget(this.target)));
+						if (!event.isCancelled()) {
+							successOperators.forEach(operator -> operator.onTeleportSuccess(entity));
+							entity.getAsAssociate().getTag().getPlayer().getPlayer().teleport(event.getTarget().getAsPlayer(), org.bukkit.event.player.PlayerTeleportEvent.TeleportCause.COMMAND);
 							cancel();
+							entity.getAsAssociate().getTag().getPlayer().getPlayer().getWorld().playSound(entity.getAsAssociate().getTag().getPlayer().getPlayer().getLocation(), Sound.ENTITY_VILLAGER_AMBIENT, 10, 1);
 						}
-					}).waitReal(20 * 10);
+					} else {
+						getEntity().getAsAssociate().getMailer().chat("&aTeleporting in 10 seconds, don't move.").deploy();
+						Clan.ACTION.sendMessage(getTarget().getAsPlayer(), "&a" + entity.getAsAssociate().getName() + " is teleporting to you.");
+						this.state = State.TELEPORTING;
+						this.accepted = new Date();
+						Schedule.sync(() -> {
+							if (!REQUESTS.contains(this)) return;
+							if (getState() == State.TELEPORTING) {
+								AssociateTeleportEvent event = ClanVentBus.call(new AssociateTeleportEvent(getEntity().getAsAssociate(), new TeleportationTarget(this.target)));
+								if (!event.isCancelled()) {
+									successOperators.forEach(operator -> operator.onTeleportSuccess(entity));
+									entity.getAsAssociate().getTag().getPlayer().getPlayer().teleport(event.getTarget().getAsPlayer(), org.bukkit.event.player.PlayerTeleportEvent.TeleportCause.COMMAND);
+									cancel();
+									entity.getAsAssociate().getTag().getPlayer().getPlayer().getWorld().playSound(entity.getAsAssociate().getTag().getPlayer().getPlayer().getLocation(), Sound.ENTITY_VILLAGER_AMBIENT, 10, 1);
+								}
+							} else {
+								cancel();
+							}
+						}).waitReal(20 * 10);
+					}
 				} else {
-					getEntity().getAsAssociate().getMailer().chat("&aTeleporting in 10 seconds, don't move.").deploy();
-					this.state = State.TELEPORTING;
-					this.accepted = new Date();
-					Schedule.sync(() -> {
-						if (!REQUESTS.contains(this)) return;
-						if (getState() == State.TELEPORTING) {
-							AssociateTeleportEvent event = ClanVentBus.call(new AssociateTeleportEvent(getEntity().getAsAssociate(), new TeleportationTarget(this.location)));
-							if (!event.isCancelled()) {
-								successOperators.forEach(operator -> operator.onTeleportSuccess(entity));
-								entity.getAsAssociate().getTag().getPlayer().getPlayer().teleport(event.getTarget().getAsLocation(), org.bukkit.event.player.PlayerTeleportEvent.TeleportCause.COMMAND);
-								cancel();
-								entity.getAsAssociate().getTag().getPlayer().getPlayer().getWorld().playSound(entity.getAsAssociate().getTag().getPlayer().getPlayer().getLocation(), Sound.ENTITY_VILLAGER_AMBIENT, 10, 1);
-							}
-						} else {
+					if (entity.getAsAssociate().getTag().getPlayer().getPlayer().getNearbyEntities(30, 0, 30).stream().noneMatch(e -> e instanceof Player && getEntity().getAsAssociate().getClan().getMember(m -> m.getName().equals(e.getName())) == null)) {
+						this.state = State.TELEPORTING;
+						this.accepted = new Date();
+						AssociateTeleportEvent event = ClanVentBus.call(new AssociateTeleportEvent(getEntity().getAsAssociate(), new TeleportationTarget(this.location)));
+						if (!event.isCancelled()) {
+							successOperators.forEach(operator -> operator.onTeleportSuccess(entity));
+							entity.getAsAssociate().getTag().getPlayer().getPlayer().teleport(event.getTarget().getAsLocation(), org.bukkit.event.player.PlayerTeleportEvent.TeleportCause.COMMAND);
 							cancel();
+							entity.getAsAssociate().getTag().getPlayer().getPlayer().getWorld().playSound(entity.getAsAssociate().getTag().getPlayer().getPlayer().getLocation(), Sound.ENTITY_VILLAGER_AMBIENT, 10, 1);
 						}
-					}).waitReal(20 * 10);
+					} else {
+						getEntity().getAsAssociate().getMailer().chat("&aTeleporting in 10 seconds, don't move.").deploy();
+						this.state = State.TELEPORTING;
+						this.accepted = new Date();
+						Schedule.sync(() -> {
+							if (!REQUESTS.contains(this)) return;
+							if (getState() == State.TELEPORTING) {
+								AssociateTeleportEvent event = ClanVentBus.call(new AssociateTeleportEvent(getEntity().getAsAssociate(), new TeleportationTarget(this.location)));
+								if (!event.isCancelled()) {
+									successOperators.forEach(operator -> operator.onTeleportSuccess(entity));
+									entity.getAsAssociate().getTag().getPlayer().getPlayer().teleport(event.getTarget().getAsLocation(), org.bukkit.event.player.PlayerTeleportEvent.TeleportCause.COMMAND);
+									cancel();
+									entity.getAsAssociate().getTag().getPlayer().getPlayer().getWorld().playSound(entity.getAsAssociate().getTag().getPlayer().getPlayer().getLocation(), Sound.ENTITY_VILLAGER_AMBIENT, 10, 1);
+								}
+							} else {
+								cancel();
+							}
+						}).waitReal(20 * 10);
+					}
 				}
 			} else {
 				if (entity.isClan()) {

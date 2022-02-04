@@ -25,13 +25,19 @@ import com.github.sanctum.labyrinth.library.TextLib;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Color;
+import org.bukkit.Material;
 import org.bukkit.command.CommandSender;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 
 public class KingdomCommand extends ClanSubCommand implements Message.Factory {
 
@@ -197,6 +203,16 @@ public class KingdomCommand extends ClanSubCommand implements Message.Factory {
 							builder.setPlayer(p);
 						}).decorate((pagination, quest, page, max, placement) -> {
 
+							Supplier<String> supplier = () -> {
+
+								ItemStack item = (ItemStack) quest.getReward().get();
+
+								if (item.getType() == Material.ENCHANTED_BOOK) {
+									Map.Entry<Enchantment, Integer> entry = item.getEnchantments().entrySet().stream().findFirst().get();
+									return item.getType().name().toLowerCase(Locale.ROOT).replace("_", " ") + " &f(&b" + entry.getKey().getKey().getKey() + " &fLvl." + entry.getValue() + ")";
+								}
+								return item.getType().name().toLowerCase(Locale.ROOT).replace("_", " ");
+							};
 							if (quest.activated(p)) {
 								message().append(text("[").color(Color.MAROON))
 										.append(text("#").color(Color.GRAY))
@@ -210,6 +226,8 @@ public class KingdomCommand extends ClanSubCommand implements Message.Factory {
 										.append(text("/"))
 										.append(text(String.valueOf(quest.getRequirement())))
 										.append(text(")").color(Color.ORANGE))
+										.append(text(" "))
+										.append(text("█").color(Color.OLIVE).bind(hover("Reward: &f" + (quest.getReward().get().getClass().isArray() ? "Items" : (quest.getReward().get() instanceof ItemStack ? "Item" : "Money"))).color(Color.RED)).bind(hover((quest.getReward().get().getClass().isArray() ? "&cAmount: &e" + ((ItemStack[]) quest.getReward().get()).length : (quest.getReward().get() instanceof ItemStack ? "&cType: &e" + supplier.get() : quest.getReward().get().toString())))))
 										.send(p).deploy();
 								message()
 										.append(text("(").color(Color.MAROON))
@@ -237,6 +255,8 @@ public class KingdomCommand extends ClanSubCommand implements Message.Factory {
 										.append(text("/"))
 										.append(text(String.valueOf(quest.getRequirement())))
 										.append(text(")").color(Color.ORANGE))
+										.append(text(" "))
+										.append(text("█").color(Color.OLIVE).bind(hover("Reward: &f" + (quest.getReward().get().getClass().isArray() ? "Items" : (quest.getReward().get() instanceof ItemStack ? "Item" : "Money"))).color(Color.RED)).bind(hover((quest.getReward().get().getClass().isArray() ? "&cAmount: &e" + ((ItemStack[]) quest.getReward().get()).length : (quest.getReward().get() instanceof ItemStack ? "&cType: &e" + supplier.get() : quest.getReward().get().toString())))))
 										.send(p).deploy();
 								message()
 										.append(text("(").color(Color.MAROON))

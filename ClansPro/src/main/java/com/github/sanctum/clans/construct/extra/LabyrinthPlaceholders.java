@@ -124,7 +124,7 @@ public class LabyrinthPlaceholders implements PlaceholderTranslation {
 		}
 
 		if (associate == null) {
-			return "";
+			return "N/A";
 		}
 
 		Clan c = associate.getClan();
@@ -192,7 +192,7 @@ public class LabyrinthPlaceholders implements PlaceholderTranslation {
 			War w = ClansAPI.getInstance().getArenaManager().get(associate);
 			if (w != null) {
 				if (!w.getTimer().isComplete()) {
-					return String.valueOf(w.getTimer().getHoursLeft());
+					return String.valueOf(w.getTimer().getHours());
 				}
 			} else {
 				return "00";
@@ -202,7 +202,7 @@ public class LabyrinthPlaceholders implements PlaceholderTranslation {
 			War w = ClansAPI.getInstance().getArenaManager().get(associate);
 			if (w != null) {
 				if (!w.getTimer().isComplete()) {
-					return String.valueOf(w.getTimer().getMinutesLeft());
+					return String.valueOf(w.getTimer().getMinutes());
 				}
 			} else {
 				return "00";
@@ -212,7 +212,7 @@ public class LabyrinthPlaceholders implements PlaceholderTranslation {
 			War w = ClansAPI.getInstance().getArenaManager().get(associate);
 			if (w != null) {
 				if (!w.getTimer().isComplete()) {
-					return String.valueOf(w.getTimer().getSecondsLeft());
+					return String.valueOf(w.getTimer().getSeconds());
 				}
 			} else {
 				return "00";

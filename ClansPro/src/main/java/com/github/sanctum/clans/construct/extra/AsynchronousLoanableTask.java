@@ -5,18 +5,18 @@ import com.github.sanctum.labyrinth.LabyrinthProvider;
 import com.github.sanctum.labyrinth.annotation.Note;
 import com.github.sanctum.labyrinth.api.Service;
 import com.github.sanctum.labyrinth.api.TaskService;
+import com.github.sanctum.labyrinth.data.container.LabyrinthCollection;
+import com.github.sanctum.labyrinth.data.container.LabyrinthSet;
 import com.github.sanctum.labyrinth.library.Applicable;
 import com.github.sanctum.labyrinth.task.Schedule;
 import com.github.sanctum.labyrinth.task.Task;
-import java.util.HashSet;
-import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import org.bukkit.entity.Player;
 
 public final class AsynchronousLoanableTask {
 
 	public static final String KEY = "ClansPro:CONCURRENT";
-	private final Set<Player> players = new HashSet<>();
+	private final LabyrinthCollection<Player> players = new LabyrinthSet<>();
 	private final Logic logic;
 
 	public AsynchronousLoanableTask(Logic logic) {
@@ -32,7 +32,13 @@ public final class AsynchronousLoanableTask {
 		if (getTask() == null) {
 			TimeUnit unit = TimeUnit.valueOf(ClansAPI.getDataInstance().getConfigString("Clans.timer.threshold"));
 			int size = ClansAPI.getDataInstance().getConfigInt("Clans.timer.time-span");
-			LabyrinthProvider.getService(Service.TASK).getScheduler(TaskService.ASYNCHRONOUS).repeat(task -> players.forEach(p -> logic.accept(p, AsynchronousLoanableTask.this)), KEY, unit.toMillis(size), unit.toMillis(size));
+			LabyrinthProvider.getService(Service.TASK).getScheduler(TaskService.ASYNCHRONOUS).repeat(task -> {
+				try {
+					players.forEach(p -> logic.accept(p, AsynchronousLoanableTask.this));
+				} catch (Exception fail) {
+					ClansAPI.getInstance().getPlugin().getLogger().severe("- The task failed to pass logic @ an unknown location.");
+				}
+			}, KEY, unit.toMillis(size), unit.toMillis(size));
 		}
 		players.add(player);
 	}

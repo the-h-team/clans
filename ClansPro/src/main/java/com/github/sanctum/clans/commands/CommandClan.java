@@ -843,7 +843,7 @@ public class CommandClan extends Command implements Message.Factory {
 								if (test != null) {
 									current.stop();
 									current.reset();
-									Cooldown.remove(test);
+									LabyrinthProvider.getInstance().remove(test);
 								} else {
 									ClansAPI.getInstance().getArenaManager().leave(associate);
 								}

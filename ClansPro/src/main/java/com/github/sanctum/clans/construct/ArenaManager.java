@@ -111,7 +111,7 @@ public final class ArenaManager implements Iterable<War> {
 						return this.time;
 					}
 				};
-				LabyrinthProvider.getService(Service.MESSENGER).getNewMessage().setPrefix(ClansAPI.getInstance().getPrefix().joined()).broadcast("&3A new clan war between clans &b[" + Arrays.stream(q.getTeams()).map(Clan::getName).collect(Collectors.joining(",")) + "] &3starts in " + time.getMinutesLeft() + " minute(s) & " + time.getSecondsLeft() + " second(s)");
+				LabyrinthProvider.getService(Service.MESSENGER).getNewMessage().setPrefix(ClansAPI.getInstance().getPrefix().joined()).broadcast("&3A new clan war between clans &b[" + Arrays.stream(q.getTeams()).map(Clan::getName).collect(Collectors.joining(",")) + "] &3starts in " + time.getMinutes() + " minute(s) & " + time.getSeconds() + " second(s)");
 				free.stamp();
 				new Cooldown() {
 

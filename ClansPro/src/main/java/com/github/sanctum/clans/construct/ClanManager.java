@@ -9,7 +9,7 @@ import com.github.sanctum.clans.construct.impl.DefaultClan;
 import com.github.sanctum.clans.event.clan.ClansLoadingProcedureEvent;
 import com.github.sanctum.labyrinth.data.FileList;
 import com.github.sanctum.labyrinth.data.FileManager;
-import com.github.sanctum.labyrinth.data.LabyrinthUser;
+import com.github.sanctum.labyrinth.data.service.PlayerSearch;
 import com.github.sanctum.labyrinth.formatting.UniformedComponents;
 import com.github.sanctum.labyrinth.library.HUID;
 import com.github.sanctum.labyrinth.task.TaskScheduler;
@@ -116,7 +116,7 @@ public final class ClanManager {
 	 * @return A clan object or null
 	 */
 	public Clan getClan(OfflinePlayer player) {
-		return getClan(LabyrinthUser.get(player.getName()).getId());
+		return getClan(PlayerSearch.of(player.getName()).getId());
 	}
 
 	/**

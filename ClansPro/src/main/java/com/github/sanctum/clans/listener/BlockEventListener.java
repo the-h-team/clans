@@ -136,17 +136,16 @@ public class BlockEventListener implements Listener {
 						Clan.ACTION.sendMessage(e.getPlayer(), "&cMaximum logo hologram size is 16x16, ours is too big.");
 						return;
 					}
-
-				}
-				if (EconomyProvision.getInstance().withdraw(BigDecimal.valueOf(125), e.getPlayer()).orElse(false)) {
-					e.setLine(0, StringUtils.use("&l[Clan]").translate());
-					e.setLine(1, StringUtils.use("&6&lLogo").translate());
-					e.setLine(2, a.getClan().getId().toString());
-					Clan.ACTION.sendMessage(e.getPlayer(), "&aClan logo now on display &r(&e#&2" + a.getClan().newCarrier(e.getBlock().getLocation()).getId() + "&r)");
-					a.getClan().save();
-				} else {
-					e.setLine(0, StringUtils.use("&4[Clan]").translate());
-					Clan.ACTION.sendMessage(e.getPlayer(), "&cFailed to display logo, not enough money.");
+					if (EconomyProvision.getInstance().withdraw(BigDecimal.valueOf(125), e.getPlayer()).orElse(false)) {
+						e.setLine(0, StringUtils.use("&l[Clan]").translate());
+						e.setLine(1, StringUtils.use("&6&lLogo").translate());
+						e.setLine(2, a.getClan().getId().toString());
+						Clan.ACTION.sendMessage(e.getPlayer(), "&aClan logo now on display &r(&e#&2" + a.getClan().newCarrier(e.getBlock().getLocation()).getId() + "&r)");
+						a.getClan().save();
+					} else {
+						e.setLine(0, StringUtils.use("&4[Clan]").translate());
+						Clan.ACTION.sendMessage(e.getPlayer(), "&cFailed to display logo, not enough money.");
+					}
 				}
 			});
 		}

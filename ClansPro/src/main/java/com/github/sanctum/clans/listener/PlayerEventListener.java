@@ -1,6 +1,5 @@
 package com.github.sanctum.clans.listener;
 
-import com.github.sanctum.clans.bridge.ClanAddonQuery;
 import com.github.sanctum.clans.bridge.ClanVentBus;
 import com.github.sanctum.clans.construct.actions.ClansUpdate;
 import com.github.sanctum.clans.construct.api.Claim;
@@ -13,8 +12,6 @@ import com.github.sanctum.clans.construct.api.Teleport;
 import com.github.sanctum.clans.construct.api.War;
 import com.github.sanctum.clans.construct.extra.AsynchronousLoanableTask;
 import com.github.sanctum.clans.construct.extra.ClanDisplayName;
-import com.github.sanctum.clans.construct.extra.FancyLogoAppendage;
-import com.github.sanctum.clans.construct.extra.ReservedLogoCarrier;
 import com.github.sanctum.clans.construct.impl.CooldownRespawn;
 import com.github.sanctum.clans.construct.impl.SimpleEntry;
 import com.github.sanctum.clans.event.TimerEvent;
@@ -31,12 +28,12 @@ import com.github.sanctum.clans.event.war.WarWonEvent;
 import com.github.sanctum.labyrinth.LabyrinthProvider;
 import com.github.sanctum.labyrinth.api.Service;
 import com.github.sanctum.labyrinth.data.EconomyProvision;
-import com.github.sanctum.labyrinth.data.LabyrinthUser;
+import com.github.sanctum.labyrinth.data.container.LabyrinthEntryMap;
+import com.github.sanctum.labyrinth.data.container.LabyrinthMap;
+import com.github.sanctum.labyrinth.data.service.PlayerSearch;
 import com.github.sanctum.labyrinth.event.custom.DefaultEvent;
 import com.github.sanctum.labyrinth.event.custom.Subscribe;
 import com.github.sanctum.labyrinth.event.custom.Vent;
-import com.github.sanctum.labyrinth.formatting.TextChunk;
-import com.github.sanctum.labyrinth.formatting.ToolTip;
 import com.github.sanctum.labyrinth.interfacing.OrdinalProcedure;
 import com.github.sanctum.labyrinth.library.Cooldown;
 import com.github.sanctum.labyrinth.library.Entities;
@@ -45,17 +42,13 @@ import com.github.sanctum.labyrinth.library.Message;
 import com.github.sanctum.labyrinth.library.StringUtils;
 import com.github.sanctum.labyrinth.task.Procedure;
 import com.github.sanctum.labyrinth.task.Schedule;
-import com.google.common.base.Strings;
 import java.math.BigDecimal;
 import java.text.MessageFormat;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import net.md_5.bungee.api.ChatColor;
-import net.md_5.bungee.api.chat.BaseComponent;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -79,7 +72,7 @@ import org.bukkit.util.Vector;
 
 public class PlayerEventListener implements Listener {
 
-	private final static Map<Location, ArmorStand> STAND_MAP = new HashMap<>();
+	private final static LabyrinthMap<Location, ArmorStand> STAND_MAP = new LabyrinthEntryMap<>();
 	public static final Procedure<Object> STAND_REMOVAL = Procedure.request(() -> Object.class).next(o -> STAND_MAP.values().forEach(ArmorStand::remove));
 	protected static final AsynchronousLoanableTask LOANABLE_TASK = new AsynchronousLoanableTask((p, task) -> {
 		if (ClansAPI.getInstance() == null) {
@@ -228,14 +221,14 @@ public class PlayerEventListener implements Listener {
 		Cooldown test = LabyrinthProvider.getService(Service.COOLDOWNS).getCooldown("ClansPro-war-respawn-" + e.getVictim().getUniqueId().toString());
 		if (test != null) {
 			if (!test.isComplete()) {
-				if (test.getSecondsLeft() == 0) {
-					Cooldown.remove(test);
+				if (test.getSeconds() == 0) {
+					LabyrinthProvider.getInstance().remove(test);
 					return;
 				}
-				e.getUtil().sendMessage(attacker, "&cYou must wait &6&l" + test.getSecondsLeft() + " &cseconds before doing this to me.");
+				e.getUtil().sendMessage(attacker, "&cYou must wait &6&l" + test.getSeconds() + " &cseconds before doing this to me.");
 				e.setCanHurt(false);
 			} else {
-				Cooldown.remove(test);
+				LabyrinthProvider.getInstance().remove(test);
 			}
 		}
 	}
@@ -513,25 +506,9 @@ public class PlayerEventListener implements Listener {
 
 		LOANABLE_TASK.join(p);
 
-		Clan.Associate associate = ClansAPI.getInstance().getAssociate(LabyrinthUser.get(p.getName()).getId()).orElse(null);
+		Clan.Associate associate = ClansAPI.getInstance().getAssociate(PlayerSearch.of(p.getName()).getId()).orElse(null);
 
-		if (ClanAddonQuery.getAddon("Kingdoms") != null) {
-			Schedule.sync(() -> {
-				Mailer mail = new Mailer(p);
-				List<String> logo = ReservedLogoCarrier.SUMMER.get();
-				int size = ChatColor.stripColor(logo.get(0)).length();
-				mail.chat("&6&m&l" + Strings.repeat("▬", Math.min(38, size * 2))).deploy();
-				FancyLogoAppendage appendage = ClansAPI.getDataInstance().appendStringsToLogo(logo, message -> message.hover("&eThe cheese is good."));
-				for (BaseComponent[] b : appendage.append(new TextChunk("Kingdoms is here,").bind(new ToolTip.Text("&eThe time for progression is here!")).bind(new ToolTip.Text("&fUse this addon to unlock")).bind(new ToolTip.Text("&fspecial rewards!")),
-						                                  new TextChunk("Try it using &6/clan kingdom.").bind(new ToolTip.Command("/c kingdom")).bind(new ToolTip.Text("&6Click me &fto execute.")),
-						                                  new TextChunk("- &6Sanctum Team")).get()) {
-					mail.chat(b).deploy();
-				}
-				mail.chat("&6&m&l" + Strings.repeat("▬", Math.min(38, size * 2))).deploy();
-			}).waitReal(10);
-		}
-
-		boolean scoreboard = Bukkit.getVersion().contains("1.14") || Bukkit.getVersion().contains("1.15") || Bukkit.getVersion().contains("1.16") || Bukkit.getVersion().contains("1.17");
+		boolean scoreboard = Bukkit.getVersion().contains("1.14") || Bukkit.getVersion().contains("1.15") || Bukkit.getVersion().contains("1.16") || Bukkit.getVersion().contains("1.17") || Bukkit.getVersion().contains("1.18");
 		if (scoreboard) {
 			if (associate != null) {
 				if (associate.isValid()) {
@@ -661,7 +638,7 @@ public class PlayerEventListener implements Listener {
 				if (t.getSpawn() != null) {
 					Cooldown test = LabyrinthProvider.getService(Service.COOLDOWNS).getCooldown("ClansPro-war-respawn-" + p.getUniqueId().toString());
 					if (test != null) {
-						Cooldown.remove(test);
+						LabyrinthProvider.getInstance().remove(test);
 					}
 					new CooldownRespawn(p.getUniqueId()).save();
 					e.setRespawnLocation(t.getSpawn());

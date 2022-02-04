@@ -302,6 +302,10 @@ Clans:
       - 'clan base'
       - 'spawn'
       - 'home'
+    # NEW! Configure extra win/loss power rewards.
+    conclusion:
+      winning: 0.0
+      losing: 1.5
     # Change the max amount of clans allowed within a clan war. Hard-cap = 4
     max-clans: 2
     # The amount of members queued required to start a war.
@@ -511,4 +515,4 @@ Addon:
 ## -- DO NOT EDIT BELOW --
 # Authors: Hempfest, ms5984
 ##------------------------
-Version: 1.3.6
+Version: 1.3.7

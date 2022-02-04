@@ -28,6 +28,7 @@ import org.jetbrains.annotations.Nullable;
 
 public final class LocalFileQuest implements Quest, Message.Factory {
 
+
 	private double progression;
 
 	private boolean complete;

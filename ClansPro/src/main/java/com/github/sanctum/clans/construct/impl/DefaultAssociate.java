@@ -109,7 +109,7 @@ public final class DefaultAssociate implements Clan.Associate, PersistentEntity 
 	}
 
 	public UUID getId() {
-		return search.getRecordedId();
+		return search.getId();
 	}
 
 	/**

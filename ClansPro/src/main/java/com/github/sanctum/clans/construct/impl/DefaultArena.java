@@ -5,6 +5,7 @@ import com.github.sanctum.clans.construct.api.ClansAPI;
 import com.github.sanctum.clans.construct.api.Vote;
 import com.github.sanctum.clans.construct.api.War;
 import com.github.sanctum.clans.construct.extra.ClanDisplayName;
+import com.github.sanctum.labyrinth.LabyrinthProvider;
 import com.github.sanctum.labyrinth.library.Cooldown;
 import com.github.sanctum.labyrinth.task.Schedule;
 import java.util.Comparator;
@@ -18,18 +19,18 @@ import org.jetbrains.annotations.NotNull;
 
 public final class DefaultArena implements War {
 
-	protected final String id;
-	protected final Queue queue;
-	protected final Vote G = new Vote();
-	protected final Vote A = new Vote();
-	protected final Vote B = new Vote();
-	protected final Vote C = new Vote();
-	protected final Vote D = new Vote();
-	protected long time;
-	protected boolean pre;
-	protected Cooldown timer;
-	protected final Map<Clan, Team> roster;
-	protected final Map<Team, Integer> pointMap;
+	final String id;
+	final Queue queue;
+	final Vote G = new Vote();
+	final Vote A = new Vote();
+	final Vote B = new Vote();
+	final Vote C = new Vote();
+	final Vote D = new Vote();
+	long time;
+	boolean pre;
+	Cooldown timer;
+	final Map<Clan, Team> roster;
+	final Map<Team, Integer> pointMap;
 
 	public DefaultArena(String id) {
 		this.id = id;
@@ -111,7 +112,7 @@ public final class DefaultArena implements War {
 	public boolean stop() {
 		if (getTimer() != null) {
 			ClansAPI.getInstance().getArenaManager().showAll(this);
-			Cooldown.remove(getTimer());
+			LabyrinthProvider.getInstance().remove(getTimer());
 			this.timer = null;
 			return true;
 		}
@@ -129,7 +130,7 @@ public final class DefaultArena implements War {
 	public void reset() {
 		if (isRunning()) {
 			ClansAPI.getInstance().getArenaManager().showAll(this);
-			Cooldown.remove(getTimer());
+			LabyrinthProvider.getInstance().remove(getTimer());
 			this.timer = null;
 		}
 		this.time = 0;

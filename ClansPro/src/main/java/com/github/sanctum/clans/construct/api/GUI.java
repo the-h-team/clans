@@ -918,6 +918,7 @@ public enum GUI {
 								SETTINGS_SELECT.get().open(p);
 
 								api.getClanManager().refresh();
+								api.getClaimManager().refresh();
 
 								printManager.getPrint(api.getLocalPrintKey()).reload().deploy();
 
@@ -1263,6 +1264,22 @@ public enum GUI {
 		return MenuType.SINGULAR.build().join();
 	}
 
+	void addBackground(InventoryElement i) {
+		FillerElement<?> filler = new FillerElement<>(i);
+		filler.add(ed -> ed.setType(ItemElement.ControlType.ITEM_FILLER).setElement(it -> it.setType(Optional.ofNullable(Items.findMaterial("bluestainedglasspane")).orElse(Items.findMaterial("stainedglasspane"))).setTitle(" ").build()));
+		i.addItem(filler);
+		BorderElement<?> border = new BorderElement<>(i);
+		for (Menu.Panel p : Menu.Panel.values()) {
+			if (p == Menu.Panel.MIDDLE) continue;
+			if (LabyrinthProvider.getInstance().isLegacy()) {
+				border.add(p, ed -> ed.setType(ItemElement.ControlType.ITEM_BORDER).setElement(it -> it.setType(Items.findMaterial("STAINED_GLASS_PANE")).setTitle(" ").build()));
+			} else {
+				border.add(p, ed -> ed.setType(ItemElement.ControlType.ITEM_BORDER).setElement(it -> it.setType(Material.GRAY_STAINED_GLASS_PANE).setTitle(" ").build()));
+			}
+		}
+		i.addItem(border);
+	}
+
 	public Menu get(Clan.Associate associate) {
 		Clan cl = associate.getClan();
 		String o = cl.getPalette().toString();
@@ -1342,6 +1359,7 @@ public enum GUI {
 										.setSize(Menu.Rows.THREE)
 										.setHost(api.getPlugin())
 										.setStock(paginated -> {
+											addBackground(paginated);
 											ListElement<Clan> list = new ListElement<>(associate.getClan().getRelation().getAlliance().get(Clan.class)).setLimit(7).setPopulate((c, element) -> {
 												element.setElement(edit -> edit.setTitle(c.getPalette() + (c.getNickname() != null ? c.getNickname() : c.getName())).setItem(ClansAPI.getDataInstance().getMenuItem("Clan")).build());
 												element.setClick(clickElement -> {
@@ -1372,6 +1390,7 @@ public enum GUI {
 										.setSize(Menu.Rows.THREE)
 										.setHost(api.getPlugin())
 										.setStock(paginated -> {
+											addBackground(paginated);
 											ListElement<Clan> list = new ListElement<>(associate.getClan().getRelation().getRivalry().get(Clan.class)).setLimit(7).setPopulate((c, element) -> {
 												element.setElement(edit -> edit.setTitle(c.getPalette() + (c.getNickname() != null ? c.getNickname() : c.getName())).setItem(ClansAPI.getDataInstance().getMenuItem("Clan")).build());
 												element.setClick(clickElement -> {

@@ -30,6 +30,7 @@ import com.github.sanctum.clans.event.war.WarWonEvent;
 import com.github.sanctum.labyrinth.LabyrinthProvider;
 import com.github.sanctum.labyrinth.api.Service;
 import com.github.sanctum.labyrinth.data.EconomyProvision;
+import com.github.sanctum.labyrinth.data.FileManager;
 import com.github.sanctum.labyrinth.event.custom.Subscribe;
 import com.github.sanctum.labyrinth.event.custom.Vent;
 import com.github.sanctum.labyrinth.formatting.FancyMessage;
@@ -40,6 +41,7 @@ import com.github.sanctum.labyrinth.library.Cooldown;
 import com.github.sanctum.labyrinth.library.Mailer;
 import com.github.sanctum.labyrinth.library.TimeWatch;
 import com.github.sanctum.labyrinth.task.Schedule;
+import com.github.sanctum.labyrinth.task.TaskScheduler;
 import java.math.BigDecimal;
 import java.util.Random;
 import java.util.UUID;
@@ -388,17 +390,17 @@ public class ClanEventListener implements Listener {
 			long sec = r.getSeconds();
 			if ((msec + sec) >= LabyrinthProvider.getInstance().getLocalPrintManager().getPrint(e.getApi().getLocalPrintKey()).getNumber("war_start_time").intValue()) {
 				e.start();
-				Cooldown.remove(test);
+				LabyrinthProvider.getInstance().remove(test);
 				e.setCancelled(true);
 			} else {
 				Mailer m = LabyrinthProvider.getService(Service.MESSENGER).getEmptyMailer();
-				String t = calc(test.getMinutesLeft()) + ":" + calc(test.getSecondsLeft());
-				Schedule.sync(() -> w.forEach(a -> {
+				String t = calc(test.getMinutes()) + ":" + calc(test.getSeconds());
+				TaskScheduler.of(() -> w.forEach(a -> {
 					Player p = a.getTag().getPlayer().getPlayer();
 					if (p != null) {
 						m.accept(p).action("&2War start&f: &e" + t).deploy();
 					}
-				})).run();
+				})).schedule();
 			}
 		}
 	}
@@ -444,7 +446,7 @@ public class ClanEventListener implements Listener {
 			if (p != null) {
 				War.Team t = e.getWar().getTeam(a.getClan());
 				int points = e.getWar().getPoints(t);
-				String time = calc(timer.getMinutesLeft()) + ":" + calc(timer.getSecondsLeft());
+				String time = calc(timer.getMinutes()) + ":" + calc(timer.getSeconds());
 				msg.accept(p).action("&3Points&f:&b " + points + " &6| &3Time left&f:&e " + time).deploy();
 			}
 		});
@@ -452,10 +454,12 @@ public class ClanEventListener implements Listener {
 
 	@Subscribe
 	public void onWarWin(WarWonEvent e) {
-
 		double reward = new Random().nextInt(e.getWinner().getValue()) + 0.17;
-		e.getWinner().getKey().givePower(reward);
-		e.getLosers().forEach((clan, integer) -> clan.takePower(reward));
+		FileManager config = ClansAPI.getDataInstance().getConfig();
+		double additional = config.read(c -> c.getNode("Clans.war.conclusion.winning").toPrimitive().getDouble());
+		e.getWinner().getKey().givePower(reward + additional);
+		double losing = config.read(c -> c.getNode("Clans.war.conclusion.losing").toPrimitive().getDouble());
+		e.getLosers().forEach((clan, integer) -> clan.takePower(reward + losing));
 	}
 
 	@Subscribe
