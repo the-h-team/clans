@@ -1,10 +1,11 @@
 package com.github.sanctum.clans.construct.api;
 
+import com.github.sanctum.labyrinth.formatting.completion.SimpleTabCompletion;
+import com.github.sanctum.labyrinth.formatting.completion.TabCompletionIndex;
 import com.github.sanctum.labyrinth.library.Message;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Stream;
+import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
@@ -14,7 +15,7 @@ public abstract class ClanSubCommand {
 
 	private String NOPERMISSION = "&cYou don't have permission <permission>";
 
-	private String PERMISSION;
+	private String PERMISSION = "clanspro";
 
 	private final String LABEL;
 
@@ -27,9 +28,7 @@ public abstract class ClanSubCommand {
 	}
 
 	protected final List<String> getBaseCompletion(String... args) {
-		List<String> result = new ArrayList<>();
-		Stream.of(getLabel()).filter(s -> s.toLowerCase().startsWith(args[0].toLowerCase())).forEach(result::add);
-		return result;
+		return SimpleTabCompletion.of(args).then(TabCompletionIndex.ONE, getLabel()).get();
 	}
 
 	public void setNoPermissionMessage(String message) {
@@ -61,13 +60,28 @@ public abstract class ClanSubCommand {
 		}
 	}
 
+	protected boolean isAlphaNumeric(String s) {
+		return s != null && s.matches("^[a-zA-Z0-9]*$");
+	}
+
+	public void sendMessage(Player player, String message) {
+		Clan.ACTION.sendMessage(player, message);
+	}
+
+	public boolean playerOnly() {
+		Bukkit.getLogger().warning("This is a player only sub-command.");
+		return true;
+	}
+
 	public List<String> getAliases() {
 		return this.ALIASES;
 	}
 
 	public abstract boolean player(Player player, String label, String[] args);
 
-	public abstract boolean console(CommandSender sender, String label, String[] args);
+	public boolean console(CommandSender sender, String label, String[] args) {
+		return playerOnly();
+	}
 
 	public List<String> tab(Player player, String label, String[] args) {
 		List<String> completion = getBaseCompletion(args);

@@ -270,6 +270,7 @@ public class ClanEventListener implements Listener {
 					break;
 				case PERSONAL:
 					String allies = c.getRelation().getAlliance().stream().map(Nameable::getName).collect(Collectors.joining(", "));
+					String alliesR = c.getRelation().getAlliance().getRequests().stream().map(Nameable::getName).collect(Collectors.joining(", "));
 					String enemies = c.getRelation().getRivalry().stream().map(Nameable::getName).collect(Collectors.joining(", "));
 					if (allies.isEmpty()) {
 						allies = "&cNone";
@@ -277,9 +278,13 @@ public class ClanEventListener implements Listener {
 					if (enemies.isEmpty()) {
 						enemies = "&cNone";
 					}
+					if (alliesR.isEmpty()) {
+						alliesR = "&cNone";
+					}
 					color = c.getPalette().toString();
 					String finalAllies = allies;
 					String finalEnemies = enemies;
+					String finalAlliesR = alliesR;
 					chain = new FancyMessageChain()
 							.append(top -> top.then(" ")
 									.then(" ")
@@ -292,7 +297,7 @@ public class ClanEventListener implements Listener {
 									.then(" ")
 									.then(" ")
 									.then("[")
-									.then("Stats").color(Color.RED).style(ChatColor.BOLD).hover(color + "Name: &f" + c.getName()).hover(color + "&rDescription: &f" + c.getDescription()).hover(color + "&rPower: &f" + Clan.ACTION.format(c.getPower())).hover(color + "&rColor: &f" + (c.getPalette().isGradient() ? (c.getPalette().toArray()[0] + c.getPalette().toArray()[1]).replace("&", "").replace("#", "&f»" + color + "&r") : color.replace("&", "&f»" + color + "&r").replace("#", "&f»" + color + "&r"))).hover(color + "&rClaims: &f" + c.getClaims().length + "/" + c.getClaimLimit()).hover(color + "&rAllies: &f" + finalAllies).hover(color + "&rEnemies: &f" + finalEnemies)
+									.then("Stats").color(Color.RED).style(ChatColor.BOLD).hover(color + "Name: &f" + c.getName()).hover(color + "&rDescription: &f" + c.getDescription()).hover(color + "&rPower: &f" + Clan.ACTION.format(c.getPower())).hover(color + "&rColor: &f" + (c.getPalette().isGradient() ? (c.getPalette().toArray()[0] + c.getPalette().toArray()[1]).replace("&", "").replace("#", "&f»" + color + "&r") : color.replace("&", "&f»" + color + "&r").replace("#", "&f»" + color + "&r"))).hover(color + "&rClaims: &f" + c.getClaims().length + "/" + c.getClaimLimit()).hover(color + "&rAllies: &f" + finalAllies).hover(color + "&rEnemies: &f" + finalEnemies).hover(color + "&rRequests: &f" + finalAlliesR)
 									.then("]")
 									.then(" ")
 									.then(" ")

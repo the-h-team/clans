@@ -1,6 +1,6 @@
 package com.github.sanctum.clans.construct.api;
 
-import com.github.sanctum.clans.construct.impl.ServerAssociate;
+import com.github.sanctum.clans.construct.impl.entity.ServerAssociate;
 import java.util.UUID;
 import java.util.function.Supplier;
 import org.jetbrains.annotations.NotNull;

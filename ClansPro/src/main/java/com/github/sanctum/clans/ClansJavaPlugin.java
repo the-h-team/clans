@@ -7,6 +7,7 @@ import com.github.sanctum.clans.bridge.internal.VaultsAddon;
 import com.github.sanctum.clans.construct.ArenaManager;
 import com.github.sanctum.clans.construct.ClaimManager;
 import com.github.sanctum.clans.construct.ClanManager;
+import com.github.sanctum.clans.construct.CommandManager;
 import com.github.sanctum.clans.construct.DataManager;
 import com.github.sanctum.clans.construct.ShieldManager;
 import com.github.sanctum.clans.construct.actions.ClansUpdate;
@@ -26,9 +27,9 @@ import com.github.sanctum.clans.construct.extra.AsynchronousLoanableTask;
 import com.github.sanctum.clans.construct.extra.MessagePrefix;
 import com.github.sanctum.clans.construct.extra.ReservedLogoCarrier;
 import com.github.sanctum.clans.construct.extra.StartProcedure;
-import com.github.sanctum.clans.construct.impl.AnimalAssociate;
 import com.github.sanctum.clans.construct.impl.DefaultArena;
 import com.github.sanctum.clans.construct.impl.DefaultClaimFlag;
+import com.github.sanctum.clans.construct.impl.entity.AnimalAssociate;
 import com.github.sanctum.clans.listener.PlayerEventListener;
 import com.github.sanctum.labyrinth.LabyrinthProvider;
 import com.github.sanctum.labyrinth.api.Service;
@@ -120,6 +121,7 @@ public class ClansJavaPlugin extends JavaPlugin implements ClansAPI {
 	private ClaimManager claimManager;
 	private ShieldManager shieldManager;
 	private ClanManager clanManager;
+	private CommandManager commandManager;
 	private LogoGallery gallery;
 	public DataManager dataManager;
 	private Hastebin hastebin;
@@ -400,6 +402,11 @@ public class ClansJavaPlugin extends JavaPlugin implements ClansAPI {
 	}
 
 	@Override
+	public @NotNull CommandManager getCommandManager() {
+		return commandManager;
+	}
+
+	@Override
 	public @NotNull LogoGallery getLogoGallery() {
 		return gallery;
 	}
@@ -535,6 +542,7 @@ public class ClansJavaPlugin extends JavaPlugin implements ClansAPI {
 		clanManager = new ClanManager();
 		claimManager = new ClaimManager();
 		shieldManager = new ShieldManager();
+		commandManager = new CommandManager();
 		serviceManager = new KeyedServiceManager<>();
 		arenaManager = new ArenaManager();
 		// Pre load 3 arena instances into cache so up to 6 clans can be at war at the same time.

@@ -42,6 +42,7 @@ import com.github.sanctum.labyrinth.library.Message;
 import com.github.sanctum.labyrinth.library.StringUtils;
 import com.github.sanctum.labyrinth.task.Procedure;
 import com.github.sanctum.labyrinth.task.Schedule;
+import com.github.sanctum.labyrinth.task.TaskScheduler;
 import java.math.BigDecimal;
 import java.text.MessageFormat;
 import java.util.Arrays;
@@ -52,6 +53,7 @@ import java.util.stream.Collectors;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.block.data.type.Farmland;
 import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
@@ -59,12 +61,14 @@ import org.bukkit.entity.Tameable;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerAnimationEvent;
 import org.bukkit.event.player.PlayerBucketEmptyEvent;
 import org.bukkit.event.player.PlayerBucketFillEvent;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
+import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerPortalEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.inventory.ItemStack;
@@ -74,7 +78,7 @@ public class PlayerEventListener implements Listener {
 
 	private final static LabyrinthMap<Location, ArmorStand> STAND_MAP = new LabyrinthEntryMap<>();
 	public static final Procedure<Object> STAND_REMOVAL = Procedure.request(() -> Object.class).next(o -> STAND_MAP.values().forEach(ArmorStand::remove));
-	protected static final AsynchronousLoanableTask LOANABLE_TASK = new AsynchronousLoanableTask((p, task) -> {
+	protected static final AsynchronousLoanableTask TASK = new AsynchronousLoanableTask((p, task) -> {
 		if (ClansAPI.getInstance() == null) {
 			task.stop();
 			return;
@@ -99,7 +103,7 @@ public class PlayerEventListener implements Listener {
 			if (clanCooldown.isComplete()) {
 				ClanVentBus.call(new ClanCooldownCompleteEvent(c, clanCooldown));
 				ClanCooldown.remove(clanCooldown);
-				Schedule.sync(() -> c.broadcast(MessageFormat.format(ClansAPI.getDataInstance().getMessageResponse("cooldown-expired"), clanCooldown.getAction().replace("Clans:", "")))).run();
+				TaskScheduler.of(() -> c.broadcast(MessageFormat.format(ClansAPI.getDataInstance().getMessageResponse("cooldown-expired"), clanCooldown.getAction().replace("Clans:", "")))).schedule();
 			}
 		}
 
@@ -196,6 +200,21 @@ public class PlayerEventListener implements Listener {
 		}
 	}
 
+	@EventHandler
+	public void onInteract(PlayerInteractEvent e) {
+		if (e.getAction() == Action.PHYSICAL) {
+			if (e.getClickedBlock().getState().getBlockData() instanceof Farmland) {
+				Claim c = ClansAPI.getInstance().getClaimManager().getClaim(e.getClickedBlock().getLocation());
+				if (c != null) {
+					Clan holder = (Clan) c.getHolder();
+					if (holder.stream().noneMatch(en -> en.getName().equals(e.getPlayer().getName()))) {
+						e.setCancelled(true);
+					}
+				}
+			}
+		}
+	}
+
 	@Subscribe(priority = Vent.Priority.HIGHEST)
 	public void onClaim(AssociateClaimEvent e) {
 		EconomyProvision eco = EconomyProvision.getInstance();
@@ -214,11 +233,11 @@ public class PlayerEventListener implements Listener {
 		}
 	}
 
-	@Subscribe
+	@Subscribe(priority = Vent.Priority.HIGHEST)
 	public void onPunch(PlayerPunchPlayerEvent e) {
 
 		Player attacker = e.getPlayer();
-		Cooldown test = LabyrinthProvider.getService(Service.COOLDOWNS).getCooldown("ClansPro-war-respawn-" + e.getVictim().getUniqueId().toString());
+		Cooldown test = LabyrinthProvider.getService(Service.COOLDOWNS).getCooldown("ClansPro-war-respawn-" + e.getVictim().getUniqueId());
 		if (test != null) {
 			if (!test.isComplete()) {
 				if (test.getSeconds() == 0) {
@@ -230,11 +249,9 @@ public class PlayerEventListener implements Listener {
 			} else {
 				LabyrinthProvider.getInstance().remove(test);
 			}
+			return;
 		}
-	}
 
-	@Subscribe(priority = Vent.Priority.HIGHEST)
-	public void onWarPunch(PlayerPunchPlayerEvent e) {
 		ClansAPI.getInstance().getAssociate(e.getPlayer()).ifPresent(a -> {
 			War w = ClansAPI.getInstance().getArenaManager().get(a);
 			if (w != null && !w.isRunning()) {
@@ -348,9 +365,8 @@ public class PlayerEventListener implements Listener {
 						return;
 					}
 					if (a.getId().equals(b.getId())) {
-						Clan at = ClansAPI.getInstance().getClanManager().getClan(e.getPlayer().getUniqueId());
-						e.setCanHurt(at.isFriendlyFire());
-						if (!at.isFriendlyFire()) {
+						e.setCanHurt(a.isFriendlyFire());
+						if (!a.isFriendlyFire()) {
 							e.getUtil().sendMessage(e.getPlayer(), e.getUtil().friendlyFire());
 						}
 						if (e.canHurt()) {
@@ -390,7 +406,6 @@ public class PlayerEventListener implements Listener {
 			Clan.Associate test = ClansAPI.getInstance().getAssociate(entity.getUniqueId()).orElse(null);
 			if (test != null) {
 				if (test.getClan().equals(associate.getClan())) {
-					// TODO: check for item on removal.
 					ItemStack item = p.getInventory().getItemInMainHand();
 					if (item.getType() == Material.STICK) {
 						if (item.hasItemMeta() && item.getItemMeta().hasDisplayName()) {
@@ -407,10 +422,11 @@ public class PlayerEventListener implements Listener {
 				}
 			} else {
 				if (!(entity instanceof Tameable)) return;
-				if (!((Tameable) entity).isTamed()) return;
-				if (((Tameable) entity).getOwner() == null) return;
-				if (((Tameable) entity).getOwner().getName() == null) return;
-				if (!((Tameable) entity).getOwner().getName().equals(associate.getName())) return;
+				Tameable tameable = (Tameable) entity;
+				if (!tameable.isTamed()) return;
+				if (tameable.getOwner() == null) return;
+				if (tameable.getOwner().getName() == null) return;
+				if (!tameable.getOwner().getName().equals(associate.getName())) return;
 				ItemStack item = p.getInventory().getItemInMainHand();
 				if (item.getType() == Material.BLAZE_ROD) {
 					if (item.hasItemMeta() && item.getItemMeta().hasDisplayName()) {
@@ -504,12 +520,12 @@ public class PlayerEventListener implements Listener {
 
 		Player p = e.getPlayer();
 
-		LOANABLE_TASK.join(p);
+		TASK.join(p);
 
 		Clan.Associate associate = ClansAPI.getInstance().getAssociate(PlayerSearch.of(p.getName()).getId()).orElse(null);
 
-		boolean scoreboard = Bukkit.getVersion().contains("1.14") || Bukkit.getVersion().contains("1.15") || Bukkit.getVersion().contains("1.16") || Bukkit.getVersion().contains("1.17") || Bukkit.getVersion().contains("1.18");
-		if (scoreboard) {
+		boolean canDisplay = !LabyrinthProvider.getInstance().isLegacy();
+		if (canDisplay) {
 			if (associate != null) {
 				if (associate.isValid()) {
 					if (ClansAPI.getDataInstance().isDisplayTagsAllowed()) {
@@ -533,7 +549,7 @@ public class PlayerEventListener implements Listener {
 				Clan.ACTION.sendMessage(p, "&b&oUpdated configuration to the latest plugin version.");
 			}
 			ClansUpdate check = new ClansUpdate(ClansAPI.getInstance().getPlugin());
-			Schedule.async(() -> {
+			TaskScheduler.of(() -> {
 				try {
 					if (check.hasUpdate()) {
 						Clan.ACTION.sendMessage(p, "&b&l&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬oO[&fUpdate&b&l&m]Oo▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬");
@@ -543,14 +559,14 @@ public class PlayerEventListener implements Listener {
 					}
 				} catch (Exception ignored) {
 				}
-			}).run();
+			}).schedule();
 		}
 	}
 
 	@Subscribe
 	public void onPlayerLeave(DefaultEvent.Leave e) {
 		final Player p = e.getPlayer();
-		LOANABLE_TASK.leave(p);
+		TASK.leave(p);
 		Clan.Associate associate = ClansAPI.getInstance().getAssociate(p).orElse(null);
 		if (associate != null) {
 			if (ClansAPI.getDataInstance().isDisplayTagsAllowed()) {
@@ -562,7 +578,7 @@ public class PlayerEventListener implements Listener {
 				if (current.isRunning()) {
 					if (current.getQueue().unque(associate)) {
 						m.announce(player -> true, associate.getNickname() + "&c has left the battlefield.").deploy();
-						Schedule.sync(() -> {
+						TaskScheduler.of(() -> {
 							if (current.getQueue().getAssociates().length == 0) {
 								m.announce(player -> true, "&cThere is no one left in the arena. War in &7#&6" + current.getId() + " &chas reset.").deploy();
 								current.stop();
@@ -585,7 +601,7 @@ public class PlayerEventListener implements Listener {
 									current.getQueue().unque(associate);
 								}
 							}
-						}).run();
+						}).schedule();
 					}
 				} else {
 					if (current.getQueue().getAssociates().length <= ClansAPI.getDataInstance().getConfigInt("Clans.war.que-needed") + 1) {
@@ -594,7 +610,7 @@ public class PlayerEventListener implements Listener {
 							m.announce(player -> true, "&cEvery queued member has left the game. War in &7#&6" + current.getId() + " &cfailed to start.").deploy();
 						}
 					} else {
-						Schedule.sync(() -> current.getQueue().unque(associate)).applyAfter(() -> {
+						TaskScheduler.of(() -> current.getQueue().unque(associate)).schedule().next(() -> {
 							if (current.getQueue().count(associate.getClan()) == 0) {
 								int alive = 0;
 								for (Clan c : current.getQueue().getTeams()) {
@@ -611,7 +627,7 @@ public class PlayerEventListener implements Listener {
 									current.getQueue().unque(associate);
 								}
 							}
-						}).run();
+						}).schedule();
 					}
 				}
 			}

@@ -1,4 +1,4 @@
-package com.github.sanctum.clans.construct.impl;
+package com.github.sanctum.clans.construct.impl.entity;
 
 import com.github.sanctum.clans.construct.api.Channel;
 import com.github.sanctum.clans.construct.api.Claim;
@@ -9,6 +9,7 @@ import com.github.sanctum.clans.construct.api.PersistentEntity;
 import com.github.sanctum.clans.construct.api.Relation;
 import com.github.sanctum.clans.construct.api.Teleport;
 import com.github.sanctum.clans.construct.extra.PrivateContainer;
+import com.github.sanctum.clans.construct.impl.Resident;
 import com.github.sanctum.labyrinth.annotation.Ordinal;
 import com.github.sanctum.labyrinth.data.Atlas;
 import com.github.sanctum.labyrinth.data.AtlasMap;

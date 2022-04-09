@@ -1,5 +1,6 @@
-package com.github.sanctum.clans.construct.impl;
+package com.github.sanctum.clans.construct.impl.entity;
 
+import com.github.sanctum.clans.bridge.ClanVentBus;
 import com.github.sanctum.clans.construct.api.Channel;
 import com.github.sanctum.clans.construct.api.Claim;
 import com.github.sanctum.clans.construct.api.Clan;
@@ -8,20 +9,29 @@ import com.github.sanctum.clans.construct.api.Consultant;
 import com.github.sanctum.clans.construct.api.IncomingConsultationListener;
 import com.github.sanctum.clans.construct.api.InvasiveEntity;
 import com.github.sanctum.clans.construct.api.OutgoingConsultationListener;
+import com.github.sanctum.clans.construct.api.PersistentEntity;
 import com.github.sanctum.clans.construct.api.Relation;
 import com.github.sanctum.clans.construct.api.Teleport;
 import com.github.sanctum.clans.construct.api.Ticket;
 import com.github.sanctum.clans.construct.extra.PrivateContainer;
+import com.github.sanctum.clans.construct.impl.Resident;
+import com.github.sanctum.clans.event.associate.AssociateFromAnimalEvent;
 import com.github.sanctum.labyrinth.annotation.Ordinal;
 import com.github.sanctum.labyrinth.data.Atlas;
 import com.github.sanctum.labyrinth.data.AtlasMap;
+import com.github.sanctum.labyrinth.data.MemorySpace;
+import com.github.sanctum.labyrinth.data.Node;
+import com.github.sanctum.labyrinth.data.service.Check;
+import com.github.sanctum.labyrinth.library.HUID;
 import com.github.sanctum.labyrinth.library.Mailer;
 import com.github.sanctum.labyrinth.library.TimeWatch;
 import com.github.sanctum.labyrinth.task.Schedule;
+import com.github.sanctum.skulls.CustomHead;
 import com.github.sanctum.skulls.SkullType;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -29,33 +39,37 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
-import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
 import org.bukkit.Location;
+import org.bukkit.entity.Tameable;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class ServerAssociate implements Clan.Associate, Consultant {
+public final class AnimalAssociate implements PersistentEntity, Clan.Associate, Consultant {
 
 	private final Map<String, IncomingConsultationListener> incomingMessageListeners = new HashMap<>();
 	private final Map<String, OutgoingConsultationListener> outgoingResponseListeners = new HashMap<>();
 	private final InvasiveEntity parent;
-	private final Clan clan;
+	private final Clan clanObject;
+	private final HUID clan;
+	private String bio;
+	private String nickname;
 	private final Date join;
 	private Clan.Rank rank;
 	private Channel chat;
+	private final ItemStack head;
 	private final Object data;
-	private final Tag tag;
 	private final Map<Long, Long> killMap;
-	private String nick;
-	private String bio;
 
-	public ServerAssociate(InvasiveEntity parent, Clan.Rank priority, Clan clan) {
-		this.clan = clan;
-		this.parent = parent;
+	public AnimalAssociate(InvasiveEntity entity, Clan.Rank priority, Clan clan) {
+		Check.forNull(entity, "Parent entity cannot be null!");
+		Check.argument(entity.isEntity(), "Parent type is not an entity!");
+		Check.argument(entity.getAsEntity() instanceof Tameable, "Parent entity is not tamable!");
+		this.parent = entity;
 		this.join = new Date();
-		this.tag = parent.getTag();
+		this.clan = clan.getId();
+		this.clanObject = clan;
 		this.data = new Object() {
 			final PrivateContainer container;
 
@@ -82,28 +96,30 @@ public class ServerAssociate implements Clan.Associate, Consultant {
 			}
 
 			@Ordinal(32)
-			private PrivateContainer getContainer() {
+			protected PrivateContainer getContainer() {
 				return container;
 			}
 		};
 		this.rank = priority;
-		this.chat = Channel.valueOf("CONSOLE");
+		this.chat = Channel.GLOBAL;
+		this.head = CustomHead.Manager.get(parent.getName());
 		this.killMap = new HashMap<>();
+		ClanVentBus.call(new AssociateFromAnimalEvent(this));
 	}
 
 	public @NotNull String getName() {
-		return this.parent.getName();
+		return parent.getName();
 	}
 
 	public @NotNull UUID getId() {
-		return UUID.fromString(getTag().getId());
+		return UUID.fromString(parent.getTag().getId());
 	}
 
 	/**
 	 * @return Gets the players cached head skin.
 	 */
 	public ItemStack getHead() {
-		return SkullType.PLAYER.get();
+		return head == null ? SkullType.PLAYER.get() : head;
 	}
 
 	/**
@@ -126,12 +142,12 @@ public class ServerAssociate implements Clan.Associate, Consultant {
 	 * @return Gets the clan this associate belongs to.
 	 */
 	public Clan getClan() {
-		return clan;
+		return Optional.ofNullable(ClansAPI.getInstance().getClanManager().getClan(clan)).orElse(clanObject);
 	}
 
 	@Override
 	public Mailer getMailer() {
-		return Mailer.empty(Bukkit.getConsoleSender());
+		return Mailer.empty(getAsEntity());
 	}
 
 	/**
@@ -145,7 +161,7 @@ public class ServerAssociate implements Clan.Associate, Consultant {
 	 * @return true if the backing clan id for this associate is linked with anything and the backing entity data is also valid.
 	 */
 	public boolean isValid() {
-		return getClan() != null && getId().equals(ClansAPI.getInstance().getSessionId());
+		return getClan() != null && getAsEntity() != null && getAsEntity().isValid();
 	}
 
 	@Ordinal(1)
@@ -214,14 +230,14 @@ public class ServerAssociate implements Clan.Associate, Consultant {
 	 * @return Gets the associates clan nick-name, if one is not present their full user-name will be returned.
 	 */
 	public synchronized String getNickname() {
-		return nick != null ? nick : getName();
+		return nickname != null ? nickname : getName();
 	}
 
 	/**
 	 * @return Gets the associates clan biography.
 	 */
 	public synchronized String getBiography() {
-		return this.bio != null ? this.bio : "&fI much like other's, &fenjoy long walks on the beach.";
+		return bio != null ? bio : "&fI much like other's, &fenjoy long walks on the beach.";
 	}
 
 	/**
@@ -253,12 +269,12 @@ public class ServerAssociate implements Clan.Associate, Consultant {
 	 * @param newName The new nick name
 	 */
 	public synchronized void setNickname(String newName) {
-		this.nick = newName;
+		this.nickname = newName;
 	}
 
 	@Override
 	public @NotNull Tag getTag() {
-		return tag;
+		return parent.getTag();
 	}
 
 	@Override
@@ -313,6 +329,66 @@ public class ServerAssociate implements Clan.Associate, Consultant {
 
 	@Override
 	public void save() {
+
+	}
+
+	@Override
+	public void remove(Carrier carrier) {
+		getClan().remove(carrier);
+	}
+
+	@Override
+	public String getPath() {
+		return getId().toString();
+	}
+
+	@Override
+	public boolean isNode(String key) {
+		Optional<MemorySpace> memorySpace = getClan().getMemorySpace();
+		if (memorySpace.isPresent()) {
+			Node user_data = memorySpace.get().getNode("user-data");
+			Node user = user_data.getNode(getPath());
+			return user.isNode(key);
+		}
+		return false;
+	}
+
+	@Override
+	public Node getNode(String key) {
+		Optional<MemorySpace> memorySpace = getClan().getMemorySpace();
+		if (memorySpace.isPresent()) {
+			Node user_data = memorySpace.get().getNode("user-data");
+			Node user = user_data.getNode(getPath());
+			return user.getNode(key);
+		}
+		return null;
+	}
+
+	@Override
+	public Set<String> getKeys(boolean deep) {
+		Optional<MemorySpace> memorySpace = getClan().getMemorySpace();
+		if (memorySpace.isPresent()) {
+			Node user_data = memorySpace.get().getNode("user-data");
+			Node user = user_data.getNode(getPath());
+			return user.getKeys(deep);
+		}
+		return new HashSet<>();
+	}
+
+	@Override
+	public Map<String, Object> getValues(boolean deep) {
+		Optional<MemorySpace> memorySpace = getClan().getMemorySpace();
+		if (memorySpace.isPresent()) {
+			Node user_data = memorySpace.get().getNode("user-data");
+			Node user = user_data.getNode(getPath());
+			return user.getValues(deep);
+		}
+		return new HashMap<>();
+	}
+
+	@Override
+	public @NotNull Optional<MemorySpace> getMemorySpace() {
+		return Optional.of(this);
 	}
 
 	@Override
@@ -359,13 +435,8 @@ public class ServerAssociate implements Clan.Associate, Consultant {
 	}
 
 	@Override
-	public void remove(Carrier carrier) {
-		getClan().remove(carrier);
-	}
-
-	@Override
 	public void remove() {
-		getClan().remove(this);
-		InvasiveEntity.removeNonAssociated(this.parent, false);
+		Schedule.sync(() -> getClan().remove(this)).run();
+		InvasiveEntity.removeNonAssociated(parent, false);
 	}
 }

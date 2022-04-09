@@ -5,6 +5,7 @@ import com.github.sanctum.clans.bridge.ClanAddon;
 import com.github.sanctum.clans.construct.ArenaManager;
 import com.github.sanctum.clans.construct.ClaimManager;
 import com.github.sanctum.clans.construct.ClanManager;
+import com.github.sanctum.clans.construct.CommandManager;
 import com.github.sanctum.clans.construct.DataManager;
 import com.github.sanctum.clans.construct.ShieldManager;
 import com.github.sanctum.clans.construct.extra.MessagePrefix;
@@ -170,6 +171,13 @@ public interface ClansAPI {
 	 * @return The raid shield manager.
 	 */
 	@NotNull ShieldManager getShieldManager();
+
+	/**
+	 * Get the manager for clan sub commands.
+	 *
+	 * @return The sub command manager.
+	 */
+	@NotNull CommandManager getCommandManager();
 
 	/**
 	 * Get the logo gallery. A public place for local users to upload their 8-bit art work.

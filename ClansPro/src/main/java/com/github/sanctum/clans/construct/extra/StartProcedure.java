@@ -12,6 +12,7 @@ import com.github.sanctum.clans.construct.api.BanksAPI;
 import com.github.sanctum.clans.construct.api.Claim;
 import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClanException;
+import com.github.sanctum.clans.construct.api.ClanSubCommand;
 import com.github.sanctum.clans.construct.api.ClansAPI;
 import com.github.sanctum.clans.construct.bank.BankListener;
 import com.github.sanctum.clans.construct.bank.BankPermissions;
@@ -20,13 +21,13 @@ import com.github.sanctum.clans.event.claim.RaidShieldEvent;
 import com.github.sanctum.labyrinth.LabyrinthProvider;
 import com.github.sanctum.labyrinth.annotation.Ordinal;
 import com.github.sanctum.labyrinth.api.Service;
-import com.github.sanctum.labyrinth.command.CommandRegistration;
 import com.github.sanctum.labyrinth.data.EconomyProvision;
 import com.github.sanctum.labyrinth.data.FileList;
 import com.github.sanctum.labyrinth.data.FileManager;
 import com.github.sanctum.labyrinth.data.FileType;
 import com.github.sanctum.labyrinth.data.Registry;
 import com.github.sanctum.labyrinth.event.custom.Vent;
+import com.github.sanctum.labyrinth.library.CommandUtils;
 import com.github.sanctum.labyrinth.library.Item;
 import com.github.sanctum.labyrinth.library.Metrics;
 import com.github.sanctum.labyrinth.library.StringUtils;
@@ -117,8 +118,9 @@ public final class StartProcedure {
 		if (bail) return;
 		instance.getLogger().info("- Starting registry procedures.");
 		instance.dataManager.copyDefaults();
-		new Registry<>(Listener.class).source(ClansAPI.getInstance().getPlugin()).pick("com.github.sanctum.clans.listener").operate(listener -> LabyrinthProvider.getService(Service.VENT).subscribe(instance, listener));
-		new Registry<>(Command.class).source(ClansAPI.getInstance().getPlugin()).pick("com.github.sanctum.clans.commands").operate(CommandRegistration::use);
+		new Registry<>(Listener.class).source(ClansAPI.getInstance().getPlugin()).filter("com.github.sanctum.clans.listener").operate(listener -> LabyrinthProvider.getService(Service.VENT).subscribe(instance, listener));
+		new Registry<>(Command.class).source(ClansAPI.getInstance().getPlugin()).filter("com.github.sanctum.clans.commands").operate(CommandUtils::register);
+		new Registry<>(ClanSubCommand.class).source(ClansAPI.getInstance().getPlugin()).filter("com.github.sanctum.clans.commands").operate(cmd -> instance.getCommandManager().register(cmd));
 		ClanAddonRegistrationException.getLoadingProcedure().run(instance).deploy();
 	}
 

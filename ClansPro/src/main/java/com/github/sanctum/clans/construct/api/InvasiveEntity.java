@@ -1,7 +1,7 @@
 package com.github.sanctum.clans.construct.api;
 
-import com.github.sanctum.clans.construct.impl.AnimalAssociate;
-import com.github.sanctum.clans.construct.impl.ServerAssociate;
+import com.github.sanctum.clans.construct.impl.entity.AnimalAssociate;
+import com.github.sanctum.clans.construct.impl.entity.ServerAssociate;
 import com.github.sanctum.labyrinth.annotation.Experimental;
 import com.github.sanctum.labyrinth.data.EconomyProvision;
 import com.github.sanctum.labyrinth.data.MemorySpace;

@@ -6,10 +6,10 @@ import com.github.sanctum.clans.construct.api.Claim;
 import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClansAPI;
 import com.github.sanctum.clans.construct.api.InvasiveEntity;
-import com.github.sanctum.clans.construct.impl.DefaultAssociate;
 import com.github.sanctum.clans.construct.impl.DefaultClaim;
 import com.github.sanctum.clans.construct.impl.DefaultClan;
 import com.github.sanctum.clans.construct.impl.Resident;
+import com.github.sanctum.clans.construct.impl.entity.DefaultAssociate;
 import com.github.sanctum.clans.event.TimerEvent;
 import com.github.sanctum.clans.event.claim.ClaimResidentEvent;
 import com.github.sanctum.clans.event.claim.ClaimsLoadingProcedureEvent;
@@ -204,7 +204,7 @@ public final class ClaimManager {
 		return null;
 	}
 
-	public boolean test(Player player, Block block) {
+	public boolean canClaim(Player player, Block block) {
 		BlockBreakEvent blockBreakEvent = new BlockBreakEvent(block, player);
 		Bukkit.getPluginManager().callEvent(blockBreakEvent);
 		return !blockBreakEvent.isCancelled();

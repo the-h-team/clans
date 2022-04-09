@@ -16,6 +16,8 @@ import com.github.sanctum.clans.construct.api.Savable;
 import com.github.sanctum.clans.construct.api.Teleport;
 import com.github.sanctum.clans.construct.extra.BukkitColor;
 import com.github.sanctum.clans.construct.extra.ClanRelationElement;
+import com.github.sanctum.clans.construct.impl.entity.AnimalAssociate;
+import com.github.sanctum.clans.construct.impl.entity.DefaultAssociate;
 import com.github.sanctum.clans.event.associate.AssociateObtainLandEvent;
 import com.github.sanctum.clans.event.command.ClanInformationAdaptEvent;
 import com.github.sanctum.clans.event.insignia.InsigniaBuildCarrierEvent;

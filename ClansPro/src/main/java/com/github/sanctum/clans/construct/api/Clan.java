@@ -6,7 +6,7 @@ import com.github.sanctum.clans.construct.extra.BukkitColor;
 import com.github.sanctum.clans.construct.extra.ClanError;
 import com.github.sanctum.clans.construct.impl.DefaultClan;
 import com.github.sanctum.clans.construct.impl.Resident;
-import com.github.sanctum.clans.construct.impl.ServerAssociate;
+import com.github.sanctum.clans.construct.impl.entity.ServerAssociate;
 import com.github.sanctum.labyrinth.LabyrinthProvider;
 import com.github.sanctum.labyrinth.data.FileManager;
 import com.github.sanctum.labyrinth.data.JsonAdapter;
