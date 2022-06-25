@@ -2,6 +2,7 @@ package com.github.sanctum.clans.event.command;
 
 import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.event.ClanEvent;
+import com.github.sanctum.labyrinth.formatting.string.FormattedString;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -27,13 +28,13 @@ public class CommandInformationAdaptEvent extends ClanEvent {
 	}
 
 	public void insert(String line) {
-		helpMenu.add(getUtil().color(line));
+		helpMenu.add(new FormattedString(line).replace("/c", "{label}").get());
 	}
 
 	public void insert(String... lines) {
 		List<String> array = new ArrayList<>();
 		for (String s : lines) {
-			array.add(getUtil().color(s));
+			array.add(new FormattedString(s).replace("/c", "{label}").get());
 		}
 		helpMenu.addAll(array);
 	}

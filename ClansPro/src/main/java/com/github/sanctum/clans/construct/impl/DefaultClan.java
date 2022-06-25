@@ -7,6 +7,7 @@ import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClanBank;
 import com.github.sanctum.clans.construct.api.ClanCooldown;
 import com.github.sanctum.clans.construct.api.ClansAPI;
+import com.github.sanctum.clans.construct.api.Clearance;
 import com.github.sanctum.clans.construct.api.ClearanceLog;
 import com.github.sanctum.clans.construct.api.InvasiveEntity;
 import com.github.sanctum.clans.construct.api.LogoHolder;
@@ -16,6 +17,7 @@ import com.github.sanctum.clans.construct.api.Savable;
 import com.github.sanctum.clans.construct.api.Teleport;
 import com.github.sanctum.clans.construct.extra.BukkitColor;
 import com.github.sanctum.clans.construct.extra.ClanRelationElement;
+import com.github.sanctum.clans.construct.extra.DocketUtils;
 import com.github.sanctum.clans.construct.impl.entity.AnimalAssociate;
 import com.github.sanctum.clans.construct.impl.entity.DefaultAssociate;
 import com.github.sanctum.clans.event.associate.AssociateObtainLandEvent;
@@ -36,12 +38,13 @@ import com.github.sanctum.labyrinth.formatting.Message;
 import com.github.sanctum.labyrinth.formatting.UniformedComponents;
 import com.github.sanctum.labyrinth.formatting.string.RandomHex;
 import com.github.sanctum.labyrinth.formatting.string.RandomID;
+import com.github.sanctum.labyrinth.gui.unity.simple.MemoryDocket;
 import com.github.sanctum.labyrinth.interfacing.OrdinalProcedure;
 import com.github.sanctum.labyrinth.library.Entities;
 import com.github.sanctum.labyrinth.library.HUID;
 import com.github.sanctum.labyrinth.library.NamespacedKey;
 import com.github.sanctum.labyrinth.library.StringUtils;
-import com.github.sanctum.labyrinth.task.Schedule;
+import com.github.sanctum.labyrinth.task.TaskScheduler;
 import java.math.BigDecimal;
 import java.text.MessageFormat;
 import java.util.ArrayList;
@@ -407,7 +410,7 @@ public final class DefaultClan implements Clan, PersistentEntity {
 		this.enemyList = new ClanRelationElement(this, ClanRelationElement.RelationType.Enemy);
 		boolean isNew = LabyrinthProvider.getService(Service.LEGACY).isNew();
 		this.palette = new Color(this);
-		if (isNew) {
+		if (isNew && !ClansAPI.getDataInstance().isTrue("Formatting.symbols")) {
 			palette.set(new RandomHex());
 		} else {
 			palette.setStart(BukkitColor.random().toCode());
@@ -499,7 +502,19 @@ public final class DefaultClan implements Clan, PersistentEntity {
 			this.friendlyfire = c.read(f -> f.getBoolean("friendlyfire"));
 
 		}
-
+		if (ClansAPI.getDataInstance().getMessages().read(n -> n.getNode("deep-edit").toPrimitive().getBoolean())) {
+			TaskScheduler.of(() -> {
+				Node members = ClansAPI.getDataInstance().getMessages().getRoot().getNode("menu.members");
+				MemoryDocket<Associate> docket = new MemoryDocket<>(members);
+				docket.setList(() -> new ArrayList<>(associates));
+				docket.setComparator(InvasiveEntity.comparingByEntity());
+				docket.setNamePlaceholder(":member_name:");
+				docket.setUniqueDataConverter(this, Clan.memoryDocketReplacer());
+				docket.setDataConverter(Associate.memoryDocketReplacer());
+				docket.load();
+				DocketUtils.load(Clan.memoryDocketReplacer().accept(members.getNode("id").toPrimitive().getString(), this), docket);
+			}).scheduleLater(2);
+		}
 
 		ClearanceLog clog = getValue(ClearanceLog.class, "clearance");
 		if (clog == null && !server) {
@@ -583,7 +598,7 @@ public final class DefaultClan implements Clan, PersistentEntity {
 			}
 
 		} else {
-			ACTION.removePlayer(target);
+			ACTION.remove(target, false).deploy();
 			return new DefaultAssociate(target, Rank.NORMAL, this);
 		}
 		return null;
@@ -616,7 +631,7 @@ public final class DefaultClan implements Clan, PersistentEntity {
 
 	@Override
 	public boolean isValid() {
-		return this.clanID != null && this.name != null && ClansAPI.getInstance().getClanManager().getClans().exists(clan -> clan.equals(this));
+		return this.clanID != null && this.name != null && ClansAPI.getInstance().getClanManager().getClans().stream().anyMatch(clan -> clan.equals(this));
 	}
 
 	@Override
@@ -684,13 +699,18 @@ public final class DefaultClan implements Clan, PersistentEntity {
 
 	@Override
 	public void setPassword(String newPassword) {
-		if (newPassword.equals("empty")) {
-			this.password = null;
-			broadcast("&b&o&nThe clan status was set to&r &a&oOPEN.");
-			return;
+		if (!newPassword.equalsIgnoreCase("empty")) {
+			if (password == null) {
+				broadcast(MessageFormat.format(ClansAPI.getDataInstance().getMessageResponse("clan-status"), "&c&oLOCKED"));
+			}
+			this.password = newPassword;
+			broadcast(Clearance.MANAGE_PASSWORD::test, MessageFormat.format(ClansAPI.getDataInstance().getMessageResponse("password-change"), newPassword));
+		} else {
+			if (password != null) {
+				this.password = null;
+			}
+			broadcast(MessageFormat.format(ClansAPI.getDataInstance().getMessageResponse("clan-status"), "&a&oOPEN"));
 		}
-		this.password = newPassword;
-		broadcast(MessageFormat.format(ClansAPI.getDataInstance().getMessageResponse("password-change"), newPassword));
 	}
 
 	@Override
@@ -887,7 +907,7 @@ public final class DefaultClan implements Clan, PersistentEntity {
 	}
 
 	public synchronized void addClaim(Claim c) {
-		Schedule.sync(() -> claims.add(c)).run();
+		TaskScheduler.of(() -> claims.add(c)).schedule();
 	}
 
 	public synchronized void removeClaim(Claim c) {
@@ -1007,7 +1027,7 @@ public final class DefaultClan implements Clan, PersistentEntity {
 			}
 		}
 		array.add("&f&m---------------------------");
-		array.add("&n" + ClansAPI.getDataInstance().getConfig().getRoot().getString("Formatting.Chat.Styles.Full.Member") + "s&r [&7" + members.size() + "&r] - " + members.toString());
+		array.add("&n" + ClansAPI.getDataInstance().getConfig().getRoot().getString("Formatting.Chat.Styles.Full.Member") + "s&r [&7" + members.size() + "&r] - " + members);
 		array.add(" ");
 		ClanInformationAdaptEvent event = new Vent.Call<>(Vent.Runtime.Synchronous, new ClanInformationAdaptEvent(array, clanID, ClanInformationAdaptEvent.Type.OTHER)).run();
 		return event.getInsertions().toArray(new String[0]);
@@ -1066,7 +1086,7 @@ public final class DefaultClan implements Clan, PersistentEntity {
 
 	@Override
 	public @NotNull List<ClanCooldown> getCooldowns() {
-		return ClansAPI.getDataInstance().getCooldowns().stream().sequential().filter(c -> c.getId().equals(clanID)).collect(Collectors.toList());
+		return ClansAPI.getDataInstance().getCooldowns().stream().sequential().filter(c -> c.getId().equals(clanID)).collect(Collectors.toSet()).stream().collect(Collectors.toList());
 	}
 
 	@Override
@@ -1098,7 +1118,7 @@ public final class DefaultClan implements Clan, PersistentEntity {
 		getMembers().forEach(a -> {
 			if (a.isEntity()) return;
 			if (predicate.test(a)) {
-				Optional.ofNullable(a.getTag().getPlayer().getPlayer()).ifPresent(pl -> pl.sendMessage(ACTION.color(message)));
+				Optional.ofNullable(a.getTag().getPlayer().getPlayer()).ifPresent(pl -> pl.sendMessage(ACTION.color("&7[&6&l" + getName() + "&7] " + message)));
 			}
 		});
 	}
@@ -1112,12 +1132,6 @@ public final class DefaultClan implements Clan, PersistentEntity {
 			int x = c.getX();
 			int z = c.getZ();
 			String world = c.getWorld().getName();
-			FileManager d = ClansAPI.getInstance().getClaimManager().getFile();
-			DataTable table = DataTable.newTable();
-			table.set(getId() + "." + claimID + ".X", x);
-			table.set(getId() + "." + claimID + ".Z", z);
-			table.set(getId() + "." + claimID + ".World", world);
-			d.write(table);
 			claim = new DefaultClaim(x, z, clanID, claimID, world, true);
 			Claim finalClaim = claim;
 			ClansAPI.getInstance().getClaimManager().getFlagManager().getFlags().forEach(finalClaim::register);
@@ -1418,7 +1432,7 @@ public final class DefaultClan implements Clan, PersistentEntity {
 	@Override
 	public void remove() {
 		getCarriers().forEach(station -> station.getLines().forEach(LogoHolder.Carrier.Line::destroy));
-		Schedule.sync(() -> ClansAPI.getInstance().getClanManager().unload(this)).run();
+		TaskScheduler.of(() -> ClansAPI.getInstance().getClanManager().unload(this)).schedule();
 	}
 
 	@NotNull
@@ -1451,7 +1465,7 @@ public final class DefaultClan implements Clan, PersistentEntity {
 	public boolean add(InvasiveEntity entity) {
 		if (entity.isAssociate()) {
 			associates.add(entity.getAsAssociate());
-			if (ClansAPI.getInstance().getClanManager().getClans().exists(c -> c.equals(this)) && !entity.isTamable()) {
+			if (ClansAPI.getInstance().getClanManager().getClans().stream().anyMatch(c -> c.equals(this)) && !entity.isTamable()) {
 				if (entity.getMemorySpace().isPresent()) {
 					Node join_date = entity.getMemorySpace().get().getNode("join-date");
 					Date now = new Date();
@@ -1643,7 +1657,7 @@ public final class DefaultClan implements Clan, PersistentEntity {
 					Carrier.this.getChunk().load(true);
 				}
 				getStand().remove();
-				Schedule.sync(() -> Carrier.this.remove(this)).run();
+				TaskScheduler.of(() -> Carrier.this.remove(this)).schedule();
 			}
 
 		}

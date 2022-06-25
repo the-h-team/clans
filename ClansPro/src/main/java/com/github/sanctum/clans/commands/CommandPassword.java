@@ -24,7 +24,7 @@ public class CommandPassword extends ClanSubCommand {
 		}
 
 		if (args.length == 0) {
-			if (!p.hasPermission(this.getPermission() + "." + DataManager.Security.getPermission("password"))) {
+			if (!Clan.ACTION.test(p, "clanspro." + DataManager.Security.getPermission("password")).deploy()) {
 				lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("password")));
 				return true;
 			}
@@ -32,7 +32,7 @@ public class CommandPassword extends ClanSubCommand {
 		}
 
 		if (args.length == 1) {
-			if (!p.hasPermission(this.getPermission() + "." + DataManager.Security.getPermission("password"))) {
+			if (!Clan.ACTION.test(p, "clanspro." + DataManager.Security.getPermission("password")).deploy()) {
 				lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("password")));
 				return true;
 			}

@@ -3,6 +3,7 @@ package com.github.sanctum.clans.construct.api;
 import com.github.sanctum.clans.ClansJavaPlugin;
 import com.github.sanctum.clans.bridge.ClanAddon;
 import com.github.sanctum.clans.bridge.ClanAddonQuery;
+import com.github.sanctum.clans.construct.extra.DocketUtils;
 import com.github.sanctum.clans.construct.extra.MessagePrefix;
 import com.github.sanctum.clans.construct.extra.SimpleLogoCarrier;
 import com.github.sanctum.labyrinth.LabyrinthProvider;
@@ -10,9 +11,11 @@ import com.github.sanctum.labyrinth.api.Service;
 import com.github.sanctum.labyrinth.data.EconomyProvision;
 import com.github.sanctum.labyrinth.data.FileList;
 import com.github.sanctum.labyrinth.data.FileManager;
+import com.github.sanctum.labyrinth.data.Node;
 import com.github.sanctum.labyrinth.data.container.LabyrinthSet;
 import com.github.sanctum.labyrinth.data.reload.PrintManager;
 import com.github.sanctum.labyrinth.data.service.Constant;
+import com.github.sanctum.labyrinth.formatting.string.FormattedString;
 import com.github.sanctum.labyrinth.formatting.string.Paragraph;
 import com.github.sanctum.labyrinth.gui.unity.construct.Menu;
 import com.github.sanctum.labyrinth.gui.unity.construct.PaginatedMenu;
@@ -23,16 +26,17 @@ import com.github.sanctum.labyrinth.gui.unity.impl.InventoryElement;
 import com.github.sanctum.labyrinth.gui.unity.impl.ItemElement;
 import com.github.sanctum.labyrinth.gui.unity.impl.ListElement;
 import com.github.sanctum.labyrinth.gui.unity.impl.MenuType;
+import com.github.sanctum.labyrinth.gui.unity.simple.Docket;
+import com.github.sanctum.labyrinth.gui.unity.simple.MemoryDocket;
+import com.github.sanctum.labyrinth.interfacing.UnknownGeneric;
 import com.github.sanctum.labyrinth.library.Deployable;
 import com.github.sanctum.labyrinth.library.Entities;
 import com.github.sanctum.labyrinth.library.HUID;
 import com.github.sanctum.labyrinth.library.Item;
 import com.github.sanctum.labyrinth.library.Items;
 import com.github.sanctum.labyrinth.library.Mailer;
-import com.github.sanctum.labyrinth.library.Message;
 import com.github.sanctum.labyrinth.library.RandomObject;
 import com.github.sanctum.labyrinth.library.StringUtils;
-import com.github.sanctum.labyrinth.task.Schedule;
 import com.github.sanctum.labyrinth.task.TaskScheduler;
 import com.github.sanctum.skulls.CustomHeadLoader;
 import com.github.sanctum.skulls.SkullType;
@@ -64,18 +68,6 @@ import org.bukkit.inventory.meta.ItemMeta;
 public enum GUI {
 
 	/**
-	 * Modify arena team spawning locations.
-	 */
-	ARENA_SPAWN,
-	/**
-	 * Call a vote to surrender the current war.
-	 */
-	ARENA_SURRENDER,
-	/**
-	 * Call a vote to truce the current war.
-	 */
-	ARENA_TRUCE,
-	/**
 	 * All activated clans addons
 	 */
 	ADDONS_ACTIVATED,
@@ -92,17 +84,21 @@ public enum GUI {
 	 */
 	ADDONS_SELECTION,
 	/**
-	 * Entire clan roster.
+	 * Modify arena team spawning locations.
 	 */
-	CLAN_ROSTER,
+	ARENA_SPAWN,
 	/**
-	 * Most power clans on the server in ordered by rank.
+	 * Call a vote to surrender the current war.
 	 */
-	CLAN_ROSTER_TOP,
+	ARENA_SURRENDER,
 	/**
-	 * Roster category selection
+	 * Call a vote to truce the current war.
 	 */
-	CLAN_ROSTER_SELECTION,
+	ARENA_TRUCE,
+	/**
+	 * Access clan bank options. (WIP)
+	 */
+	BANK,
 	/**
 	 * A clan's list of claims
 	 */
@@ -112,6 +108,18 @@ public enum GUI {
 	 */
 	CLAIM_TITLES,
 	/**
+	 * Entire clan roster.
+	 */
+	CLAN_ROSTER,
+	/**
+	 * Roster category selection
+	 */
+	CLAN_ROSTER_SELECTION,
+	/**
+	 * Most power clans on the server in ordered by rank.
+	 */
+	CLAN_ROSTER_TOP,
+	/**
 	 * A clan's list of logo carriers
 	 */
 	HOLOGRAM_LIST,
@@ -120,26 +128,25 @@ public enum GUI {
 	 */
 	LOGO_LIST,
 	/**
-	 *
+	 * The main menu.
 	 */
 	MAIN_MENU,
-	/**
-	 * View a clan member's info.
-	 */
-	MEMBER_INFO,
 	/**
 	 * Edit a clan member
 	 */
 	MEMBER_EDIT,
 	/**
+	 * View a clan member's info.
+	 */
+	MEMBER_INFO,
+	/**
 	 * View a clan's member list.
 	 */
 	MEMBER_LIST,
-	RELATIONS_MENU,
 	/**
-	 * Modify game rule settings.
+	 * View a clan's relation list.
 	 */
-	SETTINGS_GAME_RULE,
+	RELATIONS_MENU,
 	/**
 	 * Modify clan arena settings live
 	 */
@@ -152,6 +159,10 @@ public enum GUI {
 	 * View a list of clans to edit.
 	 */
 	SETTINGS_CLAN_ROSTER,
+	/**
+	 * Modify game rule settings.
+	 */
+	SETTINGS_GAME_RULE,
 	/**
 	 * Change the plugin language.
 	 */
@@ -197,6 +208,18 @@ public enum GUI {
 
 	public Menu get(Player p) {
 		if (this == GUI.MAIN_MENU) {
+			if (ClansAPI.getDataInstance().getMessages().read(c -> c.getNode("deep-edit").toPrimitive().getBoolean())) {
+				String id = ClansAPI.getDataInstance().getMessageString("menu.home.id");
+				MemoryDocket<UnknownGeneric> docket = DocketUtils.get(id);
+				if (docket == null) {
+					docket = new MemoryDocket<>(ClansAPI.getDataInstance().getMessages().getRoot().getNode("menu.home"));
+					docket.setNamePlaceholder("%player_name%");
+					docket.setUniqueDataConverter(p, (s, player) -> new FormattedString(s).translate(player).get());
+					docket.load();
+					DocketUtils.load(id, docket);
+				}
+				return docket.toMenu();
+			}
 			FileManager messages = ClansAPI.getDataInstance().getMessages();
 			return MenuType.SINGULAR.build()
 					.setTitle(MessageFormat.format(ClansAPI.getDataInstance().getMenuTitle("home-screen"), p.getName()))
@@ -252,7 +275,7 @@ public enum GUI {
 						List<String> listFormat = messages.read(c -> c.getStringList("menu-format.home-screen.clan_list_button.lore"));
 						i.addItem(item -> item.setElement(edit -> edit.setItem(ClansAPI.getDataInstance().getMenuItem("home-screen-list")).setTitle(messages.read(c -> c.getString("menu-format.home-screen.clan_list_button.title"))).setLore(listFormat).build()).setSlot(13).setClick(click -> {
 							click.setCancelled(true);
-							click.getElement().performCommand(messages.read(c -> c.getString("menu-format.home-screen.clan_list_button.destination")));
+							CLAN_ROSTER_SELECTION.get().open(click.getElement());
 						}));
 
 						List<String> commandsFormat = messages.read(c -> c.getStringList("menu-format.home-screen.clan_commands_button.lore"));
@@ -265,6 +288,14 @@ public enum GUI {
 						i.addItem(item -> item.setElement(edit -> edit.setItem(ClansAPI.getDataInstance().getMenuItem("home-screen-info")).setTitle(messages.read(c -> c.getString("menu-format.home-screen.my_info_button.title"))).setLore(infoFormat).build()).setSlot(20).setClick(click -> {
 							click.setCancelled(true);
 							click.getElement().performCommand(MessageFormat.format(messages.read(c -> c.getString("menu-format.home-screen.my_info_button.destination")), click.getElement().getName()));
+						}));
+
+						i.addItem(item -> item.setElement(edit -> edit.setType(Material.GOLD_INGOT).setTitle("&6Bank").setLore("&eClick for bank actions.").build()).setSlot(22).setClick(click -> {
+							click.setCancelled(true);
+							Clan.Associate ass = ClansAPI.getInstance().getAssociate(click.getElement()).orElse(null);
+							if (ass != null) {
+								BANK.get(ass.getClan()).open(click.getElement());
+							}
 						}));
 
 						List<String> relationsFormat = messages.read(c -> c.getStringList("menu-format.home-screen.clan_relations_button.lore"));
@@ -441,7 +472,7 @@ public enum GUI {
 									if (click.getElement().hasPermission("clanspro.admin")) {
 										if (click.getClickType().isShiftClick()) {
 											api.getLogoGallery().remove(set);
-											Schedule.sync(() -> GUI.LOGO_LIST.get().open(click.getElement())).waitReal(1);
+											TaskScheduler.of(() -> GUI.LOGO_LIST.get().open(click.getElement())).scheduleLater(1);
 											return;
 										}
 									}
@@ -458,6 +489,11 @@ public enum GUI {
 							i.addItem(list);
 						}).orGet(m -> m instanceof PaginatedMenu && m.getKey().map(("ClansPro:logo-list")::equals).orElse(false));
 			case CLAN_ROSTER:
+				if (ClansAPI.getDataInstance().getMessages().read(c -> c.getNode("deep-edit").toPrimitive().getBoolean())) {
+					String id = ClansAPI.getDataInstance().getMessageString("menu.roster.id");
+					MemoryDocket<?> docket = DocketUtils.get(id);
+					if (docket != null) return docket.toMenu();
+				}
 				return MenuType.PAGINATED.build().setHost(api.getPlugin())
 						.setProperty(Menu.Property.CACHEABLE, Menu.Property.RECURSIVE)
 						.setTitle(printManager.getPrint(api.getLocalPrintKey()).getString(AbstractGameRule.CLAN_ROSTER_TITLE))
@@ -513,7 +549,7 @@ public enum GUI {
 								CLAN_ROSTER_SELECTION.get().open(click.getElement());
 							}));
 
-							i.addItem(new ListElement<>(api.getClanManager().getClans().list()).setLimit(getLimit()).setPopulate((c, element) -> {
+							i.addItem(new ListElement<>(api.getClanManager().getClans().stream().collect(Collectors.toList())).setLimit(getLimit()).setPopulate((c, element) -> {
 								element.setElement(b -> {
 									String title = MessageFormat.format(ClansAPI.getDataInstance().getMenuCategory("clan"), c.getPalette().toString(), (c.getNickname() != null ? c.getNickname() : c.getName()), c.getId().toString().substring(0, 4));
 									ItemStack it;
@@ -533,7 +569,7 @@ public enum GUI {
 										logo.addAll(c.getLogo());
 										b.setLore(logo.toArray(new String[0]));
 									} else {
-										b.setLore("&bTag: " + c.getPalette() + (c.getNickname() != null ? c.getNickname() : c.getName()), "&bMembers: " + c.getPalette() + c.getMembers().size(), "&bDescription: " + c.getPalette() + c.getDescription());
+										b.setLore("&bTag: " + c.getPalette() + c.getName(), "&bMembers: " + c.getPalette() + c.getMembers().size(), "&bDescription: " + c.getPalette() + c.getDescription());
 									}
 									return b.build();
 								}).setClick(click -> {
@@ -631,6 +667,11 @@ public enum GUI {
 
 						}).orGet(m -> m instanceof PaginatedMenu && m.getKey().isPresent() && m.getKey().get().equals("ClansPro:Roster_edit"));
 			case CLAN_ROSTER_TOP:
+				if (ClansAPI.getDataInstance().getMessages().read(c -> c.getNode("deep-edit").toPrimitive().getBoolean())) {
+					String id = ClansAPI.getDataInstance().getMessageString("menu.roster-top.id");
+					MemoryDocket<?> docket = DocketUtils.get(id);
+					if (docket != null) return docket.toMenu();
+				}
 				return MenuType.PAGINATED.build().setHost(api.getPlugin())
 						.setProperty(Menu.Property.CACHEABLE, Menu.Property.RECURSIVE)
 						.setTitle(printManager.getPrint(api.getLocalPrintKey()).getString(AbstractGameRule.CLAN_ROSTER_TOP_TITLE))
@@ -705,7 +746,7 @@ public enum GUI {
 										logo.addAll(c.getLogo());
 										b.setLore(logo.toArray(new String[0]));
 									} else {
-										b.setLore("&bTag: " + c.getPalette() + (c.getNickname() != null ? c.getNickname() : c.getName()), "&bMembers: " + c.getPalette() + c.getMembers().size(), "&bDescription: " + c.getPalette() + c.getDescription());
+										b.setLore("&bTag: " + c.getPalette() + c.getName(), "&bMembers: " + c.getPalette() + c.getMembers().size(), "&bDescription: " + c.getPalette() + c.getDescription());
 									}
 									return b.build();
 								}).setClick(click -> {
@@ -717,6 +758,11 @@ public enum GUI {
 
 						}).orGet(m -> m instanceof PaginatedMenu && m.getKey().isPresent() && m.getKey().get().equals("ClansPro:Roster_top"));
 			case CLAN_ROSTER_SELECTION:
+				if (ClansAPI.getDataInstance().getMessages().read(c -> c.getNode("deep-edit").toPrimitive().getBoolean())) {
+					String id = ClansAPI.getDataInstance().getMessageString("menu.roster-select.id");
+					MemoryDocket<?> docket = DocketUtils.get(id);
+					if (docket != null) return docket.toMenu();
+				}
 				return MenuType.SINGULAR.build().setHost(api.getPlugin())
 						.setProperty(Menu.Property.RECURSIVE, Menu.Property.CACHEABLE)
 						.setTitle(StringUtils.use(ClansAPI.getDataInstance().getMenuTitle("list-types")).translate())
@@ -880,12 +926,12 @@ public enum GUI {
 								c.setCancelled(true);
 								SETTINGS_SELECT.get().open(c.getElement());
 								api.getFileList().get("Config", "Configuration").getRoot().reload();
-								Message.form(c.getElement()).setPrefix(api.getPrefix().joined()).send("&aConfig file 'Config' reloaded.");
+								Mailer.empty(c.getElement()).prefix().start(api.getPrefix().joined()).finish().chat("&aConfig file 'Config' reloaded.").deploy();
 							}));
 							i.addItem(b -> b.setElement(ed -> ed.setType(Material.POTION).setTitle("&5Messages.yml").build()).setSlot(2).setClick(c -> {
 								c.setCancelled(true);
 								api.getFileList().get("Messages", "Configuration").getRoot().reload();
-								Message.form(c.getElement()).setPrefix(api.getPrefix().joined()).send("&aConfig file 'Messages' reloaded.");
+								Mailer.empty(c.getElement()).prefix().start(api.getPrefix().joined()).finish().chat("&aConfig file 'Messages' reloaded.").deploy();
 							}));
 							i.addItem(b -> b.setElement(ed -> ed.setType(Material.POTION).setTitle("&2&lAll").build()).setSlot(4).setClick(c -> {
 								c.setCancelled(true);
@@ -909,7 +955,7 @@ public enum GUI {
 										config.getRoot().reload();
 										FileList.search(api.getPlugin()).copyYML("Messages_pt_br", message);
 										message.getRoot().reload();
-										Message.form(p).setPrefix(api.getPrefix().joined()).send("&a&oAgora traduzido para o brasil!");
+										Mailer.empty(p).prefix().start(api.getPrefix().joined()).finish().chat("&a&oAgora traduzido para o brasil!").deploy();
 
 									}
 
@@ -1006,7 +1052,7 @@ public enum GUI {
 								nc.getRoot().reload();
 								FileList.search(api.getPlugin()).copyYML("Messages", nm);
 								nm.getRoot().reload();
-								Message.form(c.getElement()).setPrefix(api.getPrefix().joined()).send("&a&oTranslated back to default english.");
+								Mailer.empty(c.getElement()).prefix().start(api.getPrefix().joined()).finish().chat("&a&oTranslated back to default english.").deploy();
 								FileManager main = ClansAPI.getDataInstance().getConfig();
 
 								((ClansJavaPlugin) api.getPlugin()).setPrefix(new MessagePrefix(main.getRoot().getString("Formatting.prefix.prefix"), main.getRoot().getString("Formatting.prefix.text"), main.getRoot().getString("Formatting.prefix.suffix")));
@@ -1033,7 +1079,7 @@ public enum GUI {
 								nc.getRoot().reload();
 								FileList.search(api.getPlugin()).copyYML("Messages_pt_br", nm);
 								nm.getRoot().reload();
-								Message.form(c.getElement()).setPrefix(api.getPrefix().joined()).send("&a&oAgora traduzido para o brasil!");
+								Mailer.empty(c.getElement()).prefix().start(api.getPrefix().joined()).finish().chat("&a&oAgora traduzido para o brasil!").deploy();
 
 								FileManager main = ClansAPI.getDataInstance().getConfig();
 
@@ -1333,7 +1379,6 @@ public enum GUI {
 						.setTitle("&d&oRelations &0&l»")
 						.setSize(Menu.Rows.THREE)
 						.setProperty(Menu.Property.CACHEABLE)
-						.setKey("ClansPro:" + associate.getId().toString())
 						.setStock(i -> {
 							FillerElement<?> filler = new FillerElement<>(i);
 							filler.add(ed -> ed.setType(ItemElement.ControlType.ITEM_FILLER).setElement(it -> it.setType(Optional.ofNullable(Items.findMaterial("bluestainedglasspane")).orElse(Items.findMaterial("stainedglasspane"))).setTitle(" ").build()));
@@ -1505,8 +1550,14 @@ public enum GUI {
 							}));
 
 						})
-						.orGet(m -> m.getKey().map(("ClansPro:" + associate.getId().toString())::equals).orElse(false));
+						.join();
 			case MEMBER_INFO:
+				if (ClansAPI.getDataInstance().getMessages().read(c -> c.getNode("deep-edit").toPrimitive().getBoolean())) {
+					MemoryDocket<Clan.Associate> docket = new MemoryDocket<>(ClansAPI.getDataInstance().getMessages().getRoot().getNode("menu.member"));
+					docket.setUniqueDataConverter(associate, Clan.Associate.memoryDocketReplacer());
+					docket.setNamePlaceholder(":member_name:");
+					return Docket.toMenu(docket);
+				}
 				String finalBalance = balance;
 				return MenuType.SINGULAR.build().setHost(api.getPlugin())
 						.setProperty(Menu.Property.CACHEABLE)
@@ -1558,12 +1609,12 @@ public enum GUI {
 										} else {
 											click.getElement().closeInventory();
 											request.cancel();
-											Message.form(click.getElement()).setPrefix(api.getPrefix().joined()).send("&cYou already have a teleport request pending, cancelling...");
+											Mailer.empty(click.getElement()).prefix().start(api.getPrefix().joined()).finish().chat("&cYou already have a teleport request pending, cancelling...").deploy();
 										}
 									}
 
 								} else {
-									Message.form(click.getElement()).setPrefix(api.getPrefix().joined()).send("&cIm not online at the moment, hit me up later!");
+									Mailer.empty(click.getElement()).prefix().start(api.getPrefix().joined()).finish().chat("&cIm not online at the moment, hit me up later!").deploy();
 								}
 							}));
 							i.addItem(b -> b.setElement(it -> it.setType(Material.BOOK).setTitle(o + "Statistics:").setLore(statist).build()).setSlot(12).setClick(click -> {
@@ -1586,17 +1637,30 @@ public enum GUI {
 								click.setCancelled(true);
 								p.closeInventory();
 							}));
-							i.addItem(b -> b.setElement(it -> it.setType(Material.NAME_TAG).setTitle("&c&lEdit").build()).setSlot(26).setClick(click -> {
+							i.addItem(b -> b.setElement(it -> it.setType(Material.NAME_TAG).setTitle("&dMessage").build()).setSlot(25).setClick(click -> {
 								Player p = click.getElement();
 								click.setCancelled(true);
+								MenuType.PRINTABLE.build()
+										.setTitle("Message " + associate.getName())
+										.setHost(api.getPlugin())
+										.setSize(Menu.Rows.ONE)
+										.setStock(inv -> inv.addItem(be -> be.setElement(it -> it.setItem(SkullType.ARROW_BLUE_RIGHT.get()).build())
+												.setSlot(0)
+												.setClick(c -> {
+													c.setCancelled(true);
+													c.setHotbarAllowed(false);
+												})))
+										.join()
+										.addAction(clickElement -> {
+											clickElement.setCancelled(true);
+											clickElement.setHotbarAllowed(false);
+											if (clickElement.getSlot() == 2) {
+												clickElement.getElement().performCommand("tell " + associate.getName() + " " + clickElement.getParent().getName());
+												clickElement.getElement().closeInventory();
+											}
 
-								if (p.hasPermission("clanspro.admin")) {
-									api.getMenu(SETTINGS_MEMBER, associate).open(p);
-								} else {
-									click.getParent().remove(p, true);
-									click.getParent().getParent().getParent().open(p);
-								}
-								p.closeInventory();
+										})
+										.open(p);
 							}));
 							i.addItem(b -> b.setElement(it -> it.setType(Material.DIAMOND_SWORD).setTitle(o + "K/D:").setLore(o + kd).build()).setSlot(10).setClick(click -> {
 								Player p = click.getElement();
@@ -1690,7 +1754,7 @@ public enum GUI {
 								api.getAssociate(p).ifPresent(a -> {
 									if (Clearance.KICK_MEMBERS.test(a)) {
 										associate.remove();
-										Schedule.sync(() -> MEMBER_LIST.get(a.getClan()).open(p)).wait(1);
+										TaskScheduler.of(() -> MEMBER_LIST.get(a.getClan()).open(p)).scheduleLater(1);
 									}
 								});
 							}));
@@ -1698,7 +1762,7 @@ public enum GUI {
 								Player p = click.getElement();
 								api.getAssociate(p).ifPresent(a -> {
 									if (Clearance.MANAGE_POSITIONS.test(a)) {
-										Clan.ACTION.promotePlayer(associate.getId());
+										Clan.ACTION.promote(associate.getId()).deploy();
 									}
 								});
 							}));
@@ -1706,7 +1770,7 @@ public enum GUI {
 								Player p = click.getElement();
 								api.getAssociate(p).ifPresent(a -> {
 									if (Clearance.MANAGE_POSITIONS.test(a)) {
-										Clan.ACTION.demotePlayer(associate.getId());
+										Clan.ACTION.demote(associate.getId()).deploy();
 									}
 								});
 							}));
@@ -1715,7 +1779,7 @@ public enum GUI {
 			case SETTINGS_MEMBER:
 				return MenuType.SINGULAR.build().setHost(api.getPlugin())
 						.setProperty(Menu.Property.RECURSIVE, Menu.Property.CACHEABLE)
-						.setTitle("&0&l» " + cl.getPalette().toString() + associate.getName() + " settings")
+						.setTitle("&0&l» " + cl.getPalette().toString(associate.getName()) + " settings")
 						.setKey("ClansPro:member-" + associate.getName() + "-edit-settings")
 						.setSize(Menu.Rows.THREE)
 						.setStock(i -> {
@@ -1797,7 +1861,7 @@ public enum GUI {
 												final UUID uid = associate.getId();
 												if (id != null) {
 													Clan clan = api.getClanManager().getClan(id);
-													Clan.ACTION.removePlayer(uid);
+													Clan.ACTION.remove(uid, true).deploy();
 													Clan.Associate newAssociate = clan.newAssociate(uid);
 													if (newAssociate != null) {
 														clan.add(newAssociate);
@@ -1817,11 +1881,11 @@ public enum GUI {
 							}));
 							i.addItem(b -> b.setElement(it -> it.setType(Material.DIAMOND).setTitle("&7[&aPromotion&7]").setLore("&5Click to promote me.").build()).setSlot(14).setClick(click -> {
 								Player p = click.getElement();
-								Clan.ACTION.promotePlayer(associate.getId());
+								Clan.ACTION.promote(associate.getId()).deploy();
 							}));
 							i.addItem(b -> b.setElement(it -> it.setType(Material.REDSTONE).setTitle("&7[&cDemotion&7]").setLore("&5Click to demote me.").build()).setSlot(15).setClick(click -> {
 								Player p = click.getElement();
-								Clan.ACTION.demotePlayer(associate.getId());
+								Clan.ACTION.demote(associate.getId()).deploy();
 							}));
 
 						}).orGet(m -> m instanceof SingularMenu && m.getKey().isPresent() && m.getKey().get().equals("ClansPro:member-" + associate.getName() + "-edit-settings")).addAction(c -> c.setCancelled(true));
@@ -1833,6 +1897,84 @@ public enum GUI {
 
 	public Menu get(Clan clan) {
 		switch (this) {
+			case BANK:
+				return MenuType.SINGULAR.build().setHost(api.getPlugin())
+						.setTitle("&d&oBank &0&l»")
+						.setSize(Menu.Rows.THREE)
+						.setProperty(Menu.Property.CACHEABLE)
+						.setStock(i -> {
+							FillerElement<?> filler = new FillerElement<>(i);
+							filler.add(ed -> ed.setType(ItemElement.ControlType.ITEM_FILLER).setElement(it -> it.setType(Optional.ofNullable(Items.findMaterial("bluestainedglasspane")).orElse(Items.findMaterial("stainedglasspane"))).setTitle(" ").build()));
+							i.addItem(filler);
+							BorderElement<?> border = new BorderElement<>(i);
+							for (Menu.Panel p : Menu.Panel.values()) {
+								if (p == Menu.Panel.MIDDLE) continue;
+								if (LabyrinthProvider.getInstance().isLegacy()) {
+									border.add(p, ed -> ed.setType(ItemElement.ControlType.ITEM_BORDER).setElement(it -> it.setType(Items.findMaterial("STAINED_GLASS_PANE")).setTitle(" ").build()));
+								} else {
+									border.add(p, ed -> ed.setType(ItemElement.ControlType.ITEM_BORDER).setElement(it -> it.setType(Material.GRAY_STAINED_GLASS_PANE).setTitle(" ").build()));
+								}
+							}
+							i.addItem(border);
+
+							// 9, 17
+
+							i.addItem(builder -> builder.setElement(edit -> edit.setType(Material.BOOK).setTitle("&6Balance: &f" + clan.getBalanceDouble()).setFlags(ItemFlag.HIDE_ENCHANTS).addEnchantment(Enchantment.MENDING, 1).build()).setSlot(9).setType(ItemElement.ControlType.DISPLAY));
+							i.addItem(builder -> builder.setElement(edit -> edit.setType(Material.ANVIL).setTitle("&aDeposit +").build()).setSlot(11).setClick(click -> {
+								click.setCancelled(true);
+								MenuType.PRINTABLE.build()
+										.setTitle("&a&lDeposit +")
+										.setSize(Menu.Rows.ONE)
+										.setHost(api.getPlugin())
+										.setStock(printable -> printable.addItem(b -> b.setElement(it -> it.setItem(SkullType.ARROW_BLUE_RIGHT.get()).setTitle(" ").build()).setSlot(0).setClick(c -> {
+											c.setCancelled(true);
+											c.setHotbarAllowed(false);
+										}))).join()
+										.addAction(c -> {
+											c.setCancelled(true);
+											c.setHotbarAllowed(false);
+											if (c.getSlot() == 2) {
+												String name = c.getParent().getName().trim();
+												if (StringUtils.use(name).isDouble()) {
+													c.getElement().performCommand("c bank deposit " + name);
+													c.getElement().closeInventory();
+												}
+											}
+
+										}).open(click.getElement());
+							}));
+							i.addItem(builder -> builder.setElement(edit -> edit.setType(Material.ANVIL).setTitle("&cWithdraw -").build()).setSlot(12).setClick(click -> {
+								click.setCancelled(true);
+								MenuType.PRINTABLE.build()
+										.setTitle("&c&lWithdraw -")
+										.setSize(Menu.Rows.ONE)
+										.setHost(api.getPlugin())
+										.setStock(printable -> printable.addItem(b -> b.setElement(it -> it.setItem(SkullType.ARROW_BLUE_RIGHT.get()).setTitle(" ").build()).setSlot(0).setClick(c -> {
+											c.setCancelled(true);
+											c.setHotbarAllowed(false);
+										}))).join()
+										.addAction(c -> {
+											c.setCancelled(true);
+											c.setHotbarAllowed(false);
+											if (c.getSlot() == 2) {
+												String name = c.getParent().getName().trim();
+												if (StringUtils.use(name).isDouble()) {
+													c.getElement().performCommand("c bank withdraw " + name);
+													c.getElement().closeInventory();
+												}
+											}
+
+										}).open(click.getElement());
+							}));
+
+							i.addItem(b -> b.setElement(getBackItem()).setSlot(13).setClick(clickElement -> {
+								Player p = clickElement.getElement();
+								clickElement.setCancelled(true);
+								MAIN_MENU.get(p).open(p);
+							}));
+
+						})
+						.join();
 			case CLAIM_TITLES:
 				return MenuType.SINGULAR.build().setHost(api.getPlugin())
 						.setProperty(Menu.Property.RECURSIVE, Menu.Property.CACHEABLE)
@@ -2007,7 +2149,7 @@ public enum GUI {
 									api.getAssociate(click.getElement()).ifPresent(a -> {
 										Location loc = claim.getLocation();
 										loc.setY(claim.getLocation().getWorld().getHighestBlockYAt(claim.getLocation()));
-										Clan.ACTION.teleport(click.getElement(), loc);
+										Clan.ACTION.teleport(click.getElement(), loc).deploy();
 									});
 								});
 							});
@@ -2073,7 +2215,7 @@ public enum GUI {
 								item.setClick(click -> {
 									click.setCancelled(true);
 									api.getAssociate(click.getElement()).ifPresent(a -> {
-										Clan.ACTION.teleport(click.getElement(), stand.getLines().stream().findFirst().get().getStand().getLocation());
+										Clan.ACTION.teleport(click.getElement(), stand.getLines().stream().findFirst().get().getStand().getLocation()).deploy();
 									});
 								});
 							});
@@ -2388,7 +2530,7 @@ public enum GUI {
 											c.setHotbarAllowed(false);
 											if (c.getSlot() == 2) {
 												if (c.getParent().getName().equals("1")) {
-													Clan.ACTION.removePlayer(clan.getOwner().getId());
+													Clan.ACTION.remove(clan.getOwner().getId(), false).deploy();
 													p.closeInventory();
 												} else {
 													p.closeInventory();
@@ -2458,6 +2600,13 @@ public enum GUI {
 							})));
 						}).orGet(m -> m instanceof PaginatedMenu && m.getKey().map(("ClansPro:" + clan.getName() + "-members-edit")::equals).orElse(false));
 			case MEMBER_LIST:
+				if (ClansAPI.getDataInstance().getMessages().read(c -> c.getNode("deep-edit").toPrimitive().getBoolean())) {
+					Node h = ClansAPI.getDataInstance().getMessages().getRoot().getNode("menu.members");
+					MemoryDocket<Clan.Associate> dm = DocketUtils.get(Clan.memoryDocketReplacer().accept(h.getNode("id").toPrimitive().getString(), clan));
+					if (dm != null) {
+						return dm.toMenu();
+					}
+				}
 				return MenuType.PAGINATED.build()
 						.setHost(api.getPlugin())
 						.setKey("ClansPro:" + clan.getName() + "-members")
@@ -2576,7 +2725,7 @@ public enum GUI {
 									}
 									if (v.count(Vote.NO) >= acount) {
 										v.clear();
-										LabyrinthProvider.getService(Service.MESSENGER).getNewMessage().setPrefix(api.getPrefix().joined()).broadcast("&c&oTruce amongst the clans failed . Not enough votes yes.");
+										LabyrinthProvider.getService(Service.MESSENGER).getEmptyMailer().prefix().start(api.getPrefix().joined()).finish().announce(p -> true, "&c&oTruce amongst the clans failed. Not enough votes yes.").deploy();
 									}
 								});
 								c.getElement().closeInventory();
@@ -2598,13 +2747,13 @@ public enum GUI {
 										if (v.count(Vote.YES) >= acount) {
 											if (v.isUnanimous()) {
 												v.clear();
-												LabyrinthProvider.getService(Service.MESSENGER).getNewMessage().setPrefix(api.getPrefix().joined()).broadcast("&c&oTruce amongst the clans failed . Not enough votes yes.");
+												LabyrinthProvider.getService(Service.MESSENGER).getEmptyMailer().prefix().start(api.getPrefix().joined()).finish().announce(p -> true, "&c&oTruce amongst the clans failed . Not enough votes yes.").deploy();
 											} else {
 												// good to go cancel
 												if (war.stop()) {
 													war.reset();
 													a.getClan().takePower(8.6);
-													LabyrinthProvider.getService(Service.MESSENGER).getNewMessage().setPrefix(api.getPrefix().joined()).broadcast("&3&oA truce was called and the war is over.");
+													LabyrinthProvider.getService(Service.MESSENGER).getEmptyMailer().prefix().start(api.getPrefix().joined()).finish().announce(p -> true, "&3&oA truce was called and the war is over.").deploy();
 												}
 											}
 										}
@@ -2640,7 +2789,7 @@ public enum GUI {
 										}
 										if (v.count(Vote.NO) >= acount) {
 											v.clear();
-											LabyrinthProvider.getService(Service.MESSENGER).getNewMessage().setPrefix(api.getPrefix().joined()).broadcast("&c&oClan " + a.getClan().getName() + " failed to surrender. Not enough votes yes.");
+											LabyrinthProvider.getService(Service.MESSENGER).getEmptyMailer().prefix().start(api.getPrefix().joined()).finish().announce(p -> true, "&c&oClan " + a.getClan().getName() + " failed to surrender. Not enough votes yes.").deploy();
 										}
 									}
 								});
@@ -2664,13 +2813,13 @@ public enum GUI {
 											if (v.isUnanimous()) {
 												v.clear();
 												// Mutual votes. cancel voting
-												LabyrinthProvider.getService(Service.MESSENGER).getNewMessage().setPrefix(api.getPrefix().joined()).broadcast("&c&oClan " + a.getClan().getName() + " failed to surrender. Voting came to a draw.");
+												LabyrinthProvider.getService(Service.MESSENGER).getEmptyMailer().prefix().start(api.getPrefix().joined()).finish().announce(p -> true, "&c&oClan " + a.getClan().getName() + " failed to surrender. Voting came to a draw.").deploy();
 											} else {
 												// good to go cancel
 												if (war.stop()) {
 													war.reset();
 													a.getClan().takePower(8.6);
-													LabyrinthProvider.getService(Service.MESSENGER).getNewMessage().setPrefix(api.getPrefix().joined()).broadcast("&5&oClan " + a.getClan().getName() + " has surrendered.");
+													LabyrinthProvider.getService(Service.MESSENGER).getEmptyMailer().prefix().start(api.getPrefix().joined()).finish().announce(p -> true, "&5&oClan " + a.getClan().getName() + " has surrendered.").deploy();
 												}
 											}
 										}

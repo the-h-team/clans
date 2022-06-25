@@ -20,7 +20,7 @@ public class CommandCreate extends ClanSubCommand {
 		Clan.Associate associate = ClansAPI.getInstance().getAssociate(p).orElse(null);
 
 		if (args.length == 0) {
-			if (!p.hasPermission(this.getPermission() + "." + DataManager.Security.getPermission("create"))) {
+			if (!Clan.ACTION.test(p, "clanspro." + DataManager.Security.getPermission("create")).deploy()) {
 				lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("create")));
 				return true;
 			}
@@ -29,7 +29,7 @@ public class CommandCreate extends ClanSubCommand {
 		}
 
 		if (args.length == 1) {
-			if (!p.hasPermission(this.getPermission() + "." + DataManager.Security.getPermission("create"))) {
+			if (!Clan.ACTION.test(p, "clanspro." + DataManager.Security.getPermission("create")).deploy()) {
 				lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("create")));
 				return true;
 			}
@@ -41,12 +41,12 @@ public class CommandCreate extends ClanSubCommand {
 				lib.sendMessage(p, lib.alreadyMade(args[0]));
 				return true;
 			}
-			Clan.ACTION.create(p.getUniqueId(), args[0], null);
+			Clan.ACTION.create(p.getUniqueId(), args[0], null, false).deploy();
 			return true;
 		}
 
 		if (args.length == 2) {
-			if (!p.hasPermission(this.getPermission() + "." + DataManager.Security.getPermission("create"))) {
+			if (!Clan.ACTION.test(p, "clanspro." + DataManager.Security.getPermission("create")).deploy()) {
 				lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("create")));
 				return true;
 			}
@@ -58,7 +58,7 @@ public class CommandCreate extends ClanSubCommand {
 				lib.sendMessage(p, lib.alreadyMade(args[0]));
 				return true;
 			}
-			Clan.ACTION.create(p.getUniqueId(), args[0], args[1]);
+			Clan.ACTION.create(p.getUniqueId(), args[0], args[1], false).deploy();
 			return true;
 		}
 

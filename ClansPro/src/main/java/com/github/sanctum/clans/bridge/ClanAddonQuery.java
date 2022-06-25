@@ -259,7 +259,7 @@ public class ClanAddonQuery {
 		Logger l = PRO.getLogger();
 		List<ClanAddon> data = new Registry<>(ClanAddon.class)
 				.source(plugin)
-				.pick(packageName)
+				.filter(packageName)
 				.operate(e -> {
 					ClanException.call(ClanAddonRegistrationException::new).check(e).run("Addon's can only be registered one time!", true);
 					load(e);

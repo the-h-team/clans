@@ -88,7 +88,6 @@ public class DeployableClanAction<T> implements Deployable<T> {
 	}
 
 	public T get() {
-		deploy();
 		return t;
 	}
 

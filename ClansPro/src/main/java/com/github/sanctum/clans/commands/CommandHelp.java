@@ -8,6 +8,7 @@ import com.github.sanctum.clans.construct.extra.StringLibrary;
 import com.github.sanctum.clans.event.command.CommandInformationAdaptEvent;
 import com.github.sanctum.labyrinth.data.FileManager;
 import com.github.sanctum.labyrinth.formatting.pagination.EasyPagination;
+import com.github.sanctum.labyrinth.formatting.string.FormattedString;
 import com.github.sanctum.labyrinth.library.StringUtils;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -29,7 +30,7 @@ public class CommandHelp extends ClanSubCommand {
 			help.add(msg.getRoot().getString("Commands." + s + ".text"));
 		}
 		CommandInformationAdaptEvent e = ClanVentBus.call(new CommandInformationAdaptEvent(help));
-		return e.getMenu().stream().map(s -> s.replace("clan", label)).collect(Collectors.toList());
+		return e.getMenu().stream().map(s -> new FormattedString(s).replace("{label}", "/" + label).color().get()).collect(Collectors.toList());
 	}
 
 	@Override
@@ -38,26 +39,26 @@ public class CommandHelp extends ClanSubCommand {
 		Clan.Associate associate = ClansAPI.getInstance().getAssociate(p).orElse(null);
 
 		if (args.length == 0) {
-			List<String> list = new LinkedList<>(helpMenu(label));
+			List<String> list = new LinkedList<>(helpMenu(getLastLabel()));
 			EasyPagination<String> pagination = new EasyPagination<>(p, list);
 			pagination.limit(lib.menuSize());
 			pagination.setHeader((player, chunks) -> chunks.then(lib.menuBorder()));
 			pagination.setFormat((s, integer, chunks) -> chunks.then(s));
 			pagination.setFooter((player, chunks) -> chunks.then(lib.menuBorder()));
-			lib.sendMessage(p, lib.menuTitle());
+			lib.sendMessage(p, new FormattedString(lib.menuTitle()).replace("{label}", "/" + getLastLabel()).get());
 			pagination.send(1);
 		}
 
 		if (args.length == 1) {
 			if (StringUtils.use(args[0]).isInt()) {
 				int pa = Integer.parseInt(args[0]);
-				List<String> list = new LinkedList<>(helpMenu(label));
+				List<String> list = new LinkedList<>(helpMenu(getLastLabel()));
 				EasyPagination<String> pagination = new EasyPagination<>(p, list);
 				pagination.limit(lib.menuSize());
 				pagination.setHeader((player, chunks) -> chunks.then(lib.menuBorder()));
 				pagination.setFormat((s, integer, chunks) -> chunks.then(s));
 				pagination.setFooter((player, chunks) -> chunks.then(lib.menuBorder()));
-				lib.sendMessage(p, lib.menuTitle());
+				lib.sendMessage(p, new FormattedString(lib.menuTitle()).replace("{label}", "/" + getLastLabel()).get());
 				pagination.send(Math.min(Math.max(1, pa), pagination.size()));
 			} else {
 				lib.sendMessage(p, lib.pageUnknown());

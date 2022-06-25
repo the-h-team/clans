@@ -52,7 +52,7 @@ Clans:
     # Allow a cooldown every use of mode switch? If so how long.
     timer:
       use: true
-      cooldown-in-seconds: 1800
+      cooldown: '0d 0hr 30m 0s'
     # Charge for pvp mode change? If so how much.
     charge: false
     amount: 420.0
@@ -90,6 +90,8 @@ Clans:
   ##                    ##
   ########################
   banks:
+    # Allow clans to enable the bank functions?
+    enabled: true
     # Let a clans bank balance effect their total power level.
     influence: true
     # Configure starting balance of clan banks
@@ -110,10 +112,7 @@ Clans:
   ## Clan WORLD whitelist. ##
   ##                       ##
   ###########################
-  world-whitelist:
-    - world
-    - world_nether
-    - world_the_end
+  world-whitelist: [ "world", "world_nether", "world_the_end" ]
 
   ##########################
   ##                      ##
@@ -133,8 +132,7 @@ Clans:
   ##                      ##
   ##########################
   # Any color-codes attempted to be used from this list will NOT be allowed.
-  color-blacklist:
-    - '&k'
+  color-blacklist: [ "&k" ]
 
   #########################
   ##                     ##
@@ -147,6 +145,12 @@ Clans:
     charge: false
     # The amount to charge users for +1 land.
     amount: 420.0
+    # NEW! Modes: [PERCENTAGE, ADD, STATIC] Use along-side claim charging for a more in depth cost system!
+    # PERCENTAGE will use a configurable percentage for the progressive equation, (current_claims * charge) * percentage
+    # STATIC use the exact amount configured above for cost, (charge)
+    # ADD use claim amount * charge amount. (current_claims * charge)
+    mode: PERCENTAGE
+    percent: 10
     # Change the minimum clearance level needed to claim/un-claim land.
     clearance: 2
     # Change the minimum clearance level needed to un-claim all owned land.
@@ -181,11 +185,11 @@ Clans:
       # {0} = Claim owner
       title: '&3&oOwned land &6{0}'
       sub-title: 'This land is owned by &b{0}'
-      message: '&7You are now entering {0}''s land'
+      message: '&7You are now entering {0}&7''s land'
     wilderness:
       title: 'Leaving &6{0}'
       sub-title: 'Leaving {0}''s land'
-      message: '&7Now leaving {0}''s land'
+      message: '&7Now leaving {0}&7''s land'
 
   #################################
   ##                             ##
@@ -298,10 +302,7 @@ Clans:
       # If the attacker is in a clan, allow clans to deduct power based off the given information?
       penalize: true
     # Blocked commands while in a war
-    blocked-commands:
-      - 'clan base'
-      - 'spawn'
-      - 'home'
+    blocked-commands: [ "clan base", "spawn", "home" ]
     # NEW! Configure extra win/loss power rewards.
     conclusion:
       winning: 0.0
@@ -339,10 +340,14 @@ Formatting:
   #
   # If you are wanting to convert your in game data first go in game, use '/cla copy' after you do that
   # bring your server to a complete stop then change this value to JSON. After doing that delete the old yml files
-  # and start your server! (Json -> Yaml Coming soon)
+  # and start your server! (Json -> Yaml works now too!)
   #
   # Valid types = [ YAML, JSON ]
   file-type: YAML
+  # Allow the usage of "&" symbols in clan names.
+  symbols: false
+  # Change the return result for null placeholders.
+  empty-placeholder: 'N/A'
   # Allow clans to put prefixes before player names above heads.
   nametag-prefix:
     use: true
@@ -377,6 +382,10 @@ Formatting:
     # Rank presentation style
     # Example w/ WORDLESS: (•❂•) [Test] <Hempfest> Hello world!
     rank-style: WORDLESS
+    # NEW! This option enabled allows you to provide your own custom formatting using placeholders! Customize in the 'Channel' section.
+    # Enabling this option removes the default formatting all together, allowing you to customize your chat similar to a chat control plugin.
+    # Normal placeholders will work from either PlaceholderAPI or Labyrinth such as %player_name% or ones from plugins like ClansPro including %clanspro_clan_name%
+    standalone: false
     Styles:
       Full:
         # Note: Changing these styles will have an effect regardless of rank style.
@@ -432,71 +441,12 @@ Formatting:
 #
 #-------------------------------------------------------------------
 Addon:
-  Stashes:
-    ################################################
-    ##                                            ##
-    ## A private clan inventory with only 9 slots ##
-    ##         Default clearance is 2             ##
-    ##                                            ##
-    ################################################
-    enabled: true
-    clearance: 2
-  Vaults:
-    #######################################################
-    ##                                                   ##
-    ## A virtual clan vault inventory for storing items. ##
-    ##            Default clearance is 1                 ##
-    ##                                                   ##
-    #######################################################
-    enabled: true
-    clearance: 1
-  Borders:
-    ##################################################################
-    ##                                                              ##
-    ## Allows users to see chunk borders in relation to clan status ##
-    ##                                                              ##
-    ##################################################################
-    enabled: true
-  Kingdoms:
-    ###########################################################################
-    ##                                                                       ##
-    ## Kingdoms is a progression tracking feature with rewarding attributes  ##
-    ##                                                                       ##
-    ###########################################################################
-    enabled: false
-    required-creation-power: 180.00
-    roundtable:
-      # The consistent name of the hierarchy of clan users.
-      name: 'Roundtable'
-      # Kingdoms has a stacked permissions system for the roundtable only.
-      # Kingdoms by themselves simply follow normal clan permissions.
-      perms:
-        # 4 = HIGHEST
-        # 3 = HIGHER
-        # 2 = HIGH
-        # 1 = LOW
-        name-change: 2
-        invite: 3
-        promote: 4
-        demote: 4
-        kick: 4
-  Map:
-    #####################################################
-    ##                                                 ##
-    ##        An ms5984 (Regurgitator) original        ##
-    ##   Map surrounding chunks around you and display ##
-    ##          information for them in chat.          ##
-    ##                                                 ##
-    #####################################################
-    # NEW feature by Hempfest, enhances interaction with map symbols.
-    enhanced: true
-    enabled: true
+  ##############################################################
+  ##                                                          ##
+  ## Requires Vault or Enterprise. Place bounties on players! ##
+  ##                                                          ##
+  ##############################################################
   Bounty:
-    ##############################################################
-    ##                                                          ##
-    ## Requires Vault or Enterprise. Place bounties on players! ##
-    ##                                                          ##
-    ##############################################################
     enabled: true
     settings:
       # Choose where the rewarded money gets sent. To the killer or the killers clan?
@@ -511,8 +461,85 @@ Addon:
       called-message: '&6{PLAYER} &7from clan {CLAN} put a bounty on {TARGET} for &6&l$&e{BOUNTY}'
       # The message broadcast when a players bounty gets collected.
       defeat-message: '&c&o{KILLER} from clan {KILLER_CLAN} collected the &6${BOUNTY} &c&obounty for killing {PLAYER}'
+  ##################################################################
+  ##                                                              ##
+  ## Allows users to see chunk borders in relation to clan status ##
+  ##                                                              ##
+  ##################################################################
+  Borders:
+    enabled: true
+  #####################################################
+  ##                                                 ##
+  ##        An ms5984 (Regurgitator) original        ##
+  ##   Map surrounding chunks around you and display ##
+  ##          information for them in chat.          ##
+  ##                                                 ##
+  #####################################################
+  Map:
+    # NEW feature by Hempfest, enhances interaction with map symbols.
+    enhanced: true
+    enabled: true
+  ###########################################################################
+  ##                                                                       ##
+  ## Kingdoms is a progression tracking feature with rewarding attributes  ##
+  ##                                                                       ##
+  ###########################################################################
+  Kingdoms:
+    enabled: false
+    required-creation-power: 180.00
+    roundtable:
+      # The consistent name of the hierarchy of clan users.
+      name: 'Roundtable'
+      # The amount of clan power required to start the roundtable.
+      required-power: 10000.00
+      perms:
+        name-change: 1
+        invite: 2
+        promote: 3
+        demote: 3
+        kick: 3
+  ################################################
+  ##                                            ##
+  ## A private clan inventory with only 9 slots ##
+  ##         Default clearance is 2             ##
+  ##                                            ##
+  ################################################
+  Stashes:
+    enabled: true
+    clearance: 2
+  ######################################################
+  ##                                                  ##
+  ## A good additive to kingdoms, bringing back some  ##
+  ##    early clans free stuff, adds classes with     ##
+  ##                  abilities.                      ##
+  ##                                                  ##
+  ######################################################
+  Traits:
+    enabled: false
+    abilities:
+      PICK_POCKET:
+        # Add entities you dont want to have loot.
+        entity-blacklist: [ "PIG", "COW", "SHEEP" ]
+      FULL_STRENGTH:
+        # Change the cooldown time for the full strength ability in seconds.
+        cooldown: 10
+      SUMMON_WOLVES:
+        # Change the max amount of personal wolves allowed in a world at a single time.
+        max: 12
+      SELECTIVE_KILL:
+        # Change the amount of damage dealt on a selective kill ability cast.
+        damage: 7.0
+  #######################################################
+  ##                                                   ##
+  ## A virtual clan vault inventory for storing items. ##
+  ##            Default clearance is 1                 ##
+  ##                                                   ##
+  #######################################################
+  Vaults:
+    enabled: true
+    clearance: 1
 ##------------------------
 ## -- DO NOT EDIT BELOW --
 # Authors: Hempfest, ms5984
 ##------------------------
-Version: 1.3.7
+Version: 1.3.9

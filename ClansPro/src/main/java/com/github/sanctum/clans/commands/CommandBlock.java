@@ -34,17 +34,12 @@ public class CommandBlock extends ClanSubCommand {
 		}
 
 		if (args.length == 0) {
-			if (!p.hasPermission(this.getPermission() + "." + DataManager.Security.getPermission("color"))) {
-				lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("color")));
-				return true;
-			}
-			lib.sendMessage(p, lib.commandColor());
-			lib.sendMessage(p, "&7|&e)&r " + "https://www.digminecraft.com/lists/color_list_pc.php");
+			lib.sendMessage(p, "&7|&e)&r Usage: &6/" + label + " block <playerName>");
 			return true;
 		}
 
 		if (args.length == 1) {
-			if (!p.hasPermission(this.getPermission() + "." + DataManager.Security.getPermission("block"))) {
+			if (!Clan.ACTION.test(p, "clanspro." + DataManager.Security.getPermission("block")).deploy()) {
 				lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("block")));
 				return true;
 			}

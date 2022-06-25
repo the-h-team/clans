@@ -2,28 +2,23 @@ package com.github.sanctum.clans;
 
 import com.github.sanctum.clans.bridge.ClanAddon;
 import com.github.sanctum.clans.bridge.ClanAddonQuery;
-import com.github.sanctum.clans.bridge.internal.StashesAddon;
-import com.github.sanctum.clans.bridge.internal.VaultsAddon;
 import com.github.sanctum.clans.construct.ArenaManager;
 import com.github.sanctum.clans.construct.ClaimManager;
 import com.github.sanctum.clans.construct.ClanManager;
 import com.github.sanctum.clans.construct.CommandManager;
 import com.github.sanctum.clans.construct.DataManager;
 import com.github.sanctum.clans.construct.ShieldManager;
-import com.github.sanctum.clans.construct.actions.ClansUpdate;
 import com.github.sanctum.clans.construct.api.AbstractGameRule;
-import com.github.sanctum.clans.construct.api.Channel;
 import com.github.sanctum.clans.construct.api.Claim;
 import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClansAPI;
 import com.github.sanctum.clans.construct.api.GUI;
 import com.github.sanctum.clans.construct.api.InvasiveEntity;
 import com.github.sanctum.clans.construct.api.LogoGallery;
-import com.github.sanctum.clans.construct.api.LogoHolder;
-import com.github.sanctum.clans.construct.api.QnA;
 import com.github.sanctum.clans.construct.bank.BankMeta;
 import com.github.sanctum.clans.construct.bank.backend.ClanFileBankBackend;
 import com.github.sanctum.clans.construct.extra.AsynchronousLoanableTask;
+import com.github.sanctum.clans.construct.extra.ClansUpdate;
 import com.github.sanctum.clans.construct.extra.MessagePrefix;
 import com.github.sanctum.clans.construct.extra.ReservedLogoCarrier;
 import com.github.sanctum.clans.construct.extra.StartProcedure;
@@ -41,7 +36,6 @@ import com.github.sanctum.labyrinth.data.FileType;
 import com.github.sanctum.labyrinth.data.Node;
 import com.github.sanctum.labyrinth.data.container.KeyedServiceManager;
 import com.github.sanctum.labyrinth.data.container.PersistentContainer;
-import com.github.sanctum.labyrinth.formatting.FancyMessage;
 import com.github.sanctum.labyrinth.formatting.FancyMessageChain;
 import com.github.sanctum.labyrinth.formatting.Message;
 import com.github.sanctum.labyrinth.gui.unity.construct.Menu;
@@ -52,21 +46,15 @@ import com.github.sanctum.labyrinth.library.StringUtils;
 import com.github.sanctum.labyrinth.paste.PasteManager;
 import com.github.sanctum.labyrinth.paste.type.Hastebin;
 import com.github.sanctum.labyrinth.task.Task;
-import com.github.sanctum.labyrinth.task.TaskScheduler;
-import com.github.sanctum.skulls.CustomHead;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.Random;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.OfflinePlayer;
-import org.bukkit.block.Block;
-import org.bukkit.block.BlockFace;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.serialization.ConfigurationSerialization;
 import org.bukkit.plugin.Plugin;
@@ -74,14 +62,12 @@ import org.bukkit.plugin.ServicePriority;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 
-
 /**
- *
- *     ▄▄▄·▄▄▄        ▄▄
- *    ▐█ ▄█▀▄ █·▪     ██▌
- *     ██▀·▐▀▀▄  ▄█▀▄ ▐█·
- *    ▐█▪·•▐█•█▌▐█▌.▐▌.▀
- *   .▀   .▀  ▀ ▀█▄▀▪ ▀
+ * ▄▄▄·▄▄▄        ▄▄
+ * ▐█ ▄█▀▄ █·▪     ██▌
+ * ██▀·▐▀▀▄  ▄█▀▄ ▐█·
+ * ▐█▪·•▐█•█▌▐█▌.▐▌.▀
+ * .▀   .▀  ▀ ▀█▄▀▪ ▀
  *
  * <pre>
  * <h3>MIT License</h2>
@@ -141,6 +127,7 @@ public class ClansJavaPlugin extends JavaPlugin implements ClansAPI {
 		ConfigurationSerialization.registerClass(Claim.class);
 		ConfigurationSerialization.registerClass(Clan.class);
 
+		// Pre-handle game rule injection.
 		LabyrinthProvider.getInstance().getLocalPrintManager().register(() -> {
 			Map<String, Object> map = new HashMap<>();
 			DataManager manager = ClansAPI.getDataInstance();
@@ -161,97 +148,6 @@ public class ClansJavaPlugin extends JavaPlugin implements ClansAPI {
 
 		OrdinalProcedure.process(new StartProcedure(this));
 
-		FileManager man = getFileList().get("heads", "Configuration", FileType.JSON);
-		if (!man.getRoot().exists()) {
-			origin.copy("heads.data", man);
-			man.getRoot().reload();
-		}
-		LogoHolder.newAdapter(location -> {
-			LogoHolder.Carrier def = ReservedLogoCarrier.MOTD;
-			for (LogoHolder.Carrier.Line line : def.getLines()) {
-				for (int i = 1; i < 23; i++) {
-					Block up = location.getBlock().getRelative(BlockFace.UP, i);
-					if (line.getStand().getLocation().distance(up.getLocation().add(0.5, 0, 0.5)) <= 1) {
-						return def;
-					}
-				}
-			}
-			return null;
-		}).deploy();
-
-		Channel.CLAN.register(context -> {
-			String test = context;
-			for (String word : dataManager.getConfig().getRoot().getNode("Formatting.Chat.Channel.clan.filters").getKeys(false)) {
-				String replacement = dataManager.getConfig().getRoot().getNode("Formatting.Chat.Channel.clan.filters").getNode(word).toPrimitive().getString();
-				test = StringUtils.use(test).replaceIgnoreCase(word, replacement);
-			}
-			return test;
-		});
-
-		Channel.ALLY.register(context -> {
-			String test = context;
-			for (String word : dataManager.getConfig().getRoot().getNode("Formatting.Chat.Channel.ally.filters").getKeys(false)) {
-				String replacement = dataManager.getConfig().getRoot().getNode("Formatting.Chat.Channel.ally.filters").getNode(word).toPrimitive().getString();
-				test = StringUtils.use(test).replaceIgnoreCase(word, replacement);
-			}
-			return test;
-		});
-
-		QnA.register((player, question) -> {
-			StringUtils utils = StringUtils.use(question);
-			if (utils.containsIgnoreCase("make a clan", "create a clan", "start a clan", "start clan", "make clan", "create clan")) {
-				player.closeInventory();
-				String message = "To make a clan you require the permission clanspro." + DataManager.Security.getPermission("create") + ", if you have permission this message will be white.";
-				if (!player.hasPermission("clanspro." + DataManager.Security.getPermission("create"))) {
-					Clan.ACTION.sendMessage(player, "&c" + message);
-				} else {
-					Clan.ACTION.sendMessage(player, message);
-					String[] examples = new String[]{"Panthers", "Eggnog", "Dumplin", "Potato"};
-					new FancyMessage("Click here to see an example").color(ChatColor.AQUA).style(ChatColor.ITALIC).suggest("/clan create " + examples[new Random().nextInt(examples.length)] + " (password here if you want)").send(player).queue();
-				}
-				return false;
-			}
-			if (utils.containsIgnoreCase("whats the raidshield", "what is raidshield", "what is raid shield", "raid shield", "raidshield")) {
-				player.closeInventory();
-				String message = "The default settings will start the raidshield at dawn and the raidshield will go down at dusk. Once the raidshield goes down this enables players in other clans with more clan power than yours to then overpower the land unclaiming and taking it as their own if they choose. Either way it enables raiding.";
-				Clan.ACTION.sendMessage(player, message);
-				Clan.ACTION.sendMessage(player, "When the raidshield is down and you indefinitely have more power than a targeted enemy clan, use &c/c unclaim &fto over power their land.");
-				return false;
-			}
-			if (utils.containsIgnoreCase("how do i raid", "how to raid", "raiding", "raid")) {
-				if (Claim.ACTION.isEnabled()) {
-					Clan.ACTION.sendMessage(player, "&cClan land claiming is disabled on this server! Therefore raiding becomes inherently impossible.");
-				} else {
-					Clan.ACTION.sendMessage(player, "&eRaiding can be achieved by simply overpowering a target clan's land, un-claiming an individual chunk allows you to access the containers within as well as build/break.");
-				}
-				return false;
-			}
-			if (utils.containsIgnoreCase("gain power", "how do i get more power", "more power", "get power")) {
-				Clan.ACTION.sendMessage(player, "&6You can gain power by increasing the overall size of your clan (more members), having more money in the clan bank, owning more clan claims & killing enemy clan associates as well any third party ways to achieve power gains.");
-				return false;
-			}
-			return true;
-		});
-
-		TaskScheduler.of(() -> {
-			for (Clan owner : getClanManager().getClans()) {
-				TaskScheduler.of(() -> {
-					VaultsAddon.getVault(owner.getName());
-					StashesAddon.getStash(owner.getName());
-				}).scheduleLaterAsync(1);
-				for (Claim c : owner.getClaims()) {
-					for (Claim.Flag f : getClaimManager().getFlagManager().getFlags()) {
-						Claim.Flag temp = c.getFlag(f.getId());
-						if (temp == null) {
-							c.register(f);
-						}
-					}
-					c.save();
-				}
-			}
-		}).scheduleLater(120);
-
-		CustomHead.Manager.newLoader(man.getRoot()).look("My_heads").complete();
 		LogoGallery gallery = getLogoGallery();
 		ReservedLogoCarrier reserved2 = ReservedLogoCarrier.SUMMER;
 		gallery.load(reserved2.getId(), reserved2.get());
@@ -321,7 +217,7 @@ public class ClansJavaPlugin extends JavaPlugin implements ClansAPI {
 
 		PlayerEventListener.STAND_REMOVAL.run(this).deploy();
 
-		getClanManager().getClans().list().forEach(c -> {
+		getClanManager().getClans().forEach(c -> {
 			c.save();
 			ClanFileBankBackend.saveOldFormat(c);
 			for (Clan.Associate a : c.getMembers()) {
@@ -368,17 +264,17 @@ public class ClansJavaPlugin extends JavaPlugin implements ClansAPI {
 
 	@Override
 	public Optional<Clan.Associate> getAssociate(OfflinePlayer player) {
-		return player == null ? Optional.empty() : getClanManager().getClans().filter(c -> c.getMember(m -> Objects.equals(m.getName(), player.getName())) != null).map(c -> c.getMember(m -> Objects.equals(m.getName(), player.getName()))).findFirst();
+		return player == null ? Optional.empty() : getClanManager().getClans().stream().filter(c -> c.getMember(m -> Objects.equals(m.getName(), player.getName())) != null).map(c -> c.getMember(m -> Objects.equals(m.getName(), player.getName()))).findFirst();
 	}
 
 	@Override
 	public Optional<Clan.Associate> getAssociate(UUID uuid) {
-		return uuid == null ? Optional.empty() : getClanManager().getClans().filter(c -> c.getMember(m -> Objects.equals(m.getId(), uuid)) != null).map(c -> c.getMember(m -> Objects.equals(m.getId(), uuid))).findFirst();
+		return uuid == null ? Optional.empty() : getClanManager().getClans().stream().filter(c -> c.getMember(m -> Objects.equals(m.getId(), uuid)) != null).map(c -> c.getMember(m -> Objects.equals(m.getId(), uuid))).findFirst();
 	}
 
 	@Override
 	public Optional<Clan.Associate> getAssociate(String playerName) {
-		return playerName == null ? Optional.empty() : getClanManager().getClans().filter(c -> c.getMember(m -> Objects.equals(m.getName(), playerName)) != null).map(c -> c.getMember(m -> Objects.equals(m.getName(), playerName))).findFirst();
+		return playerName == null ? Optional.empty() : getClanManager().getClans().stream().filter(c -> c.getMember(m -> Objects.equals(m.getName(), playerName)) != null).map(c -> c.getMember(m -> Objects.equals(m.getName(), playerName))).findFirst();
 	}
 
 	@Override
@@ -473,29 +369,26 @@ public class ClansJavaPlugin extends JavaPlugin implements ClansAPI {
 	@Override
 	public boolean kickUser(UUID uuid) {
 		boolean success = false;
-		if (isInClan(uuid) && !getClanManager().getClan(uuid).getOwner().getId().equals(uuid)) {
+		Clan test = getClanManager().getClan(uuid);
+		if (test != null && test.getOwner().getId().equals(uuid)) {
 			success = true;
-			Clan.ACTION.removePlayer(uuid);
+			Clan.ACTION.remove(uuid, true).deploy();
 		}
 		return success;
 	}
 
 	@Override
-	public boolean obtainUser(UUID uuid, String clanName) {
-		boolean success = false;
+	public Optional<Clan.Associate> obtainUser(UUID uuid, String clanName) {
+		final ClanManager manager = getClanManager();
 		if (!isInClan(uuid)) {
-			if (getClanManager().getClanID(clanName) == null)
-				return false;
-
-			Clan toJoin = getClanManager().getClan(getClanManager().getClanID(clanName));
-			success = true;
-			if (toJoin.getPassword() != null) {
-				Clan.ACTION.joinClan(uuid, clanName, toJoin.getPassword());
-			} else {
-				Clan.ACTION.joinClan(uuid, clanName, null);
+			HUID id = manager.getClanID(clanName);
+			if (id != null) {
+				Clan toJoin = manager.getClan(id);
+				Clan.ACTION.join(uuid, clanName, toJoin.getPassword() != null ? toJoin.getPassword() : null, false).deploy();
+				return Optional.ofNullable(toJoin.getMember(m -> m.getId().equals(uuid)));
 			}
 		}
-		return success;
+		return Optional.empty();
 	}
 
 	@Override

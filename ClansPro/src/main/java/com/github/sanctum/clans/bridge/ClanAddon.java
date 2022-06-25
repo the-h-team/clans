@@ -14,7 +14,7 @@ import com.github.sanctum.labyrinth.event.custom.Subscribe;
 import com.github.sanctum.labyrinth.library.Deployable;
 import com.github.sanctum.labyrinth.library.HUID;
 import com.github.sanctum.labyrinth.library.Mailer;
-import com.github.sanctum.labyrinth.task.Schedule;
+import com.github.sanctum.labyrinth.task.TaskScheduler;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -26,7 +26,7 @@ import java.util.List;
 import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.bukkit.entity.Player;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.Plugin;
@@ -87,7 +87,8 @@ public abstract class ClanAddon {
 
 			@Override
 			public ClanAddon loadAddon(File jar) throws IOException, InvalidAddonException {
-				return new ClanAddonClassLoader(jar, ClanAddon.this).addon;
+				if (!jar.isFile()) throw new InvalidAddonException("File " + jar.getName() + " not valid for addon processing.");
+				return new ClanAddonClassLoader(jar, ClanAddon.this).getMainClass();
 			}
 
 			@Override
@@ -240,7 +241,8 @@ public abstract class ClanAddon {
 
 			@Override
 			public ClanAddon loadAddon(File jar) throws IOException, InvalidAddonException {
-				return new ClanAddonClassLoader(jar, ClanAddon.this).addon;
+				if (!jar.isFile()) throw new InvalidAddonException("File " + jar.getName() + " not valid for addon processing.");
+				return new ClanAddonClassLoader(jar, ClanAddon.this).getMainClass();
 			}
 
 			@Override
@@ -291,7 +293,7 @@ public abstract class ClanAddon {
 			throw new InvalidAddonStateException(clazz + " is not provided by " + ClanAddonClassLoader.class);
 		}
 		if (cl instanceof ClanAddonClassLoader) {
-			ClanAddon addon = ((ClanAddonClassLoader) cl).addon;
+			ClanAddon addon = ((ClanAddonClassLoader) cl).getMainClass();
 			if (addon == null) {
 				throw new InvalidAddonStateException("Cannot get addon for " + clazz + " from a static initializer");
 			}
@@ -366,8 +368,8 @@ public abstract class ClanAddon {
 	 * @param param  The string to parse.
 	 * @return The placeholder converted string.
 	 */
-	public String onPlaceholder(Player player, String param) {
-		return param.equals(getName()) ? getName() + " " + getVersion() : "";
+	public String onPlaceholder(OfflinePlayer player, String param) {
+		return param.equals(getName()) ? getName() + " " + getVersion() : null;
 	}
 
 	/**
@@ -472,7 +474,7 @@ public abstract class ClanAddon {
 			}
 		}
 		onDisable();
-		Schedule.sync(() -> ClanAddonQuery.CLAN_ADDONS.removeIf(c -> c.getName().equals(getName()))).wait(1);
+		TaskScheduler.of(() -> ClanAddonQuery.CLAN_ADDONS.removeIf(c -> c.getName().equals(getName()))).scheduleLater(1);
 	}
 
 }

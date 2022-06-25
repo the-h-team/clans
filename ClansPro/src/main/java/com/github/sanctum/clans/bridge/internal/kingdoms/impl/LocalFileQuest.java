@@ -1,8 +1,13 @@
-package com.github.sanctum.clans.bridge.internal.kingdoms;
+package com.github.sanctum.clans.bridge.internal.kingdoms.impl;
 
 import com.github.sanctum.clans.bridge.ClanAddon;
 import com.github.sanctum.clans.bridge.ClanAddonQuery;
 import com.github.sanctum.clans.bridge.ClanVentBus;
+import com.github.sanctum.clans.bridge.internal.kingdoms.Kingdom;
+import com.github.sanctum.clans.bridge.internal.kingdoms.Progressive;
+import com.github.sanctum.clans.bridge.internal.kingdoms.Quest;
+import com.github.sanctum.clans.bridge.internal.kingdoms.Reward;
+import com.github.sanctum.clans.bridge.internal.kingdoms.RoundTable;
 import com.github.sanctum.clans.bridge.internal.kingdoms.event.KingdomQuestCompletionEvent;
 import com.github.sanctum.clans.bridge.internal.kingdoms.event.RoundTableQuestCompletionEvent;
 import com.github.sanctum.clans.construct.api.Clan;
@@ -45,7 +50,7 @@ public final class LocalFileQuest implements Quest, Message.Factory {
 
 	private final String description;
 
-	LocalFileQuest(String title, String description, double progression, double requirement, boolean done) {
+	public LocalFileQuest(String title, String description, double progression, double requirement, boolean done) {
 		this.title = title;
 		this.complete = done;
 		this.players = new HashSet<>();
@@ -54,7 +59,7 @@ public final class LocalFileQuest implements Quest, Message.Factory {
 		this.requirement = requirement;
 	}
 
-	LocalFileQuest(String title, String description, double progression, double requirement) {
+	public LocalFileQuest(String title, String description, double progression, double requirement) {
 		this.title = title;
 		this.players = new HashSet<>();
 		this.description = description;

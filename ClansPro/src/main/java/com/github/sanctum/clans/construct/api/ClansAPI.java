@@ -21,7 +21,7 @@ import com.github.sanctum.labyrinth.library.NamespacedKey;
 import com.github.sanctum.labyrinth.paste.PasteManager;
 import com.github.sanctum.labyrinth.paste.operative.PasteResponse;
 import com.github.sanctum.labyrinth.paste.type.Hastebin;
-import com.github.sanctum.labyrinth.task.Schedule;
+import com.github.sanctum.labyrinth.task.TaskScheduler;
 import java.text.MessageFormat;
 import java.util.Collections;
 import java.util.Date;
@@ -37,13 +37,13 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 /**
- *<pre>
+ * <pre>
  *     ▄▄▄·▄▄▄        ▄▄
  *    ▐█ ▄█▀▄ █·▪     ██▌
  *     ██▀·▐▀▀▄  ▄█▀▄ ▐█·
  *    ▐█▪·•▐█•█▌▐█▌.▐▌.▀
  *   .▀   .▀  ▀ ▀█▄▀▪ ▀
- *</pre>
+ * </pre>
  * <pre>
  * <h3>MIT License</h2>
  * Copyright (c) 2021 Sanctum
@@ -89,8 +89,8 @@ public interface ClansAPI {
 	/**
 	 * Get this server's unique session id.
 	 *
-	 * @apiNote This id is no longer unique after a single game session.
 	 * @return the persistently unique id for this session.
+	 * @apiNote This id is no longer unique after a single game session.
 	 */
 	@NotNull UUID getSessionId();
 
@@ -260,9 +260,9 @@ public interface ClansAPI {
 	 * Onboard a specified user to a clan of specification.
 	 *
 	 * @param uuid The user to invite
-	 * @return true if the user isn't in a clan otherwise false if the user is in a clan or is the leader.
+	 * @return an associate object if the user was able to join otherwise empty.
 	 */
-	boolean obtainUser(UUID uuid, String clanName);
+	Optional<Clan.Associate> obtainUser(UUID uuid, String clanName);
 
 	/**
 	 * Gets an addon by its name.
@@ -329,7 +329,7 @@ public interface ClansAPI {
 			}
 		} else {
 			if (entity.isClan()) {
-				Schedule.async(() -> {
+				TaskScheduler.of(() -> {
 					Date now = new Date();
 					Hastebin bin = getLocalHastebinInstance();
 					PasteResponse response;
@@ -373,7 +373,7 @@ public interface ClansAPI {
 					}
 					String link = response.get();
 					getPlugin().getLogger().warning(entity.getName() + " debug: " + link);
-				}).run();
+				}).scheduleAsync();
 			}
 		}
 	}
@@ -385,8 +385,8 @@ public interface ClansAPI {
 	/**
 	 * Get the server consultant object if one has been provided.
 	 *
-	 * @apiNote The server consultant is also an {@link com.github.sanctum.clans.construct.api.Clan.Associate}!
 	 * @return the server consultant object if provided or null.
+	 * @apiNote The server consultant is also an {@link com.github.sanctum.clans.construct.api.Clan.Associate}!
 	 */
 	default @Nullable Consultant getConsultant() {
 		return (Consultant) getAssociate(getSessionId()).orElse(null);

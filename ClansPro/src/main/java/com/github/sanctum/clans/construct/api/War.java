@@ -5,7 +5,7 @@ import com.github.sanctum.labyrinth.data.FileManager;
 import com.github.sanctum.labyrinth.data.FileType;
 import com.github.sanctum.labyrinth.library.Cooldown;
 import com.github.sanctum.labyrinth.library.HUID;
-import com.github.sanctum.labyrinth.task.Schedule;
+import com.github.sanctum.labyrinth.task.TaskScheduler;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -78,7 +78,7 @@ public interface War extends Iterable<Clan.Associate> {
 
 	/**
 	 * Assign each queued associate to their team's (Doesn't start anything)
-	 *
+	 * <p>
 	 * If the teams are already populated they will be re-scrambled.
 	 */
 	void populate();
@@ -113,7 +113,7 @@ public interface War extends Iterable<Clan.Associate> {
 	/**
 	 * Set how many points a team has
 	 *
-	 * @param team the team to modify
+	 * @param team   the team to modify
 	 * @param amount the amount to set
 	 */
 	void setPoints(Team team, int amount);
@@ -227,7 +227,7 @@ public interface War extends Iterable<Clan.Associate> {
 				Location loc = pool.get(associate);
 				Player p = associate.getTag().getPlayer().getPlayer();
 				if (p == null) {
-					Schedule.sync(() -> pool.remove(associate)).run();
+					TaskScheduler.of(() -> pool.remove(associate)).schedule();
 					return false;
 				}
 				if (ClansAPI.getDataInstance().isDisplayTagsAllowed()) {
@@ -242,7 +242,7 @@ public interface War extends Iterable<Clan.Associate> {
 				}
 				ClansAPI.getInstance().getArenaManager().show(associate);
 				Clan.ACTION.sendMessage(p, "&aGoing back to previous location...");
-				Schedule.sync(() -> p.teleport(loc)).applyAfter(() -> pool.remove(associate)).run();
+				TaskScheduler.of(() -> p.teleport(loc)).schedule().next(() -> pool.remove(associate)).schedule();
 				return true;
 			}
 			return false;

@@ -16,7 +16,7 @@ public final class BountyList {
 
 	public static Optional<Bounty> get(UUID target) {
 		Optional<Bounty> result = Optional.empty();
-		for (Clan cache : ClansAPI.getInstance().getClanManager().getClans().list()) {
+		for (Clan cache : ClansAPI.getInstance().getClanManager().getClans()) {
 			if (get(cache, target) != null) {
 				result = Optional.ofNullable(get(cache, target));
 				break;

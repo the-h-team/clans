@@ -9,6 +9,7 @@ import com.github.sanctum.clans.construct.extra.StringLibrary;
 import com.github.sanctum.labyrinth.formatting.Message;
 import com.github.sanctum.labyrinth.formatting.completion.SimpleTabCompletion;
 import com.github.sanctum.labyrinth.formatting.completion.TabCompletionIndex;
+import java.text.MessageFormat;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -26,16 +27,16 @@ public class CommandInvite extends ClanSubCommand implements Message.Factory {
 		Clan.Associate associate = ClansAPI.getInstance().getAssociate(p).orElse(null);
 
 		if (args.length == 0) {
-			if (!p.hasPermission(this.getPermission() + "." + DataManager.Security.getPermission("invite"))) {
+			if (!Clan.ACTION.test(p, "clanspro." + DataManager.Security.getPermission("invite")).deploy()) {
 				lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("invite")));
 				return true;
 			}
-			lib.sendMessage(p, "/c invite <user>");
+			lib.sendMessage(p, ClansAPI.getDataInstance().getMessageResponse("invite"));
 			return true;
 		}
 
 		if (args.length == 1) {
-			if (!p.hasPermission(this.getPermission() + "." + DataManager.Security.getPermission("invite"))) {
+			if (!Clan.ACTION.test(p, "clanspro." + DataManager.Security.getPermission("invite")).deploy()) {
 				lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("invite")));
 				return true;
 			}
@@ -54,28 +55,28 @@ public class CommandInvite extends ClanSubCommand implements Message.Factory {
 					if (CommandBlock.blockedUsers.containsKey(target)) {
 						List<UUID> users = CommandBlock.blockedUsers.get(target);
 						if (users.contains(p.getUniqueId())) {
-							lib.sendMessage(p, "&c&oThis person has you blocked. Unable to receive invitation.");
+							lib.sendMessage(p, MessageFormat.format(ClansAPI.getDataInstance().getMessageResponse("blocked"), target.getName()));
 							return true;
 						}
 					}
-					ClansAPI.getInstance().getClanManager().getClan(p.getUniqueId()).broadcast(p.getName() + " &e&ohas invited player &6&l" + target.getName());
-					lib.sendMessage(target, "&b&o" + p.getName() + " &3invites you to their clan.");
+					ClansAPI.getInstance().getClanManager().getClan(p.getUniqueId()).broadcast(MessageFormat.format(ClansAPI.getDataInstance().getMessageResponse("invite-out"), p.getName(), target.getName()));
+					lib.sendMessage(target, MessageFormat.format(ClansAPI.getDataInstance().getMessageResponse("invite-in.message"), p.getName()));
 					if (associate.getClan().getPassword() != null) {
-						message().append(text("&3|&7> &3Click a button to respond. "))
-								.append(text("&b[&nACCEPT&b]")
-										.bind(hover("&3Click to accept the request from '" + p.getName() + "'."))
+						message().append(text(ClansAPI.getDataInstance().getMessageResponse("invite-in.text")))
+								.append(text(ClansAPI.getDataInstance().getMessageResponse("invite-in.accept-button.text"))
+										.bind(hover(MessageFormat.format(ClansAPI.getDataInstance().getMessageResponse("invite-in.accept-button.hover"), p.getName())))
 										.bind(command("clan join " + ClansAPI.getInstance().getClanManager().getClan(p.getUniqueId()).getName() + " " + associate.getClan().getPassword())))
-								.append(text("&4[&nDENY&4]")
-										.bind(hover("&3Click to deny the request from '" + p.getName() + "'."))
+								.append(text(ClansAPI.getDataInstance().getMessageResponse("invite-in.deny-button.text"))
+										.bind(hover(MessageFormat.format(ClansAPI.getDataInstance().getMessageResponse("invite-in.deny-button.hover"), p.getName())))
 										.bind(command("msg " + p.getName() + " No thank you.")))
 								.send(target).deploy();
 					} else {
-						message().append(text("&3|&7> &3Click a button to respond. "))
-								.append(text("&b[&nACCEPT&b]")
-										.bind(hover("&3Click to accept the request from '" + p.getName() + "'."))
+						message().append(text(ClansAPI.getDataInstance().getMessageResponse("invite-in.text")))
+								.append(text(ClansAPI.getDataInstance().getMessageResponse("invite-in.accept-button.text"))
+										.bind(hover(MessageFormat.format(ClansAPI.getDataInstance().getMessageResponse("invite-in.accept-button.hover"), p.getName())))
 										.bind(command("clan join " + ClansAPI.getInstance().getClanManager().getClan(p.getUniqueId()).getName())))
-								.append(text("&4[&nDENY&4]")
-										.bind(hover("&3Click to deny the request from '" + p.getName() + "'."))
+								.append(text(ClansAPI.getDataInstance().getMessageResponse("invite-in.deny-button.text"))
+										.bind(hover(MessageFormat.format(ClansAPI.getDataInstance().getMessageResponse("invite-in.deny-button.hover"), p.getName())))
 										.bind(command("msg " + p.getName() + " No thank you.")))
 								.send(target).deploy();
 					}

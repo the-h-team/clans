@@ -11,6 +11,7 @@ import com.github.sanctum.clans.bridge.internal.map.structure.MapPoint;
 import com.github.sanctum.clans.construct.api.Claim;
 import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClansAPI;
+import com.github.sanctum.clans.event.associate.AssociateClaimEvent;
 import com.github.sanctum.labyrinth.LabyrinthProvider;
 import com.github.sanctum.labyrinth.event.custom.Subscribe;
 import com.github.sanctum.labyrinth.event.custom.Vent;
@@ -375,25 +376,38 @@ public class MapController implements Listener {
 											p.setAppliance(() -> {
 												Clan c = ClansAPI.getInstance().getClanManager().getClan(e.getPlayer().getUniqueId());
 												if (c != null) {
-													Claim claim = c.newClaim(e.getPlayer().getWorld().getChunkAt(p.chunkPosition.x, p.chunkPosition.z));
-													if (claim != null) {
-														if (actionWait.containsKey(e.getPlayer())) {
-															if (actionWait.get(e.getPlayer())) {
-																Clan.ACTION.sendMessage(e.getPlayer(), "&cNot so fast!");
-																return;
-															}
+													Chunk chunk = e.getPlayer().getWorld().getChunkAt(p.chunkPosition.x, p.chunkPosition.z);
+													Claim test = ClansAPI.getInstance().getClaimManager().getClaim(chunk);
+													if (test != null) {
+														if (test.getOwner().equals(c)) {
+															Clan.ACTION.sendMessage(e.getPlayer(), Clan.ACTION.alreadyOwnClaim());
+														} else {
+															Clan.ACTION.sendMessage(e.getPlayer(), Clan.ACTION.notClaimOwner(test.getOwner().getName()));
 														}
-														actionWait.put(e.getPlayer(), true);
-														TaskScheduler.of(() -> {
+														return;
+													}
+													AssociateClaimEvent ev = ClanVentBus.call(new AssociateClaimEvent(e.getPlayer()));
+													if (!ev.isCancelled()) {
+														Claim claim = c.newClaim(chunk);
+														if (claim != null) {
+															if (actionWait.containsKey(e.getPlayer())) {
+																if (actionWait.get(e.getPlayer())) {
+																	Clan.ACTION.sendMessage(e.getPlayer(), "&cNot so fast!");
+																	return;
+																}
+															}
+															actionWait.put(e.getPlayer(), true);
+															TaskScheduler.of(() -> {
 
-															e.getPlayer().performCommand("c map");
-															actionWait.remove(e.getPlayer());
+																e.getPlayer().performCommand("c map");
+																actionWait.remove(e.getPlayer());
 
-														}).scheduleLater(2);
-														Clan.ACTION.sendMessage(e.getPlayer(), "&aChunk &6&7(&3X: &f" + claim.getChunk().getX() + " &3Z: &f" + claim.getChunk().getZ() + "&7) &ais now owned by our clan.");
-													} else {
-														if (c.getClaims().length == c.getClaimLimit()) {
-															Clan.ACTION.sendMessage(e.getPlayer(), Claim.ACTION.alreadyMaxClaims());
+															}).scheduleLater(2);
+															Clan.ACTION.sendMessage(e.getPlayer(), "&aChunk &6&7(&3X: &f" + claim.getChunk().getX() + " &3Z: &f" + claim.getChunk().getZ() + "&7) &ais now owned by our clan.");
+														} else {
+															if (c.getClaims().length == c.getClaimLimit()) {
+																Clan.ACTION.sendMessage(e.getPlayer(), Claim.ACTION.alreadyMaxClaims());
+															}
 														}
 													}
 												}

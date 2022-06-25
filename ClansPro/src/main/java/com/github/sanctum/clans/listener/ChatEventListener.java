@@ -9,7 +9,8 @@ import com.github.sanctum.clans.event.associate.AssociateChatEvent;
 import com.github.sanctum.clans.event.associate.AssociateMessageReceiveEvent;
 import com.github.sanctum.labyrinth.event.custom.Subscribe;
 import com.github.sanctum.labyrinth.event.custom.Vent;
-import com.github.sanctum.labyrinth.library.Message;
+import com.github.sanctum.labyrinth.library.Mailer;
+import com.github.sanctum.labyrinth.library.StringUtils;
 import com.github.sanctum.labyrinth.library.TextLib;
 import java.text.MessageFormat;
 import java.util.ArrayList;
@@ -70,11 +71,19 @@ public class ChatEventListener implements Listener {
 					switch (lib.getRankStyle().toUpperCase()) {
 						case "WORDLESS":
 							rank = associate.getRankWordless();
-							event.setFormat(lib.color(MessageFormat.format(lib.getChatFormat(), rank, clanName) + " " + event.getFormat()));
+							if (ClansAPI.getDataInstance().isTrue("Formatting.Chat.standalone")) {
+								event.setFormat(lib.color(MessageFormat.format(StringUtils.use(lib.getChatFormat()).translate(p), rank, clanName, event.getMessage())));
+							} else {
+								event.setFormat(lib.color(MessageFormat.format(StringUtils.use(lib.getChatFormat()).translate(p), rank, clanName) + " " + event.getFormat()));
+							}
 							break;
 						case "FULL":
 							rank = associate.getRankFull();
-							event.setFormat(lib.color(MessageFormat.format(lib.getChatFormat(), rank, clanName) + " " + event.getFormat()));
+							if (ClansAPI.getDataInstance().isTrue("Formatting.Chat.standalone")) {
+								event.setFormat(lib.color(MessageFormat.format(StringUtils.use(lib.getChatFormat()).translate(p), rank, clanName, event.getMessage())));
+							} else {
+								event.setFormat(lib.color(MessageFormat.format(StringUtils.use(lib.getChatFormat()).translate(p), rank, clanName) + " " + event.getFormat()));
+							}
 							break;
 					}
 					return;
@@ -90,7 +99,7 @@ public class ChatEventListener implements Listener {
 						ClansAPI.getInstance().getPlugin().getLogger().info("- [CLAN] " + e.getAssociate().getName() + " : " + e.getMessage());
 					}
 					for (Player toGet : e.getRecipients()) {
-						Message.form(toGet).build(e.getComponents());
+						Mailer.empty(toGet).chat(e.getComponents()).deploy();
 						toGet.playSound(toGet.getLocation(), e.getPingSound(), 10, 1);
 					}
 
@@ -111,7 +120,7 @@ public class ChatEventListener implements Listener {
 						ClansAPI.getInstance().getPlugin().getLogger().info("- [ALLY] " + e.getAssociate().getName() + " : " + e.getMessage());
 					}
 					for (Player toGet : e.getRecipients()) {
-						Message.form(toGet).build(e.getComponents());
+						Mailer.empty(toGet).chat(e.getComponents()).deploy();
 						toGet.playSound(toGet.getLocation(), e.getPingSound(), 10, 1);
 					}
 					for (Clan c : associate.getClan().getRelation().getAlliance().get(Clan.class)) {
@@ -133,7 +142,7 @@ public class ChatEventListener implements Listener {
 						ClansAPI.getInstance().getPlugin().getLogger().info("- [" + associate.getChannel() + "] " + e.getAssociate().getName() + " : " + e.getMessage());
 					}
 					for (Player toGet : e.getRecipients()) {
-						Message.form(toGet).build(e.getComponents());
+						Mailer.empty(toGet).chat(e.getComponents()).deploy();
 						toGet.playSound(toGet.getLocation(), e.getPingSound(), 10, 1);
 					}
 

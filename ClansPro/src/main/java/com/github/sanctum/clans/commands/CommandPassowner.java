@@ -19,7 +19,7 @@ public class CommandPassowner extends ClanSubCommand {
 		Clan.Associate associate = ClansAPI.getInstance().getAssociate(p).orElse(null);
 
 		if (args.length == 0) {
-			if (!p.hasPermission(this.getPermission() + "." + DataManager.Security.getPermission("passowner"))) {
+			if (!Clan.ACTION.test(p, "clanspro." + DataManager.Security.getPermission("passowner")).deploy()) {
 				lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("passowner")));
 				return true;
 			}
@@ -28,12 +28,12 @@ public class CommandPassowner extends ClanSubCommand {
 		}
 
 		if (args.length == 1) {
-			if (!p.hasPermission(this.getPermission() + "." + DataManager.Security.getPermission("passowner"))) {
+			if (!Clan.ACTION.test(p, "clanspro." + DataManager.Security.getPermission("passowner")).deploy()) {
 				lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("passowner")));
 				return true;
 			}
 			if (associate != null) {
-				UUID target = Clan.ACTION.getUserID(args[0]);
+				UUID target = Clan.ACTION.getId(args[0]).deploy();
 				if (target != null) {
 
 					if (associate.getPriority().toLevel() == 3) {

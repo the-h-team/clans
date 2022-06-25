@@ -10,7 +10,7 @@ import com.github.sanctum.labyrinth.data.FileManager;
 import com.github.sanctum.labyrinth.data.Node;
 import com.github.sanctum.labyrinth.library.HUID;
 import com.github.sanctum.labyrinth.library.ParsedHUID;
-import com.github.sanctum.labyrinth.task.Schedule;
+import com.github.sanctum.labyrinth.task.TaskScheduler;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -159,7 +159,7 @@ public final class DefaultClaim implements Claim {
 
 	@Override
 	public void remove(Flag flag) {
-		flags.values().stream().filter(f -> f.getId().equals(flag.getId())).findFirst().ifPresent(fl -> Schedule.sync(() -> flags.remove(fl.getId())).run());
+		flags.values().stream().filter(f -> f.getId().equals(flag.getId())).findFirst().ifPresent(fl -> TaskScheduler.of(() -> flags.remove(fl.getId())).schedule());
 		Node claim = ClansAPI.getInstance().getClaimManager().getFile().getRoot().getNode(getOwner().getTag().getId() + "." + getId());
 		if (claim.getNode("flags").getNode(flag.getId()).get() != null) {
 			claim.getNode("flags").getNode(flag.getId()).set(null);
@@ -212,7 +212,7 @@ public final class DefaultClaim implements Claim {
 	 */
 	@Override
 	public void remove() {
-		if (!((Clan)getHolder()).isConsole()) {
+		if (!((Clan) getHolder()).isConsole()) {
 			Node n = ClansAPI.getInstance().getClaimManager().getFile().read(c -> c.getNode(getOwner().getTag().getId() + "." + getId()));
 			n.set(null);
 			n.save();
@@ -225,7 +225,7 @@ public final class DefaultClaim implements Claim {
 
 	@Override
 	public void save() {
-		if (((Clan)getHolder()).isConsole()) return;
+		if (((Clan) getHolder()).isConsole()) return;
 		FileManager file = ClansAPI.getInstance().getClaimManager().getFile();
 		Node claim = file.getRoot().getNode(getOwner().getTag().getId() + "." + getId());
 		claim.getNode("x").set(getChunk().getX());

@@ -12,21 +12,22 @@ import com.github.sanctum.clans.bridge.internal.kingdoms.event.KingdomCreationEv
 import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClanSubCommand;
 import com.github.sanctum.clans.construct.api.ClansAPI;
+import com.github.sanctum.clans.construct.api.Teleport;
 import com.github.sanctum.clans.construct.extra.MessagePrefix;
-import com.github.sanctum.labyrinth.data.EconomyProvision;
 import com.github.sanctum.labyrinth.formatting.Message;
-import com.github.sanctum.labyrinth.formatting.PaginatedList;
+import com.github.sanctum.labyrinth.formatting.completion.SimpleTabCompletion;
+import com.github.sanctum.labyrinth.formatting.completion.TabCompletionIndex;
+import com.github.sanctum.labyrinth.formatting.pagination.EasyPagination;
 import com.github.sanctum.labyrinth.formatting.string.DefaultColor;
 import com.github.sanctum.labyrinth.formatting.string.ProgressBar;
 import com.github.sanctum.labyrinth.formatting.string.RandomHex;
-import com.github.sanctum.labyrinth.library.Mailer;
 import com.github.sanctum.labyrinth.library.StringUtils;
-import com.github.sanctum.labyrinth.library.TextLib;
-import java.util.ArrayList;
+import java.text.MessageFormat;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.UUID;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -79,6 +80,13 @@ public class KingdomCommand extends ClanSubCommand implements Message.Factory {
 							.append(text("|").color(Color.OLIVE))
 							.append(text(" "))
 							.append(text("Name: " + Kingdom.getKingdom(associate.getClan()).getName()))
+							.append(text("\n"))
+							.append(text(" "))
+							.append(text("\n"))
+							.append(text(" "))
+							.append(text("|").color(Color.OLIVE))
+							.append(text(" "))
+							.append(text("King: &b" + Kingdom.getKingdom(associate.getClan()).getKing().map(Clan.Associate::getName).orElse("N/A")))
 							.send(p).deploy();
 					message()
 							.append(text(" "))
@@ -140,6 +148,57 @@ public class KingdomCommand extends ClanSubCommand implements Message.Factory {
 				return true;
 			}
 
+			if (args[0].equalsIgnoreCase("crown")) {
+				Clan.ACTION.sendMessage(p, "&cInvalid usage: &6/clan &7kingdom crown <playerName>");
+				return true;
+			}
+
+			if (args[0].equalsIgnoreCase("castle")) {
+				Clan.Associate associate = ClansAPI.getInstance().getAssociate(p).orElse(null);
+				if (associate != null) {
+					Kingdom kingdom = Kingdom.getKingdom(associate.getClan());
+					if (kingdom != null) {
+						if (kingdom.getCastle() != null) {
+							Teleport test = Teleport.get(associate);
+							if (test == null) {
+								Teleport n = new Teleport.Impl(associate, kingdom.getCastle());
+								n.register(parent -> parent.getAsAssociate().getMailer().action("&aWelcome to the castle.").deploy());
+								n.teleport();
+							} else {
+								sendMessage(p, "&cCannot teleport to the castle right now.");
+							}
+						} else {
+							sendMessage(p, "&cOur kingdom doesn't have a kingdom location set.");
+						}
+					}
+				} else {
+					sendMessage(p, Clan.ACTION.notInClan());
+				}
+				return true;
+			}
+
+			if (args[0].equalsIgnoreCase("pvp")) {
+				Clan.Associate associate = ClansAPI.getInstance().getAssociate(p).orElse(null);
+				if (associate != null) {
+					String k = associate.getClan().getValue("kingdom");
+					if (k != null) {
+						Kingdom kingdom = Kingdom.getKingdom(k);
+						if (kingdom != null) {
+							Clan.Associate king = kingdom.getKing().orElse(null);
+							if (king != null && king.equals(associate)) {
+								boolean result = !kingdom.isPeaceful();
+								kingdom.setPeaceful(result);
+								sendMessage(p, "&aKingdom pvp mode set to &f" + result);
+							} else {
+								sendMessage(p, Clan.ACTION.noClearance());
+							}
+						}
+					}
+				} else {
+					sendMessage(p, Clan.ACTION.notInClan());
+				}
+			}
+
 			if (args[0].equalsIgnoreCase("leave")) {
 
 				Clan.Associate associate = ClansAPI.getInstance().getAssociate(p).orElse(null);
@@ -190,19 +249,12 @@ public class KingdomCommand extends ClanSubCommand implements Message.Factory {
 
 						Kingdom k = Kingdom.getKingdom(kingdom);
 
-						PaginatedList<Quest> help = new PaginatedList<>(new ArrayList<>(k.getQuests()))
-								.limit(6)
-								.start((pagination, page, max) -> {
-									MessagePrefix prefix = ClansAPI.getInstance().getPrefix();
-									message().append(text(prefix.getPrefix())).append(text(prefix.getText()).style(new RandomHex())).append(text(prefix.getSuffix())).append(text(" ")).append(text("|").style(ChatColor.BOLD)).append(text(" ")).append(text("Jobs").style(DefaultColor.MANGO)).send(p).deploy();
-									message().append(text("&7&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬")).send(p).deploy();
-								});
-
-						help.finish(builder -> {
-							builder.setPrefix("&7&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬");
-							builder.setPlayer(p);
-						}).decorate((pagination, quest, page, max, placement) -> {
-
+						EasyPagination<Quest> h = new EasyPagination<>(p, k.getQuests(), (o1, o2) -> o2.getTitle().compareTo(o1.getTitle()));
+						h.limit(6);
+						MessagePrefix prefix = ClansAPI.getInstance().getPrefix();
+						message().append(text(prefix.getPrefix())).append(text(prefix.getText()).style(new RandomHex())).append(text(prefix.getSuffix())).append(text(" ")).append(text("|").style(ChatColor.BOLD)).append(text(" ")).append(text("Jobs").style(DefaultColor.MANGO)).send(p).deploy();
+						h.setHeader((player, message) -> message.then("&7&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬"));
+						h.setFormat((quest, placement, message) -> {
 							Supplier<String> supplier = () -> {
 
 								ItemStack item = (ItemStack) quest.getReward().get();
@@ -214,7 +266,7 @@ public class KingdomCommand extends ClanSubCommand implements Message.Factory {
 								return item.getType().name().toLowerCase(Locale.ROOT).replace("_", " ");
 							};
 							if (quest.activated(p)) {
-								message().append(text("[").color(Color.MAROON))
+								message.append(text("[").color(Color.MAROON))
 										.append(text("#").color(Color.GRAY))
 										.append(text(String.valueOf(placement)).color(Color.ORANGE).style(ChatColor.BOLD))
 										.append(text("]").color(Color.MAROON))
@@ -228,8 +280,7 @@ public class KingdomCommand extends ClanSubCommand implements Message.Factory {
 										.append(text(")").color(Color.ORANGE))
 										.append(text(" "))
 										.append(text("█").color(Color.OLIVE).bind(hover("Reward: &f" + (quest.getReward().get().getClass().isArray() ? "Items" : (quest.getReward().get() instanceof ItemStack ? "Item" : "Money"))).color(Color.RED)).bind(hover((quest.getReward().get().getClass().isArray() ? "&cAmount: &e" + ((ItemStack[]) quest.getReward().get()).length : (quest.getReward().get() instanceof ItemStack ? "&cType: &e" + supplier.get() : quest.getReward().get().toString())))))
-										.send(p).deploy();
-								message()
+								        .append(text("\n"))
 										.append(text("(").color(Color.MAROON))
 										.append(text(getProgressBar(((Number) quest.getProgression()).intValue(), ((Number) quest.getRequirement()).intValue(), 73)).bind(hover("&cClick to quit job &3&l" + quest.getTitle())).bind(action(() -> {
 											if (quest.deactivate(p)) {
@@ -240,10 +291,9 @@ public class KingdomCommand extends ClanSubCommand implements Message.Factory {
 											}
 										})))
 										.append(text(")").color(Color.MAROON))
-										.append(text(" "))
-										.send(p).deploy();
+										.append(text(" "));
 							} else {
-								message().append(text("[").color(Color.MAROON))
+								message.append(text("[").color(Color.MAROON))
 										.append(text("#").color(Color.GRAY))
 										.append(text(String.valueOf(placement)).color(Color.ORANGE).style(ChatColor.BOLD))
 										.append(text("]").color(Color.MAROON))
@@ -257,8 +307,7 @@ public class KingdomCommand extends ClanSubCommand implements Message.Factory {
 										.append(text(")").color(Color.ORANGE))
 										.append(text(" "))
 										.append(text("█").color(Color.OLIVE).bind(hover("Reward: &f" + (quest.getReward().get().getClass().isArray() ? "Items" : (quest.getReward().get() instanceof ItemStack ? "Item" : "Money"))).color(Color.RED)).bind(hover((quest.getReward().get().getClass().isArray() ? "&cAmount: &e" + ((ItemStack[]) quest.getReward().get()).length : (quest.getReward().get() instanceof ItemStack ? "&cType: &e" + supplier.get() : quest.getReward().get().toString())))))
-										.send(p).deploy();
-								message()
+								        .append(text("\n"))
 										.append(text("(").color(Color.MAROON))
 										.append(text(getProgressBar(((Number) quest.getProgression()).intValue(), ((Number) quest.getRequirement()).intValue(), 73)).bind(hover("&aClick to accept job &3&l" + quest.getTitle())).bind(action(() -> {
 											if (quest.isComplete()) {
@@ -278,12 +327,11 @@ public class KingdomCommand extends ClanSubCommand implements Message.Factory {
 											}
 										})))
 										.append(text(")").color(Color.MAROON))
-										.append(text(" "))
-										.send(p).deploy();
+										.append(text(" "));
 							}
-
-						}).get(1);
-
+						});
+						h.setFooter((player, message) -> message.then("&7&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬"));
+						h.send(1);
 					}
 
 
@@ -293,16 +341,112 @@ public class KingdomCommand extends ClanSubCommand implements Message.Factory {
 
 
 			if (args[0].equalsIgnoreCase("roundtable")) {
-				// TODO: send rountable help menu
-				if (Bukkit.getVersion().equals(Bukkit.getVersion())) {
-					Clan.ACTION.sendMessage(p, "&6&oRoundtable features not done yet!");
-					return true;
+				Clan.Associate associate = ClansAPI.getInstance().getAssociate(p).orElse(null);
+				if (associate != null) {
+					message()
+							.append(text("\n"))
+							.append(text(" "))
+							.append(text("|").color(Color.OLIVE))
+							.append(text(" "))
+							.append(text("Name: " + KingdomAddon.getRoundTable().getName()))
+							.append(text("\n"))
+							.append(text(" "))
+							.send(p).deploy();
+					message()
+							.append(text(" "))
+							.append(text("|").color(Color.OLIVE))
+							.append(text(" "))
+							.append(text("Members: &7" + KingdomAddon.getRoundTable().getUsers().stream().map(Bukkit::getOfflinePlayer).map(player -> "&6(&b" + KingdomAddon.getRoundTable().getRank(player.getUniqueId()).toLevel() + "&6)&7 " + player.getName()).collect(Collectors.joining("&f, "))))
+							.send(p).deploy();
+					message()
+							.append(text(" "))
+							.send(p).deploy();
+					message()
+							.append(text(" "))
+							.append(text("[").color(Color.OLIVE))
+							.append(text("Leave").color(Color.FUCHSIA).bind(hover("Click to leave " + KingdomAddon.getRoundTable().getName()).style(new RandomHex())).bind(command("/c kingdom roundtable leave")))
+							.append(text("]").color(Color.OLIVE))
+							.send(p).deploy();
+					message()
+							.append(text(" "))
+							.send(p).deploy();
+					message()
+							.append(text(" "))
+							.append(text("[").color(Color.OLIVE))
+							.append(text("Jobs").color(Color.FUCHSIA).bind(hover("Click to view special jobs.").style(new RandomHex())).bind(command("/c kingdom roundtable jobs")))
+							.append(text("]").color(Color.OLIVE))
+							.append(text("\n"))
+							.send(p).deploy();
+				} else {
+					sendMessage(p, Clan.ACTION.notInClan());
 				}
 			}
 			return true;
 		}
 
 		if (args.length == 2) {
+
+			if (args[0].equalsIgnoreCase("castle")) {
+				if (args[1].equalsIgnoreCase("set")) {
+					Clan.Associate associate = ClansAPI.getInstance().getAssociate(p).orElse(null);
+
+					if (associate != null) {
+						Kingdom kingdom = Kingdom.getKingdom(associate.getClan());
+						if (kingdom != null) {
+							Clan.Associate king = kingdom.getKing().orElse(null);
+							if (associate.equals(king)) {
+								kingdom.setCastle(p.getLocation());
+								sendMessage(p, "&aCastle location updated.");
+							} else {
+								sendMessage(p, Clan.ACTION.noClearance());
+							}
+						}
+					}
+					return true;
+				}
+			}
+
+			if (args[0].equalsIgnoreCase("crown")) {
+				Clan.Associate associate = ClansAPI.getInstance().getAssociate(p).orElse(null);
+
+				if (associate != null) {
+
+					Clan c = associate.getClan();
+
+					String kingdom = c.getValue(String.class, "kingdom");
+
+					if (kingdom != null) {
+
+						Kingdom k = Kingdom.getKingdom(kingdom);
+
+						if (k.getKing().isPresent()) {
+							if (k.getKing().get().equals(associate)) {
+								Clan.Associate test = k.getMembers().stream().filter(cl -> cl.getMember(a -> a.getName().equalsIgnoreCase(args[1])) != null).findFirst().map(clan -> clan.getMember(a -> a.getName().equalsIgnoreCase(args[1]))).orElse(null);
+								if (test != null) {
+									k.setKing(test);
+									sendMessage(p, "&aPlayer " + args[1] + " is now the king.");
+								} else {
+									sendMessage(p, "&cPlayer " + args[1] + " is not apart of our kingdom.");
+								}
+							} else {
+								sendMessage(p, Clan.ACTION.noClearance());
+							}
+						} else {
+							if (associate.getPriority().toLevel() >= 2) {
+								Clan.Associate test = k.getMembers().stream().filter(cl -> cl.getMember(a -> a.getName().equalsIgnoreCase(args[1])) != null).findFirst().map(clan -> clan.getMember(a -> a.getName().equalsIgnoreCase(args[1]))).orElse(null);
+								if (test != null) {
+									k.setKing(test);
+									sendMessage(p, "&aPlayer " + args[1] + " is now the king.");
+								} else {
+									sendMessage(p, "&cPlayer " + args[1] + " is not apart of our kingdom.");
+								}
+							} else {
+								sendMessage(p, Clan.ACTION.noClearance());
+							}
+						}
+					}
+				}
+			}
 			if (args[0].equalsIgnoreCase("join")) {
 
 				Kingdom k = Kingdom.getKingdom(args[1]);
@@ -375,6 +519,7 @@ public class KingdomCommand extends ClanSubCommand implements Message.Factory {
 						KingdomCreationEvent event = ClanVentBus.call(new KingdomCreationEvent(associate, name));
 						if (!event.isCancelled()) {
 							Kingdom create = new Kingdom(event.getKingdomName(), addon);
+							create.setKing(associate);
 							ClanVentBus.call(new KingdomCreatedEvent(p, create));
 							c.setValue("kingdom", event.getKingdomName(), false);
 							create.getMembers().add(c);
@@ -399,66 +544,145 @@ public class KingdomCommand extends ClanSubCommand implements Message.Factory {
 
 			if (args[0].equalsIgnoreCase("roundtable")) {
 
-				if (Bukkit.getVersion().equals(Bukkit.getVersion())) {
-					Clan.ACTION.sendMessage(p, "&6&oRoundtable features not done yet!");
-					return true;
-				}
-
 				RoundTable table = KingdomAddon.getRoundTable();
 
 				if (args[1].equalsIgnoreCase("jobs")) {
 
-					PaginatedList<Quest> help = new PaginatedList<>(new ArrayList<>(table.getQuests()))
-							.limit(6)
-							.start((pagination, page, max) -> {
-								if (Bukkit.getVersion().contains("1.17") || Bukkit.getVersion().contains("1.16")) {
-									Mailer.empty(p).chat("&7&m------------&7&l[&#ff7700&oRoundtable Jobs&7&l]&7&m------------").deploy();
-								} else {
-									Mailer.empty(p).chat("&7&m------------&7&l[&6&oRoundtable Jobs&7&l]&7&m------------").deploy();
-								}
-							});
+					EasyPagination<Quest> h = new EasyPagination<>(p, table.getQuests(), (o1, o2) -> o2.getTitle().compareTo(o1.getTitle()));
+					h.limit(6);
+					MessagePrefix prefix = ClansAPI.getInstance().getPrefix();
+					message().append(text(prefix.getPrefix())).append(text(prefix.getText()).style(new RandomHex())).append(text(prefix.getSuffix())).append(text(" ")).append(text("|").style(ChatColor.BOLD)).append(text(" ")).append(text("Jobs").style(DefaultColor.MANGO)).send(p).deploy();
+					h.setHeader((player, message) -> message.then("&7&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬"));
+					h.setFormat((quest, placement, message) -> {
+						Supplier<String> supplier = () -> {
 
-					help.finish(builder -> {
-						builder.setPrefix("&7&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬");
-						builder.setSuffix("&7&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬");
-						builder.setPlayer(p);
-					}).decorate((pagination, achievement, page, max, placement) -> {
+							ItemStack item = (ItemStack) quest.getReward().get();
 
-						if (achievement.activated(p)) {
-							Mailer.empty(p).chat(TextLib.getInstance().textRunnable("", " &7# &6&l" + placement + " &c&o" + achievement.getTitle() + " &r(&d" + achievement.getPercentage() + "%&r) " + " &e: &b&l" + achievement.getDescription(), "&6Click to quit job &3&l" + achievement.getTitle(), "c kingdom roundtable quit " + achievement.getTitle())).deploy();
+							if (item.getType() == Material.ENCHANTED_BOOK) {
+								Map.Entry<Enchantment, Integer> entry = item.getEnchantments().entrySet().stream().findFirst().get();
+								return item.getType().name().toLowerCase(Locale.ROOT).replace("_", " ") + " &f(&b" + entry.getKey().getKey().getKey() + " &fLvl." + entry.getValue() + ")";
+							}
+							return item.getType().name().toLowerCase(Locale.ROOT).replace("_", " ");
+						};
+						if (quest.activated(p)) {
+							message.append(text("[").color(Color.MAROON))
+									.append(text("#").color(Color.GRAY))
+									.append(text(String.valueOf(placement)).color(Color.ORANGE).style(ChatColor.BOLD))
+									.append(text("]").color(Color.MAROON))
+									.append(text(" "))
+									.append(text(quest.getTitle()).style(new RandomHex()).bind(hover(quest.getDescription()).style(new RandomHex())))
+									.append(text(" "))
+									.append(text("(").color(Color.ORANGE))
+									.append(text(String.valueOf(quest.getProgression())))
+									.append(text("/"))
+									.append(text(String.valueOf(quest.getRequirement())))
+									.append(text(")").color(Color.ORANGE))
+									.append(text(" "))
+									.append(text("█").color(Color.OLIVE).bind(hover("Reward: &f" + (quest.getReward().get().getClass().isArray() ? "Items" : (quest.getReward().get() instanceof ItemStack ? "Item" : "Money"))).color(Color.RED)).bind(hover((quest.getReward().get().getClass().isArray() ? "&cAmount: &e" + ((ItemStack[]) quest.getReward().get()).length : (quest.getReward().get() instanceof ItemStack ? "&cType: &e" + supplier.get() : quest.getReward().get().toString())))))
+									.append(text("\n"))
+									.append(text("(").color(Color.MAROON))
+									.append(text(getProgressBar(((Number) quest.getProgression()).intValue(), ((Number) quest.getRequirement()).intValue(), 73)).bind(hover("&cClick to quit job &3&l" + quest.getTitle())).bind(action(() -> {
+										if (quest.deactivate(p)) {
+											Clan.ACTION.sendMessage(p, "&cYou are no longer working job &e" + quest.getTitle());
+										} else {
+											Clan.ACTION.sendMessage(p, "&cYou aren't currently working job &e" + quest.getTitle());
+
+										}
+									})))
+									.append(text(")").color(Color.MAROON))
+									.append(text(" "));
 						} else {
-							Mailer.empty(p).chat(TextLib.getInstance().textRunnable("", " &7# &6&l" + placement + " &3&o" + achievement.getTitle() + " &r(&d" + achievement.getPercentage() + "%&r) " + " &e: &b&l" + achievement.getDescription(), "&6Click to start job &3&l" + achievement.getTitle(), "c kingdom roundtable work " + achievement.getTitle())).deploy();
+							message.append(text("[").color(Color.MAROON))
+									.append(text("#").color(Color.GRAY))
+									.append(text(String.valueOf(placement)).color(Color.ORANGE).style(ChatColor.BOLD))
+									.append(text("]").color(Color.MAROON))
+									.append(text(" "))
+									.append(text(quest.getTitle()).style(new RandomHex()).bind(hover(quest.getDescription()).style(new RandomHex())))
+									.append(text(" "))
+									.append(text("(").color(Color.ORANGE))
+									.append(text(String.valueOf(quest.getProgression())))
+									.append(text("/"))
+									.append(text(String.valueOf(quest.getRequirement())))
+									.append(text(")").color(Color.ORANGE))
+									.append(text(" "))
+									.append(text("█").color(Color.OLIVE).bind(hover("Reward: &f" + (quest.getReward().get().getClass().isArray() ? "Items" : (quest.getReward().get() instanceof ItemStack ? "Item" : "Money"))).color(Color.RED)).bind(hover((quest.getReward().get().getClass().isArray() ? "&cAmount: &e" + ((ItemStack[]) quest.getReward().get()).length : (quest.getReward().get() instanceof ItemStack ? "&cType: &e" + supplier.get() : quest.getReward().get().toString())))))
+									.append(text("\n"))
+									.append(text("(").color(Color.MAROON))
+									.append(text(getProgressBar(((Number) quest.getProgression()).intValue(), ((Number) quest.getRequirement()).intValue(), 73)).bind(hover("&aClick to accept job &3&l" + quest.getTitle())).bind(action(() -> {
+										if (quest.isComplete()) {
+											Clan.ACTION.sendMessage(p, "&cThis quest is already complete!");
+											return;
+										}
+
+										if (quest.activate(p)) {
+
+											p.sendTitle(StringUtils.use(quest.getTitle()).translate(), StringUtils.use(quest.getDescription()).translate(), 60, 10, 60);
+
+
+										} else {
+
+											Clan.ACTION.sendMessage(p, "&cYou are already working job &e" + quest.getTitle());
+
+										}
+									})))
+									.append(text(")").color(Color.MAROON))
+									.append(text(" "));
 						}
-
-					}).get(1);
-
+					});
+					h.setFooter((player, message) -> message.then("&7&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬"));
+					h.send(1);
 				}
 
-				if (args[0].equalsIgnoreCase("join")) {
+				if (args[1].equalsIgnoreCase("leave")) {
+					if (table.isMember(p.getUniqueId())) {
+						sendMessage(p, "&cYou have left the most powerful group...");
+						table.remove(p.getUniqueId());
+					}
+				}
+
+				if (args[1].equalsIgnoreCase("invite")) {
+					Clan.Associate associate = ClansAPI.getInstance().getAssociate(p).orElse(null);
+					if (associate != null) {
+						if (table.isMember(associate.getId())) {
+							sendMessage(p, "&cUsername expected.");
+						}
+					}
+				}
+
+				if (args[1].equalsIgnoreCase("join")) {
 
 					if (table.getUsers().isEmpty()) {
-
-						if (EconomyProvision.getInstance().balance(p).orElse(0.0) >= 10000) {
-							table.take(p.getUniqueId(), Clan.Rank.HIGHEST);
-							addon.getMailer().prefix().start(Clan.ACTION.getPrefix()).finish().announce(player -> true, p.getName() + " is now among the most powerful on the server.").deploy();
+						Clan.Associate associate = ClansAPI.getInstance().getAssociate(p).orElse(null);
+						if (associate != null && associate.getPriority().toLevel() == 3) {
+							// TODO: use config double for balance amount
+							if (associate.getClan().getPower() >= ClansAPI.getDataInstance().getConfig().read(c -> c.getNode("Addon.Kingdoms.roundtable.required-power").toPrimitive().getDouble())) {
+								table.set(p.getUniqueId(), Clan.Rank.HIGHEST);
+								addon.getMailer().prefix().start(Clan.ACTION.getPrefix()).finish().announce(player -> true, p.getName() + " is now among the most powerful on the server.").deploy();
+							} else {
+								Clan.ACTION.sendMessage(p, "&cYou aren't powerful enough to start the table.");
+							}
 						} else {
-							Clan.ACTION.sendMessage(p, "&cYou aren't powerful enough to start the table.");
+							Clan.ACTION.sendMessage(p, Clan.ACTION.noClearance());
 						}
 
 					} else {
+						Clan.Associate associate = ClansAPI.getInstance().getAssociate(p).orElse(null);
+						if (associate != null && associate.getPriority().toLevel() >= 2) {
+							if (!table.join(p.getUniqueId())) {
 
-						if (!table.join(p.getUniqueId())) {
+								if (table.isMember(p.getUniqueId())) {
+									Clan.ACTION.sendMessage(p, "&cYou are already a member.");
+								} else {
+									Clan.ACTION.sendMessage(p, "&cYou are not invited.");
+								}
 
-							if (table.isMember(p.getUniqueId())) {
-								Clan.ACTION.sendMessage(p, "&cYou are already a member.");
 							} else {
-								Clan.ACTION.sendMessage(p, "&cYou are not invited.");
+
+								Clan.ACTION.sendMessage(p, "&a&lWelcome to the round table.");
+
 							}
-
 						} else {
-
-							Clan.ACTION.sendMessage(p, "&a&lWelcome to the round table.");
-
+							Clan.ACTION.sendMessage(p, Clan.ACTION.noClearance());
 						}
 					}
 				}
@@ -581,12 +805,86 @@ public class KingdomCommand extends ClanSubCommand implements Message.Factory {
 		}
 
 		if (args.length == 3) {
-			if (args[0].equalsIgnoreCase("roundtable")) {
 
-				if (Bukkit.getVersion().equals(Bukkit.getVersion())) {
-					Clan.ACTION.sendMessage(p, "&6&oRoundtable features not done yet!");
-					return true;
+			if (args[0].equalsIgnoreCase("work")) {
+
+				ClansAPI API = ClansAPI.getInstance();
+
+				Clan.Associate associate = API.getAssociate(p).orElse(null);
+
+				if (associate != null) {
+
+					Clan c = associate.getClan();
+
+					String kingdom = c.getValue(String.class, "kingdom");
+
+					if (kingdom != null) {
+
+						Kingdom k = Kingdom.getKingdom(kingdom);
+
+						Quest achievement = k.getQuest(args[1] + " " + args[2]);
+
+						if (achievement != null) {
+
+							if (achievement.isComplete()) {
+								Clan.ACTION.sendMessage(p, "&cThis quest is already complete!");
+								return true;
+							}
+
+							if (achievement.activate(p)) {
+
+								p.sendTitle(StringUtils.use(achievement.getTitle()).translate(), StringUtils.use(achievement.getDescription()).translate(), 60, 10, 60);
+
+
+							} else {
+
+								Clan.ACTION.sendMessage(p, "&cYou are already working job &e" + achievement.getTitle());
+
+							}
+
+						}
+					}
 				}
+				return true;
+			}
+			if (args[0].equalsIgnoreCase("quit")) {
+
+				ClansAPI API = ClansAPI.getInstance();
+
+				Clan.Associate associate = API.getAssociate(p).orElse(null);
+
+				if (associate != null) {
+
+
+					Clan c = associate.getClan();
+
+					String kingdom = c.getValue(String.class, "kingdom");
+
+					if (kingdom != null) {
+
+						Kingdom k = Kingdom.getKingdom(kingdom);
+
+						Quest achievement = k.getQuest(args[1] + " " + args[2]);
+
+						if (achievement != null) {
+
+							if (achievement.deactivate(p)) {
+
+								Clan.ACTION.sendMessage(p, "&cYou are no longer working job &e" + achievement.getTitle());
+
+
+							} else {
+
+								Clan.ACTION.sendMessage(p, "&cYou aren't currently working job &e" + achievement.getTitle());
+
+							}
+
+						}
+					}
+				}
+				return true;
+			}
+			if (args[0].equalsIgnoreCase("roundtable")) {
 
 				RoundTable table = KingdomAddon.getRoundTable();
 
@@ -595,6 +893,134 @@ public class KingdomCommand extends ClanSubCommand implements Message.Factory {
 					if (!table.isMember(p.getUniqueId())) {
 						Clan.ACTION.sendMessage(p, "&cYou are not a member of the roundtable.");
 						return true;
+					}
+
+					if (args[1].equalsIgnoreCase("invite")) {
+						Clan.Associate associate = ClansAPI.getInstance().getAssociate(p).orElse(null);
+						if (associate != null) {
+							if (table.getRank(associate.getId()).toLevel() >= KingdomAddon.getRoundTable().getClearance(RoundTable.INVITE).getDefault()) {
+								Player target = Bukkit.getPlayer(args[2]);
+								if (target != null) {
+									if (target.equals(p)) {
+										sendMessage(p, "&cYou cannot invite yourself, you're already a member.");
+										return true;
+									}
+									sendMessage(p, "&aPlayer successfully invited to the worthy..");
+									sendMessage(target, "&6Congratulations! You've been invited to be a member of the most powerful group of players on the server.");
+									sendMessage(target, "&aType &f/c kingdom roundtable join &ato accept.");
+								} else {
+									sendMessage(p, Clan.ACTION.playerUnknown(args[2]));
+								}
+
+							} else {
+								sendMessage(p, Clan.ACTION.noClearance());
+							}
+						}
+					}
+
+					if (args[1].equalsIgnoreCase("name")) {
+						Clan.Associate associate = ClansAPI.getInstance().getAssociate(p).orElse(null);
+						if (associate != null) {
+							if (table.getRank(associate.getId()).toLevel() >= KingdomAddon.getRoundTable().getClearance(RoundTable.TAG).getDefault()) {
+								String name = args[2];
+								if (!ClansAPI.getInstance().isNameBlackListed(name)) {
+									table.setName(name);
+									sendMessage(p, "&aThe name of the roundtable has been updated to " + name);
+								}
+							} else {
+								sendMessage(p, Clan.ACTION.noClearance());
+							}
+						}
+					}
+
+					if (args[1].equalsIgnoreCase("promote")) {
+						Clan.Associate associate = ClansAPI.getInstance().getAssociate(p).orElse(null);
+						if (associate != null) {
+							if (table.getRank(associate.getId()).toLevel() >= KingdomAddon.getRoundTable().getClearance(RoundTable.PROMOTE).getDefault()) {
+								UUID test = Clan.ACTION.getId(args[2]).deploy();
+								if (test != null) {
+									if (table.isMember(test)) {
+										Clan.Rank r = table.getRank(test);
+										Clan.Rank upgrade = null;
+										switch (r) {
+											case NORMAL:
+												upgrade = Clan.Rank.HIGH;
+												break;
+											case HIGH:
+												upgrade = Clan.Rank.HIGHER;
+												break;
+											case HIGHER:
+												upgrade = Clan.Rank.HIGHEST;
+												break;
+										}
+										if (upgrade != null) {
+											table.set(test, upgrade);
+											sendMessage(p, MessageFormat.format(ClansAPI.getDataInstance().getMessageResponse("promotion"), args[2]));
+										}
+									} else {
+										sendMessage(p, "&cUser " + args[2] + " not a member.");
+									}
+								}
+
+							} else {
+								sendMessage(p, Clan.ACTION.noClearance());
+							}
+						}
+					}
+
+					if (args[1].equalsIgnoreCase("kick")) {
+						Clan.Associate associate = ClansAPI.getInstance().getAssociate(p).orElse(null);
+						if (associate != null) {
+							if (table.getRank(associate.getId()).toLevel() >= KingdomAddon.getRoundTable().getClearance(RoundTable.KICK).getDefault()) {
+								UUID test = Clan.ACTION.getId(args[2]).deploy();
+								if (test != null) {
+									if (table.isMember(test)) {
+										if (table.getRank(test).toLevel() < table.getRank(test).toLevel()) {
+											table.remove(test);
+											sendMessage(p, "&aMember " + args[2] + " removed.");
+										} else {
+											sendMessage(p, Clan.ACTION.noClearance());
+										}
+									} else {
+										sendMessage(p, "&cUser " + args[2] + " not a member.");
+									}
+								}
+							} else {
+								sendMessage(p, Clan.ACTION.noClearance());
+							}
+						}
+					}
+
+					if (args[1].equalsIgnoreCase("demote")) {
+						Clan.Associate associate = ClansAPI.getInstance().getAssociate(p).orElse(null);
+						if (associate != null) {
+							if (table.getRank(associate.getId()).toLevel() >= KingdomAddon.getRoundTable().getClearance(RoundTable.DEMOTE).getDefault()) {
+								UUID test = Clan.ACTION.getId(args[2]).deploy();
+								if (test != null) {
+									if (table.isMember(test)) {
+										Clan.Rank r = table.getRank(test);
+										Clan.Rank downgrade = null;
+										switch (r) {
+											case HIGH:
+												downgrade = Clan.Rank.NORMAL;
+												break;
+											case HIGHER:
+												downgrade = Clan.Rank.HIGH;
+												break;
+										}
+										if (downgrade != null) {
+											table.set(test, downgrade);
+											sendMessage(p, MessageFormat.format(ClansAPI.getDataInstance().getMessageResponse("demotion"), args[2]));
+										}
+									} else {
+										sendMessage(p, "&cUser " + args[2] + " not a member.");
+									}
+								}
+
+							} else {
+								sendMessage(p, Clan.ACTION.noClearance());
+							}
+						}
 					}
 
 					if (args[1].equalsIgnoreCase("work")) {
@@ -669,7 +1095,7 @@ public class KingdomCommand extends ClanSubCommand implements Message.Factory {
 
 					Kingdom k = Kingdom.getKingdom(kingdom);
 					StringBuilder builder = new StringBuilder();
-					for (int i = 2; i < args.length; i++) {
+					for (int i = 1; i < args.length; i++) {
 						if (i == args.length - 1) {
 							builder.append(args[i]);
 						} else {
@@ -721,7 +1147,7 @@ public class KingdomCommand extends ClanSubCommand implements Message.Factory {
 					Kingdom k = Kingdom.getKingdom(kingdom);
 
 					StringBuilder builder = new StringBuilder();
-					for (int i = 2; i < args.length; i++) {
+					for (int i = 1; i < args.length; i++) {
 						if (i == args.length - 1) {
 							builder.append(args[i]);
 						} else {
@@ -760,22 +1186,13 @@ public class KingdomCommand extends ClanSubCommand implements Message.Factory {
 
 	@Override
 	public List<String> tab(Player player, String label, String[] args) {
-		if (args.length == 1) {
-			return getBaseCompletion(args);
-		}
-		if (args.length == 2) {
-			if (!args[0].equalsIgnoreCase(getLabel())) return null;
-			List<String> list = new ArrayList<>();
-			Stream.of("start", "join", "leave", "work", "quit", "jobs", "name").filter(s -> s.toLowerCase().startsWith(args[1].toLowerCase())).forEach(list::add);
-			return list;
-		}
-		if (args.length == 3) {
-			if (args[1].equalsIgnoreCase("work") || args[1].equalsIgnoreCase("quit")) {
-				List<String> list = new ArrayList<>();
-				Arrays.stream(Kingdom.getDefaults()).map(Quest::getTitle).filter(s -> s.toLowerCase().startsWith(args[2].toLowerCase())).forEach(list::add);
-				return list;
-			}
-		}
-		return null;
+		return SimpleTabCompletion.of(args)
+				.then(TabCompletionIndex.ONE, getBaseCompletion(args))
+				.then(TabCompletionIndex.TWO, getLabel(), TabCompletionIndex.ONE, () -> Stream.of("start", "join", "castle", "crown", "roundtable", "leave", "work", "quit", "jobs", "pvp", "name").sorted(String::compareToIgnoreCase).collect(Collectors.toList()))
+				.then(TabCompletionIndex.THREE, "castle", TabCompletionIndex.TWO, "set")
+				.then(TabCompletionIndex.THREE, "roundtable", TabCompletionIndex.TWO, () -> Stream.of("join", "leave", "jobs", "work", "quit", "name", "invite").sorted(String::compareToIgnoreCase).collect(Collectors.toList()))
+				.then(TabCompletionIndex.THREE, "work", TabCompletionIndex.TWO, () -> Arrays.stream(Kingdom.getDefaults()).map(Quest::getTitle).collect(Collectors.toList()))
+				.then(TabCompletionIndex.THREE, "quit", TabCompletionIndex.TWO, () -> Arrays.stream(Kingdom.getDefaults()).map(Quest::getTitle).collect(Collectors.toList()))
+				.get();
 	}
 }

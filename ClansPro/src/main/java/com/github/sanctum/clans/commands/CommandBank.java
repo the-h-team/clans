@@ -1,5 +1,6 @@
 package com.github.sanctum.clans.commands;
 
+import com.github.sanctum.clans.construct.ClanManager;
 import com.github.sanctum.clans.construct.DataManager;
 import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClanBank;
@@ -17,6 +18,9 @@ import com.github.sanctum.labyrinth.formatting.completion.SimpleTabCompletion;
 import com.github.sanctum.labyrinth.formatting.completion.TabCompletionIndex;
 import com.github.sanctum.labyrinth.formatting.component.OldComponent;
 import com.github.sanctum.labyrinth.formatting.string.ColoredString;
+import com.github.sanctum.labyrinth.gui.unity.simple.MemoryDocket;
+import com.github.sanctum.labyrinth.interfacing.UnknownGeneric;
+import com.github.sanctum.labyrinth.library.HUID;
 import com.github.sanctum.labyrinth.library.TextLib;
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -25,13 +29,13 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 import net.md_5.bungee.api.chat.BaseComponent;
-import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
 public class CommandBank extends ClanSubCommand implements Message.Factory {
 	public CommandBank() {
 		super("bank");
 		setAliases(Collections.singletonList("b"));
+		setInvisible(!ClansAPI.getDataInstance().isTrue("Clans.banks.enabled"));
 	}
 
 	@Override
@@ -47,7 +51,7 @@ public class CommandBank extends ClanSubCommand implements Message.Factory {
 				sendMessage(p, Messages.PERM_NOT_PLAYER_COMMAND.toString());
 				return true;
 			} else {
-				sendMessage(p, lib.getPrefix() + Messages.BANKS_HEADER);
+				sendMessage(p, Messages.BANKS_HEADER.toString());
 			}
 			if (associate == null) {
 				lib.sendMessage(p, lib.notInClan());
@@ -108,7 +112,7 @@ public class CommandBank extends ClanSubCommand implements Message.Factory {
 		}
 
 		if (args.length == 1) {
-			if (!Bukkit.getPluginManager().isPluginEnabled("Vault") && !Bukkit.getPluginManager().isPluginEnabled("Enterprise")) {
+			if (!EconomyProvision.getInstance().isValid()) {
 				lib.sendMessage(p, "&c&oNo economy interface found. Bank feature disabled.");
 				return true;
 			}
@@ -129,6 +133,15 @@ public class CommandBank extends ClanSubCommand implements Message.Factory {
 					}
 					sendMessage(p, Messages.BANKS_CURRENT_BALANCE.toString()
 							.replace("{0}", clan.getBalance().toString()));
+					return true;
+				case "gui" :
+					if (ClansAPI.getDataInstance().getMessages().read(c -> c.getNode("deep-edit").toPrimitive().getBoolean())) {
+						MemoryDocket<UnknownGeneric> docket = new MemoryDocket<>(ClansAPI.getDataInstance().getMessages().getRoot().getNode("menu.home.bank"));
+						docket.setUniqueDataConverter(associate, Clan.Associate.memoryDocketReplacer());
+						docket.setNamePlaceholder(":member_name:");
+						docket.load();
+						docket.toMenu().open(p);
+					}
 					return true;
 				case "deposit":
 					if (BankPermissions.BANKS_DEPOSIT.not(p) || !BankAction.DEPOSIT.testForPlayer(clan, p)) {
@@ -183,6 +196,14 @@ public class CommandBank extends ClanSubCommand implements Message.Factory {
 								Messages.HOVER_NO_AMOUNT.toString()
 						));
 					}
+					return true;
+				case "send":
+					if (BankPermissions.BANKS_WITHDRAW.not(p)) {
+						sendMessage(p, Messages.PERM_NOT_PLAYER_COMMAND.toString());
+						return true;
+					}
+					sendMessage(p, "&cInvalid usage.");
+					sendMessage(p, Messages.BANK_HELP_PREFIX + " &asend &f<clanName> &6<amount>");
 					return true;
 				case "setperm":
 					if (associate.getPriority().toLevel() != 3) {
@@ -239,12 +260,20 @@ public class CommandBank extends ClanSubCommand implements Message.Factory {
 				sendMessage(p, "&c" + Messages.PLAYER_NO_CLAN);
 				return true;
 			}
-			if (!Bukkit.getPluginManager().isPluginEnabled("Vault") && !Bukkit.getPluginManager().isPluginEnabled("Enterprise")) {
+			if (!EconomyProvision.getInstance().isValid()) {
 				lib.sendMessage(p, "&c&oNo economy interface found. Bank feature disabled.");
 				return true;
 			}
 			final String arg1 = args[0].toLowerCase();
 			switch (arg1) {
+				case "Send":
+					if (BankPermissions.BANKS_WITHDRAW.not(p)) {
+						sendMessage(p, Messages.PERM_NOT_PLAYER_COMMAND.toString());
+						return true;
+					}
+					sendMessage(p, "&cInvalid usage.");
+					sendMessage(p, Messages.BANK_HELP_PREFIX + " &asend &f<clanName> &6<amount>");
+					return true;
 				case "deposit":
 				case "withdraw":
 					try {
@@ -319,6 +348,44 @@ public class CommandBank extends ClanSubCommand implements Message.Factory {
 				return true;
 			}
 			final Clan clan = associate.getClan();
+			if (args[0].equalsIgnoreCase("send")) {
+				final Clan theBank = associate.getClan();
+				final BigDecimal amount = new BigDecimal(args[2]);
+				if (amount.signum() != 1) {
+					sendMessage(p, Messages.BANK_INVALID_AMOUNT.toString());
+					return true;
+				}
+				ClanManager manager = ClansAPI.getInstance().getClanManager();
+				HUID id = manager.getClanID(args[1]);
+				if (id == null) {
+					sendMessage(p, lib.clanUnknown(args[1]));
+					return true;
+				}
+				final Clan theOtherBank = manager.getClan(id);
+				if (BankPermissions.BANKS_WITHDRAW.not(p)) {
+					sendMessage(p, Messages.PERM_NOT_PLAYER_COMMAND.toString());
+					return true;
+				}
+				if (theBank.getBalanceDouble() - amount.doubleValue() <= 0) {
+					sendMessage(p, Messages.WITHDRAW_ERR_PLAYER.toString()
+							.replace("{0}", amount.toString()));
+					associate.getClan().broadcast("&f&l&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬");
+					associate.getClan().broadcast("&aOur clan sent money in the amount of &6" + amount + " &ato clan " + theOtherBank.getPalette().toString(theOtherBank.getName()));
+					associate.getClan().broadcast("&f&l&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬");
+					theOtherBank.broadcast("&f&l&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬");
+					theOtherBank.broadcast("&6We have received money in the amount of &6" + amount + " &afrom clan " + theBank.getPalette().toString(theBank.getName()));
+					theOtherBank.broadcast("&f&l&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬");
+					return true;
+				}
+				if (theBank.setBalance(theBank.getBalance().subtract(amount)) && theOtherBank.setBalance(theOtherBank.getBalance().add(amount))) {
+					sendMessage(p, Messages.WITHDRAW_MSG_PLAYER.toString()
+							.replace("{0}", amount.toString()));
+				} else {
+					sendMessage(p, Messages.DEPOSIT_ERR_PLAYER.toString()
+							.replace("{0}", amount.toString()));
+				}
+				return true;
+			}
 			if (args[0].equalsIgnoreCase("setperm")) {
 				int level;
 				try {
@@ -375,11 +442,12 @@ public class CommandBank extends ClanSubCommand implements Message.Factory {
 
 	@Override
 	public List<String> tab(Player p, String label, String[] args) {
-		return SimpleTabCompletion.of(args).then(TabCompletionIndex.ONE, () -> getBaseCompletion(args))
+		return SimpleTabCompletion.of(args)
+				.then(TabCompletionIndex.ONE, () -> getBaseCompletion(args))
 				.then(TabCompletionIndex.TWO, getLabel(), TabCompletionIndex.ONE, () -> {
 					List<String> result = new ArrayList<>();
 					Optional<Clan.Associate> associate = ClansAPI.getInstance().getAssociate(p);
-					if (!p.hasPermission("clanspro." + DataManager.Security.getPermission("bank"))) {
+					if (!Clan.ACTION.test(p, "clanspro." + DataManager.Security.getPermission("bank")).deploy()) {
 						return result;
 					}
 
@@ -391,6 +459,7 @@ public class CommandBank extends ClanSubCommand implements Message.Factory {
 					if (EconomyProvision.getInstance().isValid()) {
 						result.add("balance");
 						result.add("deposit");
+						result.add("send");
 						result.add("withdraw");
 						Optional.ofNullable(ClansAPI.getInstance().getClanManager().getClan(p)).ifPresent(clan -> {
 							if (BankAction.VIEW_LOG.testForPlayer(clan, p)) {
@@ -406,7 +475,7 @@ public class CommandBank extends ClanSubCommand implements Message.Factory {
 					return result;
 				}).then(TabCompletionIndex.THREE, "setperm", TabCompletionIndex.TWO, () -> {
 					List<String> result = new ArrayList<>();
-					if (!p.hasPermission("clanspro." + DataManager.Security.getPermission("bank"))) {
+					if (!Clan.ACTION.test(p, "clanspro." + DataManager.Security.getPermission("bank")).deploy()) {
 						return result;
 					}
 					if (EconomyProvision.getInstance().isValid()) {
@@ -423,7 +492,7 @@ public class CommandBank extends ClanSubCommand implements Message.Factory {
 					return result;
 				}).then(TabCompletionIndex.THREE, "deposit", TabCompletionIndex.TWO, () -> {
 					List<String> result = new ArrayList<>();
-					if (!p.hasPermission("clanspro." + DataManager.Security.getPermission("bank"))) {
+					if (!Clan.ACTION.test(p, "clanspro." + DataManager.Security.getPermission("bank")).deploy()) {
 						return result;
 					}
 					if (EconomyProvision.getInstance().isValid()) {
@@ -431,9 +500,19 @@ public class CommandBank extends ClanSubCommand implements Message.Factory {
 						return result;
 					}
 					return result;
+				}).then(TabCompletionIndex.THREE, "send", TabCompletionIndex.TWO, () -> {
+					List<String> result = new ArrayList<>();
+					if (!Clan.ACTION.test(p, "clanspro." + DataManager.Security.getPermission("bank")).deploy()) {
+						return result;
+					}
+					if (EconomyProvision.getInstance().isValid()) {
+						ClansAPI.getInstance().getClanManager().getClans().forEach(c -> result.add(c.getName()));
+						return result;
+					}
+					return result;
 				}).then(TabCompletionIndex.THREE, "withdraw", TabCompletionIndex.TWO, () -> {
 					List<String> result = new ArrayList<>();
-					if (!p.hasPermission("clanspro." + DataManager.Security.getPermission("bank"))) {
+					if (!Clan.ACTION.test(p, "clanspro." + DataManager.Security.getPermission("bank")).deploy()) {
 						return result;
 					}
 					if (EconomyProvision.getInstance().isValid()) {
@@ -443,7 +522,7 @@ public class CommandBank extends ClanSubCommand implements Message.Factory {
 					return result;
 				}).then(TabCompletionIndex.FOUR, "setperm", TabCompletionIndex.TWO, () -> {
 					List<String> result = new ArrayList<>();
-					if (!p.hasPermission("clanspro." + DataManager.Security.getPermission("bank"))) {
+					if (!Clan.ACTION.test(p, "clanspro." + DataManager.Security.getPermission("bank")).deploy()) {
 						return result;
 					}
 					if (EconomyProvision.getInstance().isValid()) {

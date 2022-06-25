@@ -1,7 +1,6 @@
 package com.github.sanctum.clans.listener;
 
 import com.github.sanctum.clans.bridge.ClanVentBus;
-import com.github.sanctum.clans.construct.actions.ClansUpdate;
 import com.github.sanctum.clans.construct.api.Claim;
 import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClanCooldown;
@@ -12,6 +11,7 @@ import com.github.sanctum.clans.construct.api.Teleport;
 import com.github.sanctum.clans.construct.api.War;
 import com.github.sanctum.clans.construct.extra.AsynchronousLoanableTask;
 import com.github.sanctum.clans.construct.extra.ClanDisplayName;
+import com.github.sanctum.clans.construct.extra.ClansUpdate;
 import com.github.sanctum.clans.construct.impl.CooldownRespawn;
 import com.github.sanctum.clans.construct.impl.SimpleEntry;
 import com.github.sanctum.clans.event.TimerEvent;
@@ -38,15 +38,14 @@ import com.github.sanctum.labyrinth.interfacing.OrdinalProcedure;
 import com.github.sanctum.labyrinth.library.Cooldown;
 import com.github.sanctum.labyrinth.library.Entities;
 import com.github.sanctum.labyrinth.library.Mailer;
-import com.github.sanctum.labyrinth.library.Message;
 import com.github.sanctum.labyrinth.library.StringUtils;
 import com.github.sanctum.labyrinth.task.Procedure;
-import com.github.sanctum.labyrinth.task.Schedule;
 import com.github.sanctum.labyrinth.task.TaskScheduler;
 import java.math.BigDecimal;
 import java.text.MessageFormat;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -91,7 +90,6 @@ public class PlayerEventListener implements Listener {
 
 	@Subscribe(priority = Vent.Priority.LOW)
 	public void onInitial(TimerEvent e) {
-		if (!e.isAsynchronous()) return;
 		Player p = e.getPlayer();
 		Clan.Associate associate = ClansAPI.getInstance().getAssociate(p).orElse(null);
 
@@ -99,12 +97,16 @@ public class PlayerEventListener implements Listener {
 
 		Clan c = associate.getClan();
 
-		for (ClanCooldown clanCooldown : c.getCooldowns()) {
-			if (clanCooldown.isComplete()) {
-				ClanVentBus.call(new ClanCooldownCompleteEvent(c, clanCooldown));
-				ClanCooldown.remove(clanCooldown);
-				TaskScheduler.of(() -> c.broadcast(MessageFormat.format(ClansAPI.getDataInstance().getMessageResponse("cooldown-expired"), clanCooldown.getAction().replace("Clans:", "")))).schedule();
+		if (!e.isAsynchronous()) {
+			for (ClanCooldown clanCooldown : c.getCooldowns()) {
+				if (clanCooldown.isComplete() && !clanCooldown.isMarkedForRemoval()) {
+					clanCooldown.setMarkedForRemoval(true);
+					ClanVentBus.call(new ClanCooldownCompleteEvent(c, clanCooldown));
+					c.broadcast(MessageFormat.format(ClansAPI.getDataInstance().getMessageResponse("cooldown-expired"), clanCooldown.getAction().replace("Clans:", "")));
+					ClanCooldown.remove(clanCooldown);
+				}
 			}
+			return;
 		}
 
 		War war = ClansAPI.getInstance().getArenaManager().get("PRO");
@@ -124,19 +126,19 @@ public class PlayerEventListener implements Listener {
 								map.put(clan, war.getPoints(t));
 							}
 						}
-						Schedule.sync(() -> {
+						TaskScheduler.of(() -> {
 							WarWonEvent event = ClanVentBus.call(new WarWonEvent(war, new SimpleEntry<>(w, points), map));
 							if (!event.isCancelled()) {
-								Message msg = LabyrinthProvider.getService(Service.MESSENGER).getNewMessage().setPrefix(ClansAPI.getInstance().getPrefix().joined());
+								Mailer msg = LabyrinthProvider.getService(Service.MESSENGER).getEmptyMailer().prefix().start(ClansAPI.getInstance().getPrefix().joined()).finish();
 								Bukkit.broadcastMessage(" ");
-								msg.broadcast("&3A war between clans &b[" + Arrays.stream(war.getQueue().getTeams()).map(Clan::getName).collect(Collectors.joining(",")) + "]&3 in arena &7#&e" + war.getId() + " &3concluded with winner &6&l" + w.getName() + " &f(&a" + points + "&f)");
+								msg.announce(pl -> true, "&3A war between clans &b[" + Arrays.stream(war.getQueue().getTeams()).map(Clan::getName).collect(Collectors.joining(",")) + "]&3 in arena &7#&e" + war.getId() + " &3concluded with winner &6&l" + w.getName() + " &f(&a" + points + "&f)");
 								Bukkit.broadcastMessage(" ");
 							}
 							war.reset();
-						}).run();
+						}).schedule();
 					}
 				} else {
-					Schedule.sync(() -> ClanVentBus.call(new WarActiveEvent(war))).run();
+					TaskScheduler.of(() -> ClanVentBus.call(new WarActiveEvent(war))).schedule();
 				}
 			}
 
@@ -162,7 +164,7 @@ public class PlayerEventListener implements Listener {
 				if (clanCooldown.getId().equals(p.getUniqueId().toString())) {
 					if (clanCooldown.isComplete()) {
 						ClanVentBus.call(new PlayerCooldownCompleteEvent(p, clanCooldown));
-						Schedule.sync(() -> ClanCooldown.remove(clanCooldown)).run();
+						TaskScheduler.of(() -> ClanCooldown.remove(clanCooldown)).schedule();
 						Clan.ACTION.sendMessage(p, MessageFormat.format(ClansAPI.getDataInstance().getMessageResponse("cooldown-expired"), clanCooldown.getAction().replace("Clans:", "")));
 					}
 				}
@@ -189,11 +191,11 @@ public class PlayerEventListener implements Listener {
 							armorStand.setCustomNameVisible(true);
 						});
 						STAND_MAP.put(location, stand);
-						Schedule.sync(() -> {
+						TaskScheduler.of(() -> {
 							if (stand.isValid()) {
 								stand.remove();
 							}
-						}).wait(event.getDespawn());
+						}).scheduleLater(event.getDespawn());
 					}
 				}
 			}
@@ -220,14 +222,50 @@ public class PlayerEventListener implements Listener {
 		EconomyProvision eco = EconomyProvision.getInstance();
 		if (eco.isValid()) {
 			if (ClansAPI.getDataInstance().isTrue("Clans.land-claiming.charge")) {
+				String MODE = Optional.ofNullable(ClansAPI.getDataInstance().getConfigString("Clans.land-claiming.mode")).orElse("STATIC");
 				double cost = ClansAPI.getDataInstance().getConfig().read(f -> f.getDouble("Clans.land-claiming.amount"));
-				boolean test = eco.withdraw(BigDecimal.valueOf(cost), e.getClaimer(), e.getClaimer().getWorld().getName()).orElse(false);
-				if (test) {
-					Clan.ACTION.sendMessage(e.getClaimer(), "&a+1 &f| &6$" + cost);
-				} else {
-					double amount = eco.balance(e.getClaimer()).orElse(0.0);
-					Clan.ACTION.sendMessage(e.getClaimer(), Clan.ACTION.notEnough(cost - amount));
-					e.setCancelled(true);
+				String percent = ClansAPI.getDataInstance().getConfig().read(co -> co.getNode("Clans.land-claiming.percent").toPrimitive().getString());
+				String s1 = "0." + percent;
+				double per = Double.parseDouble(s1);
+				switch (MODE.toLowerCase(Locale.ROOT)) {
+					case "percentage":
+						BigDecimal pc = BigDecimal.valueOf(e.getClan().getClaims().length).multiply(BigDecimal.valueOf(cost)).multiply(BigDecimal.valueOf(per));
+						if (eco.has(pc, e.getClaimer()).orElse(false)) {
+							boolean test = eco.withdraw(pc, e.getClaimer(), e.getClaimer().getWorld().getName()).orElse(false);
+							if (test) {
+								Clan.ACTION.sendMessage(e.getClaimer(), "&a+1 &f| &6$" + pc.doubleValue());
+							}
+						} else {
+							double amount = eco.balance(e.getClaimer()).orElse(0.0);
+							Clan.ACTION.sendMessage(e.getClaimer(), Clan.ACTION.notEnough(pc.doubleValue() - amount));
+							e.setCancelled(true);
+						}
+						break;
+					case "add":
+						BigDecimal dc = BigDecimal.valueOf(e.getClan().getClaims().length).multiply(BigDecimal.valueOf(cost));
+						if (eco.has(dc, e.getClaimer()).orElse(false)) {
+							boolean test = eco.withdraw(dc, e.getClaimer(), e.getClaimer().getWorld().getName()).orElse(false);
+							if (test) {
+								Clan.ACTION.sendMessage(e.getClaimer(), "&a+1 &f| &6$" + dc.doubleValue());
+							}
+						} else {
+							double amount = eco.balance(e.getClaimer()).orElse(0.0);
+							Clan.ACTION.sendMessage(e.getClaimer(), Clan.ACTION.notEnough(dc.doubleValue() - amount));
+							e.setCancelled(true);
+						}
+						break;
+					case "static":
+						if (eco.has(BigDecimal.valueOf(cost), e.getClaimer()).orElse(false)) {
+							boolean test = eco.withdraw(BigDecimal.valueOf(cost), e.getClaimer(), e.getClaimer().getWorld().getName()).orElse(false);
+							if (test) {
+								Clan.ACTION.sendMessage(e.getClaimer(), "&a+1 &f| &6$" + cost);
+							}
+						} else {
+							double amount = eco.balance(e.getClaimer()).orElse(0.0);
+							Clan.ACTION.sendMessage(e.getClaimer(), Clan.ACTION.notEnough(cost - amount));
+							e.setCancelled(true);
+						}
+						break;
 				}
 			}
 		}
@@ -391,7 +429,7 @@ public class PlayerEventListener implements Listener {
 	public void onAnimate(PlayerAnimationEvent e) {
 		Claim claim = ClansAPI.getInstance().getClaimManager().getClaim(e.getPlayer().getLocation());
 		if (claim != null) {
-			if (((Clan)claim.getHolder()).getMember(m -> m.getName().equals(e.getPlayer().getName())) == null) {
+			if (((Clan) claim.getHolder()).getMember(m -> m.getName().equals(e.getPlayer().getName())) == null) {
 				e.setCancelled(true);
 			}
 		}
@@ -707,11 +745,11 @@ public class PlayerEventListener implements Listener {
 				//e.getUtil().sendMessage(e.getPlayer(), MessageFormat.format(e.getUtil().notClaimOwner(e.getClaim().getClan().getName()), e.getClaim().getClan().getName()));
 				final Material bucketType = event.getBucket();
 				if (ClansAPI.getDataInstance().isTrue("Clans.land-claiming.debug")) {
-					Schedule.sync(() -> {
+					TaskScheduler.of(() -> {
 						event.getBlockClicked().setType(Material.AIR);
 						event.getPlayer().getInventory().getItemInMainHand().setType(bucketType);
 						event.getPlayer().updateInventory();
-					}).run();
+					}).schedule();
 				}
 				event.setCancelled(true);
 			}
@@ -727,11 +765,11 @@ public class PlayerEventListener implements Listener {
 				final Material bucketType = event.getBucket();
 				final Material type = event.getBlockClicked().getType();
 				if (ClansAPI.getDataInstance().isTrue("Clans.land-claiming.debug")) {
-					Schedule.sync(() -> {
+					TaskScheduler.of(() -> {
 						event.getBlockClicked().setType(type);
 						event.getPlayer().getInventory().getItemInMainHand().setType(bucketType);
 						event.getPlayer().updateInventory();
-					}).run();
+					}).schedule();
 				}
 				event.setCancelled(true);
 			}

@@ -17,6 +17,8 @@ import org.bukkit.entity.Player;
 
 public class StringLibrary {
 
+	public static final StringLibrary LOCAL = new StringLibrary();
+
 	public void sendMessage(Player p, String message) {
 		if (Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI")) {
 			message = PlaceholderAPI.setPlaceholders(p, message);

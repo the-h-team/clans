@@ -28,7 +28,7 @@ public class BountyCommand extends ClanSubCommand {
 		if (args.length == 2) {
 			if (ClansAPI.getInstance().isInClan(p.getUniqueId())) {
 				Clan c = ClansAPI.getInstance().getClanManager().getClan(p.getUniqueId());
-				UUID id = Clan.ACTION.getUserID(args[0]);
+				UUID id = Clan.ACTION.getId(args[0]).deploy();
 				if (id != null) {
 					if (c.getMember(a -> a.getId().equals(id)) != null) {
 						Clan.ACTION.sendMessage(p, "&c&oYou cannot put bounties on clan members.");
@@ -52,7 +52,7 @@ public class BountyCommand extends ClanSubCommand {
 									.replace("{BOUNTY}", args[1]);
 							Bukkit.broadcastMessage(StringUtils.use(format).translate());
 							FileManager clanFile = ClansAPI.getDataInstance().getClanFile(c);
-							clanFile.getRoot().set("bounties." + Clan.ACTION.getUserID(args[0]).toString(), amount);
+							clanFile.getRoot().set("bounties." + Clan.ACTION.getId(args[0]).deploy().toString(), amount);
 							clanFile.getRoot().save();
 						} else {
 							Clan.ACTION.sendMessage(p, "&c&oYou don't have enough money for a bounty this big!");

@@ -26,7 +26,7 @@ public class CommandDemote extends ClanSubCommand {
 		Clan.Associate associate = ClansAPI.getInstance().getAssociate(p).orElse(null);
 
 		if (args.length == 0) {
-			if (!p.hasPermission(this.getPermission() + "." + DataManager.Security.getPermission("demote"))) {
+			if (!Clan.ACTION.test(p, "clanspro." + DataManager.Security.getPermission("demote")).deploy()) {
 				lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("demote")));
 				return true;
 			}
@@ -35,13 +35,13 @@ public class CommandDemote extends ClanSubCommand {
 		}
 
 		if (args.length == 1) {
-			if (!p.hasPermission(this.getPermission() + "." + DataManager.Security.getPermission("demote"))) {
+			if (!Clan.ACTION.test(p, "clanspro." + DataManager.Security.getPermission("demote")).deploy()) {
 				lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("demote")));
 				return true;
 			}
 			if (associate != null) {
 				if (Clearance.MANAGE_POSITIONS.test(associate)) {
-					UUID tid = Clan.ACTION.getUserID(args[0]);
+					UUID tid = Clan.ACTION.getId(args[0]).deploy();
 					if (tid == null) {
 						lib.sendMessage(p, lib.playerUnknown(args[0]));
 						return true;
@@ -52,7 +52,7 @@ public class CommandDemote extends ClanSubCommand {
 						lib.sendMessage(p, lib.noClearance());
 						return true;
 					}
-					Clan.ACTION.demotePlayer(tid);
+					Clan.ACTION.demote(tid).deploy();
 				} else {
 					lib.sendMessage(p, lib.noClearance());
 					return true;

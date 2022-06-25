@@ -2,7 +2,7 @@ package com.github.sanctum.clans.construct.api;
 
 import com.github.sanctum.labyrinth.formatting.completion.SimpleTabCompletion;
 import com.github.sanctum.labyrinth.formatting.completion.TabCompletionIndex;
-import com.github.sanctum.labyrinth.library.Message;
+import com.github.sanctum.labyrinth.library.Mailer;
 import java.util.Collections;
 import java.util.List;
 import org.bukkit.Bukkit;
@@ -17,7 +17,11 @@ public abstract class ClanSubCommand {
 
 	private String PERMISSION = "clanspro";
 
+	private String lastLabel;
+
 	private final String LABEL;
+
+	private boolean invisible;
 
 	public ClanSubCommand(String label) {
 		this.LABEL = label;
@@ -47,12 +51,28 @@ public abstract class ClanSubCommand {
 		return this.PERMISSION;
 	}
 
+	public boolean isInvisible() {
+		return invisible;
+	}
+
+	public void setInvisible(boolean invisible) {
+		this.invisible = invisible;
+	}
+
+	public String getLastLabel() {
+		return lastLabel;
+	}
+
+	public void setLastLabel(String lastLabel) {
+		this.lastLabel = lastLabel;
+	}
+
 	public boolean testPermission(Player target) {
 		if (this.PERMISSION != null && !this.PERMISSION.isEmpty()) {
 			if (target.hasPermission(this.PERMISSION)) {
 				return true;
 			} else {
-				Message.form(target).send(this.NOPERMISSION);
+				Mailer.empty(target).chat(this.NOPERMISSION).deploy();
 				return false;
 			}
 		} else {
@@ -61,7 +81,7 @@ public abstract class ClanSubCommand {
 	}
 
 	protected boolean isAlphaNumeric(String s) {
-		return s != null && s.matches("^[a-zA-Z0-9]*$");
+		return s != null && (ClansAPI.getDataInstance().isTrue("Formatting.symbols") ? s.matches("([&a-zA-Z0-9])+") : s.matches("([a-zA-Z0-9])+"));
 	}
 
 	public void sendMessage(Player player, String message) {

@@ -23,7 +23,7 @@ public class CommandInfo extends ClanSubCommand {
 		StringLibrary lib = Clan.ACTION;
 		Clan.Associate associate = ClansAPI.getInstance().getAssociate(p).orElse(null);
 		if (args.length == 0) {
-			if (!p.hasPermission(this.getPermission() + "." + DataManager.Security.getPermission("info"))) {
+			if (!Clan.ACTION.test(p, "clanspro." + DataManager.Security.getPermission("info")).deploy()) {
 				lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("info")));
 				return true;
 			}
@@ -40,11 +40,11 @@ public class CommandInfo extends ClanSubCommand {
 		}
 
 		if (args.length == 1) {
-			if (!p.hasPermission(this.getPermission() + "." + DataManager.Security.getPermission("info-other"))) {
+			if (!Clan.ACTION.test(p, "clanspro." + DataManager.Security.getPermission("info-other")).deploy()) {
 				lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("info-other")));
 				return true;
 			}
-			UUID target = Clan.ACTION.getUserID(args[0]);
+			UUID target = Clan.ACTION.getId(args[0]).deploy();
 			if (target == null) {
 				if (!Clan.ACTION.getAllClanNames().contains(args[0])) {
 					lib.sendMessage(p, lib.clanUnknown(args[0]));
@@ -69,16 +69,17 @@ public class CommandInfo extends ClanSubCommand {
 						}
 					}
 				}
-				if (ClansAPI.getDataInstance().ID_MODE.containsKey(p) && ClansAPI.getDataInstance().ID_MODE.get(p).equals("ENABLED")) {
-					lib.sendMessage(p, "&7#&fID &7of clan " + '"' + args[0] + '"' + " is: &e&o" + ClansAPI.getInstance().getClanManager().getClanID(args[0]));
+				return true;
+			}
+			if (associate != null && target.equals(associate.getId())) {
+				AssociateDisplayInfoEvent ev = ClanVentBus.call(new AssociateDisplayInfoEvent(associate, AssociateDisplayInfoEvent.Type.PERSONAL));
+				if (!ev.isCancelled()) {
+					Clan.ACTION.getClanboard(p, 1);
 				}
 				return true;
 			}
 			ClansAPI.getInstance().getAssociate(target).ifPresent(a -> {
 				GUI.MEMBER_INFO.get(a).open(p);
-				if (ClansAPI.getDataInstance().ID_MODE.containsKey(p) && ClansAPI.getDataInstance().ID_MODE.get(p).equals("ENABLED")) {
-					lib.sendMessage(p, "&7#&fID &7of player " + '"' + args[0] + '"' + " clan " + '"' + a.getClan().getName() + '"' + " is: &e&o" + a.getClan().getId().toString());
-				}
 			});
 			return true;
 		}

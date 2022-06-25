@@ -100,7 +100,7 @@ public class DynmapCommand extends ClanSubCommand {
 								integration.removeMarker(claim.getId());
 							} else {
 								if (ClansAPI.getInstance().getShieldManager().isEnabled()) {
-									if (Clan.ACTION.overPowerBypass()) {
+									if (Clan.ACTION.isIgnoringShield()) {
 										Clan clan2 = ((Clan)claim.getHolder());
 										if (clan.getPower() > clan2.getPower()) {
 											integration.removeMarker(claim.getId());

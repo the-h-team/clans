@@ -18,12 +18,12 @@ public class CommandBase extends ClanSubCommand {
 		Clan.Associate associate = ClansAPI.getInstance().getAssociate(p).orElse(null);
 
 		if (args.length == 0) {
-			if (!p.hasPermission(this.getPermission() + "." + DataManager.Security.getPermission("base"))) {
+			if (!Clan.ACTION.test(p, "clanspro." + DataManager.Security.getPermission("base")).deploy()) {
 				lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("base")));
 				return true;
 			}
 			if (associate != null) {
-				Clan.ACTION.teleport(p, associate.getClan().getBase());
+				Clan.ACTION.teleport(p, associate.getClan().getBase()).deploy();
 			} else {
 				lib.sendMessage(p, lib.notInClan());
 				return true;

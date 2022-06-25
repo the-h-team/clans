@@ -23,7 +23,7 @@ public class CommandWar extends ClanSubCommand {
 		Clan.Associate associate = ClansAPI.getInstance().getAssociate(p).orElse(null);
 
 		if (args.length == 0) {
-			if (!p.hasPermission(this.getPermission() + "." + DataManager.Security.getPermission("war"))) {
+			if (!Clan.ACTION.test(p, "clanspro." + DataManager.Security.getPermission("war")).deploy()) {
 				lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("war")));
 				return true;
 			}

@@ -25,7 +25,7 @@ public class CommandKick extends ClanSubCommand {
 		Clan.Associate associate = ClansAPI.getInstance().getAssociate(p).orElse(null);
 
 		if (args.length == 0) {
-			if (!p.hasPermission(this.getPermission() + "." + DataManager.Security.getPermission("kick"))) {
+			if (!Clan.ACTION.test(p, "clanspro." + DataManager.Security.getPermission("kick")).deploy()) {
 				lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("kick")));
 				return true;
 			}
@@ -34,13 +34,13 @@ public class CommandKick extends ClanSubCommand {
 		}
 
 		if (args.length == 1) {
-			if (!p.hasPermission(this.getPermission() + "." + DataManager.Security.getPermission("kick"))) {
+			if (!Clan.ACTION.test(p, "clanspro." + DataManager.Security.getPermission("kick")).deploy()) {
 				lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("kick")));
 				return true;
 			}
 			if (associate != null) {
 				if (Clearance.KICK_MEMBERS.test(associate)) {
-					UUID tid = Clan.ACTION.getUserID(args[0]);
+					UUID tid = Clan.ACTION.getId(args[0]).deploy();
 					if (tid == null) {
 						lib.sendMessage(p, lib.playerUnknown(args[0]));
 						return true;

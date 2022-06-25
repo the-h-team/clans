@@ -25,7 +25,7 @@ public class CommandForfeit extends ClanSubCommand {
 		Clan.Associate associate = ClansAPI.getInstance().getAssociate(p).orElse(null);
 
 		if (args.length == 0) {
-			if (!p.hasPermission(this.getPermission() + "." + DataManager.Security.getPermission("forfeit"))) {
+			if (!Clan.ACTION.test(p, "clanspro." + DataManager.Security.getPermission("forfeit")).deploy()) {
 				lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("forfeit")));
 				return true;
 			}
@@ -55,14 +55,6 @@ public class CommandForfeit extends ClanSubCommand {
 				return true;
 			}
 			return true;
-		}
-
-		if (args.length == 1) {
-			if (!p.hasPermission(this.getPermission() + "." + DataManager.Security.getPermission("join"))) {
-				lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("join")));
-				return true;
-			}
-			Clan.ACTION.joinClan(p.getUniqueId(), args[0], "none");
 		}
 
 

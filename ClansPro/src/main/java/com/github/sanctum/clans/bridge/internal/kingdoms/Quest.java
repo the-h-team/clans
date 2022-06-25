@@ -1,5 +1,6 @@
 package com.github.sanctum.clans.bridge.internal.kingdoms;
 
+import com.github.sanctum.clans.bridge.internal.kingdoms.impl.LocalFileQuest;
 import com.github.sanctum.labyrinth.data.LabyrinthUser;
 import com.github.sanctum.labyrinth.data.MemorySpace;
 import java.util.Set;
@@ -7,12 +8,20 @@ import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+/**
+ * A memory space dedicated to mission progression/completion and reward metadata bundled with the {@link com.github.sanctum.clans.bridge.internal.KingdomAddon}
+ */
 public interface Quest extends MemorySpace {
 
 	@NotNull String getTitle();
 
 	@NotNull String getDescription();
 
+	/**
+	 * Get the progression tracking parent for this quest, in most cases this is a kingdom but this could return the roundtable aswell.
+	 *
+	 * @return The parent progressive on this quest object.
+	 */
 	@Nullable Progressive getParent();
 
 	double getRequirement();

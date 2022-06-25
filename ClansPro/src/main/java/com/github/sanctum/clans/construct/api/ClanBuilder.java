@@ -35,7 +35,7 @@ public final class ClanBuilder {
 	 */
 	public ClanBuilder build() {
 		if (ClansAPI.getInstance().isInClan(leader)) {
-			Clan.ACTION.removePlayer(leader);
+			Clan.ACTION.remove(leader, true).deploy();
 		}
 		HUID newID = HUID.randomID();
 		DefaultClan test = new DefaultClan(newID.toString());
@@ -52,7 +52,7 @@ public final class ClanBuilder {
 		}
 		for (Map.Entry<UUID, Clan.Rank> entry : memberList.entrySet()) {
 			if (ClansAPI.getInstance().isInClan(entry.getKey())) {
-				Clan.ACTION.removePlayer(entry.getKey());
+				Clan.ACTION.remove(entry.getKey(), true).deploy();
 			}
 			if (entry.getKey().equals(ClansAPI.getInstance().getSessionId())) {
 				Clan.Associate a = new ServerAssociate(InvasiveEntity.wrapNonAssociated(Bukkit.getConsoleSender()), entry.getValue(), test);

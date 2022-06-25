@@ -1,4 +1,4 @@
-package com.github.sanctum.clans.construct.actions;
+package com.github.sanctum.clans.construct.extra;
 
 import com.github.sanctum.labyrinth.library.UpdateChecker;
 import org.bukkit.plugin.Plugin;

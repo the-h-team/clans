@@ -23,7 +23,7 @@ public class CommandUnclaim extends ClanSubCommand {
 		Clan.Associate associate = ClansAPI.getInstance().getAssociate(p).orElse(null);
 
 		if (args.length == 0) {
-			if (!p.hasPermission(this.getPermission() + "." + DataManager.Security.getPermission("unclaim"))) {
+			if (!Clan.ACTION.test(p, "clanspro." + DataManager.Security.getPermission("unclaim")).deploy()) {
 				lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("unclaim")));
 				return true;
 			}
@@ -47,7 +47,7 @@ public class CommandUnclaim extends ClanSubCommand {
 		if (args.length == 1) {
 			if (Claim.ACTION.isEnabled()) {
 				if (args[0].equalsIgnoreCase("all")) {
-					if (!p.hasPermission(this.getPermission() + "." + DataManager.Security.getPermission("unclaimall"))) {
+					if (!Clan.ACTION.test(p, "clanspro." + DataManager.Security.getPermission("unclaimall")).deploy()) {
 						lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("unclaimall")));
 						return true;
 					}

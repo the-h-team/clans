@@ -7,6 +7,8 @@ import java.util.concurrent.TimeUnit;
 
 public abstract class ClanCooldown {
 
+	boolean markedForRemoval;
+
 	public abstract String getId();
 
 	public abstract String getAction();
@@ -24,6 +26,14 @@ public abstract class ClanCooldown {
 		Long b = System.currentTimeMillis();
 		int compareNum = a.compareTo(b);
 		return compareNum <= 0;
+	}
+
+	public boolean isMarkedForRemoval() {
+		return markedForRemoval;
+	}
+
+	public void setMarkedForRemoval(boolean markedForRemoval) {
+		this.markedForRemoval = markedForRemoval;
 	}
 
 	protected long getTimePassed() {
@@ -66,11 +76,11 @@ public abstract class ClanCooldown {
 	 * @param seconds The amount of time to convert.
 	 * @return The milliseconds needed for conversion.
 	 */
-	protected long abv(int seconds) {
+	protected long abv(long seconds) {
 		return System.currentTimeMillis() + (seconds * 1000);
 	}
 
-	protected void abp(String key, int seconds) {
+	protected void abp(String key, long seconds) {
 		FileManager clan = ClansAPI.getDataInstance().getClanFile(ClansAPI.getInstance().getClanManager().getClan(HUID.fromString(getId())));
 		clan.write(t -> t.set("cooldown." + key, abv(seconds)));
 	}

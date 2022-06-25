@@ -7,7 +7,7 @@ import com.github.sanctum.clans.construct.api.War;
 import com.github.sanctum.clans.construct.extra.ClanDisplayName;
 import com.github.sanctum.labyrinth.LabyrinthProvider;
 import com.github.sanctum.labyrinth.library.Cooldown;
-import com.github.sanctum.labyrinth.task.Schedule;
+import com.github.sanctum.labyrinth.task.TaskScheduler;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -57,7 +57,7 @@ public final class DefaultArena implements War {
 			}
 			getQueue().forEach(a -> {
 				Team t = roster.get(a.getClan());
-				Schedule.sync(() -> {
+				TaskScheduler.of(() -> {
 					Player p = a.getTag().getPlayer().getPlayer();
 					if (p != null) {
 						getQueue().updateReturnLocation(a);
@@ -68,7 +68,7 @@ public final class DefaultArena implements War {
 					} else {
 						getQueue().unque(a);
 					}
-				}).run();
+				}).schedule();
 			});
 			timer = new Cooldown() {
 

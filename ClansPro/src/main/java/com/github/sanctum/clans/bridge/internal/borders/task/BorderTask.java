@@ -2,16 +2,15 @@ package com.github.sanctum.clans.bridge.internal.borders.task;
 
 import com.github.sanctum.clans.bridge.internal.borders.BorderListener;
 import com.github.sanctum.clans.bridge.internal.borders.event.BorderTaskEvent;
-import com.github.sanctum.clans.construct.api.ClansAPI;
-import com.github.sanctum.labyrinth.task.Schedule;
-import com.github.sanctum.labyrinth.task.Synchronous;
+import com.github.sanctum.labyrinth.task.TaskPredicate;
+import com.github.sanctum.labyrinth.task.TaskScheduler;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
 public class BorderTask {
 
-	public static Synchronous run(final Player p) {
-		Synchronous sync = Schedule.sync(() -> {
+	public static void run(final Player p) {
+		TaskScheduler.of(() -> {
 			if (BorderListener.toggled.containsKey(p.getUniqueId()) && BorderListener.toggled.get(p.getUniqueId())) {
 				BorderTaskEvent event = new BorderTaskEvent(p);
 				Bukkit.getPluginManager().callEvent(event);
@@ -19,10 +18,13 @@ public class BorderTask {
 					event.perform();
 				}
 			}
-		}).cancelAbsence(BorderListener.toggled, p.getUniqueId()).cancelAfter(p);
-		if (ClansAPI.getDataInstance().isTrue("Formatting.console-debug")) {
-			return sync.debug();
-		} else
-			return sync;
+		}).scheduleTimer("BORDERTASK;" + p.getUniqueId().toString(), 1, 40, TaskPredicate.cancelAfter(t -> {
+			if (!BorderListener.toggled.containsKey(p.getUniqueId())) {
+				t.cancel();
+				return false;
+			}
+			return true;
+		}), TaskPredicate.cancelAfter(p));
 	}
+
 }

@@ -30,7 +30,7 @@ public class CommandClaim extends ClanSubCommand {
 		Clan.Associate associate = ClansAPI.getInstance().getAssociate(p).orElse(null);
 
 		if (args.length == 0) {
-			if (!p.hasPermission(this.getPermission() + "." + DataManager.Security.getPermission("claim"))) {
+			if (!Clan.ACTION.test(p, "clanspro." + DataManager.Security.getPermission("claim")).deploy()) {
 				lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("claim")));
 				return true;
 			}
@@ -58,7 +58,7 @@ public class CommandClaim extends ClanSubCommand {
 		}
 
 		if (args.length == 1) {
-			if (!p.hasPermission(this.getPermission() + "." + DataManager.Security.getPermission("claim"))) {
+			if (!Clan.ACTION.test(p, "clanspro." + DataManager.Security.getPermission("claim")).deploy()) {
 				lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("claim")));
 				return true;
 			}
@@ -153,7 +153,7 @@ public class CommandClaim extends ClanSubCommand {
 						Claim test = ClansAPI.getInstance().getClaimManager().getClaim(p.getLocation());
 						if (test != null) {
 							Set<Claim.Flag> set = Arrays.stream(test.getFlags().clone()).sorted((o1, o2) -> String.CASE_INSENSITIVE_ORDER.compare(o1.getId(), o2.getId())).sorted(Claim.Flag::compareTo).sorted(Comparator.reverseOrder()).collect(Collectors.toCollection(LinkedHashSet::new));
-							Claim.ACTION.getFlags(p, test, set).get(1);
+							Claim.ACTION.getFlags(p, test, set).send(1);
 						} else {
 							lib.sendMessage(p, lib.alreadyWild());
 						}
@@ -170,7 +170,7 @@ public class CommandClaim extends ClanSubCommand {
 		}
 
 		if (args.length == 2) {
-			if (!p.hasPermission(this.getPermission() + "." + DataManager.Security.getPermission("claim"))) {
+			if (!Clan.ACTION.test(p, "clanspro." + DataManager.Security.getPermission("claim")).deploy()) {
 				lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("claim")));
 				return true;
 			}
@@ -229,7 +229,7 @@ public class CommandClaim extends ClanSubCommand {
 		}
 
 		if (args.length == 3) {
-			if (!p.hasPermission(this.getPermission() + "." + DataManager.Security.getPermission("claim"))) {
+			if (!Clan.ACTION.test(p, "clanspro." + DataManager.Security.getPermission("claim")).deploy()) {
 				lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("claim")));
 				return true;
 			}
@@ -274,7 +274,7 @@ public class CommandClaim extends ClanSubCommand {
 		for (int i = 1; i < args.length; i++)
 			rsn.append(args[i]).append(" ");
 		int stop = rsn.length() - 1;
-		if (!p.hasPermission(this.getPermission() + "." + DataManager.Security.getPermission("claim"))) {
+		if (!Clan.ACTION.test(p, "clanspro." + DataManager.Security.getPermission("claim")).deploy()) {
 			lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("claim")));
 			return true;
 		}

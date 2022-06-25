@@ -17,7 +17,20 @@ public class ClaimsLoadingProcedureEvent extends ClaimEvent {
 
 	public ClaimsLoadingProcedureEvent(Map<InvasiveEntity.Tag, List<Claim>> map) {
 		super(true);
-		set.putAll(map);
+		map.entrySet().forEach(e -> {
+			for (Claim claim : e.getValue()) {
+				if (claim.getOwner() != null) {
+					List<Claim> claims = set.get(e.getKey());
+					if (claims == null) {
+						claims = new ArrayList<>();
+						claims.add(claim);
+						set.put(e.getKey(), claims);
+					} else {
+						claims.add(claim);
+					}
+				}
+			}
+		});
 	}
 
 	public void insert(Claim claim) {

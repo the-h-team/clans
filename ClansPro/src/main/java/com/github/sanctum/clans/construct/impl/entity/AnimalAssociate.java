@@ -25,7 +25,7 @@ import com.github.sanctum.labyrinth.data.service.Check;
 import com.github.sanctum.labyrinth.library.HUID;
 import com.github.sanctum.labyrinth.library.Mailer;
 import com.github.sanctum.labyrinth.library.TimeWatch;
-import com.github.sanctum.labyrinth.task.Schedule;
+import com.github.sanctum.labyrinth.task.TaskScheduler;
 import com.github.sanctum.skulls.CustomHead;
 import com.github.sanctum.skulls.SkullType;
 import java.util.ArrayList;
@@ -403,7 +403,8 @@ public final class AnimalAssociate implements PersistentEntity, Clan.Associate, 
 
 	@Override
 	public @NotNull Ticket sendMessage(@NotNull Tag channel, @NotNull Supplier<Object> supplier) {
-		if (incomingMessageListeners.isEmpty() || incomingMessageListeners.get(channel.getId()) == null) return new Ticket();
+		if (incomingMessageListeners.isEmpty() || incomingMessageListeners.get(channel.getId()) == null)
+			return new Ticket();
 		Object object = supplier.get();
 		IncomingConsultationListener incomingListener = incomingMessageListeners.get(channel.getId());
 		Ticket ticket = incomingListener.onReceiveMessage(object);
@@ -416,12 +417,12 @@ public final class AnimalAssociate implements PersistentEntity, Clan.Associate, 
 
 	@Override
 	public void registerIncomingListener(@NotNull Tag holder, @NotNull IncomingConsultationListener listener) {
-		Schedule.sync(() -> incomingMessageListeners.put(holder.getId(), listener)).run();
+		TaskScheduler.of(() -> incomingMessageListeners.put(holder.getId(), listener)).schedule();
 	}
 
 	@Override
 	public void registerOutgoingListener(@NotNull Tag holder, @NotNull OutgoingConsultationListener listener) {
-		Schedule.sync(() -> outgoingResponseListeners.put(holder.getId(), listener)).run();
+		TaskScheduler.of(() -> outgoingResponseListeners.put(holder.getId(), listener)).schedule();
 	}
 
 	@Override
@@ -436,7 +437,7 @@ public final class AnimalAssociate implements PersistentEntity, Clan.Associate, 
 
 	@Override
 	public void remove() {
-		Schedule.sync(() -> getClan().remove(this)).run();
+		TaskScheduler.of(() -> getClan().remove(this)).schedule();
 		InvasiveEntity.removeNonAssociated(parent, false);
 	}
 }

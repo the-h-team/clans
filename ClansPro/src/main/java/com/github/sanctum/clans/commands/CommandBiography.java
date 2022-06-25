@@ -16,9 +16,12 @@ public class CommandBiography extends ClanSubCommand {
 	public boolean player(Player p, String label, String[] args) {
 		StringLibrary lib = Clan.ACTION;
 		Clan.Associate associate = ClansAPI.getInstance().getAssociate(p).orElse(null);
-
+		if (args.length == 0) {
+			lib.sendMessage(p, "&cExpected arguments!");
+			return true;
+		}
 		if (args.length == 1) {
-			if (!p.hasPermission(this.getPermission() + "." + DataManager.Security.getPermission("bio"))) {
+			if (!Clan.ACTION.test(p, "clanspro." + DataManager.Security.getPermission("bio")).deploy()) {
 				lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("bio")));
 				return true;
 			}
@@ -29,7 +32,7 @@ public class CommandBiography extends ClanSubCommand {
 		}
 
 		if (args.length == 2) {
-			if (!p.hasPermission(this.getPermission() + "." + DataManager.Security.getPermission("bio"))) {
+			if (!Clan.ACTION.test(p, "clanspro." + DataManager.Security.getPermission("bio")).deploy()) {
 				lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("bio")));
 				return true;
 			}
@@ -45,7 +48,7 @@ public class CommandBiography extends ClanSubCommand {
 		for (int i = 1; i < args.length; i++)
 			rsn.append(args[i]).append(" ");
 		int stop = rsn.length() - 1;
-		if (!p.hasPermission(this.getPermission() + "." + DataManager.Security.getPermission("bio"))) {
+		if (!Clan.ACTION.test(p, "clanspro." + DataManager.Security.getPermission("bio")).deploy()) {
 			lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("bio")));
 			return true;
 		}

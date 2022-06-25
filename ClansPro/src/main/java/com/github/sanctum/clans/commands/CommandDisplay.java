@@ -24,7 +24,7 @@ public class CommandDisplay extends ClanSubCommand {
 		}
 
 		if (args.length == 0) {
-			if (!p.hasPermission(this.getPermission() + "." + DataManager.Security.getPermission("display"))) {
+			if (!Clan.ACTION.test(p, "clanspro." + DataManager.Security.getPermission("display")).deploy()) {
 				lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("display")));
 				return true;
 			}
@@ -33,14 +33,19 @@ public class CommandDisplay extends ClanSubCommand {
 		}
 
 		if (args.length == 1) {
-			if (!p.hasPermission(this.getPermission() + "." + DataManager.Security.getPermission("display"))) {
+			if (!Clan.ACTION.test(p, "clanspro." + DataManager.Security.getPermission("display")).deploy()) {
 				lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("display")));
 				return true;
 			}
 			if (Clearance.MANAGE_NICK_NAME.test(associate)) {
 				if (ClansAPI.getInstance().isNameBlackListed(args[0])) {
 					lib.sendMessage(p, "&4This name is not allowed!");
-					return false;
+					return true;
+				}
+				if (args[0].equalsIgnoreCase("reset") || args[0].equalsIgnoreCase("empty")) {
+					associate.getClan().setNickname(null);
+					associate.getClan().broadcast("Our nickname has been reset.");
+					return true;
 				}
 				associate.getClan().setNickname(args[0]);
 				associate.getClan().broadcast("Our new nickname has been updated to '" + associate.getClan().getNickname() + "'");
@@ -51,7 +56,7 @@ public class CommandDisplay extends ClanSubCommand {
 		}
 
 		if (args.length == 2) {
-			if (!p.hasPermission(this.getPermission() + "." + DataManager.Security.getPermission("display"))) {
+			if (!Clan.ACTION.test(p, "clanspro." + DataManager.Security.getPermission("display")).deploy()) {
 				lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("display")));
 				return true;
 			}

@@ -29,52 +29,53 @@ public class VaultMenu extends Menu {
 	public VaultMenu(String clanName) {
 		super(ClansAPI.getInstance().getPlugin(), clanName, Rows.SIX, Type.SINGULAR, Property.SHAREABLE, Property.CACHEABLE);
 		this.c = ClansAPI.getInstance().getClanManager().getClan(ClansAPI.getInstance().getClanManager().getClanID(clanName));
-		addElement(new InventoryElement.Shared(clanName, this));
-		this.key = clanName;
-		this.close = close -> {
-			FileManager manager = ClanAddon.getAddon(VaultsAddon.class).getFile(FileType.JSON, "data");
-			Node keys = manager.getRoot().getNode(c.getId().toString());
-			keys.delete();
-			int key = 0;
-			DataTable table = DataTable.newTable();
-			for (ItemStack item : close.getMain().getContents()) {
-				if (item != null && item.getType() != Material.AIR) {
-					table.set(c.getId() + "." + key, item);
-					key++;
+		if (this.c != null) {
+			addElement(new InventoryElement.Shared(clanName, this));
+			this.key = clanName;
+			this.close = close -> {
+				FileManager manager = ClanAddon.getAddon(VaultsAddon.class).getFile(FileType.JSON, "data");
+				Node keys = manager.getRoot().getNode(c.getId().toString());
+				keys.delete();
+				int key = 0;
+				DataTable table = DataTable.newTable();
+				for (ItemStack item : close.getMain().getContents()) {
+					if (item != null && item.getType() != Material.AIR) {
+						table.set(c.getId() + "." + key, item);
+						key++;
+					}
 				}
-			}
-			manager.write(table, true);
-		};
+				manager.write(table, true);
+			};
 
-		this.click = click -> {
-			VaultInteractEvent event = ClanVentBus.call(new VaultInteractEvent(c, click.getElement(), click.getParent().getElement(), click.getAttachment(), click.getAction(), click.getClickType(), click.getParent().getParent().getElement().getViewers()));
-			if (event.isCancelled()) {
-				click.setCancelled(true);
-			}
-		};
-		if (oldExists(c.getId())) {
-			for (ItemStack it : getInventoryContentsOld(Check.forNull(c.getId(), "Clan '" + clanName + "' not found!"))) {
-				if (Objects.equals(it, null)) {
-					getInventory().getElement().addItem(new ItemStack(Material.AIR));
-				} else {
-					getInventory().getElement().addItem(it);
+			this.click = click -> {
+				VaultInteractEvent event = ClanVentBus.call(new VaultInteractEvent(c, click.getElement(), click.getParent().getElement(), click.getAttachment(), click.getAction(), click.getClickType(), click.getParent().getParent().getElement().getViewers()));
+				if (event.isCancelled()) {
+					click.setCancelled(true);
+				}
+			};
+			if (oldExists(c.getId())) {
+				for (ItemStack it : getInventoryContentsOld(Check.forNull(c.getId(), "Clan '" + clanName + "' not found!"))) {
+					if (Objects.equals(it, null)) {
+						getInventory().getElement().addItem(new ItemStack(Material.AIR));
+					} else {
+						getInventory().getElement().addItem(it);
+					}
+				}
+				c.removeValue("vault");
+			} else {
+				for (ItemStack it : getInventoryContentNew(Check.forNull(c.getId(), "Clan '" + clanName + "' not found!"))) {
+					if (Objects.equals(it, null)) {
+						getInventory().getElement().addItem(new ItemStack(Material.AIR));
+					} else {
+						getInventory().getElement().addItem(it);
+					}
 				}
 			}
-			c.removeValue("vault");
-		} else {
-			for (ItemStack it : getInventoryContentNew(Check.forNull(c.getId(), "Clan '" + clanName + "' not found!"))) {
-				if (Objects.equals(it, null)) {
-					getInventory().getElement().addItem(new ItemStack(Material.AIR));
-				} else {
-					getInventory().getElement().addItem(it);
-				}
+			try {
+				registerController();
+			} catch (Exception ignored) {
 			}
 		}
-		try {
-			registerController();
-		} catch (Exception ignored) {
-		}
-
 	}
 
 	boolean oldExists(HUID id) {

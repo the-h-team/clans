@@ -13,11 +13,10 @@ import com.github.sanctum.clans.construct.api.War;
 import com.github.sanctum.clans.construct.extra.StringLibrary;
 import com.github.sanctum.labyrinth.data.FileManager;
 import com.github.sanctum.labyrinth.data.FileType;
-import com.github.sanctum.labyrinth.formatting.PaginatedList;
+import com.github.sanctum.labyrinth.formatting.pagination.EasyPagination;
 import com.github.sanctum.labyrinth.library.HUID;
-import com.github.sanctum.labyrinth.library.Message;
 import com.github.sanctum.labyrinth.library.StringUtils;
-import com.github.sanctum.labyrinth.task.Schedule;
+import com.github.sanctum.labyrinth.task.TaskScheduler;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -296,15 +295,23 @@ public class CommandClanAdmin extends Command {
 			return true;
 		}
 		if (length == 0) {
-			new PaginatedList<>(helpMenu(commandLabel))
-					.limit(lib.menuSize())
-					.start((pagination, page, max) -> {
-						lib.sendMessage(p, lib.menuTitle());
-						Message.form(p).send(lib.menuBorder());
-					}).finish(builder -> builder.setPlayer(p).setPrefix(lib.menuBorder())).decorate((pagination, string, page, max, placement) -> Message.form(p).send(string)).get(1);
+			EasyPagination<String> pag = new EasyPagination<>(p, helpMenu(commandLabel));
+			pag.limit(lib.menuSize());
+			pag.setHeader((player, message) -> {
+				message.then(lib.menuTitle());
+				message.then("\n");
+				message.then(lib.menuBorder());
+			});
+			pag.setFooter((player, message) -> {
+				message.then(lib.menuBorder());
+			});
+			pag.setFormat((s, integer, message) -> {
+				message.then(s);
+			});
+			pag.send(1);
 			return true;
 		}
-		if (!p.hasPermission(this.getPermission())) {
+		if (!Clan.ACTION.test(p, getPermission()).deploy()) {
 			lib.sendMessage(p, "&4&oYou don't have permission " + '"' + this.getPermission() + '"');
 			return true;
 		}
@@ -324,7 +331,7 @@ public class CommandClanAdmin extends Command {
 						}
 					}
 				}
-				for (Clan c : ClansAPI.getInstance().getClanManager().getClans().list()) {
+				for (Clan c : ClansAPI.getInstance().getClanManager().getClans()) {
 					FileManager f = ClansAPI.getDataInstance().getClanFile(c);
 					if (f.getRoot().getType() != FileType.JSON) {
 						if (f.toJSON().getRoot().save()) {
@@ -411,14 +418,21 @@ public class CommandClanAdmin extends Command {
 				}
 				return true;
 			}
-			PaginatedList<String> list = new PaginatedList<>(helpMenu(commandLabel))
-					.limit(lib.menuSize())
-					.start((pagination, page, max) -> {
-						lib.sendMessage(p, lib.menuTitle());
-						Message.form(p).send(lib.menuBorder());
-					}).finish(builder -> builder.setPlayer(p).setPrefix(lib.menuBorder())).decorate((pagination, string, page, max, placement) -> Message.form(p).send(string));
+			EasyPagination<String> pag = new EasyPagination<>(p, helpMenu(commandLabel));
+			pag.limit(lib.menuSize());
+			pag.setHeader((player, message) -> {
+				message.then(lib.menuTitle());
+				message.then("\n");
+				message.then(lib.menuBorder());
+			});
+			pag.setFooter((player, message) -> {
+				message.then(lib.menuBorder());
+			});
+			pag.setFormat((s, integer, message) -> {
+				message.then(s);
+			});
 			try {
-				list.get(Integer.parseInt(args0));
+				pag.send(Integer.parseInt(args0));
 			} catch (NumberFormatException e) {
 				lib.sendMessage(p, "&c&oInvalid page number!");
 			}
@@ -434,7 +448,7 @@ public class CommandClanAdmin extends Command {
 					for (Clan.Associate id : target.getMembers()) {
 						if (id.getPriority().toLevel() == 3) {
 							target.broadcast("&8(&e!&8) &4&oOur clan has been forcibly closed by a staff member.");
-							Clan.ACTION.removePlayer(id.getId());
+							Clan.ACTION.remove(id.getId(), false).deploy();
 							break;
 						}
 					}
@@ -447,7 +461,7 @@ public class CommandClanAdmin extends Command {
 				if (args1.equalsIgnoreCase("remove")) {
 					Claim test = ClansAPI.getInstance().getClaimManager().getClaim(p.getLocation());
 					if (test != null) {
-						Schedule.sync(test::remove).run();
+						TaskScheduler.of(test::remove).schedule();
 					} else {
 						lib.sendMessage(p, "&cYou're not in a claim!");
 					}
@@ -467,7 +481,7 @@ public class CommandClanAdmin extends Command {
 					Clan clan = manager.getClan(test);
 					GUI.SETTINGS_CLAN.get(clan).open(p);
 				} else {
-					UUID test2 = Clan.ACTION.getUserID(args1);
+					UUID test2 = Clan.ACTION.getId(args1).deploy();
 					if (test2 != null) {
 						Clan.Associate associate = ClansAPI.getInstance().getAssociate(test2).orElse(null);
 						if (associate != null) {
@@ -493,7 +507,7 @@ public class CommandClanAdmin extends Command {
 
 					if (args1.equalsIgnoreCase("all")) {
 						int amount = 0;
-						for (Clan target : ClansAPI.getInstance().getClanManager().getClans().list()) {
+						for (Clan target : ClansAPI.getInstance().getClanManager().getClans()) {
 							for (String data : target.getKeys()) {
 								target.removeValue(data);
 								amount++;
@@ -527,11 +541,11 @@ public class CommandClanAdmin extends Command {
 				return true;
 			}
 			if (args0.equalsIgnoreCase("kick")) {
-				if (Clan.ACTION.getUserID(args1) == null) {
+				if (Clan.ACTION.getId(args1).deploy() == null) {
 					lib.sendMessage(p, lib.playerUnknown(args1));
 					return true;
 				}
-				UUID target = Clan.ACTION.getUserID(args1);
+				UUID target = Clan.ACTION.getId(args1).deploy();
 				if (target.equals(p.getUniqueId())) {
 					lib.sendMessage(p, "&c&oInvalid usage, try &6/c leave");
 					return true;
@@ -644,19 +658,20 @@ public class CommandClanAdmin extends Command {
 				return true;
 			}
 			if (args0.equalsIgnoreCase("put")) {
-				if (Clan.ACTION.getUserID(args1) == null) {
+				if (Clan.ACTION.getId(args1).deploy() == null) {
 					lib.sendMessage(p, lib.playerUnknown(args1));
 					return true;
 				}
-				UUID target = Clan.ACTION.getUserID(args1);
+				UUID target = Clan.ACTION.getId(args1).deploy();
 				if (target.equals(p.getUniqueId())) {
 					lib.sendMessage(p, "&c&oWhat are you even trying to test?");
 					return true;
 				}
-				if (!ClansAPI.getInstance().obtainUser(target, args2)) {
+				Clan.Associate n = ClansAPI.getInstance().obtainUser(target, args2).orElse(null);
+				if (n == null) {
 					lib.sendMessage(p, "&c&oPlayer " + args1 + " is already in a clan or the clan specified doesn't exist.");
 				} else {
-					lib.sendMessage(p, "&3&oPlayer " + args1 + " was placed into clan " + args2);
+					lib.sendMessage(p, "&3&oPlayer " + args1 + " was placed into clan " + (n.getClan().getNickname() != null ? n.getClan().getNickname() : n.getClan().getName()));
 					if (Bukkit.getOfflinePlayer(target).isOnline()) {
 						lib.sendMessage(Bukkit.getPlayer(target), "&5&oA staff member has placed you into clan " + args2);
 					}
@@ -804,11 +819,11 @@ public class CommandClanAdmin extends Command {
 			String args2 = args[2];
 			String amountPre = args[3];
 			if (args0.equalsIgnoreCase("put")) {
-				if (Clan.ACTION.getUserID(args1) == null) {
+				if (Clan.ACTION.getId(args1).deploy() == null) {
 					lib.sendMessage(p, lib.playerUnknown(args1));
 					return true;
 				}
-				UUID target = Clan.ACTION.getUserID(args1);
+				UUID target = Clan.ACTION.getId(args1).deploy();
 
 				if (ClansAPI.getInstance().isInClan(target)) {
 					lib.sendMessage(p, "&c&oPlayer " + args1 + " is already in a clan.");

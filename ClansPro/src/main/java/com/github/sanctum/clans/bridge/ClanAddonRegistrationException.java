@@ -22,7 +22,7 @@ public class ClanAddonRegistrationException extends ClanError {
 			for (File f : file.listFiles()) {
 				if (f.isDirectory()) continue;
 				try {
-					ClanAddon addon = new ClanAddonClassLoader(f).addon;
+					ClanAddon addon = new ClanAddonClassLoader(f).getMainClass();
 					ClanAddonQuery.load(addon);
 					instance.getLogger().info("▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬");
 					instance.getLogger().info("- Injected: " + addon.getName() + " v" + addon.getVersion());

@@ -8,12 +8,18 @@ import com.github.sanctum.clans.bridge.ClanAddonRegistrationException;
 import com.github.sanctum.clans.bridge.ClanVentBus;
 import com.github.sanctum.clans.bridge.external.BountyAddon;
 import com.github.sanctum.clans.bridge.external.DynmapAddon;
+import com.github.sanctum.clans.bridge.internal.StashesAddon;
+import com.github.sanctum.clans.bridge.internal.VaultsAddon;
+import com.github.sanctum.clans.construct.DataManager;
 import com.github.sanctum.clans.construct.api.BanksAPI;
+import com.github.sanctum.clans.construct.api.Channel;
 import com.github.sanctum.clans.construct.api.Claim;
 import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClanException;
 import com.github.sanctum.clans.construct.api.ClanSubCommand;
 import com.github.sanctum.clans.construct.api.ClansAPI;
+import com.github.sanctum.clans.construct.api.LogoHolder;
+import com.github.sanctum.clans.construct.api.QnA;
 import com.github.sanctum.clans.construct.bank.BankListener;
 import com.github.sanctum.clans.construct.bank.BankPermissions;
 import com.github.sanctum.clans.event.TimerEvent;
@@ -26,28 +32,40 @@ import com.github.sanctum.labyrinth.data.FileList;
 import com.github.sanctum.labyrinth.data.FileManager;
 import com.github.sanctum.labyrinth.data.FileType;
 import com.github.sanctum.labyrinth.data.Registry;
+import com.github.sanctum.labyrinth.data.service.PlayerSearch;
 import com.github.sanctum.labyrinth.event.custom.Vent;
+import com.github.sanctum.labyrinth.formatting.FancyMessage;
+import com.github.sanctum.labyrinth.gui.unity.simple.Docket;
+import com.github.sanctum.labyrinth.gui.unity.simple.MemoryDocket;
+import com.github.sanctum.labyrinth.interfacing.UnknownGeneric;
 import com.github.sanctum.labyrinth.library.CommandUtils;
 import com.github.sanctum.labyrinth.library.Item;
 import com.github.sanctum.labyrinth.library.Metrics;
 import com.github.sanctum.labyrinth.library.StringUtils;
+import com.github.sanctum.labyrinth.library.Workbench;
+import com.github.sanctum.labyrinth.library.WorkbenchSlot;
 import com.github.sanctum.labyrinth.placeholders.PlaceholderRegistration;
-import com.github.sanctum.labyrinth.task.TaskPredicate;
 import com.github.sanctum.labyrinth.task.TaskScheduler;
+import com.github.sanctum.skulls.CustomHead;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.Material;
+import org.bukkit.block.Block;
+import org.bukkit.block.BlockFace;
 import org.bukkit.command.Command;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
@@ -120,7 +138,11 @@ public final class StartProcedure {
 		instance.dataManager.copyDefaults();
 		new Registry<>(Listener.class).source(ClansAPI.getInstance().getPlugin()).filter("com.github.sanctum.clans.listener").operate(listener -> LabyrinthProvider.getService(Service.VENT).subscribe(instance, listener));
 		new Registry<>(Command.class).source(ClansAPI.getInstance().getPlugin()).filter("com.github.sanctum.clans.commands").operate(CommandUtils::register);
-		new Registry<>(ClanSubCommand.class).source(ClansAPI.getInstance().getPlugin()).filter("com.github.sanctum.clans.commands").operate(cmd -> instance.getCommandManager().register(cmd));
+		new Registry<>(ClanSubCommand.class).source(ClansAPI.getInstance().getPlugin()).filter("com.github.sanctum.clans.commands").operate(cmd -> {
+			if (!cmd.isInvisible()) {
+				instance.getCommandManager().register(cmd);
+			}
+		});
 		ClanAddonRegistrationException.getLoadingProcedure().run(instance).deploy();
 	}
 
@@ -131,8 +153,10 @@ public final class StartProcedure {
 		instance.getLogger().info("- Cleaning misc files.");
 		final FileList fileList = instance.getFileList();
 		for (String id : Clan.ACTION.getAllClanIDs()) {
-			if (fileList.get(id, "Clans", instance.TYPE).read(c -> !c.getNode("name").toPrimitive().isString())) {
-				FileManager clan = fileList.get(id, "Clans", instance.TYPE);
+			FileManager clan = fileList.get(id, "Clans", instance.TYPE);
+			FileManager clanClaims = instance.getClaimManager().getFile();
+			clanClaims.getRoot().getNode(id).delete();
+			if (clan.read(c -> !c.getNode("name").toPrimitive().isString())) {
 				clan.getRoot().delete();
 			}
 		}
@@ -156,34 +180,36 @@ public final class StartProcedure {
 				PlaceholderRegistration.getInstance().registerTranslation(new LabyrinthPlaceholders(instance)).deploy();
 				instance.getLogger().info("- PlaceholderAPI not found, loading labyrinth provision.");
 			}
-		}).scheduleLater(38, TaskPredicate.cancelAfter(task -> {
-			if (!instance.isEnabled()) {
-				task.cancel();
-				return false;
-			}
-			return true;
-		}));
+		}).scheduleLater(38);
 
-		try {
-			new Item(Material.BLAZE_ROD, StringUtils.use("&r[&6Tamer stick&r]").translate()).setKey("tamer_stick")
-					.buildStack()
-					.attachLore(Arrays.asList("Right click a tamed animal", "to add it as a teammate.", " ", "This will not persist it is", "merely a way to momentarily keep track of", "any tamed animals."))
+		if (!LabyrinthProvider.getInstance().isModded()) {
+			Consumer<Workbench> workbench = w -> {
+				w.put('U', WorkbenchSlot.ONE, WorkbenchSlot.THREE, WorkbenchSlot.FOUR, WorkbenchSlot.SIX, WorkbenchSlot.SEVEN, WorkbenchSlot.NINE);
+				w.put('G', WorkbenchSlot.TWO);
+				w.put('I', WorkbenchSlot.FIVE, WorkbenchSlot.EIGHT);
+			};
+			new Item().setKey("tamer_stick", instance)
+					.edit()
+					.setType(Material.BLAZE_ROD)
+					.setTitle("&r[&6Tamer stick&r]")
+					.setLore(Arrays.asList("Right click a tamed animal to add it as a teammate.", " ", "This effect is temporary."))
+					.complete()
 					.setItem('U', Material.AIR)
 					.setItem('I', Material.BLAZE_ROD)
 					.setItem('G', Material.LEATHER)
-					.shapeRecipe("UGU", "UIU", "UIU")
+					.shape(workbench)
 					.register();
-			new Item(Material.STICK, StringUtils.use("&r[&bRemover stick&r]").translate()).setKey("remover_stick")
-					.buildStack()
-					.attachLore(Arrays.asList("Right click a tamed animal teammate", "to remove it as a teammate."))
+			new Item().setKey("remover_stick", instance)
+					.edit()
+					.setType(Material.STICK)
+					.setTitle("&r[&bRemover stick&r]")
+					.setLore(Collections.singletonList("Right click a tamed animal teammate to remove it as a teammate."))
+					.complete()
 					.setItem('U', Material.AIR)
 					.setItem('I', Material.STICK)
 					.setItem('G', Material.LEATHER)
-					.shapeRecipe("UGU", "UIU", "UIU")
+					.shape(workbench)
 					.register();
-		} catch (UnsupportedOperationException failed) {
-			instance.getLogger().severe("- We were unable to register some crafting recipes due to modded circumstances.");
-			instance.getLogger().severe("- Items not registered: [tamer_stick, remover_stick]");
 		}
 	}
 
@@ -338,7 +364,7 @@ public final class StartProcedure {
 				}
 				return map;
 			}));
-			metrics.addCustomChart(new Metrics.SingleLineChart("total_logged_players", () -> Clan.ACTION.getAllUsers().size()));
+			metrics.addCustomChart(new Metrics.SingleLineChart("total_logged_players", () -> PlayerSearch.values().size()));
 			metrics.addCustomChart(new Metrics.SingleLineChart("total_clans_registered", () -> Clan.ACTION.getAllClanIDs().size()));
 		});
 	}
@@ -350,6 +376,149 @@ public final class StartProcedure {
 			instance.getLogger().info("- Configuration updated to latest.");
 		}
 		bail = true;
+	}
+
+	@Ordinal(13)
+	void m() {
+		// System adapter for locating MOTD carriers.
+		LogoHolder.newAdapter(location -> {
+			LogoHolder.Carrier def = ReservedLogoCarrier.MOTD;
+			for (LogoHolder.Carrier.Line line : def.getLines()) {
+				for (int i = 1; i < 23; i++) {
+					Block up = location.getBlock().getRelative(BlockFace.UP, i);
+					if (line.getStand().getLocation().distance(up.getLocation().add(0.5, 0, 0.5)) <= 1) {
+						return def;
+					}
+				}
+			}
+			return null;
+		}).deploy();
+	}
+
+	@Ordinal(14)
+	void n() {
+		Channel.CLAN.register(context -> {
+			String test = context;
+			for (String word : instance.dataManager.getConfig().getRoot().getNode("Formatting.Chat.Channel.clan.filters").getKeys(false)) {
+				String replacement = instance.dataManager.getConfig().getRoot().getNode("Formatting.Chat.Channel.clan.filters").getNode(word).toPrimitive().getString();
+				test = StringUtils.use(test).replaceIgnoreCase(word, replacement);
+			}
+			return test;
+		});
+
+		Channel.ALLY.register(context -> {
+			String test = context;
+			for (String word : instance.dataManager.getConfig().getRoot().getNode("Formatting.Chat.Channel.ally.filters").getKeys(false)) {
+				String replacement = instance.dataManager.getConfig().getRoot().getNode("Formatting.Chat.Channel.ally.filters").getNode(word).toPrimitive().getString();
+				test = StringUtils.use(test).replaceIgnoreCase(word, replacement);
+			}
+			return test;
+		});
+
+		QnA.register((player, question) -> {
+			StringUtils utils = StringUtils.use(question);
+			if (utils.containsIgnoreCase("make a clan", "create a clan", "start a clan", "start clan", "make clan", "create clan")) {
+				player.closeInventory();
+				String message = "To make a clan you require the permission clanspro." + DataManager.Security.getPermission("create") + ", if you have permission this message will be white.";
+				if (!player.hasPermission("clanspro." + DataManager.Security.getPermission("create"))) {
+					Clan.ACTION.sendMessage(player, "&c" + message);
+				} else {
+					Clan.ACTION.sendMessage(player, message);
+					String[] examples = new String[]{"Panthers", "Eggnog", "Dumplin", "Potato"};
+					new FancyMessage("Click here to see an example").color(ChatColor.AQUA).style(ChatColor.ITALIC).suggest("/clan create " + examples[new Random().nextInt(examples.length)] + " (password here if you want)").send(player).queue();
+				}
+				return false;
+			}
+			if (utils.containsIgnoreCase("whats the raidshield", "what is raidshield", "what is raid shield", "raid shield", "raidshield")) {
+				player.closeInventory();
+				String message = "The default settings will start the raidshield at dawn and the raidshield will go down at dusk. Once the raidshield goes down this enables players in other clans with more clan power than yours to then overpower the land unclaiming and taking it as their own if they choose. Either way it enables raiding.";
+				Clan.ACTION.sendMessage(player, message);
+				Clan.ACTION.sendMessage(player, "When the raidshield is down and you indefinitely have more power than a targeted enemy clan, use &c/c unclaim &fto over power their land.");
+				return false;
+			}
+			if (utils.containsIgnoreCase("how do i raid", "how to raid", "raiding", "raid")) {
+				if (Claim.ACTION.isEnabled()) {
+					Clan.ACTION.sendMessage(player, "&eRaiding can be achieved by simply overpowering a target clan's land, un-claiming an individual chunk allows you to access the containers within as well as build/break.");
+				} else {
+					Clan.ACTION.sendMessage(player, "&cClan land claiming is disabled on this server! Therefore raiding becomes inherently impossible.");
+				}
+				return false;
+			}
+			if (utils.containsIgnoreCase("gain power", "how do i get more power", "more power", "get power")) {
+				Clan.ACTION.sendMessage(player, "&6You can gain power by increasing the overall size of your clan (more members), having more money in the clan bank, owning more clan claims & killing enemy clan associates as well any third party ways to achieve power gains.");
+				return false;
+			}
+			return true;
+		});
+	}
+
+	@Ordinal(15)
+	void o() {
+		TaskScheduler.of(() -> {
+			for (Clan owner : instance.getClanManager().getClans()) {
+				TaskScheduler.of(() -> {
+					// Load clan vault and stash into memory.
+					VaultsAddon.getVault(owner.getName());
+					StashesAddon.getStash(owner.getName());
+				}).scheduleLaterAsync(1);
+				for (Claim c : owner.getClaims()) {
+					// check default flags and register any that arent registered.
+					for (Claim.Flag f : instance.getClaimManager().getFlagManager().getFlags()) {
+						Claim.Flag temp = c.getFlag(f.getId());
+						if (temp == null) {
+							c.register(f);
+						}
+					}
+					c.save();
+				}
+			}
+		}).scheduleLater(120);
+	}
+
+	@Ordinal(16)
+	void p() {
+		FileManager th = instance.getFileList().get("heads", "Configuration", FileType.JSON);
+		if (th.getRoot().exists()) {
+			th.toMoved("Configuration/Data");
+		}
+		FileManager man = instance.getFileList().get("heads", "Configuration/Data", FileType.JSON);
+		if (!man.getRoot().exists()) {
+			instance.getFileList().copy("heads.data", man);
+			man.getRoot().reload();
+		}
+		CustomHead.Manager.newLoader(man.getRoot())
+				.look("My_heads")
+				.complete();
+	}
+
+	@Ordinal(17)
+	void q() {
+		// load dockets
+		if (instance.getFileList().get("Messages", "Configuration").read(c -> c.getNode("deep-edit").toPrimitive().getBoolean())) {
+			ClansAPI api = ClansAPI.getInstance();
+			MemoryDocket<Clan> rosterDocket = Docket.newInstance(ClansAPI.getDataInstance().getMessages().getRoot().getNode("menu.roster"));
+			rosterDocket.setDataConverter(Clan.memoryDocketReplacer());
+			rosterDocket.setNamePlaceholder(":not_supported:");
+			rosterDocket.setList(() -> api.getClanManager().getClans().stream().collect(Collectors.toList()));
+			rosterDocket.load();
+			DocketUtils.load(rosterDocket.toMenu().getKey().orElseThrow(RuntimeException::new), rosterDocket);
+			MemoryDocket<Clan> rosterTopDocket = Docket.newInstance(ClansAPI.getDataInstance().getMessages().getRoot().getNode("menu.roster-top"));
+			rosterTopDocket.setDataConverter(Clan.memoryDocketReplacer());
+			rosterTopDocket.setNamePlaceholder(":not_supported:");
+			rosterTopDocket.setList(() -> api.getClanManager().getClans().stream().collect(Collectors.toList()));
+			rosterTopDocket.setComparator(ClansComparators.comparingByPower());
+			rosterTopDocket.load();
+			DocketUtils.load(rosterTopDocket.toMenu().getKey().orElseThrow(RuntimeException::new), rosterTopDocket);
+			MemoryDocket<UnknownGeneric> rosterSelect = Docket.newInstance(ClansAPI.getDataInstance().getMessages().getRoot().getNode("menu.roster-select"));
+			rosterSelect.setNamePlaceholder(":not_supported:");
+			rosterSelect.load();
+			DocketUtils.load(rosterSelect.toMenu().getKey().orElseThrow(RuntimeException::new), rosterSelect);
+		}
+	}
+
+	@Ordinal(18)
+	void r() {
+
 	}
 
 

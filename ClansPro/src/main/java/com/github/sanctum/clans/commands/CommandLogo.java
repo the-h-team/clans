@@ -68,7 +68,7 @@ public class CommandLogo extends ClanSubCommand {
 				return true;
 			}
 
-			if (!p.hasPermission(this.getPermission() + "." + DataManager.Security.getPermission("logo"))) {
+			if (!Clan.ACTION.test(p, "clanspro." + DataManager.Security.getPermission("logo")).deploy()) {
 				lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("logo")));
 				return true;
 			}
@@ -175,7 +175,7 @@ public class CommandLogo extends ClanSubCommand {
 					List<String> logo = item.getItemMeta().getLore();
 					int size = ChatColor.stripColor(logo.get(0)).length();
 					mail.chat("&6&m&l" + Strings.repeat("▬", Math.min(38, size * 2))).deploy();
-					FancyLogoAppendage appendage = ClansAPI.getDataInstance().appendStringsToLogo(logo, message -> message.hover("&2Do you like hamburgers?"));
+					FancyLogoAppendage appendage = ClansAPI.getDataInstance().appendStringsToLogo(logo, message -> message.hover("&2Do you even MLG?"));
 					for (BaseComponent[] b : appendage.append(new TextChunk("Make this"),
 							new TextChunk("your clan"),
 							new TextChunk("logo?"),
@@ -212,7 +212,7 @@ public class CommandLogo extends ClanSubCommand {
 					List<String> logo = i.getLines().stream().map(Insignia.Line::toString).collect(Collectors.toList());
 					int size = ChatColor.stripColor(logo.get(0)).length();
 					mail.chat("&6&m&l" + Strings.repeat("▬", Math.min(38, size * 2))).deploy();
-					FancyLogoAppendage appendage = ClansAPI.getDataInstance().appendStringsToLogo(logo, message -> message.hover("&2Do you like hamburgers?"));
+					FancyLogoAppendage appendage = ClansAPI.getDataInstance().appendStringsToLogo(logo, message -> message.hover("&2Do you even MLG?"));
 					for (BaseComponent[] b : appendage.append(new TextChunk("Make this"),
 							new TextChunk("your clan"),
 							new TextChunk("logo?"),
@@ -284,7 +284,7 @@ public class CommandLogo extends ClanSubCommand {
 				return true;
 			}
 
-			if (!p.hasPermission(this.getPermission() + "." + DataManager.Security.getPermission("logo"))) {
+			if (!Clan.ACTION.test(p, "clanspro." + DataManager.Security.getPermission("logo")).deploy()) {
 				lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("logo")));
 				return true;
 			}
@@ -332,7 +332,7 @@ public class CommandLogo extends ClanSubCommand {
 
 		if (args.length == 3) {
 
-			if (!p.hasPermission(this.getPermission() + "." + DataManager.Security.getPermission("logo"))) {
+			if (!Clan.ACTION.test(p, "clanspro." + DataManager.Security.getPermission("logo")).deploy()) {
 				lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("logo")));
 				return true;
 			}

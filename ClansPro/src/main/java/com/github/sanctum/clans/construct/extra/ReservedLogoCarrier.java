@@ -8,7 +8,7 @@ import com.github.sanctum.labyrinth.library.Entities;
 import com.github.sanctum.labyrinth.library.HFEncoded;
 import com.github.sanctum.labyrinth.library.HUID;
 import com.github.sanctum.labyrinth.library.StringUtils;
-import com.github.sanctum.labyrinth.task.Schedule;
+import com.github.sanctum.labyrinth.task.TaskScheduler;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashSet;
@@ -143,7 +143,7 @@ public enum ReservedLogoCarrier implements LogoHolder.Carrier {
 
 		public void destroy() {
 			getStand().remove();
-			Schedule.sync(() -> ReservedLogoCarrier.this.remove(this)).run();
+			TaskScheduler.of(() -> ReservedLogoCarrier.this.remove(this)).schedule();
 		}
 
 	}

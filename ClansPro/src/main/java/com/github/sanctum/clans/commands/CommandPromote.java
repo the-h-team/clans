@@ -27,7 +27,7 @@ public class CommandPromote extends ClanSubCommand {
 		Clan.Associate associate = ClansAPI.getInstance().getAssociate(p).orElse(null);
 
 		if (args.length == 0) {
-			if (!p.hasPermission(this.getPermission() + "." + DataManager.Security.getPermission("promote"))) {
+			if (!Clan.ACTION.test(p, "clanspro." + DataManager.Security.getPermission("promote")).deploy()) {
 				lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("promote")));
 				return true;
 			}
@@ -36,7 +36,7 @@ public class CommandPromote extends ClanSubCommand {
 		}
 
 		if (args.length == 1) {
-			if (!p.hasPermission(this.getPermission() + "." + DataManager.Security.getPermission("promote"))) {
+			if (!Clan.ACTION.test(p, "clanspro." + DataManager.Security.getPermission("promote")).deploy()) {
 				lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("promote")));
 				return true;
 			}
@@ -45,7 +45,7 @@ public class CommandPromote extends ClanSubCommand {
 			String ownerRank = main.getRoot().getString("Formatting.Chat.Styles.Full.Owner");
 			if (associate != null) {
 				if (Clearance.MANAGE_POSITIONS.test(associate)) {
-					UUID tid = Clan.ACTION.getUserID(args[0]);
+					UUID tid = Clan.ACTION.getId(args[0]).deploy();
 					if (tid == null) {
 						lib.sendMessage(p, lib.playerUnknown(args[0]));
 						return true;
@@ -56,7 +56,7 @@ public class CommandPromote extends ClanSubCommand {
 						lib.sendMessage(p, lib.alreadyMax(adminRank, ownerRank));
 						return true;
 					}
-					Clan.ACTION.promotePlayer(tid);
+					Clan.ACTION.promote(tid).deploy();
 				} else {
 					lib.sendMessage(p, lib.noClearance());
 					return true;

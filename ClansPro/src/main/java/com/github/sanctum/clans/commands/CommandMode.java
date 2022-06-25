@@ -31,7 +31,7 @@ public class CommandMode extends ClanSubCommand {
 		}
 
 		if (args.length == 0) {
-			if (!p.hasPermission(this.getPermission() + "." + DataManager.Security.getPermission("mode"))) {
+			if (!Clan.ACTION.test(p, "clanspro." + DataManager.Security.getPermission("mode")).deploy()) {
 				lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("mode")));
 				return true;
 			}
@@ -100,7 +100,7 @@ public class CommandMode extends ClanSubCommand {
 		}
 
 		if (args.length == 1) {
-			if (!p.hasPermission(this.getPermission() + "." + DataManager.Security.getPermission("mode"))) {
+			if (!Clan.ACTION.test(p, "clanspro." + DataManager.Security.getPermission("mode")).deploy()) {
 				lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("mode")));
 				return true;
 			}

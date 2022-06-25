@@ -14,7 +14,7 @@ import com.github.sanctum.labyrinth.data.LabyrinthDataTable;
 import com.github.sanctum.labyrinth.formatting.FancyMessage;
 import com.github.sanctum.labyrinth.library.Items;
 import com.github.sanctum.labyrinth.library.StringUtils;
-import com.github.sanctum.labyrinth.task.Schedule;
+import com.github.sanctum.labyrinth.task.TaskScheduler;
 import com.github.sanctum.skulls.CustomHead;
 import com.github.sanctum.skulls.CustomHeadLoader;
 import java.io.File;
@@ -250,7 +250,7 @@ public class DataManager {
 			main.toJSON("config_old", "Configuration");
 			messages.toJSON("messages_old", "Configuration");
 
-			Schedule.sync(() -> {
+			TaskScheduler.of(() -> {
 				InputStream mainGrab;
 				if (type != null) {
 					if (type.equals("JSON")) {
@@ -269,7 +269,7 @@ public class DataManager {
 				FileList.copy(msgGrab, messages.getRoot().getParent());
 				messages.getRoot().reload();
 				main.getRoot().reload();
-			}).wait(1);
+			}).scheduleLater(1);
 			return true;
 		}
 		return false;
@@ -300,6 +300,7 @@ public class DataManager {
 	}
 
 	public boolean addCooldown(ClanCooldown instance) {
+		if (COOLDOWNS.stream().anyMatch(c -> c.getId().equals(instance.getId()))) return false;
 		return COOLDOWNS.add(instance);
 	}
 

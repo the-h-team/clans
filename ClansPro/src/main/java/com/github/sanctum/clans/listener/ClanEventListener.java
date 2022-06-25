@@ -3,6 +3,7 @@ package com.github.sanctum.clans.listener;
 import com.github.sanctum.clans.bridge.internal.stashes.events.StashInteractEvent;
 import com.github.sanctum.clans.bridge.internal.vaults.events.VaultInteractEvent;
 import com.github.sanctum.clans.construct.api.AbstractGameRule;
+import com.github.sanctum.clans.construct.api.Channel;
 import com.github.sanctum.clans.construct.api.Claim;
 import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClanBlueprint;
@@ -10,6 +11,7 @@ import com.github.sanctum.clans.construct.api.ClanCooldown;
 import com.github.sanctum.clans.construct.api.ClansAPI;
 import com.github.sanctum.clans.construct.api.Consultant;
 import com.github.sanctum.clans.construct.api.GUI;
+import com.github.sanctum.clans.construct.api.Ticket;
 import com.github.sanctum.clans.construct.api.War;
 import com.github.sanctum.clans.construct.extra.AnimalConsultantListener;
 import com.github.sanctum.clans.construct.impl.CooldownCreate;
@@ -40,7 +42,6 @@ import com.github.sanctum.labyrinth.interfacing.Nameable;
 import com.github.sanctum.labyrinth.library.Cooldown;
 import com.github.sanctum.labyrinth.library.Mailer;
 import com.github.sanctum.labyrinth.library.TimeWatch;
-import com.github.sanctum.labyrinth.task.Schedule;
 import com.github.sanctum.labyrinth.task.TaskScheduler;
 import java.math.BigDecimal;
 import java.util.Random;
@@ -191,12 +192,30 @@ public class ClanEventListener implements Listener {
 
 	@Subscribe(priority = Vent.Priority.LOW)
 	public void onChat(AssociateMessageReceiveEvent e) {
-		Schedule.sync(() -> {
-			Consultant server = e.getAssociate().getConsultant();
+		TaskScheduler.of(() -> {
+			Consultant[] server = e.getAssociate().getConsultants();
 			if (server != null) { // Our server associate isn't null
-				server.sendMessage(() -> new SimpleEntry<>(e.getMessage(), new SimpleEntry<>(e.getChannel(), e.getSender()))); // Send them the message & ticket a response from the server.
+				for (Consultant c : server) {
+					c.sendMessage(() -> new SimpleEntry<>(e.getMessage(), new SimpleEntry<>(e.getChannel(), e.getSender()))); // Send them the message & ticket a response from the server.
+				}
 			}
-		}).run();
+		}).schedule();
+	}
+
+	@Subscribe
+	public void onSpawn(AssociateFromAnimalEvent e) {
+		Consultant associate = (Consultant) e.getAssociate();
+		associate.registerIncomingListener(() -> "BOOP", object -> {
+			Ticket ticket = new Ticket();
+			if (object instanceof SimpleEntry) {
+				SimpleEntry<String, SimpleEntry<Channel, Clan.Associate>> entry = (SimpleEntry<String, SimpleEntry<Channel, Clan.Associate>>) object;
+				if (entry.getKey().equalsIgnoreCase("hello")) {
+					ticket.setType(Ticket.Field.STRING, "I don't know");
+					ticket.setType(Ticket.Field.CUSTOM, new SimpleEntry<>(entry.getValue().getKey(), entry.getValue().getValue()));
+				}
+			}
+			return ticket;
+		});
 	}
 
 	@Subscribe(priority = Vent.Priority.LOW)
@@ -219,11 +238,12 @@ public class ClanEventListener implements Listener {
 			//=======================
 			String color;
 			FancyMessageChain chain = null;
+			String idMode = ClansAPI.getDataInstance().ID_MODE.containsKey(p) ? " &a(&e*" + c.getId() + "&a)" : "";
 			switch (e.getType()) {
 				case OTHER:
 					color = "&2";
 					chain = new FancyMessageChain()
-							.append(space1 -> space1.then(" "))
+							.append(space -> space.then(" "))
 							.append(top -> top.then(" ")
 									.then(" ")
 									.then(" ")
@@ -235,7 +255,7 @@ public class ClanEventListener implements Listener {
 									.then(" ")
 									.then(" ")
 									.then("[")
-									.then("Stats").color(Color.GREEN).style(ChatColor.BOLD).hover(color + "Name: &f" + c.getName()).hover(color + "&rDescription: &f" + c.getDescription()).hover(color + "&rPower: &f" + Clan.ACTION.format(c.getPower())).hover(color + "&rColor: &f" + (c.getPalette().isGradient() ? (c.getPalette().toArray()[0] + c.getPalette().toArray()[1]).replace("&", "").replace("#", "&f»" + color + "&r") : color.replace("&", "&f»" + color + "&r").replace("#", "&f»" + color + "&r"))).hover(color + "&rClaims: &f" + c.getClaims().length + "/" + c.getClaimLimit())
+									.then("Stats").color(Color.GREEN).style(ChatColor.BOLD).hover(color + "Name: &f" + c.getName() + idMode).hover(color + "Description: &f" + c.getDescription()).hover(color + "Power: &f" + Clan.ACTION.format(c.getPower())).hover(color + "Color: &f" + (c.getPalette().isGradient() ? (c.getPalette().toArray()[0] + c.getPalette().toArray()[1]).replace("&", "").replace("#", "&f»" + color + "&r") : color.replace("&", "&f»" + color).replace("#", "&f»" + color))).hover(color + "Claims: &f" + c.getClaims().length + "/" + c.getClaimLimit())
 									.then("]")
 									.then(" ")
 									.then(" ")
@@ -245,7 +265,7 @@ public class ClanEventListener implements Listener {
 									.then(" ")
 									.then(" ")
 									.then(" "))
-							.append(space1 -> space1.then(" "))
+							.append(space -> space.then(" "))
 							.append(middle -> middle.then(" ")
 									.then(" ")
 									.then(" ")
@@ -266,7 +286,7 @@ public class ClanEventListener implements Listener {
 									.then(" ")
 									.then(" ")
 									.then(" "))
-							.append(space1 -> space1.then(" "));
+							.append(space -> space.then(" "));
 					break;
 				case PERSONAL:
 					String allies = c.getRelation().getAlliance().stream().map(Nameable::getName).collect(Collectors.joining(", "));
@@ -297,7 +317,7 @@ public class ClanEventListener implements Listener {
 									.then(" ")
 									.then(" ")
 									.then("[")
-									.then("Stats").color(Color.RED).style(ChatColor.BOLD).hover(color + "Name: &f" + c.getName()).hover(color + "&rDescription: &f" + c.getDescription()).hover(color + "&rPower: &f" + Clan.ACTION.format(c.getPower())).hover(color + "&rColor: &f" + (c.getPalette().isGradient() ? (c.getPalette().toArray()[0] + c.getPalette().toArray()[1]).replace("&", "").replace("#", "&f»" + color + "&r") : color.replace("&", "&f»" + color + "&r").replace("#", "&f»" + color + "&r"))).hover(color + "&rClaims: &f" + c.getClaims().length + "/" + c.getClaimLimit()).hover(color + "&rAllies: &f" + finalAllies).hover(color + "&rEnemies: &f" + finalEnemies).hover(color + "&rRequests: &f" + finalAlliesR)
+									.then("Stats").color(Color.RED).style(ChatColor.BOLD).hover(color + "Name: &f" + c.getName() + idMode).hover(color + "Description: &f" + c.getDescription()).hover(color + "Power: &f" + Clan.ACTION.format(c.getPower())).hover(color + "Color: " + (c.getPalette().isGradient() ? c.getPalette().toString((c.getPalette().toArray()[0]).replace("&", "").replace("#", "")) + "&f»" + c.getPalette().toString((c.getPalette().toArray()[1]).replace("&", "").replace("#", "")): color.replace("&", "&f»" + color).replace("#", "&f»" + color))).hover(color + "Claims: &f" + c.getClaims().length + "/" + c.getClaimLimit()).hover(color + "Allies: &f" + finalAllies).hover(color + "Enemies: &f" + finalEnemies).hover(color + "Requests: &f" + finalAlliesR)
 									.then("]")
 									.then(" ")
 									.then(" ")
@@ -516,10 +536,12 @@ public class ClanEventListener implements Listener {
 			if (ClansAPI.getDataInstance().isTrue("Clans.creation.charge")) {
 				double amount = ClansAPI.getDataInstance().getConfig().getRoot().getDouble("Clans.creation.amount");
 
-				boolean success = EconomyProvision.getInstance().withdraw(BigDecimal.valueOf(amount), p, p.getWorld().getName()).orElse(false);
+				boolean success = EconomyProvision.getInstance().has(BigDecimal.valueOf(amount), p, p.getWorld().getName()).orElse(false);
 				if (!success) {
 					event.setCancelled(true);
 					event.getUtil().sendMessage(p, "&c&oYou don't have enough money. Amount needed: &6" + amount);
+				} else {
+					EconomyProvision.getInstance().withdraw(BigDecimal.valueOf(amount), p, p.getWorld().getName()).orElse(false);
 				}
 				return;
 			}

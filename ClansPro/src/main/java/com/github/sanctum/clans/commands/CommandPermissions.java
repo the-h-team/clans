@@ -44,7 +44,7 @@ public class CommandPermissions extends ClanSubCommand {
 		}
 
 		if (args.length == 0) {
-			if (!p.hasPermission(this.getPermission() + "." + DataManager.Security.getPermission("permissions"))) {
+			if (!Clan.ACTION.test(p, "clanspro." + DataManager.Security.getPermission("permissions")).deploy()) {
 				lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("permissions")));
 				return true;
 			}

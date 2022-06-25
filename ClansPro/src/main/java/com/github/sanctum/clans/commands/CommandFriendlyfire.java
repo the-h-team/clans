@@ -22,7 +22,7 @@ public class CommandFriendlyfire extends ClanSubCommand {
 		Clan.Associate associate = ClansAPI.getInstance().getAssociate(p).orElse(null);
 
 		if (args.length == 0) {
-			if (!p.hasPermission(this.getPermission() + "." + DataManager.Security.getPermission("friendlyfire"))) {
+			if (!Clan.ACTION.test(p, "clanspro." + DataManager.Security.getPermission("friendlyfire")).deploy()) {
 				lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("friendlyfire")));
 				return true;
 			}
@@ -82,24 +82,6 @@ public class CommandFriendlyfire extends ClanSubCommand {
 			}
 			return true;
 		}
-
-		if (args.length == 1) {
-			if (!p.hasPermission(this.getPermission() + "." + DataManager.Security.getPermission("create"))) {
-				lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("create")));
-				return true;
-			}
-			if (!isAlphaNumeric(args[0])) {
-				lib.sendMessage(p, lib.nameInvalid(args[0]));
-				return true;
-			}
-			if (Clan.ACTION.getAllClanNames().contains(args[0])) {
-				lib.sendMessage(p, lib.alreadyMade(args[0]));
-				return true;
-			}
-			Clan.ACTION.create(p.getUniqueId(), args[0], null);
-			return true;
-		}
-
 
 		return true;
 	}

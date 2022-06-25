@@ -3,7 +3,7 @@ package com.github.sanctum.clans.bridge.internal.borders;
 import com.github.sanctum.clans.construct.api.ClanSubCommand;
 import com.github.sanctum.labyrinth.formatting.completion.SimpleTabCompletion;
 import com.github.sanctum.labyrinth.formatting.completion.TabCompletionIndex;
-import com.github.sanctum.labyrinth.library.Message;
+import com.github.sanctum.labyrinth.library.Mailer;
 import java.util.List;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -17,8 +17,7 @@ public class FlagsCommand extends ClanSubCommand {
 	public boolean player(Player p, String label, String[] args) {
 		int length = args.length;
 		String prefix = "&f[&6&lX&f]&r";
-		Message msg = Message.form(p).setPrefix(prefix);
-		msg.send("&f&oCurrent flags: [ &6base&f, &6player&f, &6spawn &f]");
+		Mailer.empty(p).prefix().start(prefix).finish().chat("&f&oCurrent flags: [ &6base&f, &6player&f, &6spawn &f]").deploy();
 
 		return true;
 	}

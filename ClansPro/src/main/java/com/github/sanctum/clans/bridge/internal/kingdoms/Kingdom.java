@@ -3,8 +3,10 @@ package com.github.sanctum.clans.bridge.internal.kingdoms;
 import com.github.sanctum.clans.bridge.ClanAddon;
 import com.github.sanctum.clans.bridge.ClanAddonQuery;
 import com.github.sanctum.clans.bridge.internal.KingdomAddon;
+import com.github.sanctum.clans.bridge.internal.kingdoms.impl.LocalFileQuest;
 import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClansAPI;
+import com.github.sanctum.clans.construct.api.Clearance;
 import com.github.sanctum.labyrinth.data.FileManager;
 import com.github.sanctum.labyrinth.data.FileType;
 import com.github.sanctum.labyrinth.data.Node;
@@ -17,22 +19,27 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
 import java.util.Spliterator;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class Kingdom extends Progressive implements Iterable<Clan> {
+public class Kingdom extends Progressive implements Controllable, Iterable<Clan> {
 
 	private final List<Clan> members;
 
 	private String name;
+	private boolean peaceful = true;
+	private Location castle;
+	private Clan.Associate king;
 
 	private final List<Quest> quests;
 
@@ -49,11 +56,25 @@ public class Kingdom extends Progressive implements Iterable<Clan> {
 
 			if (section.getRoot().getKeys(false).contains(name)) {
 
+				if (section.getRoot().getNode(name + ".castle").toBukkit().isLocation()) {
+					castle = section.getRoot().getNode(name + ".castle").toBukkit().getLocation();
+				}
+
+				if (section.getRoot().getNode(name + ".pvp").toPrimitive().isBoolean()) {
+					peaceful = section.getRoot().getNode(name + ".pvp").toPrimitive().getBoolean();
+				}
+
 				for (String id : section.getRoot().getStringList(name + ".members")) {
-					Clan c = API.getClanManager().getClan(HUID.fromString(id));
+					Clan c = API.getClanManager().getClan(HUID.parseID(id).toID());
 					if (c != null) {
 						this.members.add(c);
 					}
+				}
+
+				String king = section.getRoot().getNode(name + ".king").toPrimitive().getString();
+
+				if (king != null) {
+					this.king = getMembers().stream().filter(c -> c.getMember(a -> a.getId().toString().equalsIgnoreCase(king)) != null).findFirst().map(clan -> clan.getMember(a -> a.getId().toString().equalsIgnoreCase(king))).orElse(null);
 				}
 
 				FileManager data = addon.getFile(FileType.JSON, "achievements", "data");
@@ -177,9 +198,29 @@ public class Kingdom extends Progressive implements Iterable<Clan> {
 
 	}
 
+	public boolean isPeaceful() {
+		return peaceful;
+	}
+
+	public void setPeaceful(boolean peaceful) {
+		this.peaceful = peaceful;
+	}
+
+	public Location getCastle() {
+		return castle;
+	}
+
+	public void setCastle(Location castle) {
+		this.castle = castle;
+	}
+
 	@Override
 	public @NotNull String getName() {
 		return name;
+	}
+
+	public Optional<Clan.Associate> getKing() {
+		return Optional.ofNullable(king);
 	}
 
 	@Override
@@ -207,6 +248,10 @@ public class Kingdom extends Progressive implements Iterable<Clan> {
 		return this.quests;
 	}
 
+	public void setKing(Clan.Associate king) {
+		this.king = king;
+	}
+
 	@Override
 	public void loadQuest(Quest... quests) {
 
@@ -225,6 +270,14 @@ public class Kingdom extends Progressive implements Iterable<Clan> {
 		FileManager section = cycle.getFile(FileType.JSON, "kingdoms", "data");
 
 		List<String> ids = getMembers().stream().map(Clan::getId).map(HUID::toString).collect(Collectors.toList());
+
+		if (king != null) {
+			section.getRoot().set(getName() + ".king", king.getId().toString());
+		}
+
+		section.getRoot().set(getName() + ".pvp", peaceful);
+
+		section.getRoot().set(getName() + ".castle", castle);
 
 		section.getRoot().set(getName() + ".members", ids);
 
@@ -299,5 +352,13 @@ public class Kingdom extends Progressive implements Iterable<Clan> {
 	@Override
 	public Map<String, Object> getValues(boolean deep) {
 		return getParentNode().getValues(deep);
+	}
+
+	@Override
+	public boolean test(Clearance clearance, Clan.Associate associate) {
+		if (clearance.getName().equalsIgnoreCase("kingdom_king") && getKing().map(associate::equals).orElse(false)) {
+			return true;
+		}
+		return clearance.test(associate);
 	}
 }

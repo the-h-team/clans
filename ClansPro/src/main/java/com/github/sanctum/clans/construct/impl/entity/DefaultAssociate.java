@@ -17,7 +17,6 @@ import com.github.sanctum.labyrinth.data.MemorySpace;
 import com.github.sanctum.labyrinth.data.Node;
 import com.github.sanctum.labyrinth.data.Primitive;
 import com.github.sanctum.labyrinth.data.service.PlayerSearch;
-import com.github.sanctum.labyrinth.library.HUID;
 import com.github.sanctum.labyrinth.library.Items;
 import com.github.sanctum.labyrinth.library.Mailer;
 import com.github.sanctum.labyrinth.library.TimeWatch;
@@ -51,7 +50,6 @@ public final class DefaultAssociate implements Clan.Associate, PersistentEntity 
 	private final PlayerSearch search;
 	private final UUID id;
 	private final Clan clanObject;
-	private final HUID clan;
 	private Clan.Rank rank;
 	private Channel chat;
 	private final ItemStack head;
@@ -60,7 +58,6 @@ public final class DefaultAssociate implements Clan.Associate, PersistentEntity 
 	private final Map<Long, Long> killMap;
 
 	public DefaultAssociate(UUID uuid, Clan.Rank priority, Clan clan) {
-		this.clan = clan.getId();
 		this.clanObject = clan;
 		this.name = Optional.ofNullable(Bukkit.getOfflinePlayer(uuid).getName()).orElseGet(() -> {
 			Entity test = Bukkit.getEntity(uuid);
@@ -140,7 +137,7 @@ public final class DefaultAssociate implements Clan.Associate, PersistentEntity 
 	 * @return Gets the clan this associate belongs to.
 	 */
 	public Clan getClan() {
-		return Optional.ofNullable(ClansAPI.getInstance().getClanManager().getClan(clan)).orElse(clanObject);
+		return clanObject;
 	}
 
 	@Override

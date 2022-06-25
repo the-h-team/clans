@@ -32,4 +32,20 @@ public abstract class Progressive implements MemorySpace {
 		PROGRESSIVES.add(progressive);
 	}
 
+	public final Kingdom getAsKingdom() {
+		return (Kingdom) this;
+	}
+
+	public final RoundTable getAsRoundTable() {
+		return (RoundTable) this;
+	}
+
+	public final boolean isKingdom() {
+		return this instanceof Kingdom;
+	}
+
+	public final boolean isRoundtable() {
+		return this instanceof RoundTable;
+	}
+
 }

@@ -7,6 +7,7 @@ import com.github.sanctum.clans.construct.api.ClanSubCommand;
 import com.github.sanctum.clans.construct.api.ClansAPI;
 import com.github.sanctum.clans.construct.api.GUI;
 import com.github.sanctum.clans.construct.extra.StringLibrary;
+import com.github.sanctum.labyrinth.LabyrinthProvider;
 import com.github.sanctum.labyrinth.formatting.Message;
 import com.github.sanctum.labyrinth.library.StringUtils;
 import com.google.common.collect.MapMaker;
@@ -84,6 +85,10 @@ public class CommandClan extends Command implements Message.Factory {
 									if (subCommand.getAliases().stream().anyMatch(s -> s.equalsIgnoreCase(args[0])) || subCommand.getLabel().equalsIgnoreCase(args[0])) {
 										List<String> t = new LinkedList<>(Arrays.asList(args));
 										t.removeIf(s -> StringUtils.use(s).containsIgnoreCase(subCommand.getLabel()));
+										for (String st : subCommand.getAliases()) {
+											t.removeIf(s -> StringUtils.use(s).containsIgnoreCase(st));
+										}
+										subCommand.setLastLabel(label);
 										return subCommand.console(sender, subCommand.getLabel(), t.toArray(new String[0]));
 									}
 								}
@@ -97,6 +102,7 @@ public class CommandClan extends Command implements Message.Factory {
 							if (subCommand.getAliases().stream().anyMatch(s -> s.equalsIgnoreCase(args[0])) || subCommand.getLabel().equalsIgnoreCase(args[0])) {
 								List<String> t = new LinkedList<>(Arrays.asList(args));
 								t.removeIf(s -> StringUtils.use(s).containsIgnoreCase(subCommand.getLabel()));
+								subCommand.setLastLabel(label);
 								return subCommand.console(sender, subCommand.getLabel(), t.toArray(new String[0]));
 							}
 						}
@@ -108,9 +114,13 @@ public class CommandClan extends Command implements Message.Factory {
 			Player p = (Player) sender;
 			StringLibrary lib = new StringLibrary();
 
-			if (!ClansAPI.getDataInstance().getConfig().getRoot().getStringList("Clans.world-whitelist").contains(p.getWorld().getName())) {
-				lib.sendMessage(p, "&4&oClan features have been locked within this world.");
-				return true;
+			if (!LabyrinthProvider.getInstance().isModded()) {
+				if (!ClansAPI.getDataInstance().getConfig().getRoot().getStringList("Clans.world-whitelist").contains(p.getWorld().getName())) {
+					lib.sendMessage(p, "&4&oClan features have been locked within this world.");
+					return true;
+				}
+			} else {
+				// TODO: modded check
 			}
 
 			if (this.getPermission() == null) return true;
@@ -125,12 +135,12 @@ public class CommandClan extends Command implements Message.Factory {
 						for (ClanSubCommand subCommand : cycle.getContext().getCommands()) {
 							if (subCommand.getLabel() != null) {
 								if (subCommand.getAliases().stream().anyMatch(s -> s.equalsIgnoreCase(args[0])) || subCommand.getLabel().equalsIgnoreCase(args[0])) {
-									List<String> t = new ArrayList<>();
-									for (String a : args) {
-										if (!a.equalsIgnoreCase(subCommand.getLabel()) && subCommand.getAliases().stream().noneMatch(s -> s.equalsIgnoreCase(args[0]))) {
-											t.add(a);
-										}
+									List<String> t = new LinkedList<>(Arrays.asList(args));
+									t.removeIf(s -> StringUtils.use(s).containsIgnoreCase(subCommand.getLabel()));
+									for (String st : subCommand.getAliases()) {
+										t.removeIf(s -> StringUtils.use(s).containsIgnoreCase(st));
 									}
+									subCommand.setLastLabel(label);
 									return subCommand.player(p, args[0], t.toArray(new String[0]));
 								}
 							}
@@ -140,12 +150,12 @@ public class CommandClan extends Command implements Message.Factory {
 				for (ClanSubCommand subCommand : ClansAPI.getInstance().getCommandManager().getCommands()) {
 					if (subCommand.getLabel() != null) {
 						if (subCommand.getAliases().stream().anyMatch(s -> s.equalsIgnoreCase(args[0])) || subCommand.getLabel().equalsIgnoreCase(args[0])) {
-							List<String> t = new ArrayList<>();
-							for (String a : args) {
-								if (!a.equalsIgnoreCase(subCommand.getLabel()) && subCommand.getAliases().stream().noneMatch(s -> s.equalsIgnoreCase(args[0]))) {
-									t.add(a);
-								}
+							List<String> t = new LinkedList<>(Arrays.asList(args));
+							t.removeIf(s -> s.equalsIgnoreCase(subCommand.getLabel()));
+							for (String st : subCommand.getAliases()) {
+								t.removeIf(s -> s.equalsIgnoreCase(st));
 							}
+							subCommand.setLastLabel(label);
 							return subCommand.player(p, args[0], t.toArray(new String[0]));
 						}
 					}

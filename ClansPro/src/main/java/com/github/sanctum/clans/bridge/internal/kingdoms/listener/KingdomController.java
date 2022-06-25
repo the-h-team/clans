@@ -17,6 +17,8 @@ import com.github.sanctum.clans.event.claim.ClaimInteractEvent;
 import com.github.sanctum.clans.event.claim.ClaimResidentEvent;
 import com.github.sanctum.clans.event.clan.ClanOverpowerClaimEvent;
 import com.github.sanctum.clans.event.player.PlayerKillPlayerEvent;
+import com.github.sanctum.clans.event.player.PlayerPunchPlayerEvent;
+import com.github.sanctum.clans.event.player.PlayerShootPlayerEvent;
 import com.github.sanctum.labyrinth.event.custom.DefaultEvent;
 import com.github.sanctum.labyrinth.event.custom.Subscribe;
 import com.github.sanctum.labyrinth.event.custom.Vent;
@@ -71,6 +73,34 @@ public class KingdomController implements Listener {
 		Kingdom k = Kingdom.getKingdom(((Clan)e.getClaim().getHolder()));
 		if (k != null) {
 			e.setClaimTitle("&6Kingdom&7: &r" + k.getName(), e.getClaimSubTitle());
+		}
+	}
+
+	@Subscribe
+	public void onPunchKingdom(PlayerPunchPlayerEvent e) {
+		Clan.Associate associate = e.getApi().getAssociate(e.getPlayer()).orElse(null);
+		if (associate != null) {
+			Kingdom k = Kingdom.getKingdom(associate.getClan());
+			if (k != null) {
+				if (k.getMembers().stream().anyMatch(c -> c.getMember(a -> a.getName().equalsIgnoreCase(e.getVictim().getName())) != null)) {
+					e.setCanHurt(false);
+					associate.getMailer().action("&cCannot attack kingdom members.").deploy();
+				}
+			}
+		}
+	}
+
+	@Subscribe
+	public void onShootKingdom(PlayerShootPlayerEvent e) {
+		Clan.Associate associate = e.getApi().getAssociate(e.getPlayer()).orElse(null);
+		if (associate != null) {
+			Kingdom k = Kingdom.getKingdom(associate.getClan());
+			if (k != null) {
+				if (k.getMembers().stream().anyMatch(c -> c.getMember(a -> a.getName().equalsIgnoreCase(e.getShot().getName())) != null)) {
+					e.setCanHurt(false);
+					associate.getMailer().action("&cCannot attack kingdom members.").deploy();
+				}
+			}
 		}
 	}
 

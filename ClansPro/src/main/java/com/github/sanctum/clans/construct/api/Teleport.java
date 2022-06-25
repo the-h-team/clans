@@ -5,7 +5,7 @@ import com.github.sanctum.clans.construct.extra.TeleportationTarget;
 import com.github.sanctum.clans.event.associate.AssociateTeleportEvent;
 import com.github.sanctum.clans.event.player.PlayerTeleportEvent;
 import com.github.sanctum.labyrinth.library.TimeWatch;
-import com.github.sanctum.labyrinth.task.Schedule;
+import com.github.sanctum.labyrinth.task.TaskScheduler;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
@@ -64,11 +64,11 @@ public abstract class Teleport {
 
 		public Impl(InvasiveEntity teleporter, TeleportationTarget target) {
 			if (target.isLocation()) {
-				this.target = target.getAsPlayer();
-				this.location = null;
-			} else {
-				this.location = target.getAsLocation();
 				this.target = null;
+				this.location = target.getAsLocation();
+			} else {
+				this.location = null;
+				this.target = target.getAsPlayer();
 			}
 			this.entity = teleporter;
 			this.state = State.INITIALIZED;
@@ -136,7 +136,7 @@ public abstract class Teleport {
 						Clan.ACTION.sendMessage(getTarget().getAsPlayer(), "&a" + entity.getAsAssociate().getName() + " is teleporting to you.");
 						this.state = State.TELEPORTING;
 						this.accepted = new Date();
-						Schedule.sync(() -> {
+						TaskScheduler.of(() -> {
 							if (!REQUESTS.contains(this)) return;
 							if (getState() == State.TELEPORTING) {
 								AssociateTeleportEvent event = ClanVentBus.call(new AssociateTeleportEvent(getEntity().getAsAssociate(), new TeleportationTarget(this.target)));
@@ -149,7 +149,7 @@ public abstract class Teleport {
 							} else {
 								cancel();
 							}
-						}).waitReal(20 * 10);
+						}).scheduleLater(20 * 10);
 					}
 				} else {
 					if (entity.getAsAssociate().getTag().getPlayer().getPlayer().getNearbyEntities(30, 0, 30).stream().noneMatch(e -> e instanceof Player && getEntity().getAsAssociate().getClan().getMember(m -> m.getName().equals(e.getName())) == null)) {
@@ -166,7 +166,7 @@ public abstract class Teleport {
 						getEntity().getAsAssociate().getMailer().chat("&aTeleporting in 10 seconds, don't move.").deploy();
 						this.state = State.TELEPORTING;
 						this.accepted = new Date();
-						Schedule.sync(() -> {
+						TaskScheduler.of(() -> {
 							if (!REQUESTS.contains(this)) return;
 							if (getState() == State.TELEPORTING) {
 								AssociateTeleportEvent event = ClanVentBus.call(new AssociateTeleportEvent(getEntity().getAsAssociate(), new TeleportationTarget(this.location)));
@@ -179,7 +179,7 @@ public abstract class Teleport {
 							} else {
 								cancel();
 							}
-						}).waitReal(20 * 10);
+						}).scheduleLater(20 * 10);
 					}
 				}
 			} else {
@@ -191,7 +191,7 @@ public abstract class Teleport {
 							Clan.ACTION.sendMessage(getTarget().getAsPlayer(), "&a" + a.getName() + " is teleporting to you.");
 							this.state = State.TELEPORTING;
 							this.accepted = new Date();
-							Schedule.sync(() -> {
+							TaskScheduler.of(() -> {
 								if (!REQUESTS.contains(this)) return;
 								if (getState() == State.TELEPORTING) {
 									AssociateTeleportEvent event = ClanVentBus.call(new AssociateTeleportEvent(a, new TeleportationTarget(this.target)));
@@ -204,7 +204,7 @@ public abstract class Teleport {
 								} else {
 									cancel();
 								}
-							}).waitReal(20 * 10);
+							}).scheduleLater(20 * 10);
 						});
 					} else {
 						getEntity().getAsClan().getMembers().forEach(a -> {
@@ -212,7 +212,7 @@ public abstract class Teleport {
 							a.getMailer().chat("&aTeleporting in 10 seconds, don't move.").deploy();
 							this.state = State.TELEPORTING;
 							this.accepted = new Date();
-							Schedule.sync(() -> {
+							TaskScheduler.of(() -> {
 								if (!REQUESTS.contains(this)) return;
 								if (getState() == State.TELEPORTING) {
 									AssociateTeleportEvent event = ClanVentBus.call(new AssociateTeleportEvent(a, new TeleportationTarget(this.location)));
@@ -225,7 +225,7 @@ public abstract class Teleport {
 								} else {
 									cancel();
 								}
-							}).waitReal(20 * 10);
+							}).scheduleLater(20 * 10);
 						});
 					}
 				}
@@ -236,7 +236,7 @@ public abstract class Teleport {
 						Clan.ACTION.sendMessage(getTarget().getAsPlayer(), "&a" + entity.getAsAssociate().getName() + " is teleporting to you.");
 						this.state = State.TELEPORTING;
 						this.accepted = new Date();
-						Schedule.sync(() -> {
+						TaskScheduler.of(() -> {
 							if (!REQUESTS.contains(this)) return;
 							if (getState() == State.TELEPORTING) {
 								PlayerTeleportEvent event = ClanVentBus.call(new PlayerTeleportEvent(getEntity().getAsPlayer().getPlayer(), new TeleportationTarget(this.target)));
@@ -249,12 +249,12 @@ public abstract class Teleport {
 							} else {
 								cancel();
 							}
-						}).waitReal(20 * 10);
+						}).scheduleLater(20 * 10);
 					} else {
 						Clan.ACTION.sendMessage(getEntity().getAsPlayer().getPlayer(), "&aTeleporting in 10 seconds, don't move.");
 						this.state = State.TELEPORTING;
 						this.accepted = new Date();
-						Schedule.sync(() -> {
+						TaskScheduler.of(() -> {
 							if (!REQUESTS.contains(this)) return;
 							if (getState() == State.TELEPORTING) {
 								PlayerTeleportEvent event = ClanVentBus.call(new PlayerTeleportEvent(getEntity().getAsPlayer().getPlayer(), new TeleportationTarget(this.location)));
@@ -267,7 +267,7 @@ public abstract class Teleport {
 							} else {
 								cancel();
 							}
-						}).waitReal(20 * 10);
+						}).scheduleLater(20 * 10);
 					}
 				}
 			}

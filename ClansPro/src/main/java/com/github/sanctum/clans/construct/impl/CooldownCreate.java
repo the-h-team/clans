@@ -27,13 +27,13 @@ public class CooldownCreate extends ClanCooldown {
 
 	@Override
 	public void setCooldown() {
-		FileManager config = ClansAPI.getInstance().getFileList().get("cooldowns", "Configuration", FileType.JSON);
+		FileManager config = ClansAPI.getInstance().getFileList().get("cooldowns", "Configuration/Data", FileType.JSON);
 		config.write(t -> t.set("Data." + Id.toString() + "." + getAction().replace("Clans:", "") + ".Time-allotted", System.currentTimeMillis() + (ClansAPI.getDataInstance().getConfigInt("Clans.creation.cooldown.time") * 1000)));
 	}
 
 	@Override
 	public long getCooldown() {
-		FileManager config = ClansAPI.getInstance().getFileList().get("cooldowns", "Configuration", FileType.JSON);
+		FileManager config = ClansAPI.getInstance().getFileList().get("cooldowns", "Configuration/Data", FileType.JSON);
 		return config.getRoot().getLong("Data." + Id.toString() + "." + getAction().replace("Clans:", "") + ".Time-allotted");
 	}
 

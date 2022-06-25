@@ -20,7 +20,7 @@ public class CommandTruce extends ClanSubCommand {
 		Clan.Associate associate = ClansAPI.getInstance().getAssociate(p).orElse(null);
 
 		if (args.length == 0) {
-			if (!p.hasPermission(this.getPermission() + "." + DataManager.Security.getPermission("truce"))) {
+			if (!Clan.ACTION.test(p, "clanspro." + DataManager.Security.getPermission("truce")).deploy()) {
 				lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("truce")));
 				return true;
 			}
@@ -34,14 +34,6 @@ public class CommandTruce extends ClanSubCommand {
 				return true;
 			}
 			return true;
-		}
-
-		if (args.length == 1) {
-			if (!p.hasPermission(this.getPermission() + "." + DataManager.Security.getPermission("join"))) {
-				lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("join")));
-				return true;
-			}
-			Clan.ACTION.joinClan(p.getUniqueId(), args[0], "none");
 		}
 
 

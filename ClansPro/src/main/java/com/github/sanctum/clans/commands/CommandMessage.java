@@ -19,7 +19,7 @@ public class CommandMessage extends ClanSubCommand {
 		Clan.Associate associate = ClansAPI.getInstance().getAssociate(p).orElse(null);
 
 		if (args.length == 0) {
-			if (!p.hasPermission(this.getPermission() + "." + DataManager.Security.getPermission("message"))) {
+			if (!Clan.ACTION.test(p, "clanspro." + DataManager.Security.getPermission("message")).deploy()) {
 				lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("message")));
 				return true;
 			}
@@ -27,38 +27,37 @@ public class CommandMessage extends ClanSubCommand {
 			return true;
 		}
 
+		if (associate == null) {
+			lib.sendMessage(p, lib.notInClan());
+			return true;
+		}
+
 		if (args.length == 1) {
-			if (!p.hasPermission(this.getPermission() + "." + DataManager.Security.getPermission("message"))) {
+			if (!Clan.ACTION.test(p, "clanspro." + DataManager.Security.getPermission("message")).deploy()) {
 				lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("message")));
 				return true;
 			}
-			Clan clan = ClansAPI.getInstance().getClanManager().getClan(p.getUniqueId());
-			if (associate != null)
-				clan.broadcast(MessageFormat.format(ClansAPI.getDataInstance().getConfig().getRoot().getString("Formatting.chat-message-format"), p.getName()) + " " + args[0]);
+			Clan clan = associate.getClan();
+
+			clan.broadcast(MessageFormat.format(ClansAPI.getDataInstance().getConfig().getRoot().getString("Formatting.chat-message-format"), p.getName()) + " " + args[0]);
 			return true;
 		}
 
 		if (args.length == 2) {
-			if (!p.hasPermission(this.getPermission() + "." + DataManager.Security.getPermission("message"))) {
+			if (!Clan.ACTION.test(p, "clanspro." + DataManager.Security.getPermission("message")).deploy()) {
 				lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("message")));
 				return true;
 			}
-			if (associate != null) {
-				Clan clan = associate.getClan();
-				clan.broadcast(MessageFormat.format(ClansAPI.getDataInstance().getConfig().getRoot().getString("Formatting.chat-message-format"), p.getName()) + " " + args[0] + " " + args[1]);
-			}
+			Clan clan = associate.getClan();
+			clan.broadcast(MessageFormat.format(ClansAPI.getDataInstance().getConfig().getRoot().getString("Formatting.chat-message-format"), p.getName()) + " " + args[0] + " " + args[1]);
 			return true;
 		}
 		StringBuilder rsn = new StringBuilder();
 		for (int i = 1; i < args.length; i++)
 			rsn.append(args[i]).append(" ");
 		int stop = rsn.length() - 1;
-		if (associate != null) {
-			Clan clan = associate.getClan();
-			clan.broadcast(MessageFormat.format(ClansAPI.getDataInstance().getConfig().getRoot().getString("Formatting.chat-message-format"), p.getName()) + " " + rsn.substring(0, stop));
-		} else {
-			lib.sendMessage(p, lib.notInClan());
-		}
+		Clan clan = associate.getClan();
+		clan.broadcast(MessageFormat.format(ClansAPI.getDataInstance().getConfig().getRoot().getString("Formatting.chat-message-format"), p.getName()) + " " + rsn.substring(0, stop));
 		return true;
 	}
 }

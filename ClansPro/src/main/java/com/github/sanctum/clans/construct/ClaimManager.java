@@ -41,7 +41,7 @@ import org.jetbrains.annotations.NotNull;
 
 public final class ClaimManager {
 
-	private final FileManager regions;
+	private FileManager regions;
 	private final FlagManager flagManager;
 
 	public ClaimManager() {
@@ -51,6 +51,17 @@ public final class ClaimManager {
 		} else {
 			this.regions = ClansAPI.getInstance().getFileList().get("regions", "Configuration", FileType.JSON);
 		}
+		if (regions.getRoot().exists()) {
+			this.regions = regions.toMoved("Configuration/Data");
+		} else {
+			if (JavaPlugin.getPlugin(ClansJavaPlugin.class).TYPE == FileType.YAML) {
+				this.regions = ClansAPI.getInstance().getFileList().get("Regions", "Configuration/Data", FileType.YAML);
+			} else {
+				this.regions = ClansAPI.getInstance().getFileList().get("regions", "Configuration/Data", FileType.JSON);
+			}
+		}
+
+		regions.getRoot().reload();
 
 		ClanVentBus.subscribe(TimerEvent.class, Vent.Priority.HIGH, (e, subscription) -> {
 			if (e.isAsynchronous()) return;
@@ -77,7 +88,7 @@ public final class ClaimManager {
 									}
 								}
 								if (ClansAPI.getDataInstance().isTrue("Clans.land-claiming.send-messages")) {
-									wild.getClaimUtil().sendMessage(p, MessageFormat.format(ClansAPI.getDataInstance().getConfig().getRoot().getString("Clans.land-claiming.wilderness.message"), ((Clan)res.getLastKnown().getHolder()).getName()));
+									wild.getClaimUtil().sendMessage(p, MessageFormat.format(ClansAPI.getDataInstance().getConfig().getRoot().getString("Clans.land-claiming.wilderness.message"), ((Clan) res.getLastKnown().getHolder()).getName()));
 								}
 								ClansAPI.getDataInstance().addWildernessInhabitant(p);
 							}
@@ -220,6 +231,7 @@ public final class ClaimManager {
 
 	public Set<Claim> getClaims() {
 		return ClansAPI.getInstance().getClanManager().getClans()
+				.stream()
 				.map(Clan::getClaims)
 				.map(cl -> Arrays.stream(cl).sequential().collect(Collectors.toSet()))
 				.reduce((claims1, claims2) -> {
@@ -257,13 +269,14 @@ public final class ClaimManager {
 	 */
 	public int refresh() {
 
-		for (Clan c : ClansAPI.getInstance().getClanManager().getClans().list()) {
+		for (Clan c : ClansAPI.getInstance().getClanManager().getClans()) {
 			if (c instanceof DefaultClan) {
 				DefaultClan clan = (DefaultClan) c;
 				clan.resetClaims();
 			}
 		}
 		Configurable d = getFile().getRoot();
+		d.reload();
 		Map<InvasiveEntity.Tag, List<Claim>> map = new HashMap<>();
 		for (String clan : d.getKeys(false)) {
 			Node cl = d.getNode(clan);

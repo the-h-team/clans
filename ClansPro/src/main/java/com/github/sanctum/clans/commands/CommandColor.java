@@ -34,7 +34,7 @@ public class CommandColor extends ClanSubCommand {
 		}
 
 		if (args.length == 0) {
-			if (!p.hasPermission(this.getPermission() + "." + DataManager.Security.getPermission("color"))) {
+			if (!Clan.ACTION.test(p, "clanspro." + DataManager.Security.getPermission("color")).deploy()) {
 				lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("color")));
 				return true;
 			}
@@ -44,12 +44,37 @@ public class CommandColor extends ClanSubCommand {
 		}
 
 		if (args.length == 1) {
-			if (!p.hasPermission(this.getPermission() + "." + DataManager.Security.getPermission("color"))) {
+			if (!Clan.ACTION.test(p, "clanspro." + DataManager.Security.getPermission("color")).deploy()) {
 				lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("color")));
 				return true;
 			}
 			Clan clan = associate.getClan();
 			if (Clearance.MANAGE_COLOR.test(associate)) {
+
+				if (args[0].equalsIgnoreCase("empty") || args[0].equalsIgnoreCase("reset")) {
+					clan.getPalette().setStart("&f");
+					clan.getPalette().setEnd(null);
+					lib.sendMessage(p, "&aGradient color removed.");
+					clan.getMembers().forEach(a -> {
+						OfflinePlayer op = a.getTag().getPlayer();
+						try {
+							if (op.isOnline()) {
+								if (ClansAPI.getDataInstance().isDisplayTagsAllowed()) {
+									if (clan.getPalette().isGradient()) {
+										Clan c = a.getClan();
+										ClanDisplayName.update(p, ClansAPI.getDataInstance().formatDisplayTag("", c.getPalette().toGradient().context(c.getName()).translate()));
+									} else {
+										ClanDisplayName.update(p, ClansAPI.getDataInstance().formatDisplayTag(ClansAPI.getInstance().getClanManager().getClan(op.getUniqueId()).getPalette().toString(), ClansAPI.getInstance().getClanManager().getClan(op.getUniqueId()).getName()));
+
+									}
+								}
+							}
+						} catch (NullPointerException e) {
+							ClansAPI.getInstance().getPlugin().getLogger().severe("- Failed to updated name tags for user " + op.getName() + ".");
+						}
+					});
+					return true;
+				}
 
 				if (args[0].equalsIgnoreCase("random")) {
 					clan.getPalette().randomize();
@@ -74,7 +99,7 @@ public class CommandColor extends ClanSubCommand {
 					return true;
 				}
 
-				if (!args[0].matches("(&#[a-zA-Z0-9]{6})+(&[a-zA-Z0-9])+") && !args[0].matches("(&[a-zA-Z0-9])+") && !args[0].matches("(&#[a-zA-Z0-9])+") && !args[0].matches("(#[a-zA-Z0-9])+")) {
+				if (!args[0].matches("(&#[a-zA-Z0-9]{6})+") && !args[0].matches("(#[a-zA-Z0-9]{6})+") && !args[0].matches("(&#[a-zA-Z0-9]{6})+(&[a-zA-Z0-9])+") && !args[0].matches("(&[a-zA-Z0-9])+") && !args[0].matches("(&#[a-zA-Z0-9])+") && !args[0].matches("(#[a-zA-Z0-9])+")) {
 					lib.sendMessage(p, "&c&oInvalid color format.");
 					return true;
 				}
@@ -115,7 +140,7 @@ public class CommandColor extends ClanSubCommand {
 		}
 
 		if (args.length == 2) {
-			if (!p.hasPermission(this.getPermission() + "." + DataManager.Security.getPermission("color"))) {
+			if (!Clan.ACTION.test(p, "clanspro." + DataManager.Security.getPermission("color")).deploy()) {
 				lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("color")));
 				return true;
 			}
@@ -127,6 +152,55 @@ public class CommandColor extends ClanSubCommand {
 
 			Clan clan = associate.getClan();
 			if (Clearance.MANAGE_COLOR.test(associate)) {
+
+				if (args[0].equalsIgnoreCase("empty") || args[0].equalsIgnoreCase("reset")) {
+					clan.getPalette().setStart("&f");
+					clan.getPalette().setEnd(null);
+					lib.sendMessage(p, "&aGradient color removed.");
+					clan.getMembers().forEach(a -> {
+						OfflinePlayer op = a.getTag().getPlayer();
+						try {
+							if (op.isOnline()) {
+								if (ClansAPI.getDataInstance().isDisplayTagsAllowed()) {
+									if (clan.getPalette().isGradient()) {
+										Clan c = a.getClan();
+										ClanDisplayName.update(p, ClansAPI.getDataInstance().formatDisplayTag("", c.getPalette().toGradient().context(c.getName()).translate()));
+									} else {
+										ClanDisplayName.update(p, ClansAPI.getDataInstance().formatDisplayTag(ClansAPI.getInstance().getClanManager().getClan(op.getUniqueId()).getPalette().toString(), ClansAPI.getInstance().getClanManager().getClan(op.getUniqueId()).getName()));
+
+									}
+								}
+							}
+						} catch (NullPointerException e) {
+							ClansAPI.getInstance().getPlugin().getLogger().severe("- Failed to updated name tags for user " + op.getName() + ".");
+						}
+					});
+					return true;
+				}
+
+				if (args[1].equalsIgnoreCase("empty") || args[1].equalsIgnoreCase("reset")) {
+					clan.getPalette().setEnd(null);
+					lib.sendMessage(p, "&aGradient color removed.");
+					clan.getMembers().forEach(a -> {
+						OfflinePlayer op = a.getTag().getPlayer();
+						try {
+							if (op.isOnline()) {
+								if (ClansAPI.getDataInstance().isDisplayTagsAllowed()) {
+									if (clan.getPalette().isGradient()) {
+										Clan c = a.getClan();
+										ClanDisplayName.update(p, ClansAPI.getDataInstance().formatDisplayTag("", c.getPalette().toGradient().context(c.getName()).translate()));
+									} else {
+										ClanDisplayName.update(p, ClansAPI.getDataInstance().formatDisplayTag(ClansAPI.getInstance().getClanManager().getClan(op.getUniqueId()).getPalette().toString(), ClansAPI.getInstance().getClanManager().getClan(op.getUniqueId()).getName()));
+
+									}
+								}
+							}
+						} catch (NullPointerException e) {
+							ClansAPI.getInstance().getPlugin().getLogger().severe("- Failed to updated name tags for user " + op.getName() + ".");
+						}
+					});
+					return true;
+				}
 
 				if (!args[0].matches("(&#[a-zA-Z0-9]{6})+") && !args[0].matches("(#[a-zA-Z0-9]{6})+")) {
 					lib.sendMessage(p, "&c&oInvalid color format. Only hex is allowed for gradients.");
@@ -145,20 +219,8 @@ public class CommandColor extends ClanSubCommand {
 						return true;
 					}
 				}
-
-				if (args[0].equalsIgnoreCase("empty") || args[0].equalsIgnoreCase("reset")) {
-					clan.getPalette().setStart("&f");
-					clan.getPalette().setEnd(null);
-					lib.sendMessage(p, "&aGradient color removed.");
-				} else {
-					clan.getPalette().setStart(args[0]);
-				}
-				if (args[1].equalsIgnoreCase("empty") || args[1].equalsIgnoreCase("reset")) {
-					clan.getPalette().setEnd(null);
-					lib.sendMessage(p, "&aGradient color removed.");
-				} else {
-					clan.getPalette().setEnd(args[1]);
-				}
+				clan.getPalette().setStart(args[0]);
+				clan.getPalette().setEnd(args[1]);
 				clan.broadcast(clan.getPalette().toGradient().context("Our color was changed").translate());
 				clan.getMembers().forEach(a -> {
 					OfflinePlayer op = a.getTag().getPlayer();
@@ -195,6 +257,7 @@ public class CommandColor extends ClanSubCommand {
 					for (BukkitColor c : BukkitColor.values()) {
 						list.add(c.toCode());
 					}
+					list.add("reset");
 					return list;
 				}).get();
 	}

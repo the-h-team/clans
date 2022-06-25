@@ -22,7 +22,7 @@ public class CommandTop extends ClanSubCommand {
 		Clan.Associate associate = ClansAPI.getInstance().getAssociate(p).orElse(null);
 
 		if (args.length == 0) {
-			if (!p.hasPermission(this.getPermission() + "." + DataManager.Security.getPermission("top"))) {
+			if (!Clan.ACTION.test(p, "clanspro." + DataManager.Security.getPermission("top")).deploy()) {
 				lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("top")));
 				return true;
 			}
@@ -31,7 +31,7 @@ public class CommandTop extends ClanSubCommand {
 		}
 
 		if (args.length == 1) {
-			if (!p.hasPermission(this.getPermission() + "." + DataManager.Security.getPermission("top"))) {
+			if (!Clan.ACTION.test(p, "clanspro." + DataManager.Security.getPermission("top")).deploy()) {
 				lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("top")));
 				return true;
 			}
@@ -56,7 +56,7 @@ public class CommandTop extends ClanSubCommand {
 		}
 
 		if (args.length == 2) {
-			if (!p.hasPermission(this.getPermission() + "." + DataManager.Security.getPermission("top"))) {
+			if (!Clan.ACTION.test(p, "clanspro." + DataManager.Security.getPermission("top")).deploy()) {
 				lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("top")));
 				return true;
 			}

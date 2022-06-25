@@ -9,7 +9,7 @@ import com.github.sanctum.clans.construct.impl.SimpleEntry;
 import com.github.sanctum.labyrinth.formatting.Message;
 import com.github.sanctum.labyrinth.library.Mailer;
 import com.github.sanctum.labyrinth.library.StringUtils;
-import com.github.sanctum.labyrinth.task.Schedule;
+import com.github.sanctum.labyrinth.task.TaskScheduler;
 import java.util.HashSet;
 import java.util.Random;
 import java.util.Set;
@@ -45,7 +45,7 @@ public final class AnimalConsultantListener implements IncomingConsultationListe
 					ticket.setType(Ticket.Field.STRING, response);
 					ticket.setType(Ticket.Field.CUSTOM, entry.getValue());
 					recents.add(user);
-					Schedule.sync(() -> recents.remove(user)).waitReal(40);
+					TaskScheduler.of(() -> recents.remove(user)).scheduleLater(40);
 				}
 				return ticket;
 			}
@@ -61,7 +61,7 @@ public final class AnimalConsultantListener implements IncomingConsultationListe
 					ticket.setType(Ticket.Field.STRING, response);
 					ticket.setType(Ticket.Field.CUSTOM, entry.getValue());
 					recents.add(user);
-					Schedule.sync(() -> recents.remove(user)).waitReal(40);
+					TaskScheduler.of(() -> recents.remove(user)).scheduleLater(40);
 				}
 				return ticket;
 			}
@@ -72,7 +72,7 @@ public final class AnimalConsultantListener implements IncomingConsultationListe
 					ticket.setType(Ticket.Field.STRING, response);
 					ticket.setType(Ticket.Field.CUSTOM, entry.getValue());
 					recents.add(user);
-					Schedule.sync(() -> recents.remove(user)).waitReal(40);
+					TaskScheduler.of(() -> recents.remove(user)).scheduleLater(40);
 				}
 				return ticket;
 			}
@@ -81,7 +81,7 @@ public final class AnimalConsultantListener implements IncomingConsultationListe
 					ticket.setType(Ticket.Field.STRING, "*" + tag.getAsEntity().getName() + " noises*");
 					ticket.setType(Ticket.Field.CUSTOM, entry.getValue());
 					recents.add(user);
-					Schedule.sync(() -> recents.remove(user)).waitReal(40);
+					TaskScheduler.of(() -> recents.remove(user)).scheduleLater(40);
 					return ticket;
 				}
 			}

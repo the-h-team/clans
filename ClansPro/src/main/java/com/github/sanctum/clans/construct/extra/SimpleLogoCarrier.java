@@ -7,7 +7,7 @@ import com.github.sanctum.labyrinth.annotation.Ordinal;
 import com.github.sanctum.labyrinth.library.Entities;
 import com.github.sanctum.labyrinth.library.HUID;
 import com.github.sanctum.labyrinth.library.StringUtils;
-import com.github.sanctum.labyrinth.task.Schedule;
+import com.github.sanctum.labyrinth.task.TaskScheduler;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
@@ -160,7 +160,7 @@ public final class SimpleLogoCarrier implements LogoHolder.Carrier, Iterable<Str
 
 		public void destroy() {
 			getStand().remove();
-			Schedule.sync(() -> SimpleLogoCarrier.this.remove(this)).run();
+			TaskScheduler.of(() -> SimpleLogoCarrier.this.remove(this)).schedule();
 		}
 
 	}

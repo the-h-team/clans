@@ -4,18 +4,16 @@ import com.github.sanctum.clans.ClansJavaPlugin;
 import com.github.sanctum.clans.bridge.ClanVentBus;
 import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClansAPI;
-import com.github.sanctum.clans.construct.extra.ClanRosterElement;
 import com.github.sanctum.clans.construct.impl.DefaultClan;
 import com.github.sanctum.clans.event.clan.ClansLoadingProcedureEvent;
 import com.github.sanctum.labyrinth.data.FileList;
 import com.github.sanctum.labyrinth.data.FileManager;
+import com.github.sanctum.labyrinth.data.container.LabyrinthCollection;
+import com.github.sanctum.labyrinth.data.container.LabyrinthSet;
 import com.github.sanctum.labyrinth.data.service.PlayerSearch;
-import com.github.sanctum.labyrinth.formatting.UniformedComponents;
 import com.github.sanctum.labyrinth.library.HUID;
 import com.github.sanctum.labyrinth.task.TaskScheduler;
 import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import org.bukkit.OfflinePlayer;
@@ -23,15 +21,10 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 public final class ClanManager {
 
-	private final List<Clan> CLANS = new LinkedList<>();
-	private final ClanRosterElement element;
+	private final LabyrinthCollection<Clan> CLANS = new LabyrinthSet<>();
 
-	public ClanManager() {
-		this.element = new ClanRosterElement(CLANS);
-	}
-
-	public UniformedComponents<Clan> getClans() {
-		return this.element.update(CLANS);
+	public LabyrinthCollection<Clan> getClans() {
+		return CLANS;
 	}
 
 	/**
@@ -56,7 +49,7 @@ public final class ClanManager {
 	 * @return A clan id or null
 	 */
 	public HUID getClanID(String clanName) {
-		for (Clan c : getClans().list()) {
+		for (Clan c : getClans()) {
 			if (c.getName().equals(clanName)) {
 				return c.getId();
 			}
@@ -85,7 +78,7 @@ public final class ClanManager {
 	 * @return A clan object or null
 	 */
 	public Clan getClan(UUID target) {
-		for (Clan c : getClans().list()) {
+		for (Clan c : getClans()) {
 			if (c.getMember(m -> m.getId().equals(target)) != null) {
 				return c;
 			}
@@ -101,7 +94,7 @@ public final class ClanManager {
 	 */
 	public Clan getClan(HUID clanID) {
 		Clan clan = null;
-		for (Clan c : getClans().list()) {
+		for (Clan c : getClans()) {
 			if (c.getId().equals(clanID)) {
 				clan = c;
 			}

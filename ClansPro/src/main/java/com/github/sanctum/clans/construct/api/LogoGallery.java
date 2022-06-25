@@ -4,7 +4,7 @@ import com.github.sanctum.clans.construct.extra.SimpleLogoCarrier;
 import com.github.sanctum.labyrinth.LabyrinthProvider;
 import com.github.sanctum.labyrinth.data.container.PersistentContainer;
 import com.github.sanctum.labyrinth.library.NamespacedKey;
-import com.github.sanctum.labyrinth.task.Schedule;
+import com.github.sanctum.labyrinth.task.TaskScheduler;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
@@ -80,11 +80,11 @@ public class LogoGallery implements Savable {
 	public void remove(List<String> logo) {
 		for (Map.Entry<String, SimpleLogoCarrier> c : carriers.entrySet()) {
 			if (Arrays.equals(c.getValue().toRaw(), logo.toArray(new String[0]))) {
-				Schedule.sync(() -> {
+				TaskScheduler.of(() -> {
 					carriers.get(c.getKey()).remove();
 					carriers.remove(c.getKey());
 					container.delete(c.getKey());
-				}).run();
+				}).schedule();
 				break;
 			}
 		}

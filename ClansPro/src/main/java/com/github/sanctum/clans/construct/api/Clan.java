@@ -8,12 +8,15 @@ import com.github.sanctum.clans.construct.impl.DefaultClan;
 import com.github.sanctum.clans.construct.impl.Resident;
 import com.github.sanctum.clans.construct.impl.entity.ServerAssociate;
 import com.github.sanctum.labyrinth.LabyrinthProvider;
+import com.github.sanctum.labyrinth.data.EconomyProvision;
 import com.github.sanctum.labyrinth.data.FileManager;
 import com.github.sanctum.labyrinth.data.JsonAdapter;
 import com.github.sanctum.labyrinth.data.LabyrinthUser;
 import com.github.sanctum.labyrinth.data.NodePointer;
+import com.github.sanctum.labyrinth.data.WideFunction;
 import com.github.sanctum.labyrinth.formatting.Message;
 import com.github.sanctum.labyrinth.formatting.string.CustomColor;
+import com.github.sanctum.labyrinth.formatting.string.FormattedString;
 import com.github.sanctum.labyrinth.formatting.string.GradientColor;
 import com.github.sanctum.labyrinth.formatting.string.RandomHex;
 import com.github.sanctum.labyrinth.library.HUID;
@@ -21,10 +24,10 @@ import com.github.sanctum.labyrinth.library.Mailer;
 import com.github.sanctum.labyrinth.library.TypeFlag;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -32,6 +35,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 import net.md_5.bungee.api.chat.BaseComponent;
 import net.melion.rgbchat.chat.TextColor;
 import org.bukkit.Chunk;
@@ -467,6 +471,21 @@ public interface Clan extends ClanBank, ConfigurationSerializable, EntityHolder,
 		return Implementation.UNKNOWN;
 	}
 
+	static <V extends Clan> WideFunction<String, V, String> memoryDocketReplacer() {
+		return (s, clan) -> {
+			FormattedString string = new FormattedString(s);
+			return string.replace(":member_list:", clan.getMembers().stream().map(Clan.Associate::getNickname).collect(Collectors.joining(", ")))
+					.replace(":member_count:", clan.size() + "")
+					.replace(":clan_name:", clan.getName())
+					.replace(":clan_logo:", clan.getLogo() == null ? "" : String.join("\n", clan.getLogo()))
+					.replace(":clan_color:", clan.getPalette().toString())
+					.replace(":clan_name_colored:", clan.getPalette().toString(clan.getName()))
+					.replace(":clan_nick_name:", clan.getNickname() != null ? clan.getNickname() : clan.getName())
+					.replace(":clan_nick_name_colored:", clan.getName())
+					.get();
+		};
+	}
+
 	enum Implementation {
 		DEFAULT, CUSTOM, UNKNOWN
 	}
@@ -503,7 +522,6 @@ public interface Clan extends ClanBank, ConfigurationSerializable, EntityHolder,
 		}
 
 	}
-
 
 	/**
 	 * A type of invasive entity that belongs to a parent entity known as a {@link Clan}.
@@ -664,7 +682,7 @@ public interface Clan extends ClanBank, ConfigurationSerializable, EntityHolder,
 		 * @return an array of message consultant objects relative to this associate.
 		 */
 		default Consultant[] getConsultants() {
-			List<Consultant> consultants = new ArrayList<>();
+			Set<Consultant> consultants = new HashSet<>();
 			for (InvasiveEntity entity : getClan()) {
 				if (entity.isTamable()) {
 					Tameable en = (Tameable) entity.getAsEntity();
@@ -681,7 +699,7 @@ public interface Clan extends ClanBank, ConfigurationSerializable, EntityHolder,
 		 */
 		@Override
 		default void remove() {
-			Clan.ACTION.kickPlayer(getId());
+			Clan.ACTION.kick(getId()).deploy();
 		}
 
 		/**
@@ -744,6 +762,29 @@ public interface Clan extends ClanBank, ConfigurationSerializable, EntityHolder,
 		@Override
 		void save();
 
+		static <V extends Associate> WideFunction<String, V, String> memoryDocketReplacer() {
+			return (s, associate) -> {
+				FormattedString string = new FormattedString(s);
+				return string.replace(":member_name:", associate.getName())
+						.replace(":member_kd:", associate.getKD() + "")
+						.replace(":member_bio:", associate.getBiography())
+						.replace(":member_balance:", (EconomyProvision.getInstance().isValid() ? EconomyProvision.getInstance().balance(associate.getAsPlayer()).orElse(0.0) : 0.0) + "")
+						.replace(":member_nick_name:", associate.getNickname())
+						.replace(":member_nick_name_colored:", associate.getClan().getPalette().toString(associate.getNickname()))
+						.replace(":member_rank_full:", associate.getRankFull())
+						.replace(":member_rank_wordless:", associate.getRankWordless())
+						.replace(":member_list:", associate.getClan().getMembers().stream().map(Clan.Associate::getNickname).collect(Collectors.joining(", ")))
+						.replace(":member_count:", associate.getClan().size() + "")
+						.replace(":clan_name:", associate.getClan().getName())
+						.replace(":clan_logo:", associate.getClan().getLogo() == null ? "" : String.join("\n", associate.getClan().getLogo()))
+						.replace(":clan_name_colored:", associate.getClan().getPalette().toString(associate.getClan().getName()))
+						.replace(":clan_nick_name:", associate.getClan().getNickname() != null ? associate.getClan().getNickname() : associate.getClan().getName())
+						.replace(":clan_nick_name_colored:", associate.getClan().getName())
+						.translate(associate.getAsPlayer())
+						.get();
+			};
+		}
+
 	}
 
 	class Color implements CharSequence {
@@ -752,7 +793,7 @@ public interface Clan extends ClanBank, ConfigurationSerializable, EntityHolder,
 		private String end;
 
 		public Color(Clan c) {
-			ClanException.call(ClanError::new).check(c).run("Cannot attach to null clan!");
+			ClanException.call(ClanError::new).check(c).run("Null clan cannot have color!");
 		}
 
 		public Color setStart(String start) {
@@ -776,20 +817,28 @@ public interface Clan extends ClanBank, ConfigurationSerializable, EntityHolder,
 
 		public void randomize() {
 			if (LabyrinthProvider.getInstance().isNew()) {
-				CustomColor color = new RandomHex();
-				this.start = color.getStart();
-				this.end = color.getEnd();
+				set(new RandomHex());
 			} else {
-				this.start = BukkitColor.random().toCode();
+				setStart(BukkitColor.random().toCode());
+				// nullify gradient since we know we're legacy.
+				setEnd(null);
 			}
 		}
 
 		public boolean isGradient() {
-			return end != null;
+			return end != null && start.contains("#") && end.contains("#");
 		}
 
 		public boolean isHex() {
 			return start.contains("#");
+		}
+
+		public String getStart() {
+			return start;
+		}
+
+		public String getEnd() {
+			return end;
 		}
 
 		@Override
@@ -813,7 +862,7 @@ public interface Clan extends ClanBank, ConfigurationSerializable, EntityHolder,
 		}
 
 		public String toString(String context) {
-			if (!isGradient()) return toString() + context;
+			if (!isGradient()) return this + context;
 			return toGradient().context(context).translate();
 		}
 

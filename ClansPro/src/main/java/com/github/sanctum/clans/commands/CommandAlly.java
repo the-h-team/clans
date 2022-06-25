@@ -25,7 +25,7 @@ public class CommandAlly extends ClanSubCommand {
 		Clan.Associate associate = ClansAPI.getInstance().getAssociate(p).orElse(null);
 
 		if (args.length == 0) {
-			if (!p.hasPermission(this.getPermission() + "." + DataManager.Security.getPermission("ally"))) {
+			if (!Clan.ACTION.test(p, this.getPermission() + "." + DataManager.Security.getPermission("ally")).deploy()) {
 				lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("ally")));
 				return true;
 			}
@@ -39,7 +39,7 @@ public class CommandAlly extends ClanSubCommand {
 
 		if (args.length == 2) {
 			if (args[0].equalsIgnoreCase("add")) {
-				if (!p.hasPermission(this.getPermission() + "." + DataManager.Security.getPermission("ally"))) {
+				if (!Clan.ACTION.test(p, this.getPermission() + "." + DataManager.Security.getPermission("ally")).deploy()) {
 					lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("ally")));
 					return true;
 				}
@@ -94,7 +94,7 @@ public class CommandAlly extends ClanSubCommand {
 				return true;
 			}
 			if (args[0].equalsIgnoreCase("remove")) {
-				if (!p.hasPermission(this.getPermission() + "." + DataManager.Security.getPermission("removeally"))) {
+				if (!Clan.ACTION.test(p, this.getPermission() + "." + DataManager.Security.getPermission("removeally")).deploy()) {
 					lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("removeally")));
 					return true;
 				}

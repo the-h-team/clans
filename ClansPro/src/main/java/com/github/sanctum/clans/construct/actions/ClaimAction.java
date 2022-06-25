@@ -14,12 +14,11 @@ import com.github.sanctum.clans.event.associate.AssociateObtainLandEvent;
 import com.github.sanctum.clans.event.associate.AssociateUnClaimEvent;
 import com.github.sanctum.labyrinth.data.FileManager;
 import com.github.sanctum.labyrinth.data.Node;
-import com.github.sanctum.labyrinth.formatting.FancyMessage;
 import com.github.sanctum.labyrinth.formatting.Message;
-import com.github.sanctum.labyrinth.formatting.PaginatedList;
+import com.github.sanctum.labyrinth.formatting.pagination.AdvancedPagination;
 import com.github.sanctum.labyrinth.formatting.string.RandomID;
 import com.github.sanctum.labyrinth.library.HUID;
-import com.github.sanctum.labyrinth.task.Schedule;
+import com.github.sanctum.labyrinth.task.TaskScheduler;
 import com.google.common.base.Strings;
 import java.text.MessageFormat;
 import java.util.Arrays;
@@ -47,10 +46,6 @@ public class ClaimAction extends StringLibrary {
 	}
 
 	public boolean claim(Player p, Chunk ch) {
-		AssociateClaimEvent event1 = ClanVentBus.call(new AssociateClaimEvent(p));
-		if (event1.isCancelled()) {
-			return false;
-		}
 		Claim claim = ClansAPI.getInstance().getClaimManager().getClaim(ch);
 		Clan.Associate associate = ClansAPI.getInstance().getAssociate(p).orElse(null);
 
@@ -64,7 +59,10 @@ public class ClaimAction extends StringLibrary {
 
 		boolean claimEffect = ClansAPI.getDataInstance().isTrue("Clans.land-claiming.claim-influence.allow");
 		if (claim == null) {
-
+			AssociateClaimEvent event1 = ClanVentBus.call(new AssociateClaimEvent(p));
+			if (event1.isCancelled()) {
+				return false;
+			}
 			Clan clan = associate.getClan();
 			if (!claimEffect) {
 				if (clan.getClaims().length == claimHardcap(p)) {
@@ -131,7 +129,7 @@ public class ClaimAction extends StringLibrary {
 				return false;
 			}
 			AssociateUnClaimEvent event = ClanVentBus.call(new AssociateUnClaimEvent(p, claim));
-			if (((Clan)claim.getHolder()).getMembers().stream().anyMatch(a -> p.getName().equals(a.getName()))) {
+			if (((Clan) claim.getHolder()).getMembers().stream().anyMatch(a -> p.getName().equals(a.getName()))) {
 				if (!event.isCancelled()) {
 
 					if (associate.getPriority().toLevel() < Clan.ACTION.claimingClearance()) {
@@ -149,8 +147,8 @@ public class ClaimAction extends StringLibrary {
 				return false;
 			} else {
 				if (ClansAPI.getInstance().getShieldManager().isEnabled()) {
-					if (Clan.ACTION.overPowerBypass()) {
-						Clan owner = ((Clan)claim.getHolder());
+					if (Clan.ACTION.isIgnoringShield()) {
+						Clan owner = ((Clan) claim.getHolder());
 						if (clan.getPower() > owner.getPower() && !clan.equals(owner)) {
 							if (clan.isPeaceful()) {
 								sendMessage(p, peacefulDeny());
@@ -169,7 +167,7 @@ public class ClaimAction extends StringLibrary {
 								}
 								for (Chunk chunk : getChunksAroundLocation(owner.getBase(), -1, 0, 1).stream().filter(c -> ClansAPI.getInstance().getClaimManager().isInClaim(c.getX(), c.getZ(), c.getWorld().getName())).collect(Collectors.toList())) {
 									if (chunk.equals(p.getLocation().getChunk())) {
-										sendMessage(p, MessageFormat.format(ClansAPI.getDataInstance().getMessageResponse("safe-zone"), ((Clan)claim.getHolder()).getName()));
+										sendMessage(p, MessageFormat.format(ClansAPI.getDataInstance().getMessageResponse("safe-zone"), ((Clan) claim.getHolder()).getName()));
 										return false;
 									}
 								}
@@ -212,7 +210,7 @@ public class ClaimAction extends StringLibrary {
 						return false;
 					}
 				} else {
-					Clan owner = ((Clan)claim.getHolder());
+					Clan owner = ((Clan) claim.getHolder());
 					if (clan.getPower() > owner.getPower() && !clan.equals(owner)) {
 						if (clan.isPeaceful()) {
 							sendMessage(p, peacefulDeny());
@@ -232,7 +230,7 @@ public class ClaimAction extends StringLibrary {
 
 							for (Chunk chunk : getChunksAroundLocation(owner.getBase(), -1, 0, 1).stream().filter(c -> ClansAPI.getInstance().getClaimManager().isInClaim(c.getX(), c.getZ(), c.getWorld().getName())).collect(Collectors.toList())) {
 								if (chunk.equals(p.getLocation().getChunk())) {
-									sendMessage(p, MessageFormat.format(ClansAPI.getDataInstance().getMessageResponse("safe-zone"), ((Clan)claim.getHolder()).getName()));
+									sendMessage(p, MessageFormat.format(ClansAPI.getDataInstance().getMessageResponse("safe-zone"), ((Clan) claim.getHolder()).getName()));
 									return false;
 								}
 							}
@@ -318,115 +316,122 @@ public class ClaimAction extends StringLibrary {
 		return string.chars().reduce(0, (p, i) -> p + correctCharLength((char) i) + 1);
 	}
 
-	public PaginatedList<Claim.Flag> getFlags(Player p, Claim claim) {
+	public AdvancedPagination<Claim.Flag> getFlags(Player p, Claim claim) {
 
 		Set<Claim.Flag> n = ClansAPI.getInstance().getClaimManager().getFlagManager().getFlags().stream().sorted((o1, o2) -> String.CASE_INSENSITIVE_ORDER.compare(o1.getId(), o2.getId())).sorted(Claim.Flag::compareTo).sorted(Comparator.reverseOrder()).collect(Collectors.toCollection(LinkedHashSet::new));
-		return new PaginatedList<>(n)
-				.limit(5)
-				.start((pagination, page, max) -> {
-					sendMessage(p, "&e&lChunk: &aGlobal &r(&2All&r)");
-					new FancyMessage("--------------------------------------").color(Color.AQUA).style(ChatColor.STRIKETHROUGH).send(p).deploy();
-					new FancyMessage("⬛").color(Color.ORANGE).hover("&aClick me to toggle flag control to individual.").action(() -> {
-						Set<Claim.Flag> set = Arrays.stream(claim.getFlags().clone()).sorted((o1, o2) -> String.CASE_INSENSITIVE_ORDER.compare(o1.getId(), o2.getId())).sorted(Claim.Flag::compareTo).sorted(Comparator.reverseOrder()).collect(Collectors.toCollection(LinkedHashSet::new));
-						getFlags(p, claim, set).get(1);
-					}).then("&m------------------------------------'").send(p).deploy();
-				})
-				.decorate((pagination, f, page, max, placement) -> {
-					Message m;
-					if (f.isValid()) {
+		AdvancedPagination<Claim.Flag> pag = new AdvancedPagination<>(p, n);
+		pag.limit(5);
+		pag.setHeader((player, message) -> {
+			message.then("&e&lChunk: &aGlobal &r(&2All&r)");
+			message.then("\n");
+			message.then("--------------------------------------").color(Color.AQUA).style(ChatColor.STRIKETHROUGH);
+			message.then("\n");
+			message.then("⬛").color(Color.ORANGE).hover("&aClick me to toggle flag control to individual.").action(() -> {
+				Set<Claim.Flag> set = Arrays.stream(claim.getFlags().clone()).sorted((o1, o2) -> String.CASE_INSENSITIVE_ORDER.compare(o1.getId(), o2.getId())).sorted(Claim.Flag::compareTo).sorted(Comparator.reverseOrder()).collect(Collectors.toCollection(LinkedHashSet::new));
+				getFlags(p, claim, set).send(1);
+			});
+			message.then("\n");
+			message.then("&m------------------------------------'");
+		});
+		pag.setFormat((f, placement, message) -> {
+			if (f.isValid()) {
 
-						Claim.Flag match = claim.getFlag(f.getId());
+				Claim.Flag match = claim.getFlag(f.getId());
 
-						m = new FancyMessage().then(f.getId() + ";").color(Color.OLIVE).then("Enable").color(match.isEnabled() ? Color.YELLOW : Color.AQUA).hover("Click to enable this flag.").action(() -> {
-							Arrays.stream(((Clan)claim.getHolder()).getClaims()).forEach(claim1 -> {
-								if (claim1.getFlag(f.getId()) == null) {
-									claim1.register(f);
-									claim1.getFlag(f.getId()).setEnabled(true);
-								}
-								Arrays.stream(claim1.getFlags()).forEach(flag -> {
-									if (flag.getId().equals(f.getId())) {
-										flag.setEnabled(true);
-									}
-								});
-							});
-							Schedule.sync(() -> getFlags(p, claim).get(page)).waitReal(1);
-						}).then(" ").then("Disable").color(!match.isEnabled() ? Color.YELLOW : Color.AQUA).hover("Click to disallow this flag.").action(() -> {
-							Arrays.stream(((Clan)claim.getHolder()).getClaims()).forEach(claim1 -> {
-								if (claim1.getFlag(f.getId()) == null) {
-									claim1.register(f);
-									claim1.getFlag(f.getId()).setEnabled(false);
-								}
-								Arrays.stream(claim1.getFlags()).forEach(flag -> {
-									if (flag.getId().equals(f.getId())) {
-										flag.setEnabled(false);
-									}
-								});
-							});
-							Schedule.sync(() -> getFlags(p, claim).get(page)).waitReal(1);
-						});
-						for (Message.Chunk c : m) {
-							String text = c.getText();
-							if (text.contains(";")) {
-								c.replace(";", " &8" + Strings.repeat(".", ((180 - getFixedLength(text.replace(";", ""))) / 2)) + " ");
-							}
+				message.then(f.getId() + ";").color(Color.OLIVE).then("Enable").color(match.isEnabled() ? Color.YELLOW : Color.AQUA).hover("Click to enable this flag.").action(() -> {
+					Arrays.stream(((Clan) claim.getHolder()).getClaims()).forEach(claim1 -> {
+						if (claim1.getFlag(f.getId()) == null) {
+							claim1.register(f);
+							claim1.getFlag(f.getId()).setEnabled(true);
 						}
-
-						m.send(p).deploy();
-					} else {
-						new FancyMessage("&c&m" + f.getId()).hover("Click to remove me i no longer work. (#").action(() -> {
-							Arrays.stream(((Clan)claim.getHolder()).getClaims()).forEach(claim1 -> claim1.remove(f));
-							Schedule.sync(() -> getFlags(p, claim).get(page)).waitReal(1);
-						}).send(p).deploy();
+						Arrays.stream(claim1.getFlags()).forEach(flag -> {
+							if (flag.getId().equals(f.getId())) {
+								flag.setEnabled(true);
+							}
+						});
+					});
+					TaskScheduler.of(() -> getFlags(p, claim).send(placement.getKey())).scheduleLater(1);
+				}).then(" ").then("Disable").color(!match.isEnabled() ? Color.YELLOW : Color.AQUA).hover("Click to disallow this flag.").action(() -> {
+					Arrays.stream(((Clan) claim.getHolder()).getClaims()).forEach(claim1 -> {
+						if (claim1.getFlag(f.getId()) == null) {
+							claim1.register(f);
+							claim1.getFlag(f.getId()).setEnabled(false);
+						}
+						Arrays.stream(claim1.getFlags()).forEach(flag -> {
+							if (flag.getId().equals(f.getId())) {
+								flag.setEnabled(false);
+							}
+						});
+					});
+					TaskScheduler.of(() -> getFlags(p, claim).send(placement.getKey())).scheduleLater(1);
+				});
+				for (Message.Chunk c : message) {
+					String text = c.getText();
+					if (text.contains(";")) {
+						c.replace(";", " &8" + Strings.repeat(".", ((180 - getFixedLength(text.replace(";", ""))) / 2)) + " ");
 					}
-				})
-				.finish(builder -> builder.setPrefix("&b&m--------------------------------------").setPlayer(p));
+				}
+			} else {
+				message.then("&c&m" + f.getId()).hover("Click to remove me i no longer work. (#").action(() -> {
+					Arrays.stream(((Clan) claim.getHolder()).getClaims()).forEach(claim1 -> claim1.remove(f));
+					TaskScheduler.of(() -> getFlags(p, claim).send(placement.getKey())).scheduleLater(1);
+				});
+			}
+		});
+
+		pag.setFooter((player, message) -> message.then("&b&m--------------------------------------"));
+		return pag;
 	}
 
-	public PaginatedList<Claim.Flag> getFlags(Player p, Claim claim, Set<Claim.Flag> set) {
-		return new PaginatedList<>(set)
-				.limit(5)
-				.start((pagination, page, max) -> {
-					sendMessage(p, "&e&lChunk: &bX:&f" + claim.getChunk().getX() + " &bZ:&f" + claim.getChunk().getZ());
-					new FancyMessage("--------------------------------------").color(org.bukkit.Color.AQUA).style(org.bukkit.ChatColor.STRIKETHROUGH).send(p).deploy();
-					new FancyMessage("⬛").color(org.bukkit.Color.AQUA).hover("&aClick me to toggle flag control to global.").action(() -> getFlags(p, claim).get(1))
-							.then("&m------------------------------------'").send(p).deploy();
-				})
-				.decorate((pagination, f, page, max, placement) -> {
-					Message m;
-					if (f.isValid()) {
-						if (f.isEnabled()) {
-							m = new FancyMessage().then(f.getId() + ";").color(org.bukkit.Color.GREEN).then("Enable").color(org.bukkit.Color.YELLOW).then(" ").then("Disable").color(org.bukkit.Color.GRAY).hover("Click to disallow this flag.").action(() -> {
-								f.setEnabled(false);
-								Schedule.sync(() -> getFlags(p, claim, set).get(page)).waitReal(1);
-							});
-							for (Message.Chunk c : m) {
-								String text = c.getText();
-								if (text.contains(";")) {
-									c.replace(";", " &8" + Strings.repeat(".", ((180 - getFixedLength(text.replace(";", ""))) / 2)) + " ");
-								}
-							}
-						} else {
-							m = new FancyMessage().then(f.getId() + ";").color(org.bukkit.Color.GREEN).then("Enable").color(org.bukkit.Color.GRAY).hover("Click to allow this flag.").action(() -> {
-								f.setEnabled(true);
-								Schedule.sync(() -> getFlags(p, claim, set).get(page)).waitReal(1);
-							}).then(" ").then("Disable").color(org.bukkit.Color.YELLOW);
-							for (Message.Chunk c : m) {
-								String text = c.getText();
-								if (text.contains(";")) {
-									c.replace(";", " &8" + Strings.repeat(".", ((180 - getFixedLength(text.replace(";", ""))) / 2)) + " ");
-								}
-							}
+	public AdvancedPagination<Claim.Flag> getFlags(Player p, Claim claim, Set<Claim.Flag> set) {
+
+		AdvancedPagination<Claim.Flag> pag = new AdvancedPagination<>(p, set);
+		pag.limit(5);
+		pag.setHeader((player, message) -> {
+			message.then("&e&lChunk: &bX:&f" + claim.getChunk().getX() + " &bZ:&f" + claim.getChunk().getZ());
+			message.then("\n");
+			message.then("--------------------------------------").color(org.bukkit.Color.AQUA).style(org.bukkit.ChatColor.STRIKETHROUGH);
+			message.then("\n");
+			message.then("⬛").color(org.bukkit.Color.AQUA).hover("&aClick me to toggle flag control to global.").action(() -> getFlags(p, claim).send(1))
+					.then("\n")
+					.then("&m------------------------------------'");
+		});
+		pag.setFormat((f, placement, message) -> {
+			if (f.isValid()) {
+				if (f.isEnabled()) {
+					message.then(f.getId() + ";").color(org.bukkit.Color.GREEN).then("Enable").color(org.bukkit.Color.YELLOW).then(" ").then("Disable").color(org.bukkit.Color.GRAY).hover("Click to disallow this flag.").action(() -> {
+						f.setEnabled(false);
+						TaskScheduler.of(() -> getFlags(p, claim, set).send(placement.getKey())).scheduleLater(1);
+					});
+					for (Message.Chunk c : message) {
+						String text = c.getText();
+						if (text.contains(";")) {
+							c.replace(";", " &8" + Strings.repeat(".", ((180 - getFixedLength(text.replace(";", ""))) / 2)) + " ");
 						}
-						m.send(p).deploy();
-					} else {
-						new FancyMessage("&c&m" + f.getId()).hover("Click to remove me i no longer work.").action(() -> {
-							claim.remove(f);
-							Set<Claim.Flag> s = Arrays.stream(claim.getFlags()).sorted((o1, o2) -> String.CASE_INSENSITIVE_ORDER.compare(o1.getId(), o2.getId())).sorted(Claim.Flag::compareTo).sorted(Comparator.reverseOrder()).collect(Collectors.toCollection(LinkedHashSet::new));
-							Schedule.sync(() -> getFlags(p, claim, s).get(page)).waitReal(1);
-						}).send(p).deploy();
 					}
-				})
-				.finish(builder -> builder.setPrefix("&b&m--------------------------------------").setPlayer(p));
+				} else {
+					message.then(f.getId() + ";").color(org.bukkit.Color.GREEN).then("Enable").color(org.bukkit.Color.GRAY).hover("Click to allow this flag.").action(() -> {
+						f.setEnabled(true);
+						TaskScheduler.of(() -> getFlags(p, claim, set).send(placement.getKey())).scheduleLater(1);
+					}).then(" ").then("Disable").color(org.bukkit.Color.YELLOW);
+					for (Message.Chunk c : message) {
+						String text = c.getText();
+						if (text.contains(";")) {
+							c.replace(";", " &8" + Strings.repeat(".", ((180 - getFixedLength(text.replace(";", ""))) / 2)) + " ");
+						}
+					}
+				}
+			} else {
+				message.then("&c&m" + f.getId()).hover("Click to remove me i no longer work.").action(() -> {
+					claim.remove(f);
+					Set<Claim.Flag> s = Arrays.stream(claim.getFlags()).sorted((o1, o2) -> String.CASE_INSENSITIVE_ORDER.compare(o1.getId(), o2.getId())).sorted(Claim.Flag::compareTo).sorted(Comparator.reverseOrder()).collect(Collectors.toCollection(LinkedHashSet::new));
+					TaskScheduler.of(() -> getFlags(p, claim, s).send(placement.getKey())).scheduleLater(1);
+				});
+			}
+		});
+
+		pag.setFooter((player, message) -> message.then("&b&m--------------------------------------"));
+		return pag;
 	}
 
 	public synchronized Collection<Chunk> getChunksAroundLocation(Location location, int xoff, int yoff, int zoff) {

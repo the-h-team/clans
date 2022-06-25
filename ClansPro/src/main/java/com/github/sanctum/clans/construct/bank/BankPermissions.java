@@ -1,12 +1,12 @@
 package com.github.sanctum.clans.construct.bank;
 
 import com.github.sanctum.clans.construct.DataManager;
+import com.github.sanctum.clans.construct.api.Clan;
+import java.util.Optional;
+import java.util.function.Function;
 import org.bukkit.command.CommandSender;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
-import java.util.Optional;
-import java.util.function.Function;
 
 public enum BankPermissions {
     BANKS_USE("bank"),
@@ -40,7 +40,7 @@ public enum BankPermissions {
     }
 
     public boolean not(CommandSender sender) {
-        return !sender.hasPermission(getNode());
+        return !Clan.ACTION.test(sender, getNode()).deploy();
     }
 }
 

@@ -18,7 +18,7 @@ import com.github.sanctum.labyrinth.data.Atlas;
 import com.github.sanctum.labyrinth.data.AtlasMap;
 import com.github.sanctum.labyrinth.library.Mailer;
 import com.github.sanctum.labyrinth.library.TimeWatch;
-import com.github.sanctum.labyrinth.task.Schedule;
+import com.github.sanctum.labyrinth.task.TaskScheduler;
 import com.github.sanctum.skulls.SkullType;
 import java.util.ArrayList;
 import java.util.Date;
@@ -328,7 +328,8 @@ public class ServerAssociate implements Clan.Associate, Consultant {
 
 	@Override
 	public @NotNull Ticket sendMessage(@NotNull Tag channel, @NotNull Supplier<Object> supplier) {
-		if (incomingMessageListeners.isEmpty() || incomingMessageListeners.get(channel.getId()) == null) return new Ticket();
+		if (incomingMessageListeners.isEmpty() || incomingMessageListeners.get(channel.getId()) == null)
+			return new Ticket();
 		Object object = supplier.get();
 		IncomingConsultationListener incomingListener = incomingMessageListeners.get(channel.getId());
 		Ticket ticket = incomingListener.onReceiveMessage(object);
@@ -341,12 +342,12 @@ public class ServerAssociate implements Clan.Associate, Consultant {
 
 	@Override
 	public void registerIncomingListener(@NotNull Tag holder, @NotNull IncomingConsultationListener listener) {
-		Schedule.sync(() -> incomingMessageListeners.put(holder.getId(), listener)).run();
+		TaskScheduler.of(() -> incomingMessageListeners.put(holder.getId(), listener)).schedule();
 	}
 
 	@Override
 	public void registerOutgoingListener(@NotNull Tag holder, @NotNull OutgoingConsultationListener listener) {
-		Schedule.sync(() -> outgoingResponseListeners.put(holder.getId(), listener)).run();
+		TaskScheduler.of(() -> outgoingResponseListeners.put(holder.getId(), listener)).schedule();
 	}
 
 	@Override
