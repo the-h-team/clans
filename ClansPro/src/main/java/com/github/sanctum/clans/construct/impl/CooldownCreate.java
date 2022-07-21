@@ -4,7 +4,7 @@ import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClanCooldown;
 import com.github.sanctum.clans.construct.api.ClansAPI;
 import com.github.sanctum.labyrinth.data.FileManager;
-import com.github.sanctum.labyrinth.data.FileType;
+import com.github.sanctum.panther.file.Configurable;
 import java.util.UUID;
 
 public class CooldownCreate extends ClanCooldown {
@@ -27,13 +27,13 @@ public class CooldownCreate extends ClanCooldown {
 
 	@Override
 	public void setCooldown() {
-		FileManager config = ClansAPI.getInstance().getFileList().get("cooldowns", "Configuration/Data", FileType.JSON);
+		FileManager config = ClansAPI.getInstance().getFileList().get("cooldowns", "Configuration/Data", Configurable.Type.JSON);
 		config.write(t -> t.set("Data." + Id.toString() + "." + getAction().replace("Clans:", "") + ".Time-allotted", System.currentTimeMillis() + (ClansAPI.getDataInstance().getConfigInt("Clans.creation.cooldown.time") * 1000)));
 	}
 
 	@Override
 	public long getCooldown() {
-		FileManager config = ClansAPI.getInstance().getFileList().get("cooldowns", "Configuration/Data", FileType.JSON);
+		FileManager config = ClansAPI.getInstance().getFileList().get("cooldowns", "Configuration/Data", Configurable.Type.JSON);
 		return config.getRoot().getLong("Data." + Id.toString() + "." + getAction().replace("Clans:", "") + ".Time-allotted");
 	}
 

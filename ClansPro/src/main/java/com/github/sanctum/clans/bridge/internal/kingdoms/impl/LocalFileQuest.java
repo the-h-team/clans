@@ -13,11 +13,11 @@ import com.github.sanctum.clans.bridge.internal.kingdoms.event.RoundTableQuestCo
 import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.labyrinth.data.EconomyProvision;
 import com.github.sanctum.labyrinth.data.FileManager;
-import com.github.sanctum.labyrinth.data.FileType;
 import com.github.sanctum.labyrinth.data.LabyrinthUser;
-import com.github.sanctum.labyrinth.data.Node;
 import com.github.sanctum.labyrinth.formatting.ComponentChunk;
 import com.github.sanctum.labyrinth.formatting.Message;
+import com.github.sanctum.panther.file.Configurable;
+import com.github.sanctum.panther.file.Node;
 import java.math.BigDecimal;
 import java.util.HashSet;
 import java.util.Map;
@@ -324,13 +324,13 @@ public final class LocalFileQuest implements Quest, Message.Factory {
 	@Override
 	public boolean isNode(String key) {
 		ClanAddon cycle = ClanAddonQuery.getAddon("Kingdoms");
-		FileManager file = cycle.getFile(FileType.JSON, "achievements", "data");
+		FileManager file = cycle.getFile(Configurable.Type.JSON, "achievements", "data");
 		return file.getRoot().getNode(getPath()).isNode(key);
 	}
 
 	Node getParentNode() {
 		ClanAddon cycle = ClanAddonQuery.getAddon("Kingdoms");
-		FileManager file = cycle.getFile(FileType.JSON, "achievements", "data");
+		FileManager file = cycle.getFile(Configurable.Type.JSON, "achievements", "data");
 		return file.getRoot().getNode(getPath());
 	}
 

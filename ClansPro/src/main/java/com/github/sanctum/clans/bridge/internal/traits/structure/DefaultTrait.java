@@ -1,7 +1,7 @@
 package com.github.sanctum.clans.bridge.internal.traits.structure;
 
-import com.github.sanctum.labyrinth.data.container.LabyrinthCollection;
-import com.github.sanctum.labyrinth.data.container.LabyrinthList;
+import com.github.sanctum.panther.container.PantherCollection;
+import com.github.sanctum.panther.container.PantherList;
 import java.util.Arrays;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -15,7 +15,7 @@ public enum DefaultTrait implements Trait {
 	TAMER
 	;
 
-	LabyrinthCollection<Supplier<Ability>> abilities = new LabyrinthList<>();
+	PantherCollection<Supplier<Ability>> abilities = new PantherList<>();
 
 	@Override
 	public @NotNull String getName() {
@@ -35,7 +35,7 @@ public enum DefaultTrait implements Trait {
 
 	@Override
 	public @NotNull Ability[] getAbilities() {
-		LabyrinthCollection<Ability> abilities = new LabyrinthList<>(this.abilities.stream().map(Supplier::get).collect(Collectors.toList()));
+		PantherCollection<Ability> abilities = new PantherList<>(this.abilities.stream().map(Supplier::get).collect(Collectors.toList()));
 		switch (this) {
 			case ASSASSIN:
 				abilities.add(AbilityPool.PICK_POCKET);

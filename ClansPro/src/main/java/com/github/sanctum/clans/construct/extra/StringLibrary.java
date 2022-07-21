@@ -2,6 +2,7 @@ package com.github.sanctum.clans.construct.extra;
 
 import com.github.sanctum.clans.construct.api.ClansAPI;
 import com.github.sanctum.labyrinth.data.FileManager;
+import com.github.sanctum.labyrinth.formatting.string.FormattedString;
 import com.github.sanctum.labyrinth.library.StringUtils;
 import com.github.sanctum.labyrinth.library.TextLib;
 import java.text.MessageFormat;
@@ -9,9 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import java.util.UUID;
-import me.clip.placeholderapi.PlaceholderAPI;
 import net.md_5.bungee.api.chat.TextComponent;
-import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
@@ -20,10 +19,7 @@ public class StringLibrary {
 	public static final StringLibrary LOCAL = new StringLibrary();
 
 	public void sendMessage(Player p, String message) {
-		if (Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI")) {
-			message = PlaceholderAPI.setPlaceholders(p, message);
-		}
-		p.sendMessage(color(getPrefix() + " " + message));
+		p.sendMessage(color(getPrefix() + " " + new FormattedString(message).translate(p).get()));
 	}
 
 	protected String[] color(String... text) {

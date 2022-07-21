@@ -8,7 +8,7 @@ import com.github.sanctum.clans.construct.api.Clearance;
 import com.github.sanctum.clans.construct.extra.StringLibrary;
 import com.github.sanctum.labyrinth.formatting.completion.SimpleTabCompletion;
 import com.github.sanctum.labyrinth.formatting.completion.TabCompletionIndex;
-import com.github.sanctum.labyrinth.library.HUID;
+import com.github.sanctum.panther.util.HUID;
 import java.util.ArrayList;
 import java.util.List;
 import org.bukkit.Bukkit;

@@ -62,9 +62,4 @@ public class RaidShieldEvent extends ClanEvent {
 		this.off = i;
 	}
 
-	@Override
-	public String getName() {
-		return getClass().getSimpleName();
-	}
-
 }

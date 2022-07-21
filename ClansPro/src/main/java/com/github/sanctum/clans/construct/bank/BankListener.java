@@ -9,8 +9,9 @@ import com.github.sanctum.clans.event.bank.BankSetBalanceEvent;
 import com.github.sanctum.clans.event.bank.BankTransactionEvent;
 import com.github.sanctum.clans.event.bank.messaging.Messages;
 import com.github.sanctum.labyrinth.data.EconomyProvision;
-import com.github.sanctum.labyrinth.event.custom.Subscribe;
-import com.github.sanctum.labyrinth.event.custom.Vent;
+import com.github.sanctum.labyrinth.event.LabyrinthVentCall;
+import com.github.sanctum.panther.event.Subscribe;
+import com.github.sanctum.panther.event.Vent;
 import java.math.BigDecimal;
 import java.util.Optional;
 import org.bukkit.entity.Player;
@@ -102,7 +103,7 @@ public class BankListener {
 
 		if (success) bank.balance = bank.balance.add(amount);
 		if (!success) event.setSuccess(false);
-		new Vent.Call<>(Vent.Runtime.Synchronous, new BankTransactionEvent(player, bank, amount, bank.clanId, success, BankTransactionEvent.Type.DEPOSIT)).run();
+		new LabyrinthVentCall<>(new BankTransactionEvent(player, bank, amount, bank.clanId, success, BankTransactionEvent.Type.DEPOSIT)).run();
 	}
 
 	@Subscribe(priority = Vent.Priority.HIGHEST)
@@ -122,7 +123,7 @@ public class BankListener {
 		success = opt.orElse(false);
 		if (success) bank.balance = bank.balance.subtract(amount);
 		if (!success) event.setSuccess(false);
-		new Vent.Call<>(Vent.Runtime.Synchronous, new BankTransactionEvent(player, bank, amount, bank.clanId, success, BankTransactionEvent.Type.WITHDRAWAL)).run();
+		new LabyrinthVentCall<>(new BankTransactionEvent(player, bank, amount, bank.clanId, success, BankTransactionEvent.Type.WITHDRAWAL)).run();
 	}
 
 	@Subscribe(priority = Vent.Priority.MEDIUM)

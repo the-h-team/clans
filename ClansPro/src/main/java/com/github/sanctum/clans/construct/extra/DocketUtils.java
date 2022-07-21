@@ -1,12 +1,12 @@
 package com.github.sanctum.clans.construct.extra;
 
-import com.github.sanctum.labyrinth.data.container.LabyrinthEntryMap;
-import com.github.sanctum.labyrinth.data.container.LabyrinthMap;
 import com.github.sanctum.labyrinth.gui.unity.simple.MemoryDocket;
+import com.github.sanctum.panther.container.PantherEntryMap;
+import com.github.sanctum.panther.container.PantherMap;
 
 public class DocketUtils {
 
-	static final LabyrinthMap<String, MemoryDocket<?>> dockets = new LabyrinthEntryMap<>();
+	static final PantherMap<String, MemoryDocket<?>> dockets = new PantherEntryMap<>();
 
 	public static <V> MemoryDocket<V> get(String id) {
 		Object o = dockets.get(id);

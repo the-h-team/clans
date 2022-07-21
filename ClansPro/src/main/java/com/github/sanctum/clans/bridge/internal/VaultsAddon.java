@@ -7,9 +7,9 @@ import com.github.sanctum.clans.bridge.internal.vaults.VaultMenu;
 import com.github.sanctum.clans.bridge.internal.vaults.command.VaultCommand;
 import com.github.sanctum.clans.construct.api.ClansAPI;
 import com.github.sanctum.clans.event.command.CommandInformationAdaptEvent;
-import com.github.sanctum.labyrinth.event.custom.Vent;
 import com.github.sanctum.labyrinth.gui.unity.construct.Menu;
 import com.github.sanctum.labyrinth.gui.unity.impl.MenuType;
+import com.github.sanctum.panther.event.Vent;
 import org.jetbrains.annotations.NotNull;
 
 public class VaultsAddon extends ClanAddon {

@@ -2,11 +2,11 @@ package com.github.sanctum.clans.construct.api;
 
 import com.github.sanctum.clans.construct.extra.BukkitColor;
 import com.github.sanctum.labyrinth.LabyrinthProvider;
-import com.github.sanctum.labyrinth.annotation.Note;
 import com.github.sanctum.labyrinth.data.service.Constant;
 import com.github.sanctum.labyrinth.formatting.FancyMessage;
 import com.github.sanctum.labyrinth.formatting.Message;
 import com.github.sanctum.labyrinth.formatting.string.RandomHex;
+import com.github.sanctum.panther.annotation.Note;
 import java.text.MessageFormat;
 import java.util.HashSet;
 import java.util.Set;

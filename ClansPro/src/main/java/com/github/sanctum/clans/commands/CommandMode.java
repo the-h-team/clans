@@ -5,6 +5,7 @@ import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClanSubCommand;
 import com.github.sanctum.clans.construct.api.ClansAPI;
 import com.github.sanctum.clans.construct.api.Clearance;
+import com.github.sanctum.clans.construct.extra.Reservoir;
 import com.github.sanctum.clans.construct.extra.StringLibrary;
 import com.github.sanctum.clans.construct.impl.DefaultClan;
 import com.github.sanctum.labyrinth.data.EconomyProvision;
@@ -30,6 +31,8 @@ public class CommandMode extends ClanSubCommand {
 			return true;
 		}
 
+		Reservoir r = Reservoir.get(associate.getClan());
+
 		if (args.length == 0) {
 			if (!Clan.ACTION.test(p, "clanspro." + DataManager.Security.getPermission("mode")).deploy()) {
 				lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("mode")));
@@ -38,6 +41,10 @@ public class CommandMode extends ClanSubCommand {
 			if (Clearance.MANAGE_MODE.test(associate)) {
 				DefaultClan c = (DefaultClan) associate.getClan();
 				if (c.isPeaceful()) {
+					if (r == null && ClansAPI.getDataInstance().isTrue("Clans.mode-change.require-reservoir")) {
+						lib.sendMessage(p, "&cYour clan must have a reservoir! Craft and place an end crystal on claimed land.");
+						return true;
+					}
 					if (ClansAPI.getDataInstance().isTrue("Clans.mode-change.charge")) {
 						double amount = ClansAPI.getDataInstance().getConfig().getRoot().getDouble("Clans.mode-change.amount");
 						double balance = EconomyProvision.getInstance().balance(p).orElse(0.0);
@@ -111,6 +118,10 @@ public class CommandMode extends ClanSubCommand {
 				switch (args[0].toLowerCase()) {
 					case "war":
 						if (c.isPeaceful()) {
+							if (r == null && ClansAPI.getDataInstance().isTrue("Clans.mode-change.require-reservoir")) {
+								lib.sendMessage(p, "&cYour clan must have a reservoir! Craft and place an end crystal on claimed land.");
+								return true;
+							}
 							if (ClansAPI.getDataInstance().isTrue("Clans.mode-change.charge")) {
 								double amount = ClansAPI.getDataInstance().getConfig().getRoot().getDouble("Clans.mode-change.amount");
 								double balance = EconomyProvision.getInstance().balance(p).orElse(0.0);

@@ -1,9 +1,9 @@
 package com.github.sanctum.clans.construct.api;
 
 import com.github.sanctum.clans.construct.extra.SpecialCarrierAdapter;
-import com.github.sanctum.labyrinth.annotation.Note;
 import com.github.sanctum.labyrinth.library.Deployable;
-import com.github.sanctum.labyrinth.library.HUID;
+import com.github.sanctum.panther.annotation.Note;
+import com.github.sanctum.panther.util.HUID;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;

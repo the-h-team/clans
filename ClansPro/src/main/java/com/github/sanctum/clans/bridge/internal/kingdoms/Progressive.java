@@ -1,7 +1,7 @@
 package com.github.sanctum.clans.bridge.internal.kingdoms;
 
 import com.github.sanctum.clans.bridge.ClanAddon;
-import com.github.sanctum.labyrinth.data.MemorySpace;
+import com.github.sanctum.panther.file.MemorySpace;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;

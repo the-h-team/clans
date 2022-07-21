@@ -11,10 +11,9 @@ public class KingdomCreatedEvent extends AssociateEvent {
 	private final Kingdom kingdom;
 
 	public KingdomCreatedEvent(Player player, Kingdom kingdom) {
-		super(ClansAPI.getInstance().getAssociate(player).get(), false);
+		super(ClansAPI.getInstance().getAssociate(player).get(), player.getUniqueId(), State.IMMUTABLE, false);
 		this.player = player;
 		this.kingdom = kingdom;
-		setState(CancelState.OFF);
 	}
 
 	public Player getPlayer() {

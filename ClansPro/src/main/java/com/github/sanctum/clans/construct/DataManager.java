@@ -15,6 +15,7 @@ import com.github.sanctum.labyrinth.formatting.FancyMessage;
 import com.github.sanctum.labyrinth.library.Items;
 import com.github.sanctum.labyrinth.library.StringUtils;
 import com.github.sanctum.labyrinth.task.TaskScheduler;
+import com.github.sanctum.panther.file.Configurable;
 import com.github.sanctum.skulls.CustomHead;
 import com.github.sanctum.skulls.CustomHeadLoader;
 import java.io.File;
@@ -52,7 +53,7 @@ public class DataManager {
 
 	void create(FileManager manager) {
 		if (!manager.getRoot().exists()) {
-			InputStream is = ClansAPI.getInstance().getPlugin().getResource(manager.getRoot().getName() + manager.getRoot().getType().getExtension());
+			InputStream is = ClansAPI.getInstance().getPlugin().getResource(manager.getRoot().getName() + manager.getRoot().getType().get());
 			if (is == null) throw new IllegalStateException("Unable to load Config.yml from the jar!");
 			FileList.copy(is, manager.getRoot().getParent());
 			manager.getRoot().reload();
@@ -238,8 +239,8 @@ public class DataManager {
 		FileManager main = list.get("Config", "Configuration");
 		FileManager messages = list.get("Messages", "Configuration");
 		if (!ClansAPI.getInstance().getPlugin().getDescription().getVersion().equals(getConfig().getRoot().getString("Version"))) {
-			FileManager mainOld = list.get("config_old", "Configuration", com.github.sanctum.labyrinth.data.FileType.JSON);
-			FileManager messOld = list.get("messages_old", "Configuration", com.github.sanctum.labyrinth.data.FileType.JSON);
+			FileManager mainOld = list.get("config_old", "Configuration", Configurable.Type.JSON);
+			FileManager messOld = list.get("messages_old", "Configuration", Configurable.Type.JSON);
 			if (mainOld.getRoot().exists()) {
 				mainOld.getRoot().delete();
 			}

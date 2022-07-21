@@ -11,6 +11,7 @@ import com.github.sanctum.labyrinth.data.FileManager;
 import com.github.sanctum.labyrinth.library.Mailer;
 import com.github.sanctum.labyrinth.library.TextLib;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -19,6 +20,7 @@ import org.bukkit.entity.Player;
 public class CommandPermissions extends ClanSubCommand {
 	public CommandPermissions() {
 		super("permissions");
+		setAliases(Collections.singletonList("perms"));
 	}
 
 

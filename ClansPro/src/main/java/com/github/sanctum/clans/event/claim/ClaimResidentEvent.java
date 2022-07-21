@@ -7,7 +7,7 @@ import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClansAPI;
 import com.github.sanctum.clans.construct.impl.Resident;
 import com.github.sanctum.labyrinth.LabyrinthProvider;
-import com.github.sanctum.labyrinth.library.HUID;
+import com.github.sanctum.panther.util.HUID;
 import java.text.MessageFormat;
 import java.util.Collection;
 import java.util.HashMap;

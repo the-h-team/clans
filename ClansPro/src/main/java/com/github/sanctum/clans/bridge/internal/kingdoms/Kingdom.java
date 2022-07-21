@@ -8,11 +8,11 @@ import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClansAPI;
 import com.github.sanctum.clans.construct.api.Clearance;
 import com.github.sanctum.labyrinth.data.FileManager;
-import com.github.sanctum.labyrinth.data.FileType;
-import com.github.sanctum.labyrinth.data.Node;
-import com.github.sanctum.labyrinth.library.HUID;
 import com.github.sanctum.labyrinth.library.Items;
 import com.github.sanctum.labyrinth.library.StringUtils;
+import com.github.sanctum.panther.file.Configurable;
+import com.github.sanctum.panther.file.Node;
+import com.github.sanctum.panther.util.HUID;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
@@ -50,14 +50,14 @@ public class Kingdom extends Progressive implements Controllable, Iterable<Clan>
 
 		ClansAPI API = ClansAPI.getInstance();
 
-		FileManager section = addon.getFile(FileType.JSON, "kingdoms", "data");
+		FileManager section = addon.getFile(Configurable.Type.JSON, "kingdoms", "data");
 
 		if (section.getRoot().exists()) {
 
 			if (section.getRoot().getKeys(false).contains(name)) {
 
-				if (section.getRoot().getNode(name + ".castle").toBukkit().isLocation()) {
-					castle = section.getRoot().getNode(name + ".castle").toBukkit().getLocation();
+				if (section.getRoot().isNode(name + ".castle")) {
+					castle = section.getRoot().getNode(name + ".castle").get(Location.class);
 				}
 
 				if (section.getRoot().getNode(name + ".pvp").toPrimitive().isBoolean()) {
@@ -77,7 +77,7 @@ public class Kingdom extends Progressive implements Controllable, Iterable<Clan>
 					this.king = getMembers().stream().filter(c -> c.getMember(a -> a.getId().toString().equalsIgnoreCase(king)) != null).findFirst().map(clan -> clan.getMember(a -> a.getId().toString().equalsIgnoreCase(king))).orElse(null);
 				}
 
-				FileManager data = addon.getFile(FileType.JSON, "achievements", "data");
+				FileManager data = addon.getFile(Configurable.Type.JSON, "achievements", "data");
 
 				if (data.getRoot().exists()) {
 					if (data.getRoot().isNode("memory.kingdom." + name)) {
@@ -89,14 +89,14 @@ public class Kingdom extends Progressive implements Controllable, Iterable<Clan>
 								if (money) {
 									achievement.setReward(Reward.MONEY, reward.getNode("value").toPrimitive().getDouble());
 								} else {
-									if (reward.getNode("value").toBukkit().isItemStack()) {
-										achievement.setReward(Reward.ITEM, reward.getNode("value").toBukkit().getItemStack());
+									if (reward.getNode("value").isNode("org.bukkit.inventory.ItemStack")) {
+										achievement.setReward(Reward.ITEM, reward.getNode("value").get(ItemStack.class));
 									} else {
 										List<ItemStack> items = new ArrayList<>();
 										for (String s : reward.getNode("value").getKeys(false)) {
 											Node item = reward.getNode("value").getNode(s);
-											if (item.toBukkit().isItemStack()) {
-												items.add(item.toBukkit().getItemStack());
+											if (reward.getNode("value").isNode(s)) {
+												items.add(item.get(ItemStack.class));
 											}
 										}
 										achievement.setReward(Reward.ITEM_ARRAY, items.toArray(new ItemStack[0]));
@@ -181,7 +181,7 @@ public class Kingdom extends Progressive implements Controllable, Iterable<Clan>
 
 		ClanAddon cycle = ClanAddonQuery.getAddon("Kingdoms");
 
-		FileManager section = cycle.getFile(FileType.JSON, "kingdoms", "data");
+		FileManager section = cycle.getFile(Configurable.Type.JSON, "kingdoms", "data");
 
 		section.getRoot().set(getName(), null);
 
@@ -267,7 +267,7 @@ public class Kingdom extends Progressive implements Controllable, Iterable<Clan>
 	@Override
 	public void save(ClanAddon cycle) {
 
-		FileManager section = cycle.getFile(FileType.JSON, "kingdoms", "data");
+		FileManager section = cycle.getFile(Configurable.Type.JSON, "kingdoms", "data");
 
 		List<String> ids = getMembers().stream().map(Clan::getId).map(HUID::toString).collect(Collectors.toList());
 
@@ -291,7 +291,7 @@ public class Kingdom extends Progressive implements Controllable, Iterable<Clan>
 
 	public void remove(ClanAddon cycle) {
 
-		FileManager section = cycle.getFile(FileType.JSON, "kingdoms", "data");
+		FileManager section = cycle.getFile(Configurable.Type.JSON, "kingdoms", "data");
 
 		section.getRoot().set(getName(), null);
 
@@ -330,7 +330,7 @@ public class Kingdom extends Progressive implements Controllable, Iterable<Clan>
 	}
 
 	Node getParentNode() {
-		FileManager section = ClanAddonQuery.getAddon("Kingdoms").getFile(FileType.JSON, "kingdoms", "data");
+		FileManager section = ClanAddonQuery.getAddon("Kingdoms").getFile(Configurable.Type.JSON, "kingdoms", "data");
 		return section.getRoot().getNode(getPath());
 	}
 

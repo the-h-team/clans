@@ -19,13 +19,13 @@ import com.github.sanctum.clans.event.clan.ClanOverpowerClaimEvent;
 import com.github.sanctum.clans.event.player.PlayerKillPlayerEvent;
 import com.github.sanctum.clans.event.player.PlayerPunchPlayerEvent;
 import com.github.sanctum.clans.event.player.PlayerShootPlayerEvent;
-import com.github.sanctum.labyrinth.event.custom.DefaultEvent;
-import com.github.sanctum.labyrinth.event.custom.Subscribe;
-import com.github.sanctum.labyrinth.event.custom.Vent;
+import com.github.sanctum.labyrinth.event.DefaultEvent;
 import com.github.sanctum.labyrinth.formatting.ComponentChunk;
 import com.github.sanctum.labyrinth.formatting.FancyMessage;
-import com.github.sanctum.labyrinth.interfacing.OrdinalProcedure;
 import com.github.sanctum.labyrinth.library.StringUtils;
+import com.github.sanctum.panther.event.Subscribe;
+import com.github.sanctum.panther.event.Vent;
+import com.github.sanctum.panther.util.OrdinalProcedure;
 import java.util.stream.Stream;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -50,6 +50,8 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerItemConsumeEvent;
+
+;
 
 public class KingdomController implements Listener {
 

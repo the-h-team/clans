@@ -10,18 +10,17 @@ import com.github.sanctum.clans.construct.impl.entity.ServerAssociate;
 import com.github.sanctum.labyrinth.LabyrinthProvider;
 import com.github.sanctum.labyrinth.data.EconomyProvision;
 import com.github.sanctum.labyrinth.data.FileManager;
-import com.github.sanctum.labyrinth.data.JsonAdapter;
 import com.github.sanctum.labyrinth.data.LabyrinthUser;
-import com.github.sanctum.labyrinth.data.NodePointer;
-import com.github.sanctum.labyrinth.data.WideFunction;
 import com.github.sanctum.labyrinth.formatting.Message;
 import com.github.sanctum.labyrinth.formatting.string.CustomColor;
 import com.github.sanctum.labyrinth.formatting.string.FormattedString;
 import com.github.sanctum.labyrinth.formatting.string.GradientColor;
 import com.github.sanctum.labyrinth.formatting.string.RandomHex;
-import com.github.sanctum.labyrinth.library.HUID;
 import com.github.sanctum.labyrinth.library.Mailer;
-import com.github.sanctum.labyrinth.library.TypeFlag;
+import com.github.sanctum.panther.file.JsonAdapter;
+import com.github.sanctum.panther.file.Node;
+import com.github.sanctum.panther.util.HUID;
+import com.github.sanctum.panther.util.TypeAdapter;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import java.util.Arrays;
@@ -34,6 +33,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
+import java.util.function.BiFunction;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import net.md_5.bungee.api.chat.BaseComponent;
@@ -50,8 +50,7 @@ import org.jetbrains.annotations.Nullable;
 /**
  * The mother of pearls & diamonds, the glorious invasive clan entity for grouping numerous entities together under a single label.
  */
-@NodePointer(value = "Clan",
-		type = DefaultClan.class)
+@Node.Pointer(value = "com.github.sanctum.clans.Clan", type = DefaultClan.class)
 @DelegateDeserialization(DefaultClan.class)
 public interface Clan extends ClanBank, ConfigurationSerializable, EntityHolder, InvasiveEntity, JsonAdapter<Clan>, Relatable<Clan> {
 
@@ -181,11 +180,11 @@ public interface Clan extends ClanBank, ConfigurationSerializable, EntityHolder,
 	 * Retrieve a value of specified type from this clans persistent data container.
 	 *
 	 * @param flag The type of object to retrieve.
-	 * @param key   The key delimiter for the object.
-	 * @param <R>   The desired serializable object.
+	 * @param key  The key delimiter for the object.
+	 * @param <R>  The desired serializable object.
 	 * @return The desired serializable object.
 	 */
-	default <R> R getValue(TypeFlag<R> flag, String key) {
+	default <R> R getValue(TypeAdapter<R> flag, String key) {
 		return getValue(flag.getType(), key);
 	}
 
@@ -197,7 +196,7 @@ public interface Clan extends ClanBank, ConfigurationSerializable, EntityHolder,
 	 * @return The desired serializable object.
 	 */
 	default <R> R getValue(String key) {
-		return getValue(TypeFlag.get(), key);
+		return getValue(TypeAdapter.get(), key);
 	}
 
 	/**
@@ -471,7 +470,7 @@ public interface Clan extends ClanBank, ConfigurationSerializable, EntityHolder,
 		return Implementation.UNKNOWN;
 	}
 
-	static <V extends Clan> WideFunction<String, V, String> memoryDocketReplacer() {
+	static <V extends Clan> BiFunction<String, V, String> memoryDocketReplacer() {
 		return (s, clan) -> {
 			FormattedString string = new FormattedString(s);
 			return string.replace(":member_list:", clan.getMembers().stream().map(Clan.Associate::getNickname).collect(Collectors.joining(", ")))
@@ -762,13 +761,13 @@ public interface Clan extends ClanBank, ConfigurationSerializable, EntityHolder,
 		@Override
 		void save();
 
-		static <V extends Associate> WideFunction<String, V, String> memoryDocketReplacer() {
+		static <V extends Associate> BiFunction<String, V, String> memoryDocketReplacer() {
 			return (s, associate) -> {
 				FormattedString string = new FormattedString(s);
 				return string.replace(":member_name:", associate.getName())
 						.replace(":member_kd:", associate.getKD() + "")
 						.replace(":member_bio:", associate.getBiography())
-						.replace(":member_balance:", (EconomyProvision.getInstance().isValid() ? EconomyProvision.getInstance().balance(associate.getAsPlayer()).orElse(0.0) : 0.0) + "")
+						.replace(":member_balance:", (EconomyProvision.getInstance().isValid() && associate.isPlayer() ? EconomyProvision.getInstance().balance(associate.getAsPlayer()).orElse(0.0) : 0.0) + "")
 						.replace(":member_nick_name:", associate.getNickname())
 						.replace(":member_nick_name_colored:", associate.getClan().getPalette().toString(associate.getNickname()))
 						.replace(":member_rank_full:", associate.getRankFull())
@@ -881,6 +880,11 @@ public interface Clan extends ClanBank, ConfigurationSerializable, EntityHolder,
 	}
 
 	@Override
+	default Class<Clan> getSerializationSignature() {
+		return Clan.class;
+	}
+
+	@Override
 	default JsonElement write(Clan clan) {
 		JsonObject o = new JsonObject();
 		o.addProperty("id", clan.getId().toString());
@@ -926,11 +930,6 @@ public interface Clan extends ClanBank, ConfigurationSerializable, EntityHolder,
 			}
 		}
 		return clan;
-	}
-
-	@Override
-	default Class<? extends Clan> getSubClass() {
-		return getClass();
 	}
 
 	@Override

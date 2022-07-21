@@ -26,7 +26,7 @@ public class PlayerCreateClanEvent extends PlayerEvent {
 		return null;
 	}
 
-	public String getClanName() {
+	public String getName() {
 		return name;
 	}
 

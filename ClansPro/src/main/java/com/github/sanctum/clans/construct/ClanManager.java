@@ -8,11 +8,11 @@ import com.github.sanctum.clans.construct.impl.DefaultClan;
 import com.github.sanctum.clans.event.clan.ClansLoadingProcedureEvent;
 import com.github.sanctum.labyrinth.data.FileList;
 import com.github.sanctum.labyrinth.data.FileManager;
-import com.github.sanctum.labyrinth.data.container.LabyrinthCollection;
-import com.github.sanctum.labyrinth.data.container.LabyrinthSet;
 import com.github.sanctum.labyrinth.data.service.PlayerSearch;
-import com.github.sanctum.labyrinth.library.HUID;
 import com.github.sanctum.labyrinth.task.TaskScheduler;
+import com.github.sanctum.panther.container.PantherCollection;
+import com.github.sanctum.panther.container.PantherSet;
+import com.github.sanctum.panther.util.HUID;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
@@ -21,9 +21,9 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 public final class ClanManager {
 
-	private final LabyrinthCollection<Clan> CLANS = new LabyrinthSet<>();
+	private final PantherCollection<Clan> CLANS = new PantherSet<>();
 
-	public LabyrinthCollection<Clan> getClans() {
+	public PantherCollection<Clan> getClans() {
 		return CLANS;
 	}
 

@@ -33,8 +33,6 @@ import com.github.sanctum.labyrinth.LabyrinthProvider;
 import com.github.sanctum.labyrinth.api.Service;
 import com.github.sanctum.labyrinth.data.EconomyProvision;
 import com.github.sanctum.labyrinth.data.FileManager;
-import com.github.sanctum.labyrinth.event.custom.Subscribe;
-import com.github.sanctum.labyrinth.event.custom.Vent;
 import com.github.sanctum.labyrinth.formatting.FancyMessage;
 import com.github.sanctum.labyrinth.formatting.FancyMessageChain;
 import com.github.sanctum.labyrinth.formatting.Message;
@@ -43,6 +41,8 @@ import com.github.sanctum.labyrinth.library.Cooldown;
 import com.github.sanctum.labyrinth.library.Mailer;
 import com.github.sanctum.labyrinth.library.TimeWatch;
 import com.github.sanctum.labyrinth.task.TaskScheduler;
+import com.github.sanctum.panther.event.Subscribe;
+import com.github.sanctum.panther.event.Vent;
 import java.math.BigDecimal;
 import java.util.Random;
 import java.util.UUID;
@@ -177,6 +177,7 @@ public class ClanEventListener implements Listener {
 		}
 	}
 
+	@Vent.Disabled
 	@Subscribe
 	public void onLoad(ClansLoadingProcedureEvent e) {
 		if (e.getClans().stream().noneMatch(c -> c.getName().equals("Labyrinth"))) {
@@ -276,7 +277,16 @@ public class ClanEventListener implements Listener {
 									.then(" ")
 									.then(" ")
 									.then("[")
-									.then("Roster").color(Color.GREEN).style(ChatColor.BOLD).hover(color + "Click to view our roster.").action(() -> e.getApi().getMenu(GUI.MEMBER_LIST, c).open(p))
+									.then("Roster").color(Color.GREEN).style(ChatColor.BOLD).hover(color + "Click to view our roster.").action(() -> {
+										if (ClansAPI.getDataInstance().getMessages().read(n -> n.getNode("menu.enabled").toPrimitive().getBoolean())) {
+											e.getApi().getMenu(GUI.MEMBER_LIST, c).open(p);
+										} else {
+											new FancyMessage("&2" + c.getName() + " associates:").send(p).deploy();
+											new FancyMessage("&a&l&m---------------------------------").send(p).deploy();
+											c.getMembers().forEach(a -> new FancyMessage(" " + a.getRankFull() + " - " + c.getPalette().toString(a.getNickname())).send(p).queue());
+											new FancyMessage("&a&l&m---------------------------------").send(p).deploy();
+										}
+									})
 									.then("]")
 									.then(" ")
 									.then(" ")
@@ -330,7 +340,16 @@ public class ClanEventListener implements Listener {
 							.append(space1 -> space1.then(" "))
 							.append(top_middle -> top_middle.then(" ")
 									.then("[")
-									.then("Roster").color(Color.RED).style(ChatColor.BOLD).action(() -> GUI.MEMBER_LIST.get(c).open(p)).hover(color + "&oClick to view the clan roster.")
+									.then("Roster").color(Color.RED).style(ChatColor.BOLD).action(() -> {
+										if (ClansAPI.getDataInstance().getMessages().read(n -> n.getNode("menu.enabled").toPrimitive().getBoolean())) {
+											e.getApi().getMenu(GUI.MEMBER_LIST, c).open(p);
+										} else {
+											new FancyMessage(c.getPalette().toString("Associates:")).send(p).deploy();
+											new FancyMessage("&f&l&m---------------------------------").send(p).deploy();
+											c.getMembers().forEach(a -> new FancyMessage(" " + a.getRankFull() + " - " + c.getPalette().toString(a.getNickname()) + " &8*(" + a.getName() + ")").send(p).queue());
+											new FancyMessage("&f&l&m---------------------------------").send(p).deploy();
+										}
+									}).hover(color + "&oClick to view the clan roster.")
 									.then("]")
 									.then(" ")
 									.then(" ")
@@ -524,8 +543,8 @@ public class ClanEventListener implements Listener {
 				event.setCancelled(true);
 				return;
 			}
-			if (ClansAPI.getInstance().isNameBlackListed(event.getClanName())) {
-				String command = ClansAPI.getDataInstance().getConfig().getRoot().getString("Clans.name-blacklist." + event.getClanName().toLowerCase() + ".action");
+			if (ClansAPI.getInstance().isNameBlackListed(event.getName())) {
+				String command = ClansAPI.getDataInstance().getConfig().getRoot().getString("Clans.name-blacklist." + event.getName().toLowerCase() + ".action");
 				event.getUtil().sendMessage(p, "&c&oThis name is not allowed!");
 				if (command != null && !command.isEmpty()) {
 					Bukkit.dispatchCommand(Bukkit.getConsoleSender(), Clan.ACTION.format(command, "{PLAYER}", p.getName()));

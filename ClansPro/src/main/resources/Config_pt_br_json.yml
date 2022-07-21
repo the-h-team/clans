@@ -19,14 +19,18 @@ Clans:
   check-version: true
 
   ############################################################
+  ##                                                        ##
   ## Select a language for the configuration automatically! ##
   ## Current turned in languages are: en-US, pt-BR          ##
+  ##                                                        ##
   ############################################################
-  lang: 'pt-BR'
+  lang: 'en-US'
 
   ############################################################
+  ##                                                        ##
   ## A single timer runs the whole show! Decide how frequent##
   ## the timer runs here!                                   ##
+  ##                                                        ##
   ############################################################
   timer:
     # Valid thresholds: [ MILLISECONDS, SECONDS, MINUTES, HOURS, DAYS ]
@@ -40,6 +44,28 @@ Clans:
   ##############################################
   max-clans: 60
 
+  ##############################################
+  ##                                          ##
+  ##   Max amount of power a clan can have.   ##
+  ##                                          ##
+  ##############################################
+  max-power: 2000.0
+
+  ##############################################
+  ##                                          ##
+  ##        Clan reservoir settings.          ##
+  ##                                          ##
+  ##############################################
+  reservoir:
+    # Set the worth for tokens used to gain power.
+    power-multiplier: 3.17
+    # Set the worth for items used to repair the reservoir.
+    repair-multiplier:
+      DIAMOND: 1.7
+      #ITEMHERE: WORTH
+      #ITEMHERE: WORTH
+      #ITEMHERE: WORTH
+
   #################################
   ##                             ##
   ## Modify clan pvp mode change ##
@@ -49,6 +75,8 @@ Clans:
   mode-change:
     # Change what pvp mode a clan gets put in on creation {Valid types = peace, war}
     default: peace
+    # NEW! With this option enabled clans can only switch to war mode by having a reservoir built!
+    require-reservoir: true
     # Allow a cooldown every use of mode switch? If so how long.
     timer:
       use: true
@@ -112,6 +140,7 @@ Clans:
   ## Clan WORLD whitelist. ##
   ##                       ##
   ###########################
+  use-whitelist: true
   world-whitelist: [ "world", "world_nether", "world_the_end" ]
 
   ##########################
@@ -211,6 +240,9 @@ Clans:
   raid-shield:
     # Allow the raid-shield to run, enabling claim raiding?
     allow: true
+    # NEW! Set the mode for the raid-shield. If the raid shield is down and the mode is set to PERMANENT clans will need to manually un-claim chunks,
+    # otherwise claims will be temporarily unprotected during shield downtime with the option TEMPORARY not allowing for claim removal.
+    mode: PERMANENT
     # This section is crucial. It tells the shield events what world to base the time off of.
     main-world: 'world'
     # Default: 0 for dawn
@@ -366,6 +398,26 @@ Formatting:
   chat-spy-console: true
   # Change the format for the /clan message command
   chat-message-format: '&7{0} say''s :'
+  # Allow clans to use gradients for clan coloring?
+  gradient-name-coloring: true
+  # Adjust level adjustments like claims and power
+  level-adjustment:
+    give-power:
+      add: 0.0
+      announce: true
+      text: '&fPower &a+{0}'
+    take-power:
+      add: 0.0
+      announce: true
+      text: '&fPower &c-{0}'
+    give-claims:
+      add: 0.0
+      announce: true
+      text: '&fClaims &a+{0}'
+    take-claims:
+      add: 0.0
+      announce: true
+      text: '&fClaims &c-{0}'
   # Change the prefix displayed for the plugin messaging.
   prefix:
     prefix: '&7['
@@ -540,4 +592,4 @@ Addon:
 ## -- DO NOT EDIT BELOW --
 # Authors: Hempfest, ms5984
 ##------------------------
-Version: 1.3.9
+Version: 1.4.0-DEV

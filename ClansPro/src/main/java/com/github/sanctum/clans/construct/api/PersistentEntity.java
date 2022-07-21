@@ -1,7 +1,7 @@
 package com.github.sanctum.clans.construct.api;
 
-import com.github.sanctum.labyrinth.data.MemorySpace;
-import com.github.sanctum.labyrinth.data.Node;
+import com.github.sanctum.panther.file.MemorySpace;
+import com.github.sanctum.panther.file.Node;
 import java.util.Map;
 import java.util.Set;
 

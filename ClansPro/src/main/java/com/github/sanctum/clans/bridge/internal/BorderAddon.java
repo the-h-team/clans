@@ -9,7 +9,7 @@ import com.github.sanctum.clans.bridge.internal.borders.TerritoryCommand;
 import com.github.sanctum.clans.construct.api.ClansAPI;
 import com.github.sanctum.clans.event.command.CommandInformationAdaptEvent;
 import com.github.sanctum.labyrinth.LabyrinthProvider;
-import com.github.sanctum.labyrinth.event.custom.Vent;
+import com.github.sanctum.panther.event.Vent;
 import org.jetbrains.annotations.NotNull;
 
 public class BorderAddon extends ClanAddon {

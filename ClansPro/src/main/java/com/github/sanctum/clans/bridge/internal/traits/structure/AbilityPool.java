@@ -2,13 +2,13 @@ package com.github.sanctum.clans.bridge.internal.traits.structure;
 
 import com.github.sanctum.clans.construct.api.ClansAPI;
 import com.github.sanctum.labyrinth.LabyrinthProvider;
-import com.github.sanctum.labyrinth.data.container.LabyrinthCollection;
-import com.github.sanctum.labyrinth.data.container.LabyrinthList;
 import com.github.sanctum.labyrinth.data.service.PlayerSearch;
 import com.github.sanctum.labyrinth.library.Deployable;
 import com.github.sanctum.labyrinth.library.Mailer;
-import com.github.sanctum.labyrinth.library.RandomObject;
 import com.github.sanctum.labyrinth.task.TaskScheduler;
+import com.github.sanctum.panther.container.PantherCollection;
+import com.github.sanctum.panther.container.PantherList;
+import com.github.sanctum.panther.util.RandomObject;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -353,7 +353,7 @@ public final class AbilityPool {
 									}
 									return this;
 								}
-								LabyrinthCollection<TamerWolf> toSpawn = new LabyrinthList<>();
+								PantherCollection<TamerWolf> toSpawn = new PantherList<>();
 								for (int i = 0; i < getLevel(); i++) {
 									TamerWolf wolf = new TamerWolf(holder);
 									toSpawn.add(wolf);

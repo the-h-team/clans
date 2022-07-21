@@ -21,6 +21,7 @@ import com.github.sanctum.clans.construct.extra.AsynchronousLoanableTask;
 import com.github.sanctum.clans.construct.extra.ClansUpdate;
 import com.github.sanctum.clans.construct.extra.MessagePrefix;
 import com.github.sanctum.clans.construct.extra.ReservedLogoCarrier;
+import com.github.sanctum.clans.construct.extra.Reservoir;
 import com.github.sanctum.clans.construct.extra.StartProcedure;
 import com.github.sanctum.clans.construct.impl.DefaultArena;
 import com.github.sanctum.clans.construct.impl.DefaultClaimFlag;
@@ -29,25 +30,27 @@ import com.github.sanctum.clans.listener.PlayerEventListener;
 import com.github.sanctum.labyrinth.LabyrinthProvider;
 import com.github.sanctum.labyrinth.api.Service;
 import com.github.sanctum.labyrinth.api.TaskService;
-import com.github.sanctum.labyrinth.data.Configurable;
 import com.github.sanctum.labyrinth.data.FileList;
 import com.github.sanctum.labyrinth.data.FileManager;
-import com.github.sanctum.labyrinth.data.FileType;
-import com.github.sanctum.labyrinth.data.Node;
+import com.github.sanctum.labyrinth.data.YamlExtension;
 import com.github.sanctum.labyrinth.data.container.KeyedServiceManager;
 import com.github.sanctum.labyrinth.data.container.PersistentContainer;
 import com.github.sanctum.labyrinth.formatting.FancyMessageChain;
 import com.github.sanctum.labyrinth.formatting.Message;
 import com.github.sanctum.labyrinth.gui.unity.construct.Menu;
-import com.github.sanctum.labyrinth.interfacing.OrdinalProcedure;
-import com.github.sanctum.labyrinth.library.HUID;
 import com.github.sanctum.labyrinth.library.NamespacedKey;
 import com.github.sanctum.labyrinth.library.StringUtils;
-import com.github.sanctum.labyrinth.paste.PasteManager;
-import com.github.sanctum.labyrinth.paste.type.Hastebin;
 import com.github.sanctum.labyrinth.task.Task;
+import com.github.sanctum.panther.event.Vent;
+import com.github.sanctum.panther.file.Configurable;
+import com.github.sanctum.panther.file.Node;
+import com.github.sanctum.panther.paste.PasteManager;
+import com.github.sanctum.panther.paste.type.Hastebin;
+import com.github.sanctum.panther.util.HUID;
+import com.github.sanctum.panther.util.OrdinalProcedure;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -96,10 +99,10 @@ import org.jetbrains.annotations.NotNull;
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-public class ClansJavaPlugin extends JavaPlugin implements ClansAPI {
+public class ClansJavaPlugin extends JavaPlugin implements ClansAPI, Vent.Host {
 
 	private NamespacedKey STATE;
-	public FileType TYPE;
+	public Configurable.Extension TYPE;
 	private static ClansJavaPlugin PRO;
 	private static FileList origin;
 	private MessagePrefix prefix;
@@ -136,6 +139,7 @@ public class ClansJavaPlugin extends JavaPlugin implements ClansAPI {
 			map.put(AbstractGameRule.WAR_START_TIME, manager.getConfigInt("Clans.war.start-wait"));
 			map.put(AbstractGameRule.BLOCKED_WAR_COMMANDS, manager.getConfig().getRoot().getStringList("Clans.war.blocked-commands"));
 			map.put(AbstractGameRule.MAX_CLANS, manager.getConfigInt("Clans.max-clans"));
+			map.put(AbstractGameRule.MAX_POWER, manager.getConfig().getRoot().getNode("Clans.max-power").toPrimitive().getDouble());
 			map.put(AbstractGameRule.DEFAULT_WAR_MODE, manager.getConfigString("Clans.mode-change.default"));
 			map.put(AbstractGameRule.CLAN_ROSTER_TOP_TITLE, manager.getMenuTitle("top-list"));
 			map.put(AbstractGameRule.CLAN_ROSTER_TITLE, manager.getMenuTitle("roster-list"));
@@ -230,6 +234,8 @@ public class ClansJavaPlugin extends JavaPlugin implements ClansAPI {
 			for (Claim claim : c.getClaims()) {
 				claim.save();
 			}
+			Reservoir r = Reservoir.get(c);
+			if (r != null) r.save();
 			c.remove();
 		});
 
@@ -431,7 +437,15 @@ public class ClansJavaPlugin extends JavaPlugin implements ClansAPI {
 		dataManager = new DataManager();
 		gallery = new LogoGallery();
 		FileManager main = dataManager.getConfig();
-		TYPE = FileType.valueOf(main.read(c -> c.getNode("Formatting").getNode("file-type").toPrimitive().getString()));
+		String s = main.read(c -> c.getNode("Formatting").getNode("file-type").toPrimitive().getString());
+		switch (s.toLowerCase(Locale.ROOT)) {
+			case "json":
+				TYPE = Configurable.Type.JSON;
+				break;
+			case "yaml":
+				TYPE = YamlExtension.INSTANCE;
+				break;
+		}
 		clanManager = new ClanManager();
 		claimManager = new ClaimManager();
 		shieldManager = new ShieldManager();

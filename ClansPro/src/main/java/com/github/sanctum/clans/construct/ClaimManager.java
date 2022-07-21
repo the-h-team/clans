@@ -15,12 +15,12 @@ import com.github.sanctum.clans.event.claim.ClaimResidentEvent;
 import com.github.sanctum.clans.event.claim.ClaimsLoadingProcedureEvent;
 import com.github.sanctum.clans.event.claim.WildernessInhabitantEvent;
 import com.github.sanctum.labyrinth.LabyrinthProvider;
-import com.github.sanctum.labyrinth.data.Configurable;
 import com.github.sanctum.labyrinth.data.FileManager;
-import com.github.sanctum.labyrinth.data.FileType;
-import com.github.sanctum.labyrinth.data.Node;
-import com.github.sanctum.labyrinth.event.custom.Vent;
-import com.github.sanctum.labyrinth.library.HUID;
+import com.github.sanctum.labyrinth.data.YamlExtension;
+import com.github.sanctum.panther.event.Vent;
+import com.github.sanctum.panther.file.Configurable;
+import com.github.sanctum.panther.file.Node;
+import com.github.sanctum.panther.util.HUID;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -46,18 +46,18 @@ public final class ClaimManager {
 
 	public ClaimManager() {
 		this.flagManager = new FlagManager(this);
-		if (JavaPlugin.getPlugin(ClansJavaPlugin.class).TYPE == FileType.YAML) {
-			this.regions = ClansAPI.getInstance().getFileList().get("Regions", "Configuration", FileType.YAML);
+		if (JavaPlugin.getPlugin(ClansJavaPlugin.class).TYPE == YamlExtension.INSTANCE) {
+			this.regions = ClansAPI.getInstance().getFileList().get("Regions", "Configuration", YamlExtension.INSTANCE);
 		} else {
-			this.regions = ClansAPI.getInstance().getFileList().get("regions", "Configuration", FileType.JSON);
+			this.regions = ClansAPI.getInstance().getFileList().get("regions", "Configuration", Configurable.Type.JSON);
 		}
 		if (regions.getRoot().exists()) {
 			this.regions = regions.toMoved("Configuration/Data");
 		} else {
-			if (JavaPlugin.getPlugin(ClansJavaPlugin.class).TYPE == FileType.YAML) {
-				this.regions = ClansAPI.getInstance().getFileList().get("Regions", "Configuration/Data", FileType.YAML);
+			if (JavaPlugin.getPlugin(ClansJavaPlugin.class).TYPE == YamlExtension.INSTANCE) {
+				this.regions = ClansAPI.getInstance().getFileList().get("Regions", "Configuration/Data", YamlExtension.INSTANCE);
 			} else {
-				this.regions = ClansAPI.getInstance().getFileList().get("regions", "Configuration/Data", FileType.JSON);
+				this.regions = ClansAPI.getInstance().getFileList().get("regions", "Configuration/Data", Configurable.Type.JSON);
 			}
 		}
 

@@ -8,13 +8,13 @@ import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClansAPI;
 import com.github.sanctum.labyrinth.data.DataTable;
 import com.github.sanctum.labyrinth.data.FileManager;
-import com.github.sanctum.labyrinth.data.FileType;
-import com.github.sanctum.labyrinth.data.Node;
-import com.github.sanctum.labyrinth.data.service.Check;
 import com.github.sanctum.labyrinth.gui.unity.construct.Menu;
 import com.github.sanctum.labyrinth.gui.unity.impl.InventoryElement;
 import com.github.sanctum.labyrinth.gui.unity.impl.PreProcessElement;
-import com.github.sanctum.labyrinth.library.HUID;
+import com.github.sanctum.panther.file.Configurable;
+import com.github.sanctum.panther.file.Node;
+import com.github.sanctum.panther.util.Check;
+import com.github.sanctum.panther.util.HUID;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -33,7 +33,7 @@ public class VaultMenu extends Menu {
 			addElement(new InventoryElement.Shared(clanName, this));
 			this.key = clanName;
 			this.close = close -> {
-				FileManager manager = ClanAddon.getAddon(VaultsAddon.class).getFile(FileType.JSON, "data");
+				FileManager manager = ClanAddon.getAddon(VaultsAddon.class).getFile(Configurable.Type.JSON, "data");
 				Node keys = manager.getRoot().getNode(c.getId().toString());
 				keys.delete();
 				int key = 0;
@@ -97,10 +97,10 @@ public class VaultMenu extends Menu {
 		List<ItemStack> list = new ArrayList<>(54);
 		ClanAddon vaults = ClanAddon.getAddon(VaultsAddon.class);
 		if (vaults != null) {
-			FileManager manager = vaults.getFile(FileType.JSON, "data");
+			FileManager manager = vaults.getFile(Configurable.Type.JSON, "data");
 			Node keys = manager.getRoot().getNode(id.toString());
 			for (String index : keys.getKeys(false)) {
-				ItemStack item = keys.getNode(index).toBukkit().getItemStack();
+				ItemStack item = keys.getNode(index).get(ItemStack.class);
 				list.add(item);
 			}
 		}

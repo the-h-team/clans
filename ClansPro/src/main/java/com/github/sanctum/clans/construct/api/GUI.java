@@ -11,12 +11,9 @@ import com.github.sanctum.labyrinth.api.Service;
 import com.github.sanctum.labyrinth.data.EconomyProvision;
 import com.github.sanctum.labyrinth.data.FileList;
 import com.github.sanctum.labyrinth.data.FileManager;
-import com.github.sanctum.labyrinth.data.Node;
-import com.github.sanctum.labyrinth.data.container.LabyrinthSet;
 import com.github.sanctum.labyrinth.data.reload.PrintManager;
 import com.github.sanctum.labyrinth.data.service.Constant;
 import com.github.sanctum.labyrinth.formatting.string.FormattedString;
-import com.github.sanctum.labyrinth.formatting.string.Paragraph;
 import com.github.sanctum.labyrinth.gui.unity.construct.Menu;
 import com.github.sanctum.labyrinth.gui.unity.construct.PaginatedMenu;
 import com.github.sanctum.labyrinth.gui.unity.construct.SingularMenu;
@@ -29,15 +26,15 @@ import com.github.sanctum.labyrinth.gui.unity.impl.MenuType;
 import com.github.sanctum.labyrinth.gui.unity.simple.Docket;
 import com.github.sanctum.labyrinth.gui.unity.simple.MemoryDocket;
 import com.github.sanctum.labyrinth.interfacing.UnknownGeneric;
-import com.github.sanctum.labyrinth.library.Deployable;
 import com.github.sanctum.labyrinth.library.Entities;
-import com.github.sanctum.labyrinth.library.HUID;
-import com.github.sanctum.labyrinth.library.Item;
 import com.github.sanctum.labyrinth.library.Items;
 import com.github.sanctum.labyrinth.library.Mailer;
-import com.github.sanctum.labyrinth.library.RandomObject;
 import com.github.sanctum.labyrinth.library.StringUtils;
 import com.github.sanctum.labyrinth.task.TaskScheduler;
+import com.github.sanctum.panther.container.PantherSet;
+import com.github.sanctum.panther.file.Node;
+import com.github.sanctum.panther.util.HUID;
+import com.github.sanctum.panther.util.RandomObject;
 import com.github.sanctum.skulls.CustomHeadLoader;
 import com.github.sanctum.skulls.SkullType;
 import java.text.MessageFormat;
@@ -48,19 +45,16 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import org.bukkit.Bukkit;
-import org.bukkit.Color;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.Statistic;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
-import org.bukkit.event.inventory.ClickType;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -208,117 +202,11 @@ public enum GUI {
 
 	public Menu get(Player p) {
 		if (this == GUI.MAIN_MENU) {
-			if (ClansAPI.getDataInstance().getMessages().read(c -> c.getNode("deep-edit").toPrimitive().getBoolean())) {
-				String id = ClansAPI.getDataInstance().getMessageString("menu.home.id");
-				MemoryDocket<UnknownGeneric> docket = DocketUtils.get(id);
-				if (docket == null) {
-					docket = new MemoryDocket<>(ClansAPI.getDataInstance().getMessages().getRoot().getNode("menu.home"));
-					docket.setNamePlaceholder("%player_name%");
-					docket.setUniqueDataConverter(p, (s, player) -> new FormattedString(s).translate(player).get());
-					docket.load();
-					DocketUtils.load(id, docket);
-				}
-				return docket.toMenu();
-			}
-			FileManager messages = ClansAPI.getDataInstance().getMessages();
-			return MenuType.SINGULAR.build()
-					.setTitle(MessageFormat.format(ClansAPI.getDataInstance().getMenuTitle("home-screen"), p.getName()))
-					.setHost(api.getPlugin())
-					.setSize(Menu.Rows.SIX)
-					.setStock(i -> {
-						BorderElement<?> border = new BorderElement<>(i);
-						for (Menu.Panel panel : Menu.Panel.values()) {
-							if (panel == Menu.Panel.MIDDLE) continue;
-							if (LabyrinthProvider.getInstance().isLegacy()) {
-								border.add(panel, ed -> ed.setType(ItemElement.ControlType.ITEM_BORDER).setElement(it -> it.setType(Items.findMaterial("STAINED_GLASS_PANE")).setTitle(" ").build()));
-							} else {
-								border.add(panel, ed -> ed.setType(ItemElement.ControlType.ITEM_BORDER).setElement(it -> it.setType(Material.GRAY_STAINED_GLASS_PANE).setTitle(" ").build()));
-							}
-						}
-						FillerElement<?> filler = new FillerElement<>(i);
-						filler.add(ed -> ed.setType(ItemElement.ControlType.ITEM_FILLER).setElement(it -> it.setType(Optional.ofNullable(Items.findMaterial("bluestainedglasspane")).orElse(Items.findMaterial("stainedglasspane"))).setTitle(" ").build()));
-						i.addItem(filler);
-						i.addItem(border);
-						List<String> questionFormat = messages.read(c -> c.getStringList("menu-format.home-screen.clan_question_button.lore"));
-						i.addItem(item -> item.setElement(edit -> edit.setItem(ClansAPI.getDataInstance().getMenuItem("home-screen-question")).setTitle(messages.read(c -> c.getString("menu-format.home-screen.clan_question_button.title"))).setLore(questionFormat).build()).setSlot(10).setClick(click -> {
-							click.setCancelled(true);
-							MenuType.PRINTABLE.build()
-									.setTitle("&6&lAsk Question")
-									.setSize(Menu.Rows.ONE)
-									.setHost(api.getPlugin())
-									.setStock(inventoryElement -> inventoryElement.addItem(b -> b.setElement(it -> it.setItem(SkullType.ARROW_BLUE_RIGHT.get()).setTitle(" ").build()).setSlot(0).setClick(c -> {
-										c.setCancelled(true);
-										c.setHotbarAllowed(false);
-									}))).join()
-									.addAction(clickElement -> {
-										clickElement.setCancelled(true);
-										clickElement.setHotbarAllowed(false);
-										if (clickElement.getSlot() == 2) {
-											for (QnA qnA : InoperableSpecialMemory.QNA) {
-												if (!qnA.test(clickElement.getElement(), clickElement.getParent().getName()))
-													return;
-											}
-											Deployable.of(clickElement.getElement(), player -> {
-												player.closeInventory();
-												String response = "&cI don't have an answer.";
-												if (StringUtils.use(clickElement.getParent().getName()).containsIgnoreCase("nigger", "fuck", "dumb", "retard", "fag")) {
-													response = "&cThat's not very nice.";
-												}
-												Mailer.empty(player).title(api.getPrefix().joined(), response).deploy(mailer -> {
-													TaskScheduler.of(() -> MAIN_MENU.get(player).open(player)).scheduleLater(75);
-												});
-											}).deploy();
-										}
-
-									}).open(click.getElement());
-						}));
-						List<String> listFormat = messages.read(c -> c.getStringList("menu-format.home-screen.clan_list_button.lore"));
-						i.addItem(item -> item.setElement(edit -> edit.setItem(ClansAPI.getDataInstance().getMenuItem("home-screen-list")).setTitle(messages.read(c -> c.getString("menu-format.home-screen.clan_list_button.title"))).setLore(listFormat).build()).setSlot(13).setClick(click -> {
-							click.setCancelled(true);
-							CLAN_ROSTER_SELECTION.get().open(click.getElement());
-						}));
-
-						List<String> commandsFormat = messages.read(c -> c.getStringList("menu-format.home-screen.clan_commands_button.lore"));
-						i.addItem(item -> item.setElement(edit -> edit.setItem(ClansAPI.getDataInstance().getMenuItem("home-screen-commands")).setTitle(messages.read(c -> c.getString("menu-format.home-screen.clan_commands_button.title"))).setLore(commandsFormat).build()).setSlot(16).setClick(click -> {
-							click.setCancelled(true);
-							click.getElement().performCommand(messages.read(c -> c.getString("menu-format.home-screen.clan_commands_button.destination")));
-						}));
-
-						List<String> infoFormat = messages.read(c -> c.getStringList("menu-format.home-screen.my_info_button.lore"));
-						i.addItem(item -> item.setElement(edit -> edit.setItem(ClansAPI.getDataInstance().getMenuItem("home-screen-info")).setTitle(messages.read(c -> c.getString("menu-format.home-screen.my_info_button.title"))).setLore(infoFormat).build()).setSlot(20).setClick(click -> {
-							click.setCancelled(true);
-							click.getElement().performCommand(MessageFormat.format(messages.read(c -> c.getString("menu-format.home-screen.my_info_button.destination")), click.getElement().getName()));
-						}));
-
-						i.addItem(item -> item.setElement(edit -> edit.setType(Material.GOLD_INGOT).setTitle("&6Bank").setLore("&eClick for bank actions.").build()).setSlot(22).setClick(click -> {
-							click.setCancelled(true);
-							Clan.Associate ass = ClansAPI.getInstance().getAssociate(click.getElement()).orElse(null);
-							if (ass != null) {
-								BANK.get(ass.getClan()).open(click.getElement());
-							}
-						}));
-
-						List<String> relationsFormat = messages.read(c -> c.getStringList("menu-format.home-screen.clan_relations_button.lore"));
-						i.addItem(item -> item.setElement(edit -> edit.setItem(ClansAPI.getDataInstance().getMenuItem("home-screen-relations")).setTitle(messages.read(c -> c.getString("menu-format.home-screen.clan_relations_button.title"))).setLore(relationsFormat).build()).setSlot(24).setClick(click -> {
-							click.setCancelled(true);
-							api.getAssociate(click.getElement().getName()).ifPresent(a -> GUI.RELATIONS_MENU.get(a).open(click.getElement()));
-						}));
-
-						List<String> vaultFormat = messages.read(c -> c.getStringList("menu-format.home-screen.clan_vault_button.lore"));
-						i.addItem(item -> item.setElement(edit -> edit.setItem(ClansAPI.getDataInstance().getMenuItem("home-screen-vault")).setTitle(messages.read(c -> c.getString("menu-format.home-screen.clan_vault_button.title"))).setLore(vaultFormat).build()).setSlot(31).setClick(click -> {
-							click.setCancelled(true);
-							click.getElement().performCommand(MessageFormat.format(messages.read(c -> c.getString("menu-format.home-screen.clan_vault_button.destination")), click.getElement().getName()));
-						}));
-
-						List<String> chatFormat = messages.read(c -> c.getStringList("menu-format.home-screen.clan_chat_button.lore"));
-						i.addItem(item -> item.setElement(edit -> edit.setItem(ClansAPI.getDataInstance().getMenuItem("home-screen-chat")).setTitle(messages.read(c -> c.getString("menu-format.home-screen.clan_chat_button.title"))).setLore(chatFormat).build()).setSlot(40).setClick(click -> {
-							click.setCancelled(true);
-							click.getElement().closeInventory();
-							click.getElement().performCommand(MessageFormat.format(messages.read(c -> c.getString("menu-format.home-screen.clan_chat_button.destination")), click.getElement().getName()));
-						}));
-
-					})
-					.join();
+			MemoryDocket<UnknownGeneric> docket = new MemoryDocket<>(ClansAPI.getDataInstance().getMessages().getRoot().getNode("menu.home"));
+			docket.setNamePlaceholder("%player_name%");
+			docket.setUniqueDataConverter(p, (s, player) -> new FormattedString(s).translate(player).get());
+			docket.load();
+			return docket.toMenu();
 		}
 		return MenuType.SINGULAR.build().join();
 	}
@@ -489,96 +377,9 @@ public enum GUI {
 							i.addItem(list);
 						}).orGet(m -> m instanceof PaginatedMenu && m.getKey().map(("ClansPro:logo-list")::equals).orElse(false));
 			case CLAN_ROSTER:
-				if (ClansAPI.getDataInstance().getMessages().read(c -> c.getNode("deep-edit").toPrimitive().getBoolean())) {
-					String id = ClansAPI.getDataInstance().getMessageString("menu.roster.id");
-					MemoryDocket<?> docket = DocketUtils.get(id);
-					if (docket != null) return docket.toMenu();
-				}
-				return MenuType.PAGINATED.build().setHost(api.getPlugin())
-						.setProperty(Menu.Property.CACHEABLE, Menu.Property.RECURSIVE)
-						.setTitle(printManager.getPrint(api.getLocalPrintKey()).getString(AbstractGameRule.CLAN_ROSTER_TITLE))
-						.setSize(getSize())
-						.setProcessEvent(open -> tempSpot.put(open.getElement(), CLAN_ROSTER.name()))
-						.setOpenEvent(open -> tempSpot.put(open.getElement(), CLAN_ROSTER.name()))
-						.setKey("ClansPro:Roster")
-						.setStock(i -> {
-							BorderElement<?> border = new BorderElement<>(i);
-							for (Menu.Panel p : Menu.Panel.values()) {
-								if (p == Menu.Panel.MIDDLE) continue;
-								if (LabyrinthProvider.getInstance().isLegacy()) {
-									border.add(p, ed -> ed.setType(ItemElement.ControlType.ITEM_BORDER).setElement(it -> it.setType(Items.findMaterial("STAINED_GLASS_PANE")).setTitle(" ").build()));
-								} else {
-									border.add(p, ed -> ed.setType(ItemElement.ControlType.ITEM_BORDER).setElement(it -> it.setType(Material.GRAY_STAINED_GLASS_PANE).setTitle(" ").build()));
-								}
-							}
-							FillerElement<?> filler = new FillerElement<>(i);
-							filler.add(ed -> ed.setType(ItemElement.ControlType.ITEM_FILLER).setElement(it -> it.setItem(ClansAPI.getDataInstance().getMenuItem("background-theme")).setTitle(" ").build()));
-							i.addItem(filler);
-							i.addItem(border);
-							i.addItem(b -> b.setElement(getLeftItem()).setSlot(getLeft()).setTypeAndAddAction(ItemElement.ControlType.BUTTON_BACK, click -> {
-								click.setCancelled(true);
-								click.setHotbarAllowed(false);
-								click.setConsumer((target, success) -> {
-
-									if (success) {
-										i.open(target);
-									} else {
-										Clan.ACTION.sendMessage(target, Clan.ACTION.color(Clan.ACTION.alreadyFirstPage()));
-									}
-
-								});
-							}));
-
-							i.addItem(b -> b.setElement(getRightItem()).setSlot(getRight()).setTypeAndAddAction(ItemElement.ControlType.BUTTON_NEXT, click -> {
-								click.setCancelled(true);
-								click.setHotbarAllowed(false);
-								click.setConsumer((target, success) -> {
-
-									if (success) {
-										i.open(target);
-									} else {
-										Clan.ACTION.sendMessage(target, Clan.ACTION.color(Clan.ACTION.alreadyLastPage()));
-									}
-
-								});
-							}));
-
-							i.addItem(b -> b.setElement(getBackItem()).setSlot(getBack()).setTypeAndAddAction(ItemElement.ControlType.BUTTON_EXIT, click -> {
-								click.setCancelled(true);
-								click.setHotbarAllowed(false);
-								CLAN_ROSTER_SELECTION.get().open(click.getElement());
-							}));
-
-							i.addItem(new ListElement<>(api.getClanManager().getClans().stream().collect(Collectors.toList())).setLimit(getLimit()).setPopulate((c, element) -> {
-								element.setElement(b -> {
-									String title = MessageFormat.format(ClansAPI.getDataInstance().getMenuCategory("clan"), c.getPalette().toString(), (c.getNickname() != null ? c.getNickname() : c.getName()), c.getId().toString().substring(0, 4));
-									ItemStack it;
-									if (c.isConsole()) {
-										it = new ItemStack(special);
-										title = title + "&b*";
-									} else {
-										it = new ItemStack(ClansAPI.getDataInstance().getMenuItem("clan"));
-									}
-									b.setItem(it);
-									b.setTitle(title);
-									if (c.getLogo() != null) {
-										LabyrinthSet<String> logo = new LabyrinthSet<>();
-										logo.add("&bTag: " + c.getPalette() + c.getName());
-										logo.add("&bMembers: " + c.getPalette() + c.getMembers().size());
-										logo.add("&bDescription: " + c.getPalette() + c.getDescription());
-										logo.addAll(c.getLogo());
-										b.setLore(logo.toArray(new String[0]));
-									} else {
-										b.setLore("&bTag: " + c.getPalette() + c.getName(), "&bMembers: " + c.getPalette() + c.getMembers().size(), "&bDescription: " + c.getPalette() + c.getDescription());
-									}
-									return b.build();
-								}).setClick(click -> {
-									click.setCancelled(true);
-									click.setHotbarAllowed(false);
-									MEMBER_LIST.get(c).open(click.getElement());
-								});
-							}).setLimit(getLimit()));
-						}).orGet(m -> m instanceof PaginatedMenu && m.getKey().isPresent() && m.getKey().get().equals("ClansPro:Roster"));
+				String id = ClansAPI.getDataInstance().getMessageString("menu.roster.id");
+				MemoryDocket<?> docket = DocketUtils.get(id);
+				if (docket != null) return docket.toMenu();
 			case SETTINGS_CLAN_ROSTER:
 				return MenuType.PAGINATED.build().setHost(api.getPlugin())
 						.setProperty(Menu.Property.CACHEABLE, Menu.Property.RECURSIVE)
@@ -648,7 +449,7 @@ public enum GUI {
 									b.setItem(it);
 									b.setTitle(title);
 									if (c.getLogo() != null) {
-										LabyrinthSet<String> logo = new LabyrinthSet<>();
+										PantherSet<String> logo = new PantherSet<>();
 										logo.add("&bTag: " + c.getPalette() + c.getName());
 										logo.add("&bMembers: " + c.getPalette() + c.getMembers().size());
 										logo.add("&bDescription: " + c.getPalette() + c.getDescription());
@@ -667,132 +468,13 @@ public enum GUI {
 
 						}).orGet(m -> m instanceof PaginatedMenu && m.getKey().isPresent() && m.getKey().get().equals("ClansPro:Roster_edit"));
 			case CLAN_ROSTER_TOP:
-				if (ClansAPI.getDataInstance().getMessages().read(c -> c.getNode("deep-edit").toPrimitive().getBoolean())) {
-					String id = ClansAPI.getDataInstance().getMessageString("menu.roster-top.id");
-					MemoryDocket<?> docket = DocketUtils.get(id);
-					if (docket != null) return docket.toMenu();
-				}
-				return MenuType.PAGINATED.build().setHost(api.getPlugin())
-						.setProperty(Menu.Property.CACHEABLE, Menu.Property.RECURSIVE)
-						.setTitle(printManager.getPrint(api.getLocalPrintKey()).getString(AbstractGameRule.CLAN_ROSTER_TOP_TITLE))
-						.setSize(getSize())
-						.setKey("ClansPro:Roster_top")
-						.setOpenEvent(open -> tempSpot.put(open.getElement(), CLAN_ROSTER_TOP.name()))
-						.setProcessEvent(open -> tempSpot.put(open.getElement(), CLAN_ROSTER_TOP.name()))
-						.setStock(i -> {
-							BorderElement<?> border = new BorderElement<>(i);
-							for (Menu.Panel p : Menu.Panel.values()) {
-								if (p == Menu.Panel.MIDDLE) continue;
-								if (LabyrinthProvider.getInstance().isLegacy()) {
-									border.add(p, ed -> ed.setType(ItemElement.ControlType.ITEM_BORDER).setElement(it -> it.setType(Items.findMaterial("STAINED_GLASS_PANE")).setTitle(" ").build()));
-								} else {
-									border.add(p, ed -> ed.setType(ItemElement.ControlType.ITEM_BORDER).setElement(it -> it.setType(Material.GRAY_STAINED_GLASS_PANE).setTitle(" ").build()));
-								}
-							}
-							FillerElement<?> filler = new FillerElement<>(i);
-							filler.add(ed -> ed.setType(ItemElement.ControlType.ITEM_FILLER).setElement(it -> it.setItem(ClansAPI.getDataInstance().getMenuItem("background-theme")).setTitle(" ").build()));
-							i.addItem(filler);
-							i.addItem(border);
-							i.addItem(b -> b.setElement(getLeftItem()).setSlot(getLeft()).setTypeAndAddAction(ItemElement.ControlType.BUTTON_BACK, click -> {
-								click.setCancelled(true);
-								click.setHotbarAllowed(false);
-								click.setConsumer((target, success) -> {
-
-									if (success) {
-										i.open(target);
-									} else {
-										Clan.ACTION.sendMessage(target, Clan.ACTION.color(Clan.ACTION.alreadyFirstPage()));
-									}
-
-								});
-							}));
-
-							i.addItem(b -> b.setElement(getRightItem()).setSlot(getRight()).setTypeAndAddAction(ItemElement.ControlType.BUTTON_NEXT, click -> {
-								click.setCancelled(true);
-								click.setHotbarAllowed(false);
-								click.setConsumer((target, success) -> {
-
-									if (success) {
-										i.open(target);
-									} else {
-										Clan.ACTION.sendMessage(target, Clan.ACTION.color(Clan.ACTION.alreadyLastPage()));
-									}
-
-								});
-							}));
-
-							i.addItem(b -> b.setElement(getBackItem()).setSlot(getBack()).setTypeAndAddAction(ItemElement.ControlType.BUTTON_EXIT, click -> {
-								click.setCancelled(true);
-								click.setHotbarAllowed(false);
-								CLAN_ROSTER_SELECTION.get().open(click.getElement());
-							}));
-							i.addItem(new ListElement<>(Clan.ACTION.getMostPowerful()).setLimit(getLimit()).setComparator((o1, o2) -> Double.compare(o2.getData().get().getPower(), o1.getData().get().getPower())).setPopulate((c, element) -> {
-								element.setElement(b -> {
-									String title = MessageFormat.format(ClansAPI.getDataInstance().getMenuCategory("clan"), c.getPalette().toString(), (c.getNickname() != null ? c.getNickname() : c.getName()), c.getId().toString().substring(0, 4));
-									ItemStack it;
-									if (c.isConsole()) {
-										it = new ItemStack(special);
-										title = title + "&b*";
-									} else {
-										it = new ItemStack(ClansAPI.getDataInstance().getMenuItem("clan"));
-									}
-									b.setItem(it);
-									b.setTitle(title);
-									if (c.getLogo() != null) {
-										LabyrinthSet<String> logo = new LabyrinthSet<>();
-										logo.add("&bTag: " + c.getPalette() + c.getName());
-										logo.add("&bMembers: " + c.getPalette() + c.getMembers().size());
-										logo.add("&bDescription: " + c.getPalette() + c.getDescription());
-										logo.addAll(c.getLogo());
-										b.setLore(logo.toArray(new String[0]));
-									} else {
-										b.setLore("&bTag: " + c.getPalette() + c.getName(), "&bMembers: " + c.getPalette() + c.getMembers().size(), "&bDescription: " + c.getPalette() + c.getDescription());
-									}
-									return b.build();
-								}).setClick(click -> {
-									click.setCancelled(true);
-									click.setHotbarAllowed(false);
-									MEMBER_LIST.get(c).open(click.getElement());
-								});
-							}).setLimit(getLimit()));
-
-						}).orGet(m -> m instanceof PaginatedMenu && m.getKey().isPresent() && m.getKey().get().equals("ClansPro:Roster_top"));
+				String rosterTopId = ClansAPI.getDataInstance().getMessageString("menu.roster-top.id");
+				MemoryDocket<?> docket2 = DocketUtils.get(rosterTopId);
+				if (docket2 != null) return docket2.toMenu();
 			case CLAN_ROSTER_SELECTION:
-				if (ClansAPI.getDataInstance().getMessages().read(c -> c.getNode("deep-edit").toPrimitive().getBoolean())) {
-					String id = ClansAPI.getDataInstance().getMessageString("menu.roster-select.id");
-					MemoryDocket<?> docket = DocketUtils.get(id);
-					if (docket != null) return docket.toMenu();
-				}
-				return MenuType.SINGULAR.build().setHost(api.getPlugin())
-						.setProperty(Menu.Property.RECURSIVE, Menu.Property.CACHEABLE)
-						.setTitle(StringUtils.use(ClansAPI.getDataInstance().getMenuTitle("list-types")).translate())
-						.setKey("ClansPro:Settings_select")
-						.setSize(Menu.Rows.ONE)
-						.setStock(i -> {
-							FillerElement<?> filler = new FillerElement<>(i);
-							filler.add(ed -> ed.setType(ItemElement.ControlType.ITEM_FILLER).setElement(it -> it.setType(Optional.ofNullable(Items.findMaterial("ironbars")).orElse(Items.findMaterial("stainedglasspane"))).setTitle(" ").build()));
-							i.addItem(filler);
-							i.addItem(b -> b.setElement(it -> it.setType(ClansAPI.getDataInstance().getMenuMaterial("top-list") != null ? ClansAPI.getDataInstance().getMenuMaterial("top-list") : Material.PAPER)
-									.setTitle(StringUtils.use(ClansAPI.getDataInstance().getMenuCategory("top-list")).translate()).build()).setSlot(3).setClick(click -> {
-								click.setHotbarAllowed(false);
-								click.setCancelled(true);
-								Player p = click.getElement();
-								CLAN_ROSTER_TOP.get().open(p);
-							}));
-							i.addItem(b -> b.setElement(getBackItem()).setSlot(4).setTypeAndAddAction(ItemElement.ControlType.BUTTON_EXIT, click -> {
-								click.setCancelled(true);
-								click.setHotbarAllowed(false);
-								MAIN_MENU.get(click.getElement()).open(click.getElement());
-							}));
-							i.addItem(b -> b.setElement(it -> it.setType(ClansAPI.getDataInstance().getMenuMaterial("roster-list") != null ? ClansAPI.getDataInstance().getMenuMaterial("roster-list") : Material.PAPER)
-									.setTitle(ClansAPI.getDataInstance().getMenuCategory("roster-list")).build()).setSlot(5).setClick(click -> {
-								click.setHotbarAllowed(false);
-								click.setCancelled(true);
-								Player p = click.getElement();
-								CLAN_ROSTER.get().open(p);
-							}));
-
-						}).orGet(m -> m instanceof SingularMenu && m.getKey().isPresent() && m.getKey().get().equals("ClansPro:Settings_Select")).addAction(c -> c.setCancelled(true));
+				String selectID = ClansAPI.getDataInstance().getMessageString("menu.roster-select.id");
+				MemoryDocket<?> docket3 = DocketUtils.get(selectID);
+				if (docket3 != null) return docket3.toMenu();
 			case SETTINGS_SELECT:
 				return MenuType.SINGULAR.build()
 						.setHost(api.getPlugin())
@@ -1552,128 +1234,10 @@ public enum GUI {
 						})
 						.join();
 			case MEMBER_INFO:
-				if (ClansAPI.getDataInstance().getMessages().read(c -> c.getNode("deep-edit").toPrimitive().getBoolean())) {
-					MemoryDocket<Clan.Associate> docket = new MemoryDocket<>(ClansAPI.getDataInstance().getMessages().getRoot().getNode("menu.member"));
-					docket.setUniqueDataConverter(associate, Clan.Associate.memoryDocketReplacer());
-					docket.setNamePlaceholder(":member_name:");
-					return Docket.toMenu(docket);
-				}
-				String finalBalance = balance;
-				return MenuType.SINGULAR.build().setHost(api.getPlugin())
-						.setProperty(Menu.Property.CACHEABLE)
-						.setTitle(test)
-						.setSize(Menu.Rows.THREE)
-						.setStock(i -> {
-							FillerElement<?> filler = new FillerElement<>(i);
-							filler.add(ed -> ed.setType(ItemElement.ControlType.ITEM_FILLER).setElement(it -> it.setType(Optional.ofNullable(Items.findMaterial("bluestainedglasspane")).orElse(Items.findMaterial("stainedglasspane"))).setTitle(" ").build()));
-							i.addItem(filler);
-							BorderElement<?> border = new BorderElement<>(i);
-							for (Menu.Panel p : Menu.Panel.values()) {
-								if (p == Menu.Panel.MIDDLE) continue;
-								if (LabyrinthProvider.getInstance().isLegacy()) {
-									border.add(p, ed -> ed.setType(ItemElement.ControlType.ITEM_BORDER).setElement(it -> it.setType(Items.findMaterial("STAINED_GLASS_PANE")).setTitle(" ").build()));
-								} else {
-									border.add(p, ed -> ed.setType(ItemElement.ControlType.ITEM_BORDER).setElement(it -> it.setType(Material.GRAY_STAINED_GLASS_PANE).setTitle(" ").build()));
-								}
-							}
-							i.addItem(border);
-							i.addItem(b -> b.setElement(it -> it.setItem(Item.ColoredArmor.select(Item.ColoredArmor.Piece.TORSO).setColor(associate.getClan().getPalette().isHex() ? associate.getClan().getPalette().toColor() : Color.RED).build())
-									.setTitle("Clan:").setLore(o + cl.getName()).build()).setSlot(13).setClick(click -> {
-								click.setHotbarAllowed(false);
-								click.setCancelled(true);
-								Player p = click.getElement();
-								p.performCommand("c info " + cl.getName());
-							}));
-							i.addItem(b -> b.setElement(it -> it.setItem(associate.getHead() != null ? associate.getHead() : SkullType.PLAYER.get()).setTitle("&6Click to teleport.").setLore(new Paragraph(bio + " &r- " + associate.getNickname()).setRegex(Paragraph.COMMA_AND_PERIOD).get()).build()).setSlot(4).setClick(click -> {
-								click.setCancelled(true);
-								if ((associate.getTag().isPlayer() && associate.getTag().getPlayer().isOnline()) || associate.getTag().isEntity()) {
-									Clan.Associate a = api.getAssociate(click.getElement()).orElse(null);
-
-									if (a != null) {
-										Teleport request = a.getTeleport();
-										if (request == null) {
-											if (Objects.equals(associate.getName(), a.getName()))
-												return;
-											if (!associate.getClan().getMembers().contains(a)) {
-												Clan.ACTION.sendMessage(click.getElement(), "&cYou're not in our clan.");
-												return;
-											}
-											if (associate.isEntity()) {
-												Teleport r = new Teleport.Impl(a, associate.getAsEntity().getLocation());
-												r.teleport();
-											} else {
-												Teleport r = new Teleport.Impl(a, associate.getTag().getPlayer().getPlayer());
-												r.teleport();
-											}
-
-										} else {
-											click.getElement().closeInventory();
-											request.cancel();
-											Mailer.empty(click.getElement()).prefix().start(api.getPrefix().joined()).finish().chat("&cYou already have a teleport request pending, cancelling...").deploy();
-										}
-									}
-
-								} else {
-									Mailer.empty(click.getElement()).prefix().start(api.getPrefix().joined()).finish().chat("&cIm not online at the moment, hit me up later!").deploy();
-								}
-							}));
-							i.addItem(b -> b.setElement(it -> it.setType(Material.BOOK).setTitle(o + "Statistics:").setLore(statist).build()).setSlot(12).setClick(click -> {
-								Player p = click.getElement();
-								click.setCancelled(true);
-								p.closeInventory();
-							}));
-							i.addItem(b -> b.setElement(getBackItem()).setSlot(19).setClick(click -> {
-								Player p = click.getElement();
-								click.setCancelled(true);
-								MEMBER_LIST.get(cl).open(p);
-							}));
-							i.addItem(b -> b.setElement(it -> it.setType(Items.findMaterial("GOLDENPICKAXE") != null ? Items.findMaterial("GOLDENPICKAXE") : Items.findMaterial("GOLDPICKAXE")).setTitle(o + "Rank:").setLore(o + rank).build()).setSlot(14).setClick(click -> {
-								Player p = click.getElement();
-								click.setCancelled(true);
-								p.closeInventory();
-							}));
-							i.addItem(b -> b.setElement(it -> it.setType(Items.findMaterial("ENDPORTALFRAME") != null ? Items.findMaterial("ENDPORTALFRAME") : Items.findMaterial("IRONINGOT")).setTitle(o + "Join Date:").setLore(date).build()).setSlot(22).setClick(click -> {
-								Player p = click.getElement();
-								click.setCancelled(true);
-								p.closeInventory();
-							}));
-							i.addItem(b -> b.setElement(it -> it.setType(Material.NAME_TAG).setTitle("&dMessage").build()).setSlot(25).setClick(click -> {
-								Player p = click.getElement();
-								click.setCancelled(true);
-								MenuType.PRINTABLE.build()
-										.setTitle("Message " + associate.getName())
-										.setHost(api.getPlugin())
-										.setSize(Menu.Rows.ONE)
-										.setStock(inv -> inv.addItem(be -> be.setElement(it -> it.setItem(SkullType.ARROW_BLUE_RIGHT.get()).build())
-												.setSlot(0)
-												.setClick(c -> {
-													c.setCancelled(true);
-													c.setHotbarAllowed(false);
-												})))
-										.join()
-										.addAction(clickElement -> {
-											clickElement.setCancelled(true);
-											clickElement.setHotbarAllowed(false);
-											if (clickElement.getSlot() == 2) {
-												clickElement.getElement().performCommand("tell " + associate.getName() + " " + clickElement.getParent().getName());
-												clickElement.getElement().closeInventory();
-											}
-
-										})
-										.open(p);
-							}));
-							i.addItem(b -> b.setElement(it -> it.setType(Material.DIAMOND_SWORD).setTitle(o + "K/D:").setLore(o + kd).build()).setSlot(10).setClick(click -> {
-								Player p = click.getElement();
-								click.setCancelled(true);
-								p.closeInventory();
-							}));
-							i.addItem(b -> b.setElement(it -> it.setType(Material.GOLD_INGOT).setTitle(o + "Wallet:").setLore(o + finalBalance).build()).setSlot(16).setClick(click -> {
-								Player p = click.getElement();
-								click.setCancelled(true);
-								p.closeInventory();
-							}));
-
-						}).join();
+				MemoryDocket<Clan.Associate> docket = new MemoryDocket<>(ClansAPI.getDataInstance().getMessages().getRoot().getNode("menu.member"));
+				docket.setUniqueDataConverter(associate, Clan.Associate.memoryDocketReplacer());
+				docket.setNamePlaceholder(":member_name:");
+				return Docket.toMenu(docket);
 			case MEMBER_EDIT:
 				return MenuType.SINGULAR.build().setHost(api.getPlugin())
 						.setProperty(Menu.Property.CACHEABLE)
@@ -2600,77 +2164,11 @@ public enum GUI {
 							})));
 						}).orGet(m -> m instanceof PaginatedMenu && m.getKey().map(("ClansPro:" + clan.getName() + "-members-edit")::equals).orElse(false));
 			case MEMBER_LIST:
-				if (ClansAPI.getDataInstance().getMessages().read(c -> c.getNode("deep-edit").toPrimitive().getBoolean())) {
-					Node h = ClansAPI.getDataInstance().getMessages().getRoot().getNode("menu.members");
-					MemoryDocket<Clan.Associate> dm = DocketUtils.get(Clan.memoryDocketReplacer().accept(h.getNode("id").toPrimitive().getString(), clan));
-					if (dm != null) {
-						return dm.toMenu();
-					}
+				Node h = ClansAPI.getDataInstance().getMessages().getRoot().getNode("menu.members");
+				MemoryDocket<Clan.Associate> dm = DocketUtils.get(Clan.memoryDocketReplacer().apply(h.getNode("id").toPrimitive().getString(), clan));
+				if (dm != null) {
+					return dm.toMenu();
 				}
-				return MenuType.PAGINATED.build()
-						.setHost(api.getPlugin())
-						.setKey("ClansPro:" + clan.getName() + "-members")
-						.setSize(getSize())
-						.setTitle(Clan.ACTION.color(ClansAPI.getDataInstance().getMenuTitle("member-list")))
-						.setStock(i -> {
-							BorderElement<?> border = new BorderElement<>(i);
-							for (Menu.Panel p : Menu.Panel.values()) {
-								if (p == Menu.Panel.MIDDLE) continue;
-								if (LabyrinthProvider.getInstance().isLegacy()) {
-									border.add(p, ed -> ed.setType(ItemElement.ControlType.ITEM_BORDER).setElement(it -> it.setType(Items.findMaterial("STAINED_GLASS_PANE")).setTitle(" ").build()));
-								} else {
-									border.add(p, ed -> ed.setType(ItemElement.ControlType.ITEM_BORDER).setElement(it -> it.setType(Material.GRAY_STAINED_GLASS_PANE).setTitle(" ").build()));
-								}
-							}
-							FillerElement<?> filler = new FillerElement<>(i);
-							filler.add(ed -> ed.setType(ItemElement.ControlType.ITEM_FILLER).setElement(it -> it.setItem(ClansAPI.getDataInstance().getMenuItem("background-theme")).setTitle(" ").build()));
-							i.addItem(filler);
-							i.addItem(border);
-							i.addItem(b -> b.setElement(getLeftItem()).setSlot(getLeft()).setTypeAndAddAction(ItemElement.ControlType.BUTTON_BACK, click -> {
-								click.setCancelled(true);
-								click.setHotbarAllowed(false);
-								click.setConsumer((target, success) -> {
-
-									if (success) {
-										i.open(target);
-									} else {
-										Clan.ACTION.sendMessage(target, Clan.ACTION.color(Clan.ACTION.alreadyFirstPage()));
-									}
-
-								});
-							}));
-
-							i.addItem(b -> b.setElement(getRightItem()).setSlot(getRight()).setTypeAndAddAction(ItemElement.ControlType.BUTTON_NEXT, click -> {
-								click.setCancelled(true);
-								click.setHotbarAllowed(false);
-								click.setConsumer((target, success) -> {
-									if (success) {
-										i.open(target);
-									} else {
-										Clan.ACTION.sendMessage(target, Clan.ACTION.color(Clan.ACTION.alreadyLastPage()));
-									}
-
-								});
-							}));
-
-							i.addItem(b -> b.setElement(getBackItem()).setSlot(getBack()).setTypeAndAddAction(ItemElement.ControlType.BUTTON_EXIT, click -> {
-								click.setCancelled(true);
-								click.setHotbarAllowed(false);
-								getTemp(click.getElement()).open(click.getElement());
-							}));
-							i.addItem(new ListElement<>(new ArrayList<>(clan.getMembers())).setLimit(getLimit()).setPopulate((value, element) -> element.setElement(it -> it.setItem(value.getHead() != null ? value.getHead() : SkullType.PLAYER.get()).setTitle(value.getNickname() != null && !value.getNickname().equals(value.getName()) ? clan.getPalette().toString() + value.getName() + " &r(" + clan.getPalette().toString(value.getNickname()) + "&r)" : clan.getPalette().toString() + value.getName()).setLore("&5Click to view my information.", "", "&c&oShift-Right click to edit (Member).").build()).setClick(c -> {
-								c.setCancelled(true);
-								if (clan.getMember(a -> a.getName().equals(c.getElement().getName())) != null) {
-									if (c.getClickType() == ClickType.SHIFT_RIGHT) {
-										MEMBER_EDIT.get(value).open(c.getElement());
-									} else {
-										MEMBER_INFO.get(value).open(c.getElement());
-									}
-								} else {
-									MEMBER_INFO.get(value).open(c.getElement());
-								}
-							})));
-						}).orGet(m -> m instanceof PaginatedMenu && m.getKey().map(("ClansPro:" + clan.getName() + "-members")::equals).orElse(false));
 		}
 		throw new IllegalArgumentException("GUI type " + name() + " not valid, contact developers.");
 	}

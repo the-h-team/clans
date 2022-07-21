@@ -1,9 +1,9 @@
 package com.github.sanctum.clans.bridge.internal.traits;
 
 import com.github.sanctum.clans.bridge.internal.traits.structure.TraitHolder;
-import com.github.sanctum.labyrinth.data.container.LabyrinthCollection;
-import com.github.sanctum.labyrinth.data.container.LabyrinthEntryMap;
-import com.github.sanctum.labyrinth.data.container.LabyrinthMap;
+import com.github.sanctum.panther.container.PantherCollection;
+import com.github.sanctum.panther.container.PantherEntryMap;
+import com.github.sanctum.panther.container.PantherMap;
 import java.util.UUID;
 import java.util.function.Supplier;
 import org.bukkit.OfflinePlayer;
@@ -12,7 +12,7 @@ import org.jetbrains.annotations.NotNull;
 public class TraitManager {
 
 	static TraitManager instance;
-	final LabyrinthMap<UUID, TraitHolder> traits = new LabyrinthEntryMap<>();
+	final PantherMap<UUID, TraitHolder> traits = new PantherEntryMap<>();
 
 	public TraitHolder get(@NotNull OfflinePlayer player) {
 		return traits.get(player.getUniqueId());
@@ -22,7 +22,7 @@ public class TraitManager {
 		return traits.computeIfAbsent(player.getUniqueId(), new TraitHolder(player));
 	}
 
-	public LabyrinthCollection<TraitHolder> getAll() {
+	public PantherCollection<TraitHolder> getAll() {
 		return traits.values();
 	}
 

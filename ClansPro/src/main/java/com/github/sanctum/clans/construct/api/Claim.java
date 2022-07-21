@@ -3,13 +3,12 @@ package com.github.sanctum.clans.construct.api;
 import com.github.sanctum.clans.construct.actions.ClaimAction;
 import com.github.sanctum.clans.construct.impl.DefaultClaim;
 import com.github.sanctum.clans.construct.impl.Resident;
-import com.github.sanctum.labyrinth.data.JsonAdapter;
-import com.github.sanctum.labyrinth.data.NodePointer;
-import com.github.sanctum.labyrinth.data.service.Check;
-import com.github.sanctum.labyrinth.library.HFEncoded;
+import com.github.sanctum.labyrinth.library.LabyrinthEncoded;
+import com.github.sanctum.panther.file.JsonAdapter;
+import com.github.sanctum.panther.file.Node;
+import com.github.sanctum.panther.util.Check;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import java.io.NotSerializableException;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.List;
@@ -25,7 +24,7 @@ import org.jetbrains.annotations.NotNull;
 /**
  * Encapsulated data for a clan owned <strong>chunk</strong> of land.
  */
-@NodePointer(value = "Claim", type = DefaultClaim.class)
+@Node.Pointer(value = "Claim", type = DefaultClaim.class)
 @DelegateDeserialization(DefaultClaim.class)
 public interface Claim extends Savable, Iterable<Block>, ConfigurationSerializable, JsonAdapter<Claim> {
 
@@ -231,7 +230,7 @@ public interface Claim extends Savable, Iterable<Block>, ConfigurationSerializab
 	}
 
 	@Override
-	default Class<Claim> getClassType() {
+	default Class<Claim> getSerializationSignature() {
 		return Claim.class;
 	}
 
@@ -294,7 +293,8 @@ public interface Claim extends Savable, Iterable<Block>, ConfigurationSerializab
 		private boolean allowed;
 		private String id;
 
-		public Flag() {}
+		public Flag() {
+		}
 
 		public Flag(Flag otherFlag) {
 			this.id = Check.forNull(otherFlag.getId(), "Flag id cannot be null in cloning process!");
@@ -308,7 +308,7 @@ public interface Claim extends Savable, Iterable<Block>, ConfigurationSerializab
 		}
 
 		public static Flag deserialize(String context) {
-			return new HFEncoded(context).deserialize(Flag.class);
+			return new LabyrinthEncoded(context).deserialize(Flag.class);
 		}
 
 		@NotNull
@@ -333,12 +333,7 @@ public interface Claim extends Savable, Iterable<Block>, ConfigurationSerializab
 		}
 
 		public final @NotNull String serialize() {
-			try {
-				return new HFEncoded(this).serialize();
-			} catch (NotSerializableException e) {
-				e.printStackTrace();
-				return "You'll never see me.";
-			}
+			return new LabyrinthEncoded(this).serialize();
 		}
 
 		@Override

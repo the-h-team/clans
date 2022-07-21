@@ -3,13 +3,17 @@ package com.github.sanctum.clans.bridge.external;
 import com.github.sanctum.clans.bridge.ClanAddon;
 import com.github.sanctum.clans.bridge.ClanAddonQuery;
 import com.github.sanctum.clans.bridge.ClanVentBus;
+import com.github.sanctum.clans.bridge.external.dynmap.DynmapClanMarketSet;
 import com.github.sanctum.clans.bridge.external.dynmap.DynmapCommand;
+import com.github.sanctum.clans.event.associate.AssociateObtainLandEvent;
+import com.github.sanctum.clans.event.associate.AssociateUnClaimEvent;
 import com.github.sanctum.clans.event.command.CommandInformationAdaptEvent;
-import com.github.sanctum.labyrinth.event.custom.Vent;
 import org.bukkit.Bukkit;
 import org.jetbrains.annotations.NotNull;
 
 public class DynmapAddon extends ClanAddon {
+
+	DynmapClanMarketSet integration;
 
 	@Override
 	public boolean isPersistent() {
@@ -23,12 +27,12 @@ public class DynmapAddon extends ClanAddon {
 
 	@Override
 	public @NotNull String getDescription() {
-		return "Allows clans to share land publicly on Dynmap renders (Renderings non-persistent).";
+		return "Allows clans to temporarily display owned claims publicly.";
 	}
 
 	@Override
 	public @NotNull String getVersion() {
-		return "1.0";
+		return "2.0";
 	}
 
 	@Override
@@ -38,14 +42,14 @@ public class DynmapAddon extends ClanAddon {
 
 	@Override
 	public void onLoad() {
-		getContext().stage(new DynmapCommand("claim"));
+		integration = new DynmapClanMarketSet().initialize();
+		getContext().stage(new DynmapCommand("globe"));
 	}
 
 	@Override
 	public void onEnable() {
 
-		ClanVentBus.subscribe(CommandInformationAdaptEvent.class, Vent.Priority.MEDIUM, (e, subscription) -> {
-
+		ClanVentBus.MEDIUM_PRIORITY.subscribeTo(CommandInformationAdaptEvent.class, "clanspro;dynmap-info_adapt", (e, subscription) -> {
 			ClanAddon cycle = ClanAddonQuery.getAddon("Dynmap");
 
 			if (cycle != null && !cycle.getContext().isActive()) {
@@ -53,15 +57,35 @@ public class DynmapAddon extends ClanAddon {
 				return;
 			}
 
-			e.insert("&7|&e) &6/clan &fshowclaims");
-			e.insert("&7|&e) &6/clan &fhideclaim");
+			e.insert("&7|&e) &6/c &bglobe &ashow &8[all]");
+			e.insert("&7|&e) &6/c &bglobe &chide &8[all]");
+		}).queue();
 
-		});
+		ClanVentBus.MEDIUM_PRIORITY.subscribeTo(AssociateObtainLandEvent.class, "clanspro;dynmap-land_obtain", (event, subscription) -> {
+			event.getPlayer().performCommand("c globe show");
+		}).queue();
+
+		ClanVentBus.HIGHEST_PRIORITY.subscribeTo(AssociateUnClaimEvent.class, "clanspro;dynmap-land_loss", (event, subscription) -> {
+			if (!event.isCancelled()) {
+				event.getPlayer().performCommand("c globe hide");
+			}
+		}).queue();
 
 	}
 
 	@Override
 	public void onDisable() {
 
+		ClanVentBus mediumPriority = ClanVentBus.MEDIUM_PRIORITY;
+		mediumPriority.unsubscribeFrom(CommandInformationAdaptEvent.class, "clanspro;dynmap-info_adapt").deploy();
+		mediumPriority.unsubscribeFrom(CommandInformationAdaptEvent.class, "clanspro;dynmap-land_obtain").deploy();
+		mediumPriority.unsubscribeFrom(CommandInformationAdaptEvent.class, "clanspro;dynmap-land_loss").deploy();
+
+
 	}
+
+	public DynmapClanMarketSet getMarketSet() {
+		return integration;
+	}
+
 }

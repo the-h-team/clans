@@ -349,10 +349,9 @@ Response:
 #==================================#
 # Welcome to the brand new gui configuration section! The top section for the members screen
 # shows documentation on usages. Use it to fully customize 100% of the gui to your liking!! Newly improved!
-# Enable the option below to switch to the new customization format! Its highly recommended you start adjusting as
-# the ability to ignore deep customization will be removed for it will be the sole provider.
-deep-edit: true
 menu:
+  # Allow the plugin to forward use of GUI?
+  enabled: true
   # A roster screen of members for a given clan.
   # Clan provided placeholders work here:
   # :member_list:  "Get all members of this clan in string form."
@@ -1136,7 +1135,6 @@ menu:
     title: 'Hello %player_name%'
     rows: SIX
     type: SINGULAR
-    id: 'ClansPro:Home'
     border:
       name: ''
       locked: true

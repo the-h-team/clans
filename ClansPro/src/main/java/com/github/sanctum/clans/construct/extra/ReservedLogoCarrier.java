@@ -3,12 +3,12 @@ package com.github.sanctum.clans.construct.extra;
 import com.github.sanctum.clans.bridge.ClanVentBus;
 import com.github.sanctum.clans.construct.api.LogoHolder;
 import com.github.sanctum.clans.event.insignia.InsigniaBuildCarrierEvent;
-import com.github.sanctum.labyrinth.annotation.Ordinal;
 import com.github.sanctum.labyrinth.library.Entities;
-import com.github.sanctum.labyrinth.library.HFEncoded;
-import com.github.sanctum.labyrinth.library.HUID;
+import com.github.sanctum.labyrinth.library.LabyrinthEncoded;
 import com.github.sanctum.labyrinth.library.StringUtils;
 import com.github.sanctum.labyrinth.task.TaskScheduler;
+import com.github.sanctum.panther.annotation.Ordinal;
+import com.github.sanctum.panther.util.HUID;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashSet;
@@ -38,7 +38,7 @@ public enum ReservedLogoCarrier implements LogoHolder.Carrier {
 	}
 
 	public List<String> get() {
-		return (List<String>) new HFEncoded(logo).deserialize(List.class);
+		return (List<String>) new LabyrinthEncoded(logo).deserialize(List.class);
 	}
 
 	public void add(Attributable attributable) throws IllegalArgumentException {

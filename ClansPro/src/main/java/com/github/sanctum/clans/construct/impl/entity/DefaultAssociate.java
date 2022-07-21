@@ -10,16 +10,16 @@ import com.github.sanctum.clans.construct.api.Relation;
 import com.github.sanctum.clans.construct.api.Teleport;
 import com.github.sanctum.clans.construct.extra.PrivateContainer;
 import com.github.sanctum.clans.construct.impl.Resident;
-import com.github.sanctum.labyrinth.annotation.Ordinal;
 import com.github.sanctum.labyrinth.data.Atlas;
 import com.github.sanctum.labyrinth.data.AtlasMap;
-import com.github.sanctum.labyrinth.data.MemorySpace;
-import com.github.sanctum.labyrinth.data.Node;
-import com.github.sanctum.labyrinth.data.Primitive;
 import com.github.sanctum.labyrinth.data.service.PlayerSearch;
 import com.github.sanctum.labyrinth.library.Items;
 import com.github.sanctum.labyrinth.library.Mailer;
 import com.github.sanctum.labyrinth.library.TimeWatch;
+import com.github.sanctum.panther.annotation.Ordinal;
+import com.github.sanctum.panther.file.MemorySpace;
+import com.github.sanctum.panther.file.Node;
+import com.github.sanctum.panther.file.Primitive;
 import com.github.sanctum.skulls.CustomHead;
 import java.text.MessageFormat;
 import java.util.Arrays;
@@ -107,7 +107,7 @@ public final class DefaultAssociate implements Clan.Associate, PersistentEntity 
 	}
 
 	public UUID getId() {
-		return search.getId();
+		return search != null ? search.getId() : this.id;
 	}
 
 	/**
@@ -361,7 +361,7 @@ public final class DefaultAssociate implements Clan.Associate, PersistentEntity 
 
 	@Override
 	public int getClaimLimit() {
-		return search.getPlayer().isOnline() ? Claim.ACTION.claimHardcap(getTag().getPlayer().getPlayer()) : getClan().getClaimLimit();
+		return search != null && search.getPlayer().isOnline() ? Claim.ACTION.claimHardcap(getTag().getPlayer().getPlayer()) : getClan().getClaimLimit();
 	}
 
 	@Override

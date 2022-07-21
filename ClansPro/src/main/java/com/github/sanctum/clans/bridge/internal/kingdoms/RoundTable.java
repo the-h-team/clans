@@ -10,10 +10,10 @@ import com.github.sanctum.clans.construct.api.Clearance;
 import com.github.sanctum.labyrinth.LabyrinthProvider;
 import com.github.sanctum.labyrinth.api.Service;
 import com.github.sanctum.labyrinth.data.FileManager;
-import com.github.sanctum.labyrinth.data.FileType;
-import com.github.sanctum.labyrinth.data.Node;
 import com.github.sanctum.labyrinth.data.container.PersistentContainer;
 import com.github.sanctum.labyrinth.library.NamespacedKey;
+import com.github.sanctum.panther.file.Configurable;
+import com.github.sanctum.panther.file.Node;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -55,9 +55,9 @@ public class RoundTable extends Progressive implements Controllable, Iterable<Cl
 		String test = container.get(String.class, "name");
 		if (test != null) this.name = test;
 
-		FileManager data = cycle.getFile(FileType.JSON, "achievements", "data");
+		FileManager data = cycle.getFile(Configurable.Type.JSON, "achievements", "data");
 
-		FileManager users = cycle.getFile(FileType.JSON, "users", "data");
+		FileManager users = cycle.getFile(Configurable.Type.JSON, "users", "data");
 
 		if (data.getRoot().exists()) {
 			if (data.getRoot().isNode("memory.table")) {
@@ -69,14 +69,14 @@ public class RoundTable extends Progressive implements Controllable, Iterable<Cl
 						if (money) {
 							achievement.setReward(Reward.MONEY, reward.getNode("value").toPrimitive().getDouble());
 						} else {
-							if (reward.getNode("value").toBukkit().isItemStack()) {
-								achievement.setReward(Reward.ITEM, reward.getNode("value").toBukkit().getItemStack());
+							if (reward.getNode("value").isNode("org.bukkit.inventory.ItemStack")) {
+								achievement.setReward(Reward.ITEM, reward.getNode("value").get(ItemStack.class));
 							} else {
 								List<ItemStack> items = new ArrayList<>();
 								for (String s : reward.getNode("value").getKeys(false)) {
 									Node item = reward.getNode("value").getNode(s);
-									if (item.toBukkit().isItemStack()) {
-										items.add(item.toBukkit().getItemStack());
+									if (reward.getNode("value").isNode(s)) {
+										items.add(item.get(ItemStack.class));
 									}
 								}
 								achievement.setReward(Reward.ITEM_ARRAY, items.toArray(new ItemStack[0]));
@@ -246,7 +246,7 @@ public class RoundTable extends Progressive implements Controllable, Iterable<Cl
 	@Override
 	public void save(ClanAddon cycle) {
 
-		FileManager users = cycle.getFile(FileType.JSON, "users", "data");
+		FileManager users = cycle.getFile(Configurable.Type.JSON, "users", "data");
 		container.attach("name", this.name);
 		try {
 			container.save("name");
@@ -271,7 +271,7 @@ public class RoundTable extends Progressive implements Controllable, Iterable<Cl
 	}
 
 	Node getParentNode() {
-		FileManager section = ClanAddonQuery.getAddon("Kingdoms").getFile(FileType.JSON, "table", "data");
+		FileManager section = ClanAddonQuery.getAddon("Kingdoms").getFile(Configurable.Type.JSON, "table", "data");
 		return section.getRoot().getNode(getPath());
 	}
 

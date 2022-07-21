@@ -1,7 +1,7 @@
 package com.github.sanctum.clans.bridge.internal.traits.structure;
 
-import com.github.sanctum.labyrinth.data.container.LabyrinthCollection;
-import com.github.sanctum.labyrinth.data.container.LabyrinthList;
+import com.github.sanctum.panther.container.PantherCollection;
+import com.github.sanctum.panther.container.PantherList;
 import java.util.Arrays;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -9,7 +9,7 @@ import org.jetbrains.annotations.Nullable;
 public class UserTrait implements Trait {
 
 	final String name;
-	final LabyrinthCollection<Ability> abilities = new LabyrinthList<>();
+	final PantherCollection<Ability> abilities = new PantherList<>();
 
 	public UserTrait(@NotNull Trait trait) {
 		this.name = trait.getName();

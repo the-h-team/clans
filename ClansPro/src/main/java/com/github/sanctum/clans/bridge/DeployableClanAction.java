@@ -5,7 +5,7 @@ import com.github.sanctum.labyrinth.api.Service;
 import com.github.sanctum.labyrinth.api.TaskService;
 import com.github.sanctum.labyrinth.library.Deployable;
 import com.github.sanctum.labyrinth.library.DeployableMapping;
-import com.github.sanctum.labyrinth.library.HUID;
+import com.github.sanctum.panther.util.HUID;
 import java.util.Date;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
@@ -59,8 +59,8 @@ public class DeployableClanAction<T> implements Deployable<T> {
 	}
 
 	@Override
-	public <O> DeployableMapping<O> map(Function<? super T, ? extends O> mapper) {
-		return Deployable.of(t, action).map(mapper);
+	public <O> DeployableMapping<O> mapLabyrinth(Function<? super T, ? extends O> mapper) {
+		return Deployable.of(t, action).mapLabyrinth(mapper);
 	}
 
 	@Override

@@ -7,7 +7,7 @@ import com.github.sanctum.clans.bridge.internal.map.MapController;
 import com.github.sanctum.clans.bridge.internal.map.command.MapCommand;
 import com.github.sanctum.clans.construct.api.ClansAPI;
 import com.github.sanctum.clans.event.command.CommandInformationAdaptEvent;
-import com.github.sanctum.labyrinth.event.custom.Vent;
+import com.github.sanctum.panther.event.Vent;
 import org.bukkit.plugin.ServicePriority;
 import org.jetbrains.annotations.NotNull;
 

@@ -1,7 +1,7 @@
 package com.github.sanctum.clans.construct.api;
 
 import com.github.sanctum.labyrinth.data.FileManager;
-import com.github.sanctum.labyrinth.library.HUID;
+import com.github.sanctum.panther.util.HUID;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 

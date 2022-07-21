@@ -3,11 +3,12 @@ package com.github.sanctum.clans.bridge;
 import com.github.sanctum.clans.construct.api.ClanException;
 import com.github.sanctum.clans.construct.api.ClansAPI;
 import com.github.sanctum.labyrinth.LabyrinthProvider;
-import com.github.sanctum.labyrinth.api.Service;
 import com.github.sanctum.labyrinth.data.Registry;
-import com.github.sanctum.labyrinth.data.service.AnnotationDiscovery;
-import com.github.sanctum.labyrinth.data.service.Check;
-import com.github.sanctum.labyrinth.event.custom.Subscribe;
+import com.github.sanctum.panther.annotation.AnnotationDiscovery;
+import com.github.sanctum.panther.event.Subscribe;
+import com.github.sanctum.panther.event.Vent;
+import com.github.sanctum.panther.event.VentMap;
+import com.github.sanctum.panther.util.Check;
 import com.google.common.collect.Sets;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
@@ -92,7 +93,7 @@ public class ClanAddonQuery {
 				DATA_LOG.add(" - (+1) Listener failed to register. Already registered and skipping.");
 			} else {
 				if (AnnotationDiscovery.of(Subscribe.class, add).isPresent()) {
-					LabyrinthProvider.getService(Service.VENT).subscribe(ClansAPI.getInstance().getPlugin(), add);
+					VentMap.getInstance().subscribe((Vent.Host) ClansAPI.getInstance().getPlugin(), add);
 				} else {
 					Bukkit.getPluginManager().registerEvents(add, ClansAPI.getInstance().getPlugin());
 				}
@@ -175,7 +176,7 @@ public class ClanAddonQuery {
 				boolean registered = HandlerList.getRegisteredListeners(PRO).stream().anyMatch(r -> r.getListener().equals(addition));
 				if (!registered) {
 					l.info("- [" + addon.getName() + "] (+1) Listener " + format + " loaded");
-					LabyrinthProvider.getService(Service.VENT).subscribe(PRO, addition);
+					VentMap.getInstance().subscribe((Vent.Host) PRO, addition);
 				} else {
 					l.info("- [" + addon.getName() + "] (-1) Listener " + format + " already loaded. Skipping.");
 				}
@@ -231,7 +232,7 @@ public class ClanAddonQuery {
 					boolean registered = HandlerList.getRegisteredListeners(plugin).stream().anyMatch(r -> r.getListener().equals(addition));
 					if (!registered) {
 						l.info("- [" + c.getName() + "] (+1) Listener " + format + " loaded");
-						LabyrinthProvider.getService(Service.VENT).subscribe(plugin, addition);
+						VentMap.getInstance().subscribe((Vent.Host) plugin, addition);
 					} else {
 						l.info("- [" + c.getName() + "] (-1) Listener " + format + " already loaded. Skipping.");
 					}
@@ -292,7 +293,7 @@ public class ClanAddonQuery {
 					boolean registered = HandlerList.getRegisteredListeners(PRO).stream().anyMatch(r -> r.getListener().equals(addition));
 					if (!registered) {
 						l.info("- [" + e.getName() + "] (+1) Class " + format + " loaded");
-						LabyrinthProvider.getService(Service.VENT).subscribe(PRO, addition);
+						VentMap.getInstance().subscribe((Vent.Host) PRO, addition);
 					} else {
 						l.info("- [" + e.getName() + "] (-1) Class " + format + " already loaded. Skipping.");
 					}

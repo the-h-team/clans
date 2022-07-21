@@ -8,8 +8,8 @@ import org.intellij.lang.annotations.MagicConstant;
 import org.jetbrains.annotations.NotNull;
 
 /**
- * An object containing either no or multiple value types in response to a processed inquiry.
- * 
+ * An object containing either zero or multiple value types in response to a processed inquiry.
+ *
  * @see Consultant#sendMessage(Supplier)
  */
 public final class Ticket {

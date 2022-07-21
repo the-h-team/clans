@@ -2,10 +2,10 @@ package com.github.sanctum.clans.construct.api;
 
 import com.github.sanctum.clans.construct.extra.ClanDisplayName;
 import com.github.sanctum.labyrinth.data.FileManager;
-import com.github.sanctum.labyrinth.data.FileType;
 import com.github.sanctum.labyrinth.library.Cooldown;
-import com.github.sanctum.labyrinth.library.HUID;
 import com.github.sanctum.labyrinth.task.TaskScheduler;
+import com.github.sanctum.panther.file.Configurable;
+import com.github.sanctum.panther.util.HUID;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -27,7 +27,7 @@ public interface War extends Iterable<Clan.Associate> {
 	}
 
 	static void setSpawn(Team team, Location location) {
-		FileManager file = ClansAPI.getInstance().getFileList().find("locations", "Configuration", FileType.JSON);
+		FileManager file = ClansAPI.getInstance().getFileList().get("locations", "Configuration", Configurable.Type.JSON);
 		switch (team) {
 			case A:
 				file.write(t -> t.set("War.team-a", location));
@@ -326,20 +326,20 @@ public interface War extends Iterable<Clan.Associate> {
 	 */
 	enum Team {
 		A(() -> {
-			FileManager file = ClansAPI.getInstance().getFileList().get("locations", "Configuration", FileType.JSON);
-			return file.read(c -> c.getNode("War").getNode("team-a").toBukkit().getLocation());
+			FileManager file = ClansAPI.getInstance().getFileList().get("locations", "Configuration", Configurable.Type.JSON);
+			return file.read(c -> c.getNode("War").getNode("team-a").get(Location.class));
 		}),
 		B(() -> {
-			FileManager file = ClansAPI.getInstance().getFileList().get("locations", "Configuration", FileType.JSON);
-			return file.read(c -> c.getNode("War").getNode("team-b").toBukkit().getLocation());
+			FileManager file = ClansAPI.getInstance().getFileList().get("locations", "Configuration", Configurable.Type.JSON);
+			return file.read(c -> c.getNode("War").getNode("team-b").get(Location.class));
 		}),
 		C(() -> {
-			FileManager file = ClansAPI.getInstance().getFileList().get("locations", "Configuration", FileType.JSON);
-			return file.read(c -> c.getNode("War").getNode("team-c").toBukkit().getLocation());
+			FileManager file = ClansAPI.getInstance().getFileList().get("locations", "Configuration", Configurable.Type.JSON);
+			return file.read(c -> c.getNode("War").getNode("team-c").get(Location.class));
 		}),
 		D(() -> {
-			FileManager file = ClansAPI.getInstance().getFileList().get("locations", "Configuration", FileType.JSON);
-			return file.read(c -> c.getNode("War").getNode("team-d").toBukkit().getLocation());
+			FileManager file = ClansAPI.getInstance().getFileList().get("locations", "Configuration", Configurable.Type.JSON);
+			return file.read(c -> c.getNode("War").getNode("team-d").get(Location.class));
 		});
 
 		private final Supplier<Location> spawn;

@@ -41,6 +41,12 @@ public class CommandClaim extends ClanSubCommand {
 							lib.sendMessage(p, MessageFormat.format(lib.notClaimOwner("Third Party"), "Third Party"));
 							return true;
 						}
+						if (ClansAPI.getDataInstance().getConfigString("Clans.raid-shield.mode").equals("TEMPORARY")) {
+							if (!ClansAPI.getInstance().getShieldManager().isEnabled()) {
+								lib.sendMessage(p, "&cYou cannot do this while the shield is down.");
+								return true;
+							}
+						}
 						Claim.ACTION.claim(p);
 					} else {
 						lib.sendMessage(p, lib.noClearance());

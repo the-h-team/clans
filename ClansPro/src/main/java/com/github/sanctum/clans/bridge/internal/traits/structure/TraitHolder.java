@@ -4,9 +4,9 @@ import com.github.sanctum.clans.bridge.ClanAddon;
 import com.github.sanctum.clans.bridge.internal.TraitsAddon;
 import com.github.sanctum.clans.construct.api.Savable;
 import com.github.sanctum.labyrinth.data.FileManager;
-import com.github.sanctum.labyrinth.data.FileType;
-import com.github.sanctum.labyrinth.data.Node;
 import com.github.sanctum.labyrinth.interfacing.Nameable;
+import com.github.sanctum.panther.file.Configurable;
+import com.github.sanctum.panther.file.Node;
 import java.util.Arrays;
 import java.util.UUID;
 import org.bukkit.OfflinePlayer;
@@ -25,7 +25,7 @@ public class TraitHolder implements Nameable, Savable {
 		this.id = player.getUniqueId();
 		ClanAddon addon = ClanAddon.getAddon(TraitsAddon.class);
 		if (addon != null) {
-			FileManager file = addon.getFile(FileType.JSON, "holders");
+			FileManager file = addon.getFile(Configurable.Type.JSON, "holders");
 			Node user = file.getRoot().getNode(id.toString());
 			if (user.exists()) {
 				String prim = user.getNode("primary").toPrimitive().getString();
@@ -92,7 +92,7 @@ public class TraitHolder implements Nameable, Savable {
 	public void save() {
 		ClanAddon addon = ClanAddon.getAddon(TraitsAddon.class);
 		if (addon != null) {
-			FileManager file = addon.getFile(FileType.JSON, "holders");
+			FileManager file = addon.getFile(Configurable.Type.JSON, "holders");
 			Node user = file.getRoot().getNode(id.toString());
 			user.getNode("primary").set(primary.getName());
 			user.getNode("primary-abilities").set(null);

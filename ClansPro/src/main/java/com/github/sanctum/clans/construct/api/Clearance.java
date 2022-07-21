@@ -1,10 +1,10 @@
 package com.github.sanctum.clans.construct.api;
 
-import com.github.sanctum.labyrinth.annotation.Json;
-import com.github.sanctum.labyrinth.data.service.Check;
 import com.github.sanctum.labyrinth.data.service.Constant;
 import com.github.sanctum.labyrinth.interfacing.JsonIntermediate;
 import com.github.sanctum.labyrinth.interfacing.Nameable;
+import com.github.sanctum.panther.annotation.Json;
+import com.github.sanctum.panther.util.Check;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import java.io.Serializable;

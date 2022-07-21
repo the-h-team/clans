@@ -12,11 +12,11 @@ import com.github.sanctum.clans.construct.api.GUI;
 import com.github.sanctum.clans.construct.api.War;
 import com.github.sanctum.clans.construct.extra.StringLibrary;
 import com.github.sanctum.labyrinth.data.FileManager;
-import com.github.sanctum.labyrinth.data.FileType;
 import com.github.sanctum.labyrinth.formatting.pagination.EasyPagination;
-import com.github.sanctum.labyrinth.library.HUID;
 import com.github.sanctum.labyrinth.library.StringUtils;
 import com.github.sanctum.labyrinth.task.TaskScheduler;
+import com.github.sanctum.panther.file.Configurable;
+import com.github.sanctum.panther.util.HUID;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -319,7 +319,7 @@ public class CommandClanAdmin extends Command {
 			String args0 = args[0];
 			if (args0.equalsIgnoreCase("copy")) {
 				FileManager reg = ClansAPI.getInstance().getClaimManager().getFile();
-				if (reg.getRoot().getType() != FileType.JSON) {
+				if (reg.getRoot().getType() != Configurable.Type.JSON) {
 					if (reg.toJSON("regions", "Configuration").getRoot().save()) {
 						lib.sendMessage(p, "&aRegions file copied to Json");
 					}
@@ -333,7 +333,7 @@ public class CommandClanAdmin extends Command {
 				}
 				for (Clan c : ClansAPI.getInstance().getClanManager().getClans()) {
 					FileManager f = ClansAPI.getDataInstance().getClanFile(c);
-					if (f.getRoot().getType() != FileType.JSON) {
+					if (f.getRoot().getType() != Configurable.Type.JSON) {
 						if (f.toJSON().getRoot().save()) {
 							lib.sendMessage(p, "&aClan " + c.getName() + " file copied to Json");
 						}

@@ -7,10 +7,10 @@ import com.github.sanctum.clans.construct.api.EntityHolder;
 import com.github.sanctum.clans.construct.api.InvasiveEntity;
 import com.github.sanctum.labyrinth.LabyrinthProvider;
 import com.github.sanctum.labyrinth.data.FileManager;
-import com.github.sanctum.labyrinth.data.Node;
-import com.github.sanctum.labyrinth.library.HUID;
-import com.github.sanctum.labyrinth.library.ParsedHUID;
 import com.github.sanctum.labyrinth.task.TaskScheduler;
+import com.github.sanctum.panther.file.Node;
+import com.github.sanctum.panther.util.HUID;
+import com.github.sanctum.panther.util.ParsedHUID;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -142,7 +142,7 @@ public final class DefaultClaim implements Claim {
 	@Override
 	public void setActive(boolean active) {
 		this.active = active;
-		ClansAPI.getInstance().getClaimManager().getFile().getRoot().set(getOwner().getTag().getId() + ".Claims." + getId() + ".active", active);
+		ClansAPI.getInstance().getClaimManager().getFile().getRoot().set(getOwner().getTag().getId() + "." + getId() + ".active", active);
 		ClansAPI.getInstance().getClaimManager().getFile().getRoot().save();
 	}
 

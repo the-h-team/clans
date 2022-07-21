@@ -1,6 +1,8 @@
 package com.github.sanctum.clans.listener;
 
 import com.github.sanctum.clans.bridge.ClanVentBus;
+import com.github.sanctum.clans.bridge.ClanVentCall;
+import com.github.sanctum.clans.construct.actions.ClanAction;
 import com.github.sanctum.clans.construct.api.Claim;
 import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClansAPI;
@@ -10,13 +12,14 @@ import com.github.sanctum.clans.construct.extra.ShieldTamper;
 import com.github.sanctum.clans.event.claim.ClaimInteractEvent;
 import com.github.sanctum.clans.event.claim.RaidShieldEvent;
 import com.github.sanctum.labyrinth.data.EconomyProvision;
-import com.github.sanctum.labyrinth.event.custom.DefaultEvent;
-import com.github.sanctum.labyrinth.event.custom.Subscribe;
-import com.github.sanctum.labyrinth.event.custom.Vent;
+import com.github.sanctum.labyrinth.event.DefaultEvent;
 import com.github.sanctum.labyrinth.library.StringUtils;
+import com.github.sanctum.panther.event.Subscribe;
+import com.github.sanctum.panther.event.Vent;
 import java.math.BigDecimal;
 import java.text.MessageFormat;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import net.md_5.bungee.api.ChatColor;
 import org.bukkit.Bukkit;
@@ -136,15 +139,26 @@ public class BlockEventListener implements Listener {
 						Clan.ACTION.sendMessage(e.getPlayer(), "&cMaximum logo hologram size is 16x16, ours is too big.");
 						return;
 					}
-					if (EconomyProvision.getInstance().withdraw(BigDecimal.valueOf(125), e.getPlayer()).orElse(false)) {
+					if (EconomyProvision.getInstance().isValid()) {
+						final EconomyProvision provision = EconomyProvision.getInstance();
+						final BigDecimal am = BigDecimal.valueOf(125);
+						if (provision.has(am, e.getPlayer()).orElse(false)) {
+							provision.withdraw(am, e.getPlayer()).orElse(false);
+							e.setLine(0, StringUtils.use("&l[Clan]").translate());
+							e.setLine(1, StringUtils.use("&6&lLogo").translate());
+							e.setLine(2, a.getClan().getId().toString());
+							Clan.ACTION.sendMessage(e.getPlayer(), "&aClan logo now on display &r(&e#&2" + a.getClan().newCarrier(e.getBlock().getLocation()).getId() + "&r)");
+							a.getClan().save();
+						} else {
+							e.setLine(0, StringUtils.use("&4[Clan]").translate());
+							Clan.ACTION.sendMessage(e.getPlayer(), "&cFailed to display logo, not enough money.");
+						}
+					} else {
 						e.setLine(0, StringUtils.use("&l[Clan]").translate());
 						e.setLine(1, StringUtils.use("&6&lLogo").translate());
 						e.setLine(2, a.getClan().getId().toString());
 						Clan.ACTION.sendMessage(e.getPlayer(), "&aClan logo now on display &r(&e#&2" + a.getClan().newCarrier(e.getBlock().getLocation()).getId() + "&r)");
 						a.getClan().save();
-					} else {
-						e.setLine(0, StringUtils.use("&4[Clan]").translate());
-						Clan.ACTION.sendMessage(e.getPlayer(), "&cFailed to display logo, not enough money.");
 					}
 				}
 			});
@@ -166,13 +180,19 @@ public class BlockEventListener implements Listener {
 
 	@Subscribe(priority = Vent.Priority.READ_ONLY)
 	public void onShield(RaidShieldEvent e) {
-		World world = Bukkit.getWorld(ClansAPI.getDataInstance().getConfig().getRoot().getString("Clans.raid-shield.main-world"));
-		if (world == null) {
-			world = Bukkit.getWorlds().get(0);
-		}
-		if (Clan.ACTION.isNight(world, e.getStartTime(), e.getStopTime())) {
-			if (ClansAPI.getInstance().getShieldManager().isEnabled()) {
-				ClansAPI.getInstance().getShieldManager().setEnabled(false);
+		final ClansAPI api = e.getApi();
+		final ClanAction action = Clan.ACTION;
+		final World world = Optional.ofNullable(Bukkit.getWorld(ClansAPI.getDataInstance().getConfig().getRoot().getString("Clans.raid-shield.main-world"))).orElse(Bukkit.getWorlds().get(0));
+		if (action.isNight(world, e.getStartTime(), e.getStopTime())) {
+			if (api.getShieldManager().isEnabled()) {
+				api.getShieldManager().setEnabled(false);
+				if (ClansAPI.getDataInstance().getConfigString("Clans.raid-shield.mode").equals("TEMPORARY")) {
+					api.getClanManager().getClans().forEach(c -> {
+						for (Claim claim : c.getClaims()) {
+							claim.setActive(false);
+						}
+					});
+				}
 				if (e.getShieldOn().equals("{0} &a&lRAID SHIELD ENABLED")) {
 					e.setShieldOff(ClansAPI.getDataInstance().getConfig().getRoot().getString("Clans.raid-shield.messages.disabled"));
 				}
@@ -181,9 +201,16 @@ public class BlockEventListener implements Listener {
 				}
 			}
 		}
-		if (!Clan.ACTION.isNight(world, e.getStartTime(), e.getStopTime())) {
-			if (!ClansAPI.getInstance().getShieldManager().isEnabled()) {
-				ClansAPI.getInstance().getShieldManager().setEnabled(true);
+		if (!action.isNight(world, e.getStartTime(), e.getStopTime())) {
+			if (!api.getShieldManager().isEnabled()) {
+				api.getShieldManager().setEnabled(true);
+				if (ClansAPI.getDataInstance().getConfigString("Clans.raid-shield.mode").equals("TEMPORARY")) {
+					api.getClanManager().getClans().forEach(c -> {
+						for (Claim claim : c.getClaims()) {
+							claim.setActive(true);
+						}
+					});
+				}
 				if (e.getShieldOn().equals("{0} &a&lRAID SHIELD ENABLED")) {
 					e.setShieldOn(ClansAPI.getDataInstance().getConfig().getRoot().getString("Clans.raid-shield.messages.enabled"));
 				}
@@ -197,28 +224,37 @@ public class BlockEventListener implements Listener {
 	@Subscribe
 	public void onClaimInteract(ClaimInteractEvent e) {
 		Clan.Associate associate = ClansAPI.getInstance().getAssociate(e.getPlayer()).orElse(null);
+		if (!e.getClaim().isActive()) return;
 		if (associate != null && associate.isValid()) {
 			switch (e.getInteraction()) {
 				case USE:
 					if (e.getBlock().getType().isInteractable()) {
 						if (!e.getClaim().getOwner().getTag().getId().equals(associate.getClan().getId().toString())) {
 							if (!e.getPlayer().hasPermission("clanspro.admin")) {
-								if (!((Clan)e.getClaim().getHolder()).getRelation().getAlliance().has(associate.getClan())) {
-									e.getUtil().sendMessage(e.getPlayer(), MessageFormat.format(e.getUtil().notClaimOwner(((Clan)e.getClaim().getHolder()).getName()), ((Clan)e.getClaim().getHolder()).getName()));
+								if (!((Clan) e.getClaim().getHolder()).getRelation().getAlliance().has(associate.getClan())) {
+									e.getUtil().sendMessage(e.getPlayer(), MessageFormat.format(e.getUtil().notClaimOwner(((Clan) e.getClaim().getHolder()).getName()), ((Clan) e.getClaim().getHolder()).getName()));
 									e.setCancelled(true);
 								}
 							}
 						} else {
-							if (e.getInteraction() == ClaimInteractEvent.Type.USE) {
-								if (!Clearance.LAND_USE_INTRACTABLE.test(associate)) {
-									Clan.ACTION.sendMessage(e.getPlayer(), Clan.ACTION.noClearance());
+							if (!Clearance.LAND_USE_INTRACTABLE.test(associate)) {
+								Clan.ACTION.sendMessage(e.getPlayer(), Clan.ACTION.noClearance());
+								e.setCancelled(true);
+							}
+						}
+					}
+					if (!e.isCancelled() && StringUtils.use(e.getPlayer().getInventory().getItemInMainHand().getType().name()).containsIgnoreCase("bucket")) {
+						if (!e.getClaim().getOwner().getTag().getId().equals(associate.getClan().getId().toString())) {
+							if (!e.getPlayer().hasPermission("clanspro.admin")) {
+								if (!((Clan) e.getClaim().getHolder()).getRelation().getAlliance().has(associate.getClan())) {
+									e.getUtil().sendMessage(e.getPlayer(), MessageFormat.format(e.getUtil().notClaimOwner(((Clan) e.getClaim().getHolder()).getName()), ((Clan) e.getClaim().getHolder()).getName()));
 									e.setCancelled(true);
 								}
-							} else {
-								if (!Clearance.LAND_USE.test(associate)) {
-									Clan.ACTION.sendMessage(e.getPlayer(), Clan.ACTION.noClearance());
-									e.setCancelled(true);
-								}
+							}
+						} else {
+							if (!Clearance.LAND_USE_INTRACTABLE.test(associate)) {
+								Clan.ACTION.sendMessage(e.getPlayer(), Clan.ACTION.noClearance());
+								e.setCancelled(true);
 							}
 						}
 					}
@@ -227,22 +263,15 @@ public class BlockEventListener implements Listener {
 				case BUILD:
 					if (!e.getClaim().getOwner().getTag().getId().equals(associate.getClan().getId().toString())) {
 						if (!e.getPlayer().hasPermission("clanspro.admin")) {
-							if (!((Clan)e.getClaim().getHolder()).getRelation().getAlliance().has(associate.getClan())) {
-								e.getUtil().sendMessage(e.getPlayer(), MessageFormat.format(e.getUtil().notClaimOwner(((Clan)e.getClaim().getHolder()).getName()), ((Clan)e.getClaim().getHolder()).getName()));
+							if (!((Clan) e.getClaim().getHolder()).getRelation().getAlliance().has(associate.getClan())) {
+								e.getUtil().sendMessage(e.getPlayer(), MessageFormat.format(e.getUtil().notClaimOwner(((Clan) e.getClaim().getHolder()).getName()), ((Clan) e.getClaim().getHolder()).getName()));
 								e.setCancelled(true);
 							}
 						}
 					} else {
-						if (e.getInteraction() == ClaimInteractEvent.Type.USE) {
-							if (!Clearance.LAND_USE_INTRACTABLE.test(associate)) {
-								Clan.ACTION.sendMessage(e.getPlayer(), Clan.ACTION.noClearance());
-								e.setCancelled(true);
-							}
-						} else {
-							if (!Clearance.LAND_USE.test(associate)) {
-								Clan.ACTION.sendMessage(e.getPlayer(), Clan.ACTION.noClearance());
-								e.setCancelled(true);
-							}
+						if (!Clearance.LAND_USE.test(associate)) {
+							Clan.ACTION.sendMessage(e.getPlayer(), Clan.ACTION.noClearance());
+							e.setCancelled(true);
 						}
 					}
 					break;
@@ -252,7 +281,13 @@ public class BlockEventListener implements Listener {
 				case USE:
 					if (e.getBlock().getType().isInteractable()) {
 						if (!e.getPlayer().hasPermission("clanspro.admin")) {
-							e.getUtil().sendMessage(e.getPlayer(), MessageFormat.format(e.getUtil().notClaimOwner(((Clan)e.getClaim().getHolder()).getName()), ((Clan)e.getClaim().getHolder()).getName()));
+							e.getUtil().sendMessage(e.getPlayer(), MessageFormat.format(e.getUtil().notClaimOwner(((Clan) e.getClaim().getHolder()).getName()), ((Clan) e.getClaim().getHolder()).getName()));
+							e.setCancelled(true);
+						}
+					}
+					if (!e.isCancelled() && StringUtils.use(e.getPlayer().getInventory().getItemInMainHand().getType().name()).containsIgnoreCase("bucket")) {
+						if (!e.getPlayer().hasPermission("clanspro.admin")) {
+							e.getUtil().sendMessage(e.getPlayer(), MessageFormat.format(e.getUtil().notClaimOwner(((Clan) e.getClaim().getHolder()).getName()), ((Clan) e.getClaim().getHolder()).getName()));
 							e.setCancelled(true);
 						}
 					}
@@ -260,7 +295,7 @@ public class BlockEventListener implements Listener {
 				case BREAK:
 				case BUILD:
 					if (!e.getPlayer().hasPermission("clanspro.admin")) {
-						e.getUtil().sendMessage(e.getPlayer(), MessageFormat.format(e.getUtil().notClaimOwner(((Clan)e.getClaim().getHolder()).getName()), ((Clan)e.getClaim().getHolder()).getName()));
+						e.getUtil().sendMessage(e.getPlayer(), MessageFormat.format(e.getUtil().notClaimOwner(((Clan) e.getClaim().getHolder()).getName()), ((Clan) e.getClaim().getHolder()).getName()));
 						e.setCancelled(true);
 					}
 					break;
@@ -273,7 +308,7 @@ public class BlockEventListener implements Listener {
 		if (event.getEntity().getShooter() instanceof Player) {
 			Player p = (Player) event.getEntity().getShooter();
 			if (ClansAPI.getInstance().getClaimManager().getClaim(event.getEntity().getLocation()) != null) {
-				ClaimInteractEvent e = new Vent.Call<>(Vent.Runtime.Synchronous, new ClaimInteractEvent(p, event.getEntity().getLocation(), ClaimInteractEvent.Type.USE)).run();
+				ClaimInteractEvent e = new ClanVentCall<>(new ClaimInteractEvent(p, event.getEntity().getLocation(), ClaimInteractEvent.Type.USE)).run();
 				if (e.isCancelled()) {
 					if (event.getEntity().getType() != EntityType.TRIDENT) {
 						e.getUtil().sendMessage(e.getPlayer(), MessageFormat.format(e.getUtil().notClaimOwner(((Clan)e.getClaim().getHolder()).getName()), ((Clan)e.getClaim().getHolder()).getName()));

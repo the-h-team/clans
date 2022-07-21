@@ -1,7 +1,7 @@
 package com.github.sanctum.clans.construct.api;
 
 import com.github.sanctum.clans.construct.extra.ClanError;
-import com.github.sanctum.labyrinth.annotation.Note;
+import com.github.sanctum.panther.annotation.Note;
 import java.lang.reflect.InvocationTargetException;
 import java.util.function.Function;
 

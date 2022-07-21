@@ -3,10 +3,10 @@ package com.github.sanctum.clans.construct.extra;
 import com.github.sanctum.labyrinth.LabyrinthProvider;
 import com.github.sanctum.labyrinth.api.TaskService;
 import com.github.sanctum.labyrinth.data.container.CollectionTask;
-import com.github.sanctum.labyrinth.data.container.LabyrinthCollection;
-import com.github.sanctum.labyrinth.data.container.LabyrinthList;
 import com.github.sanctum.labyrinth.library.DirectivePoint;
-import com.github.sanctum.labyrinth.library.HUID;
+import com.github.sanctum.panther.container.PantherCollection;
+import com.github.sanctum.panther.container.PantherList;
+import com.github.sanctum.panther.util.HUID;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
@@ -46,7 +46,7 @@ public class Walls implements Buildable {
 
 	@Override
 	public void build() {
-		LabyrinthCollection<Block> collection = new LabyrinthList<>();
+		PantherCollection<Block> collection = new PantherList<>();
 		Block b = location.getBlock();
 		DirectivePoint pi = Buildable.getPoint(location.getYaw());
 		for (int i = 0; i < length; i++) {

@@ -1,13 +1,13 @@
 package com.github.sanctum.clans.bridge.internal.traits.structure;
 
 import com.github.sanctum.clans.construct.api.ClansAPI;
-import com.github.sanctum.labyrinth.data.WideConsumer;
 import com.github.sanctum.labyrinth.data.service.PlayerSearch;
 import com.github.sanctum.labyrinth.formatting.string.FormattedString;
-import com.github.sanctum.labyrinth.formatting.string.SpecialID;
 import com.github.sanctum.labyrinth.library.Entities;
-import com.github.sanctum.labyrinth.library.RandomObject;
+import com.github.sanctum.panther.util.RandomObject;
+import com.github.sanctum.panther.util.SpecialID;
 import java.util.Random;
+import java.util.function.BiConsumer;
 import org.bukkit.DyeColor;
 import org.bukkit.Location;
 import org.bukkit.Particle;
@@ -17,7 +17,7 @@ import org.jetbrains.annotations.NotNull;
 
 public class TamerWolf {
 
-	final WideConsumer<Wolf, Player> consumer = (wolf, p) -> {
+	final BiConsumer<Wolf, Player> consumer = (wolf, p) -> {
 		wolf.setAdult();
 		wolf.setTamed(true);
 		wolf.setOwner(p);

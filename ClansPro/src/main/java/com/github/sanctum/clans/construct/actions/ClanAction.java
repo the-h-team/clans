@@ -31,10 +31,12 @@ import com.github.sanctum.labyrinth.data.FileManager;
 import com.github.sanctum.labyrinth.data.service.PlayerSearch;
 import com.github.sanctum.labyrinth.formatting.pagination.EasyPagination;
 import com.github.sanctum.labyrinth.interfacing.Nameable;
-import com.github.sanctum.labyrinth.library.HUID;
 import com.github.sanctum.labyrinth.library.StringUtils;
 import com.github.sanctum.labyrinth.library.TextLib;
 import com.github.sanctum.labyrinth.task.TaskScheduler;
+import com.github.sanctum.panther.container.PantherCollection;
+import com.github.sanctum.panther.container.PantherList;
+import com.github.sanctum.panther.util.HUID;
 import java.io.File;
 import java.math.BigDecimal;
 import java.text.MessageFormat;
@@ -53,6 +55,7 @@ import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.ArmorStand;
+import org.bukkit.entity.EnderCrystal;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -566,15 +569,35 @@ public class ClanAction extends StringLibrary {
 
 	public ArmorStand getArmorStandInSight(Player player, int range) {
 		List<ArmorStand> entities = player.getNearbyEntities(range, range, range).stream().filter(entity -> entity instanceof ArmorStand).map(entity -> (ArmorStand) entity).collect(Collectors.toList());
+		if (entities.size() == 0) return null;
 		try {
 			List<Block> sightBlock = player.getLineOfSight(null, range);
-			List<Location> sight = new ArrayList<>();
+			PantherCollection<Location> sight = new PantherList<>();
 			int i;
 			for (i = 0; i < sightBlock.size(); i++)
 				sight.add(sightBlock.get(i).getLocation());
 			for (i = 0; i < sight.size(); i++) {
 				for (ArmorStand entity : entities) {
 					if (entity.getLocation().distance(sight.get(i)) <= 0.8) return entity;
+				}
+			}
+		} catch (IllegalStateException ignored) {
+		}
+		return null;
+	}
+
+	public EnderCrystal getEnderCrystalInSight(Player player, int range) {
+		List<EnderCrystal> entities = player.getNearbyEntities(range, range, range).stream().filter(entity -> entity instanceof EnderCrystal).map(entity -> (EnderCrystal) entity).collect(Collectors.toList());
+		if (entities.size() == 0) return null;
+		try {
+			List<Block> sightBlock = player.getLineOfSight(null, range);
+			PantherCollection<Location> sight = new PantherList<>();
+			int i;
+			for (i = 0; i < sightBlock.size(); i++)
+				sight.add(sightBlock.get(i).getLocation());
+			for (i = 0; i < sight.size(); i++) {
+				for (EnderCrystal entity : entities) {
+					if (entity.getLocation().distance(sight.get(i)) <= 2.8) return entity;
 				}
 			}
 		} catch (IllegalStateException ignored) {

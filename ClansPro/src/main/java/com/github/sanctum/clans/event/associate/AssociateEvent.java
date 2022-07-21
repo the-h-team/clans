@@ -3,6 +3,7 @@ package com.github.sanctum.clans.event.associate;
 import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.event.player.PlayerEvent;
 import java.util.UUID;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * The parent abstraction for all clan associate related events.
@@ -18,6 +19,11 @@ public abstract class AssociateEvent extends PlayerEvent {
 	// This constructor allows us to specify the default backing Player for the PlayerEvent abstraction
 	public AssociateEvent(Clan.Associate associate, UUID id, boolean isAsync) {
 		super(id, isAsync);
+		this.associate = associate;
+	}
+
+	public AssociateEvent(Clan.Associate associate, UUID id, @NotNull State state, boolean isAsync) {
+		super(id, state, isAsync);
 		this.associate = associate;
 	}
 

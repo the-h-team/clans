@@ -114,13 +114,15 @@ public class CommandClan extends Command implements Message.Factory {
 			Player p = (Player) sender;
 			StringLibrary lib = new StringLibrary();
 
-			if (!LabyrinthProvider.getInstance().isModded()) {
-				if (!ClansAPI.getDataInstance().getConfig().getRoot().getStringList("Clans.world-whitelist").contains(p.getWorld().getName())) {
-					lib.sendMessage(p, "&4&oClan features have been locked within this world.");
-					return true;
+			if (ClansAPI.getDataInstance().isTrue("Clans.use-whitelist")) {
+				if (!LabyrinthProvider.getInstance().isModded()) {
+					if (!ClansAPI.getDataInstance().getConfig().getRoot().getStringList("Clans.world-whitelist").contains(p.getWorld().getName())) {
+						lib.sendMessage(p, "&4&oClan features have been locked within this world.");
+						return true;
+					}
+				} else {
+					// TODO: modded check
 				}
-			} else {
-				// TODO: modded check
 			}
 
 			if (this.getPermission() == null) return true;
@@ -161,7 +163,9 @@ public class CommandClan extends Command implements Message.Factory {
 					}
 				}
 			} else {
-				GUI.MAIN_MENU.get(p).open(p);
+				if (ClansAPI.getDataInstance().getMessages().read(n -> n.getNode("menu.enabled").toPrimitive().getBoolean())) {
+					GUI.MAIN_MENU.get(p).open(p);
+				} else p.performCommand("c help");
 				return true;
 			}
 			lib.sendMessage(p, lib.commandUnknown(label));

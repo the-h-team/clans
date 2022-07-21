@@ -6,6 +6,7 @@ import com.github.sanctum.clans.bridge.ClanAddonDependencyException;
 import com.github.sanctum.clans.bridge.ClanAddonQuery;
 import com.github.sanctum.clans.bridge.ClanAddonRegistrationException;
 import com.github.sanctum.clans.bridge.ClanVentBus;
+import com.github.sanctum.clans.bridge.ClanVentCall;
 import com.github.sanctum.clans.bridge.external.BountyAddon;
 import com.github.sanctum.clans.bridge.external.DynmapAddon;
 import com.github.sanctum.clans.bridge.internal.StashesAddon;
@@ -25,15 +26,11 @@ import com.github.sanctum.clans.construct.bank.BankPermissions;
 import com.github.sanctum.clans.event.TimerEvent;
 import com.github.sanctum.clans.event.claim.RaidShieldEvent;
 import com.github.sanctum.labyrinth.LabyrinthProvider;
-import com.github.sanctum.labyrinth.annotation.Ordinal;
-import com.github.sanctum.labyrinth.api.Service;
 import com.github.sanctum.labyrinth.data.EconomyProvision;
 import com.github.sanctum.labyrinth.data.FileList;
 import com.github.sanctum.labyrinth.data.FileManager;
-import com.github.sanctum.labyrinth.data.FileType;
 import com.github.sanctum.labyrinth.data.Registry;
 import com.github.sanctum.labyrinth.data.service.PlayerSearch;
-import com.github.sanctum.labyrinth.event.custom.Vent;
 import com.github.sanctum.labyrinth.formatting.FancyMessage;
 import com.github.sanctum.labyrinth.gui.unity.simple.Docket;
 import com.github.sanctum.labyrinth.gui.unity.simple.MemoryDocket;
@@ -44,8 +41,11 @@ import com.github.sanctum.labyrinth.library.Metrics;
 import com.github.sanctum.labyrinth.library.StringUtils;
 import com.github.sanctum.labyrinth.library.Workbench;
 import com.github.sanctum.labyrinth.library.WorkbenchSlot;
-import com.github.sanctum.labyrinth.placeholders.PlaceholderRegistration;
 import com.github.sanctum.labyrinth.task.TaskScheduler;
+import com.github.sanctum.panther.annotation.Ordinal;
+import com.github.sanctum.panther.event.VentMap;
+import com.github.sanctum.panther.file.Configurable;
+import com.github.sanctum.panther.placeholder.PlaceholderRegistration;
 import com.github.sanctum.skulls.CustomHead;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
@@ -97,7 +97,7 @@ public final class StartProcedure {
 	void x() {
 		if (System.getProperty("RELOAD") != null && System.getProperty("RELOAD").equals("TRUE")) {
 			bail = true;
-			FileManager file = instance.getFileList().get("ignore", FileType.JSON);
+			FileManager file = instance.getFileList().get("ignore", Configurable.Type.JSON);
 			String location = new Date().toInstant().atZone(ZoneId.systemDefault()).format(DateTimeFormatter.ISO_LOCAL_DATE);
 			List<String> toAdd = new ArrayList<>(file.getRoot().getStringList(location));
 			toAdd.add("RELOAD DETECTED! Shutting down...");
@@ -136,9 +136,9 @@ public final class StartProcedure {
 		if (bail) return;
 		instance.getLogger().info("- Starting registry procedures.");
 		instance.dataManager.copyDefaults();
-		new Registry<>(Listener.class).source(ClansAPI.getInstance().getPlugin()).filter("com.github.sanctum.clans.listener").operate(listener -> LabyrinthProvider.getService(Service.VENT).subscribe(instance, listener));
-		new Registry<>(Command.class).source(ClansAPI.getInstance().getPlugin()).filter("com.github.sanctum.clans.commands").operate(CommandUtils::register);
-		new Registry<>(ClanSubCommand.class).source(ClansAPI.getInstance().getPlugin()).filter("com.github.sanctum.clans.commands").operate(cmd -> {
+		new Registry<>(Listener.class).source(instance).filter("com.github.sanctum.clans.listener").operate(listener -> VentMap.getInstance().subscribe(instance, listener));
+		new Registry<>(Command.class).source(instance).filter("com.github.sanctum.clans.commands").operate(CommandUtils::register);
+		new Registry<>(ClanSubCommand.class).source(instance).filter("com.github.sanctum.clans.commands").operate(cmd -> {
 			if (!cmd.isInvisible()) {
 				instance.getCommandManager().register(cmd);
 			}
@@ -169,15 +169,14 @@ public final class StartProcedure {
 	@Ordinal(6)
 	void f() {
 		if (bail) return;
-		instance.getLogger().info("- Checking for placeholders.");
-
 		TaskScheduler.of(() -> {
+			instance.getLogger().info("- Checking for placeholders.");
 			if (Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI")) {
 				new PapiPlaceholders(instance).register();
-				new LabyrinthPlaceholders(instance).register().deploy();
+				new LabyrinthPlaceholders(instance).register();
 				instance.getLogger().info("- PlaceholderAPI found! Loading clans placeholders");
 			} else {
-				PlaceholderRegistration.getInstance().registerTranslation(new LabyrinthPlaceholders(instance)).deploy();
+				PlaceholderRegistration.getInstance().registerTranslation(new LabyrinthPlaceholders(instance));
 				instance.getLogger().info("- PlaceholderAPI not found, loading labyrinth provision.");
 			}
 		}).scheduleLater(38);
@@ -232,10 +231,10 @@ public final class StartProcedure {
 		boolean configAllow = instance.dataManager.getConfig().getRoot().getBoolean("Clans.raid-shield.allow");
 		if (Claim.ACTION.isEnabled()) {
 			if (configAllow) {
-				ClanVentBus.subscribe(TimerEvent.class, Vent.Priority.HIGH, (event, subscription) -> {
+				ClanVentBus.HIGH_PRIORITY.subscribeTo(TimerEvent.class, (event, subscription) -> {
 					if (event.isAsynchronous()) return;
-					new Vent.Call<>(Vent.Runtime.Synchronous, new RaidShieldEvent()).run();
-				});
+					new ClanVentCall<>(new RaidShieldEvent()).schedule();
+				}).queue();
 				instance.getLogger().info("- Running raid shield timer.");
 			} else {
 				instance.getLogger().info("- Denying raid shield timer. (Off)");
@@ -477,11 +476,11 @@ public final class StartProcedure {
 
 	@Ordinal(16)
 	void p() {
-		FileManager th = instance.getFileList().get("heads", "Configuration", FileType.JSON);
+		FileManager th = instance.getFileList().get("heads", "Configuration", Configurable.Type.JSON);
 		if (th.getRoot().exists()) {
 			th.toMoved("Configuration/Data");
 		}
-		FileManager man = instance.getFileList().get("heads", "Configuration/Data", FileType.JSON);
+		FileManager man = instance.getFileList().get("heads", "Configuration/Data", Configurable.Type.JSON);
 		if (!man.getRoot().exists()) {
 			instance.getFileList().copy("heads.data", man);
 			man.getRoot().reload();
@@ -494,26 +493,24 @@ public final class StartProcedure {
 	@Ordinal(17)
 	void q() {
 		// load dockets
-		if (instance.getFileList().get("Messages", "Configuration").read(c -> c.getNode("deep-edit").toPrimitive().getBoolean())) {
-			ClansAPI api = ClansAPI.getInstance();
-			MemoryDocket<Clan> rosterDocket = Docket.newInstance(ClansAPI.getDataInstance().getMessages().getRoot().getNode("menu.roster"));
-			rosterDocket.setDataConverter(Clan.memoryDocketReplacer());
-			rosterDocket.setNamePlaceholder(":not_supported:");
-			rosterDocket.setList(() -> api.getClanManager().getClans().stream().collect(Collectors.toList()));
-			rosterDocket.load();
-			DocketUtils.load(rosterDocket.toMenu().getKey().orElseThrow(RuntimeException::new), rosterDocket);
-			MemoryDocket<Clan> rosterTopDocket = Docket.newInstance(ClansAPI.getDataInstance().getMessages().getRoot().getNode("menu.roster-top"));
-			rosterTopDocket.setDataConverter(Clan.memoryDocketReplacer());
-			rosterTopDocket.setNamePlaceholder(":not_supported:");
-			rosterTopDocket.setList(() -> api.getClanManager().getClans().stream().collect(Collectors.toList()));
-			rosterTopDocket.setComparator(ClansComparators.comparingByPower());
-			rosterTopDocket.load();
-			DocketUtils.load(rosterTopDocket.toMenu().getKey().orElseThrow(RuntimeException::new), rosterTopDocket);
-			MemoryDocket<UnknownGeneric> rosterSelect = Docket.newInstance(ClansAPI.getDataInstance().getMessages().getRoot().getNode("menu.roster-select"));
-			rosterSelect.setNamePlaceholder(":not_supported:");
-			rosterSelect.load();
-			DocketUtils.load(rosterSelect.toMenu().getKey().orElseThrow(RuntimeException::new), rosterSelect);
-		}
+		ClansAPI api = ClansAPI.getInstance();
+		MemoryDocket<Clan> rosterDocket = Docket.newInstance(ClansAPI.getDataInstance().getMessages().getRoot().getNode("menu.roster"));
+		rosterDocket.setDataConverter(Clan.memoryDocketReplacer());
+		rosterDocket.setNamePlaceholder(":not_supported:");
+		rosterDocket.setList(() -> api.getClanManager().getClans().stream().collect(Collectors.toList()));
+		rosterDocket.load();
+		DocketUtils.load(rosterDocket.toMenu().getKey().orElseThrow(RuntimeException::new), rosterDocket);
+		MemoryDocket<Clan> rosterTopDocket = Docket.newInstance(ClansAPI.getDataInstance().getMessages().getRoot().getNode("menu.roster-top"));
+		rosterTopDocket.setDataConverter(Clan.memoryDocketReplacer());
+		rosterTopDocket.setNamePlaceholder(":not_supported:");
+		rosterTopDocket.setList(() -> api.getClanManager().getClans().stream().collect(Collectors.toList()));
+		rosterTopDocket.setComparator(ClansComparators.comparingByPower());
+		rosterTopDocket.load();
+		DocketUtils.load(rosterTopDocket.toMenu().getKey().orElseThrow(RuntimeException::new), rosterTopDocket);
+		MemoryDocket<UnknownGeneric> rosterSelect = Docket.newInstance(ClansAPI.getDataInstance().getMessages().getRoot().getNode("menu.roster-select"));
+		rosterSelect.setNamePlaceholder(":not_supported:");
+		rosterSelect.load();
+		DocketUtils.load(rosterSelect.toMenu().getKey().orElseThrow(RuntimeException::new), rosterSelect);
 	}
 
 	@Ordinal(18)

@@ -2,7 +2,7 @@ package com.github.sanctum.clans.bridge.internal.kingdoms;
 
 import com.github.sanctum.clans.bridge.internal.kingdoms.impl.LocalFileQuest;
 import com.github.sanctum.labyrinth.data.LabyrinthUser;
-import com.github.sanctum.labyrinth.data.MemorySpace;
+import com.github.sanctum.panther.file.MemorySpace;
 import java.util.Set;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;

@@ -12,9 +12,8 @@ public class PlayerCooldownCompleteEvent extends PlayerEvent {
 	private final ClanCooldown clanCooldown;
 
 	public PlayerCooldownCompleteEvent(Player player, ClanCooldown cooldown) {
-		super(player.getUniqueId(), false);
+		super(player.getUniqueId(), State.IMMUTABLE, false);
 		this.clanCooldown = cooldown;
-		setState(CancelState.OFF);
 	}
 
 	public ClanCooldown getCooldown() {

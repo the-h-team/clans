@@ -1,13 +1,13 @@
 package com.github.sanctum.clans.construct.api;
 
 import com.github.sanctum.labyrinth.LabyrinthProvider;
-import com.github.sanctum.labyrinth.annotation.Note;
 import com.github.sanctum.labyrinth.data.reload.FingerPrint;
 import com.github.sanctum.labyrinth.gui.unity.construct.Menu;
 import com.github.sanctum.labyrinth.gui.unity.impl.InventoryElement;
 import com.github.sanctum.labyrinth.gui.unity.impl.MenuType;
 import com.github.sanctum.labyrinth.library.StringUtils;
-import com.github.sanctum.labyrinth.library.TypeFlag;
+import com.github.sanctum.panther.annotation.Note;
+import com.github.sanctum.panther.util.TypeAdapter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -22,6 +22,7 @@ public abstract class AbstractGameRule {
 	public static final String BLOCKED_WAR_COMMANDS = "blocked_commands_war";
 	public static final String WAR_START_TIME = "war_start_time";
 	public static final String MAX_CLANS = "max_clans";
+	public static final String MAX_POWER = "max_power";
 	public static final String DEFAULT_WAR_MODE = "mode_default";
 	public static final String CLAN_ROSTER_TITLE = "clan_roster_title";
 	public static final String CLAN_ROSTER_TOP_TITLE = "clan_roster_top_title";
@@ -100,7 +101,7 @@ public abstract class AbstractGameRule {
 								c.setCancelled(true);
 								c.setHotbarAllowed(false);
 								if (c.getSlot() == 2) {
-									TypeFlag<List<String>> flag = TypeFlag.get();
+									TypeAdapter<List<String>> flag = TypeAdapter.get();
 									List<String> list = new ArrayList<>(flag.cast(o));
 									list.add(c.getParent().getName());
 									ClansAPI.getDataInstance().getResetTable().set(key, list);
@@ -124,7 +125,7 @@ public abstract class AbstractGameRule {
 								c.setCancelled(true);
 								c.setHotbarAllowed(false);
 								if (c.getSlot() == 2) {
-									TypeFlag<List<String>> flag = TypeFlag.get();
+									TypeAdapter<List<String>> flag = TypeAdapter.get();
 									List<String> list = new ArrayList<>(flag.cast(o));
 									list.remove(c.getParent().getName());
 									ClansAPI.getDataInstance().getResetTable().set(key, list);
@@ -159,6 +160,83 @@ public abstract class AbstractGameRule {
 						}).getInventory();
 			}
 			return null;
+		}
+		if (o instanceof Double) {
+			switch (modification) {
+
+				case SET:
+					return (InventoryElement.Printable) MenuType.PRINTABLE.build()
+							.setTitle("&3&lEdit &r" + key.replace("_", " "))
+							.setHost(ClansAPI.getInstance().getPlugin())
+							.setSize(Menu.Rows.ONE)
+							.setStock(i -> i.addItem(be -> be.setElement(it -> it.setType(Material.DIAMOND_SWORD).setTitle(" ").setLore("Click to reset").setFlags(ItemFlag.HIDE_ENCHANTS).build()).setSlot(0).setClick(c -> {
+								c.setCancelled(true);
+								c.setHotbarAllowed(false);
+							})).addItem(it -> it.setElement(el -> el.setType(Material.DIAMOND_SWORD).addEnchantment(Enchantment.MENDING, 1).setFlags(ItemFlag.HIDE_ENCHANTS).setTitle("&cClick to go back").build()).setClick(c -> {
+								c.setCancelled(true);
+								GUI.SETTINGS_GAME_RULE.get().open(c.getElement());
+							}).setSlot(1))).join().addAction(c -> {
+								c.setCancelled(true);
+								c.setHotbarAllowed(false);
+								if (c.getSlot() == 2) {
+									if (!StringUtils.use(c.getParent().getName()).isDouble()) return;
+									double test = Double.parseDouble(c.getParent().getName());
+									ClansAPI.getDataInstance().getResetTable().set(key, test);
+									print.reload().deploy();
+									Clan.ACTION.sendMessage(c.getElement(), "&6Field &r" + key + " &5overwritten");
+								}
+							}).getInventory();
+				case ADD:
+					return (InventoryElement.Printable) MenuType.PRINTABLE.build()
+							.setTitle("&aEdit &r" + key.replace("_", " "))
+							.setHost(ClansAPI.getInstance().getPlugin())
+							.setSize(Menu.Rows.ONE)
+							.setStock(i -> i.addItem(be -> be.setElement(it -> it.setType(Material.DIAMOND_SWORD).setTitle(" ").setLore("Click to reset").setFlags(ItemFlag.HIDE_ENCHANTS).build()).setSlot(0).setClick(c -> {
+								c.setCancelled(true);
+								c.setHotbarAllowed(false);
+							})).addItem(it -> it.setElement(el -> el.setType(Material.DIAMOND_SWORD).addEnchantment(Enchantment.MENDING, 1).setFlags(ItemFlag.HIDE_ENCHANTS).setTitle("&cClick to go back").build()).setClick(c -> {
+								c.setCancelled(true);
+								GUI.SETTINGS_GAME_RULE.get().open(c.getElement());
+							}).setSlot(1))).join().addAction(c -> {
+								c.setCancelled(true);
+								c.setHotbarAllowed(false);
+								if (c.getSlot() == 2) {
+									TypeAdapter<Double> flag = TypeAdapter.get();
+									double i = flag.cast(o);
+									if (!StringUtils.use(c.getParent().getName()).isDouble()) return;
+									double test = Double.parseDouble(c.getParent().getName());
+									ClansAPI.getDataInstance().getResetTable().set(key, (i + test));
+									print.reload().deploy();
+									Clan.ACTION.sendMessage(c.getElement(), "&6Field &r" + key + " &aadded &r" + c.getParent().getName());
+								}
+							}).getInventory();
+				case REMOVE:
+					return (InventoryElement.Printable) MenuType.PRINTABLE.build()
+							.setTitle("&cEdit &r" + key.replace("_", " "))
+							.setHost(ClansAPI.getInstance().getPlugin())
+							.setSize(Menu.Rows.ONE)
+							.setStock(i -> i.addItem(be -> be.setElement(it -> it.setType(Material.DIAMOND_SWORD).setTitle(" ").setLore("Click to reset").setFlags(ItemFlag.HIDE_ENCHANTS).build()).setSlot(0).setClick(c -> {
+								c.setCancelled(true);
+								c.setHotbarAllowed(false);
+							})).addItem(it -> it.setElement(el -> el.setType(Material.DIAMOND_SWORD).addEnchantment(Enchantment.MENDING, 1).setFlags(ItemFlag.HIDE_ENCHANTS).setTitle("&cClick to go back").build()).setClick(c -> {
+								c.setCancelled(true);
+								GUI.SETTINGS_GAME_RULE.get().open(c.getElement());
+							}).setSlot(1))).join().addAction(c -> {
+								c.setCancelled(true);
+								c.setHotbarAllowed(false);
+								if (c.getSlot() == 2) {
+									TypeAdapter<Double> flag = TypeAdapter.get();
+									double i = flag.cast(o);
+									if (!StringUtils.use(c.getParent().getName()).isDouble()) return;
+									double test = Double.parseDouble(c.getParent().getName());
+									ClansAPI.getDataInstance().getResetTable().set(key, (i - test));
+									print.reload().deploy();
+									Clan.ACTION.sendMessage(c.getElement(), "&6Field &r" + key + " &cremoved &r" + c.getParent().getName());
+								}
+							}).getInventory();
+				default:
+					return null;
+			}
 		}
 		if (o instanceof Integer) {
 			switch (modification) {
@@ -200,7 +278,7 @@ public abstract class AbstractGameRule {
 								c.setCancelled(true);
 								c.setHotbarAllowed(false);
 								if (c.getSlot() == 2) {
-									TypeFlag<Integer> flag = TypeFlag.get();
+									TypeAdapter<Integer> flag = TypeAdapter.get();
 									int i = flag.cast(o);
 									if (!StringUtils.use(c.getParent().getName()).isInt()) return;
 									int test = Integer.parseInt(c.getParent().getName());
@@ -224,7 +302,7 @@ public abstract class AbstractGameRule {
 								c.setCancelled(true);
 								c.setHotbarAllowed(false);
 								if (c.getSlot() == 2) {
-									TypeFlag<Integer> flag = TypeFlag.get();
+									TypeAdapter<Integer> flag = TypeAdapter.get();
 									int i = flag.cast(o);
 									if (!StringUtils.use(c.getParent().getName()).isInt()) return;
 									int test = Integer.parseInt(c.getParent().getName());

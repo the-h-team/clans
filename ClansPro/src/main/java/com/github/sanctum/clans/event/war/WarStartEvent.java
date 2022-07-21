@@ -9,7 +9,7 @@ import com.github.sanctum.labyrinth.library.TimeWatch;
 public class WarStartEvent extends WarEvent {
 
 	public WarStartEvent(War war) {
-		super(war);
+		super(war, State.CANCELLABLE);
 	}
 
 	public void start() {

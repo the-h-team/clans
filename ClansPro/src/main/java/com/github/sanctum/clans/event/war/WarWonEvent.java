@@ -13,7 +13,7 @@ public class WarWonEvent extends WarEvent {
 	private final Map<Clan, Integer> losers;
 
 	public WarWonEvent(War war, Map.Entry<Clan, Integer> winner, Map<Clan, Integer> losers) {
-		super(war);
+		super(war, State.CANCELLABLE);
 		this.winner = winner;
 		this.losers = losers;
 	}

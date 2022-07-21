@@ -1,6 +1,7 @@
 package com.github.sanctum.clans.listener;
 
 import com.github.sanctum.clans.bridge.ClanVentBus;
+import com.github.sanctum.clans.bridge.ClanVentCall;
 import com.github.sanctum.clans.construct.api.Claim;
 import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClanCooldown;
@@ -12,10 +13,13 @@ import com.github.sanctum.clans.construct.api.War;
 import com.github.sanctum.clans.construct.extra.AsynchronousLoanableTask;
 import com.github.sanctum.clans.construct.extra.ClanDisplayName;
 import com.github.sanctum.clans.construct.extra.ClansUpdate;
+import com.github.sanctum.clans.construct.extra.EnderCrystalData;
+import com.github.sanctum.clans.construct.extra.Reservoir;
 import com.github.sanctum.clans.construct.impl.CooldownRespawn;
 import com.github.sanctum.clans.construct.impl.SimpleEntry;
 import com.github.sanctum.clans.event.TimerEvent;
 import com.github.sanctum.clans.event.associate.AssociateClaimEvent;
+import com.github.sanctum.clans.event.associate.AssociateHitReservoirEvent;
 import com.github.sanctum.clans.event.claim.ClaimInteractEvent;
 import com.github.sanctum.clans.event.clan.ClanCooldownCompleteEvent;
 import com.github.sanctum.clans.event.player.PlayerCooldownCompleteEvent;
@@ -28,21 +32,36 @@ import com.github.sanctum.clans.event.war.WarWonEvent;
 import com.github.sanctum.labyrinth.LabyrinthProvider;
 import com.github.sanctum.labyrinth.api.Service;
 import com.github.sanctum.labyrinth.data.EconomyProvision;
-import com.github.sanctum.labyrinth.data.container.LabyrinthEntryMap;
-import com.github.sanctum.labyrinth.data.container.LabyrinthMap;
-import com.github.sanctum.labyrinth.data.service.PlayerSearch;
-import com.github.sanctum.labyrinth.event.custom.DefaultEvent;
-import com.github.sanctum.labyrinth.event.custom.Subscribe;
-import com.github.sanctum.labyrinth.event.custom.Vent;
-import com.github.sanctum.labyrinth.interfacing.OrdinalProcedure;
+import com.github.sanctum.labyrinth.data.container.CollectionTask;
+import com.github.sanctum.labyrinth.event.DefaultEvent;
+import com.github.sanctum.labyrinth.formatting.FancyMessage;
+import com.github.sanctum.labyrinth.formatting.string.FormattedString;
 import com.github.sanctum.labyrinth.library.Cooldown;
 import com.github.sanctum.labyrinth.library.Entities;
+import com.github.sanctum.labyrinth.library.Item;
+import com.github.sanctum.labyrinth.library.ItemCompost;
+import com.github.sanctum.labyrinth.library.ItemMatcher;
+import com.github.sanctum.labyrinth.library.ItemSync;
+import com.github.sanctum.labyrinth.library.Items;
 import com.github.sanctum.labyrinth.library.Mailer;
 import com.github.sanctum.labyrinth.library.StringUtils;
 import com.github.sanctum.labyrinth.task.Procedure;
+import com.github.sanctum.labyrinth.task.Task;
+import com.github.sanctum.labyrinth.task.TaskMonitor;
+import com.github.sanctum.labyrinth.task.TaskPredicate;
 import com.github.sanctum.labyrinth.task.TaskScheduler;
+import com.github.sanctum.panther.container.PantherCollection;
+import com.github.sanctum.panther.container.PantherEntryMap;
+import com.github.sanctum.panther.container.PantherList;
+import com.github.sanctum.panther.container.PantherMap;
+import com.github.sanctum.panther.event.Subscribe;
+import com.github.sanctum.panther.event.Vent;
+import com.github.sanctum.panther.util.HUID;
+import com.github.sanctum.panther.util.OrdinalProcedure;
+import com.github.sanctum.panther.util.ProgressBar;
 import java.math.BigDecimal;
 import java.text.MessageFormat;
+import java.text.NumberFormat;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Locale;
@@ -50,10 +69,16 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import org.bukkit.Bukkit;
+import org.bukkit.Color;
+import org.bukkit.FireworkEffect;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
+import org.bukkit.Particle;
+import org.bukkit.Sound;
 import org.bukkit.block.data.type.Farmland;
 import org.bukkit.entity.ArmorStand;
+import org.bukkit.entity.EnderCrystal;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Tameable;
@@ -66,16 +91,22 @@ import org.bukkit.event.player.PlayerAnimationEvent;
 import org.bukkit.event.player.PlayerBucketEmptyEvent;
 import org.bukkit.event.player.PlayerBucketFillEvent;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
+import org.bukkit.event.player.PlayerInteractAtEntityEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerPortalEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
+import org.bukkit.inventory.EquipmentSlot;
+import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.persistence.PersistentDataContainer;
+import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.util.Vector;
+import org.jetbrains.annotations.NotNull;
 
 public class PlayerEventListener implements Listener {
 
-	private final static LabyrinthMap<Location, ArmorStand> STAND_MAP = new LabyrinthEntryMap<>();
+	private final static PantherMap<Location, ArmorStand> STAND_MAP = new PantherEntryMap<>();
 	public static final Procedure<Object> STAND_REMOVAL = Procedure.request(() -> Object.class).next(o -> STAND_MAP.values().forEach(ArmorStand::remove));
 	protected static final AsynchronousLoanableTask TASK = new AsynchronousLoanableTask((p, task) -> {
 		if (ClansAPI.getInstance() == null) {
@@ -87,6 +118,8 @@ public class PlayerEventListener implements Listener {
 		task.synchronize(() -> ClanVentBus.call(new TimerEvent(p, false) {
 		}));
 	});
+	ItemMatcher itemMatcher;
+	ItemMatcher tokenMatcher;
 
 	@Subscribe(priority = Vent.Priority.LOW)
 	public void onInitial(TimerEvent e) {
@@ -181,21 +214,84 @@ public class PlayerEventListener implements Listener {
 				LogoHolder.Carrier t = LogoHolder.getCarrier(test.getLocation());
 				if (t != null) {
 					Location location = new Location(t.getTop().getWorld(), t.getTop().getX(), t.getTop().getY(), t.getTop().getZ(), t.getTop().getYaw(), t.getTop().getPitch()).add(0, 0.5, 0);
-					PlayerLookAtCarrierEvent event = ClanVentBus.call(new PlayerLookAtCarrierEvent(p, t, "(" + t.getId() + ") " + OrdinalProcedure.select(t, 2).cast(() -> Clan.class).getName(), 2));
+					PlayerLookAtCarrierEvent event = ClanVentBus.call(new PlayerLookAtCarrierEvent(p, t, "(" + t.getId() + ") " + OrdinalProcedure.select(t, 2).cast(() -> Clan.class).getName(), 20));
 					if (!event.isCancelled()) {
-						ArmorStand stand = Entities.ARMOR_STAND.spawn(location, armorStand -> {
-							armorStand.setVisible(false);
-							armorStand.setMarker(true);
-							armorStand.setSmall(true);
-							armorStand.setCustomName(event.getTitle());
-							armorStand.setCustomNameVisible(true);
-						});
-						STAND_MAP.put(location, stand);
-						TaskScheduler.of(() -> {
-							if (stand.isValid()) {
-								stand.remove();
-							}
-						}).scheduleLater(event.getDespawn());
+						if (!STAND_MAP.containsKey(location)) {
+							ArmorStand stand = Entities.ARMOR_STAND.spawn(location, armorStand -> {
+								armorStand.setVisible(false);
+								armorStand.setMarker(true);
+								armorStand.setSmall(true);
+								armorStand.setCustomName(event.getTitle());
+								armorStand.setCustomNameVisible(true);
+							});
+							STAND_MAP.put(location, stand);
+							TaskScheduler.of(() -> {
+								if (stand.isValid()) {
+									STAND_MAP.remove(stand.getLocation());
+									stand.remove();
+								}
+							}).scheduleLater(event.getDespawn());
+						}
+					}
+				}
+			}
+		}
+	}
+
+	@Subscribe(priority = Vent.Priority.READ_ONLY, processCancelled = true)
+	public void onViewReservoir(TimerEvent e) {
+		Player p = e.getPlayer();
+		if (!e.isAsynchronous()) {
+			if (!LabyrinthProvider.getInstance().isNew()) return;
+			EnderCrystal test = Clan.ACTION.getEnderCrystalInSight(p, 5);
+			if (test != null) {
+				PersistentDataContainer container = test.getPersistentDataContainer();
+				NamespacedKey key = new NamespacedKey(e.getApi().getPlugin(), "clanspro_reservoir");
+				if (container.has(key, PersistentDataType.STRING)) {
+					String owner = container.get(key, PersistentDataType.STRING);
+					Clan c = e.getApi().getClanManager().getClan(HUID.parseID(owner).toID());
+					if (c != null) {
+						Reservoir r = Reservoir.of(test);
+						if (r.getOwner() == null) r.adapt(c);
+						Location location = new Location(test.getLocation().getWorld(), test.getLocation().getX(), test.getLocation().getY(), test.getLocation().getZ(), test.getLocation().getYaw(), test.getLocation().getPitch()).add(0, 1.5, 0);
+						if (!STAND_MAP.containsKey(location)) {
+							ArmorStand stand = Entities.ARMOR_STAND.spawn(location, armorStand -> {
+								armorStand.setVisible(false);
+								armorStand.setMarker(true);
+								armorStand.setSmall(true);
+								armorStand.setCustomName(new FormattedString(new ProgressBar().setProgress((int) r.getPower()).setGoal(Math.max(250, (int) c.getPower())).setFullColor("&5&l").setPrefix(null).setSuffix(null).toString() + " &f(&6" + NumberFormat.getNumberInstance().format(c.getPower()) + "&f)").color().get());
+								armorStand.setCustomNameVisible(true);
+							});
+							STAND_MAP.put(location, stand);
+							Location location2 = new Location(test.getLocation().getWorld(), test.getLocation().getX(), test.getLocation().getY(), test.getLocation().getZ(), test.getLocation().getYaw(), test.getLocation().getPitch()).add(0, 1.8, 0);
+							ArmorStand stand2 = Entities.ARMOR_STAND.spawn(location2, armorStand -> {
+								armorStand.setVisible(false);
+								armorStand.setMarker(true);
+								armorStand.setSmall(true);
+								armorStand.setCustomName(new FormattedString(c.getPalette().toString(c.getName())).color().get());
+								armorStand.setCustomNameVisible(true);
+							});
+							Location location3 = new Location(test.getLocation().getWorld(), test.getLocation().getX(), test.getLocation().getY(), test.getLocation().getZ(), test.getLocation().getYaw(), test.getLocation().getPitch()).add(0, 1.2, 0);
+							ArmorStand stand3 = Entities.ARMOR_STAND.spawn(location3, armorStand -> {
+								armorStand.setVisible(false);
+								armorStand.setMarker(true);
+								armorStand.setSmall(true);
+								armorStand.setCustomName(new FormattedString("&5Reservoir").color().get());
+								armorStand.setCustomNameVisible(true);
+							});
+							TaskScheduler.of(() -> {
+								STAND_MAP.remove(stand.getLocation());
+								if (stand.isValid()) {
+									stand.remove();
+								}
+								if (stand2.isValid()) {
+									stand2.remove();
+								}
+								if (stand3.isValid()) {
+									stand3.remove();
+								}
+							}).scheduleLater(20);
+						}
 					}
 				}
 			}
@@ -212,6 +308,147 @@ public class PlayerEventListener implements Listener {
 					if (holder.stream().noneMatch(en -> en.getName().equals(e.getPlayer().getName()))) {
 						e.setCancelled(true);
 					}
+				}
+			}
+		}
+		if (e.getAction() == Action.RIGHT_CLICK_BLOCK) {
+			if (e.getPlayer().getInventory().getItemInMainHand().getType() == Material.END_CRYSTAL) {
+				Clan.Associate t = ClansAPI.getInstance().getAssociate(e.getPlayer()).orElse(null);
+				if (t != null) {
+					Claim claim = ClansAPI.getInstance().getClaimManager().getClaim(e.getClickedBlock().getLocation());
+					if (claim != null && claim.getHolder().equals(t.getClan())) {
+						if (Reservoir.get(t.getClan()) == null) {
+							if (e.getClickedBlock().getType() != Material.BEDROCK) {
+								EnderCrystalData data = new EnderCrystalData();
+								data.setAssociate(t);
+								EntityEventListener.map.put(e.getClickedBlock().getLocation(), data);
+								e.getClickedBlock().setType(Material.AIR);
+								Entities.ENDER_CRYSTAL.spawn(e.getClickedBlock().getLocation());
+							}
+						} else {
+							Clan.ACTION.sendMessage(e.getPlayer(), "&cYour clan already has a reservoir powered up!");
+						}
+					}
+				}
+			}
+		}
+	}
+
+	@EventHandler
+	public void onHealReservoir(PlayerInteractAtEntityEvent e) {
+		if (!LabyrinthProvider.getInstance().isNew()) return;
+		Clan.Associate a = ClansAPI.getInstance().getAssociate(e.getPlayer()).orElse(null);
+		if (a != null) {
+			if (e.getRightClicked() instanceof EnderCrystal) {
+				if (e.getHand().equals(EquipmentSlot.HAND)) {
+					Reservoir r = Reservoir.get(e.getRightClicked());
+					if (r != null) {
+						Clan owner = r.getOwner();
+						if (owner != null) {
+							if (owner.equals(a.getClan())) {
+								final ItemStack itemStack = e.getPlayer().getInventory().getItemInMainHand();
+								final ItemCompost compost = LabyrinthProvider.getInstance().getItemComposter();
+								if (itemStack.getType() == Material.IRON_NUGGET) {
+									Remover sync = new Remover(itemStack.getAmount(), e.getPlayer().getInventory());
+									if (tokenMatcher == null) {
+										tokenMatcher = sync;
+										compost.registerMatcher(tokenMatcher);
+									} else {
+										compost.unregisterMatcher(tokenMatcher);
+										compost.registerMatcher(tokenMatcher = sync);
+									}
+									if (compost.has(sync)) {
+										double modifier = ClansAPI.getDataInstance().getConfig().read(c -> c.getNode("Clans.reservoir.power-multiplier").toPrimitive().getDouble());
+										final double worth = modifier * itemStack.getAmount();
+										compost.remove(sync);
+										owner.givePower(worth);
+										owner.broadcast("&5" + a.getNickname() + " &6obtained power for us.");
+									}
+									return;
+								}
+								if (r.getPower() < Math.max(250, owner.getPower())) {
+									long size = r.getEntity().getNearbyEntities(8, 8, 8).stream().filter(en -> en instanceof Player && owner.getMember(m -> m.getName().equals(en.getName())) == null).count();
+									if (size == 0) {
+										if (itemStack.getAmount() >= 1) {
+											final int am = itemStack.getAmount();
+											double modifier = ClansAPI.getDataInstance().getConfig().read(c -> c.getNode("Clans.reservoir.repair-multiplier." + itemStack.getType().name()).toPrimitive().getDouble()); // retrieve modifier based on item from config or pull default.
+											if (modifier > 0) {
+												itemStack.setAmount(0);
+												r.set(Math.min(owner.getPower(), r.getPower() + (modifier * am)));
+												e.getPlayer().getWorld().spawnParticle(Particle.HEART, new Location(r.getEntity().getWorld(), r.getEntity().getLocation().getX(), r.getEntity().getLocation().getY(), r.getEntity().getLocation().getZ(), r.getEntity().getLocation().getYaw(), r.getEntity().getLocation().getPitch()).add(0, 0.5, 0), 1);
+												owner.broadcast("&aOur reservoir was repaired by &5" + a.getNickname());
+											} else {
+												a.getMailer().chat("&cThis item has no value to the reservoir.").queue();
+											}
+										} else {
+											Clan.ACTION.sendMessage(e.getPlayer(), "&cYou cannot feed the reservoir air!");
+										}
+									} else {
+										a.getMailer().chat("&cThere are enemies too close by to perform this action.").queue();
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
+	@Subscribe
+	public void onReservoirDeath(AssociateHitReservoirEvent e) {
+		Reservoir r = e.getReservoir();
+		Clan attacking = e.getAssociate().getClan();
+		Clan victim = r.getOwner();
+		if (victim != null) {
+			if (attacking.equals(victim)) {
+				e.getAssociate().getMailer().chat("&cYou cannot damage your own reservoir only repair it!").deploy();
+				new FancyMessage("Are you attempting to destroy it?").then(" ").then("&7[").then("&6Yes").hover("&eClick to confirm.").action(() -> {
+					e.getPlayer().getWorld().spawnParticle(Particle.EXPLOSION_HUGE, r.getEntity().getLocation(), 1);
+					e.getPlayer().getWorld().playSound(r.getEntity().getLocation(), Sound.ENTITY_GENERIC_EXPLODE, 10, 1);
+					r.remove();
+					attacking.broadcast("&5" + e.getAssociate().getNickname() + " &ehas removed our clan reservoir.");
+				}).then("&7]").send(e.getPlayer()).queue();
+				e.setCancelled(true);
+				return;
+			}
+			if (r.getPower() == 0) {
+				if (victim.getPower() < 1) {
+					e.getAssociate().getMailer().chat("&cAll resources here have been tapped! No power to siphon.").queue();
+					e.setCancelled(true);
+					return;
+				}
+				Task test = TaskMonitor.getLocalInstance().get("ClansPro;reservoir_power_loss:" + victim.getId());
+				if (test == null) {
+					attacking.broadcast("&aAssociate &5" + e.getAssociate().getNickname() + " &apowered down " + victim.getPalette().toString(victim.getName()) + "'s &areservoir! Hurry and collect the power its leaking!");
+					PantherCollection<Integer> drain = new PantherList<>();
+					for (int i = 1; i < victim.getPower() + 1; i++) {
+						drain.add(1);
+					}
+					Integer[] ar = drain.stream().toArray(Integer[]::new);
+					Task t = CollectionTask.processSilent(ar, "ClansPro;reservoir_power_loss:" + victim.getId(), 1, integer -> {
+						victim.takePower(integer);
+						attacking.givePower(integer);
+						e.getPlayer().getWorld().playSound(r.getEntity().getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 10, 1);
+						e.getPlayer().getWorld().spawnParticle(Particle.DAMAGE_INDICATOR, r.getEntity().getLocation(), 1);
+					});
+					TaskPredicate<Task> predicate = TaskPredicate.cancelAfter(task -> {
+						if (r.getEntity().getNearbyEntities(4, 4, 4).stream().noneMatch(en -> en instanceof Player && attacking.getMember(a -> a.getName().equals(en.getName())) != null)) {
+							task.cancel();
+							attacking.broadcast("&cPower siphoning stopped. Not close enough to reservoir.");
+							victim.broadcast("&cOur power loss has stopped but our reservoir is badly damaged. Repair it with items to prevent further loss.");
+							return false;
+						}
+						return true;
+					});
+					t.listen(predicate);
+					TaskScheduler.of(t).scheduleTimer(t.getKey(), 0, 20);
+					victim.broadcast("&4&lBreach &7» &cOur reservoir was powered down! Hurry and repair it before we lose too much power!");
+					Location location = r.getEntity().getLocation();
+					Item.CustomFirework firework = Item.CustomFirework.from(new Location(location.getWorld(), location.getX(), location.getY(), location.getZ(), location.getYaw(), location.getPitch()).add(0, 2.5, 0));
+					firework.addEffects(b -> b.trail(true).with(FireworkEffect.Type.CREEPER).withColor(Color.ORANGE, Color.FUCHSIA, Color.MAROON, Color.OLIVE).withFade(Color.PURPLE).flicker(true)).build().detonate();
+				} else {
+					e.getAssociate().getMailer().chat("&cThis reservoir is already being drained!").queue();
 				}
 			}
 		}
@@ -439,61 +676,63 @@ public class PlayerEventListener implements Listener {
 	public void onInteract(PlayerInteractEntityEvent e) {
 		Entity entity = e.getRightClicked();
 		Player p = e.getPlayer();
-		ClansAPI.getInstance().getAssociate(p).ifPresent(associate -> {
-			Clan c = associate.getClan();
-			Clan.Associate test = ClansAPI.getInstance().getAssociate(entity.getUniqueId()).orElse(null);
-			if (test != null) {
-				if (test.getClan().equals(associate.getClan())) {
+		if (e.getHand().equals(EquipmentSlot.HAND)) {
+			ClansAPI.getInstance().getAssociate(p).ifPresent(associate -> {
+				Clan c = associate.getClan();
+				Clan.Associate test = ClansAPI.getInstance().getAssociate(entity.getUniqueId()).orElse(null);
+				if (test != null) {
+					if (test.getClan().equals(associate.getClan())) {
+						ItemStack item = p.getInventory().getItemInMainHand();
+						if (item.getType() == Material.STICK) {
+							if (item.hasItemMeta() && item.getItemMeta().hasDisplayName()) {
+								if (StringUtils.use(StringUtils.use("&r[&bRemover stick&r]").translate()).containsIgnoreCase(item.getItemMeta().getDisplayName())) {
+									test.remove();
+									item.setAmount(Math.max(0, item.getAmount() - 1));
+									if (item.getAmount() == 0) {
+										p.getInventory().remove(item);
+									}
+									c.broadcast(MessageFormat.format(ClansAPI.getDataInstance().getMessageResponse("member-leave"), test.getName()));
+								}
+							}
+						}
+					}
+				} else {
+					if (!(entity instanceof Tameable)) return;
+					Tameable tameable = (Tameable) entity;
+					if (!tameable.isTamed()) return;
+					if (tameable.getOwner() == null) return;
+					if (tameable.getOwner().getName() == null) return;
+					if (!tameable.getOwner().getName().equals(associate.getName())) return;
 					ItemStack item = p.getInventory().getItemInMainHand();
-					if (item.getType() == Material.STICK) {
+					if (item.getType() == Material.BLAZE_ROD) {
 						if (item.hasItemMeta() && item.getItemMeta().hasDisplayName()) {
-							if (StringUtils.use(StringUtils.use("&r[&bRemover stick&r]").translate()).containsIgnoreCase(item.getItemMeta().getDisplayName())) {
-								test.remove();
+							if (StringUtils.use(StringUtils.use("&r[&6Tamer stick&r]").translate()).containsIgnoreCase(item.getItemMeta().getDisplayName())) {
 								item.setAmount(Math.max(0, item.getAmount() - 1));
 								if (item.getAmount() == 0) {
 									p.getInventory().remove(item);
 								}
-								c.broadcast(MessageFormat.format(ClansAPI.getDataInstance().getMessageResponse("member-leave"), test.getName()));
-							}
-						}
-					}
-				}
-			} else {
-				if (!(entity instanceof Tameable)) return;
-				Tameable tameable = (Tameable) entity;
-				if (!tameable.isTamed()) return;
-				if (tameable.getOwner() == null) return;
-				if (tameable.getOwner().getName() == null) return;
-				if (!tameable.getOwner().getName().equals(associate.getName())) return;
-				ItemStack item = p.getInventory().getItemInMainHand();
-				if (item.getType() == Material.BLAZE_ROD) {
-					if (item.hasItemMeta() && item.getItemMeta().hasDisplayName()) {
-						if (StringUtils.use(StringUtils.use("&r[&6Tamer stick&r]").translate()).containsIgnoreCase(item.getItemMeta().getDisplayName())) {
-							item.setAmount(Math.max(0, item.getAmount() - 1));
-							if (item.getAmount() == 0) {
-								p.getInventory().remove(item);
-							}
-							// do entity stuff
-							int count = 0;
-							for (Clan.Associate a : c.getMembers()) {
-								if (StringUtils.use(a.getName()).containsIgnoreCase(((Tameable) entity).getOwner().getName() + "'s " + entity.getName())) {
-									count++;
+								// do entity stuff
+								int count = 0;
+								for (Clan.Associate a : c.getMembers()) {
+									if (StringUtils.use(a.getName()).containsIgnoreCase(((Tameable) entity).getOwner().getName() + "'s " + entity.getName())) {
+										count++;
+									}
+								}
+								InvasiveEntity conversion = InvasiveEntity.wrapNonAssociated(entity, count == 0 ? ((Tameable) entity).getOwner().getName() + "'s " + entity.getName() : ((Tameable) entity).getOwner().getName() + "'s " + entity.getName() + " x" + count);
+
+								Clan.Associate newAssociate = c.newAssociate(conversion);
+
+								if (newAssociate != null) {
+									c.add(newAssociate);
+									// TODO: make ClanBroadcastMessageEvent
+									c.broadcast(MessageFormat.format(ClansAPI.getDataInstance().getMessageResponse("member-join"), newAssociate.getName()));
 								}
 							}
-							InvasiveEntity conversion = InvasiveEntity.wrapNonAssociated(entity, count == 0 ? ((Tameable) entity).getOwner().getName() + "'s " + entity.getName() : ((Tameable) entity).getOwner().getName() + "'s " + entity.getName() + " x" + count);
-
-							Clan.Associate newAssociate = c.newAssociate(conversion);
-
-							if (newAssociate != null) {
-								c.add(newAssociate);
-								// TODO: make ClanBroadcastMessageEvent
-								c.broadcast(MessageFormat.format(ClansAPI.getDataInstance().getMessageResponse("member-join"), newAssociate.getName()));
-							}
 						}
 					}
 				}
-			}
-		});
+			});
+		}
 	}
 
 	@Subscribe
@@ -505,7 +744,8 @@ public class PlayerEventListener implements Listener {
 		}
 		Player killer = e.getPlayer();
 		if (killer != null) {
-
+			ItemStack rew = Items.edit().setType(Material.IRON_NUGGET).setTitle("&3[&6Token&3]").setAmount(1).build();
+			LabyrinthProvider.getInstance().getItemComposter().add(rew, killer);
 			ClansAPI.getInstance().getAssociate(killer).ifPresent(a -> {
 				a.getClan().givePower(0.11);
 				OrdinalProcedure.process(a, 50);
@@ -560,7 +800,7 @@ public class PlayerEventListener implements Listener {
 
 		TASK.join(p);
 
-		Clan.Associate associate = ClansAPI.getInstance().getAssociate(PlayerSearch.of(p.getName()).getId()).orElse(null);
+		Clan.Associate associate = ClansAPI.getInstance().getAssociate(Bukkit.getOfflinePlayer(p.getUniqueId())).orElse(null);
 
 		boolean canDisplay = !LabyrinthProvider.getInstance().isLegacy();
 		if (canDisplay) {
@@ -726,7 +966,7 @@ public class PlayerEventListener implements Listener {
 		if (event.getEntity().getKiller() != null) {
 			Player p = event.getEntity().getKiller();
 			Player target = event.getEntity();
-			PlayerKillPlayerEvent e = new Vent.Call<>(Vent.Runtime.Synchronous, new PlayerKillPlayerEvent(p, target)).run();
+			PlayerKillPlayerEvent e = new ClanVentCall<>(new PlayerKillPlayerEvent(p, target)).run();
 
 			if (e.isKeepInventory()) {
 				event.setKeepInventory(true);
@@ -740,13 +980,13 @@ public class PlayerEventListener implements Listener {
 	@EventHandler(priority = EventPriority.HIGHEST)
 	public void onBucketRelease(PlayerBucketEmptyEvent event) {
 		if (ClansAPI.getInstance().getClaimManager().getClaim(event.getBlock().getLocation()) != null) {
-			ClaimInteractEvent e = new Vent.Call<>(Vent.Runtime.Synchronous, new ClaimInteractEvent(event.getPlayer(), event.getBlockClicked().getLocation(), ClaimInteractEvent.Type.USE)).run();
+			ClaimInteractEvent e = new ClanVentCall<>(new ClaimInteractEvent(event.getPlayer(), event.getBlockClicked().getLocation(), ClaimInteractEvent.Type.USE)).run();
 			if (e.isCancelled()) {
 				//e.getUtil().sendMessage(e.getPlayer(), MessageFormat.format(e.getUtil().notClaimOwner(e.getClaim().getClan().getName()), e.getClaim().getClan().getName()));
 				final Material bucketType = event.getBucket();
 				if (ClansAPI.getDataInstance().isTrue("Clans.land-claiming.debug")) {
 					TaskScheduler.of(() -> {
-						event.getBlockClicked().setType(Material.AIR);
+						event.getBlock().setType(Material.AIR);
 						event.getPlayer().getInventory().getItemInMainHand().setType(bucketType);
 						event.getPlayer().updateInventory();
 					}).schedule();
@@ -759,14 +999,14 @@ public class PlayerEventListener implements Listener {
 	@EventHandler(priority = EventPriority.HIGHEST)
 	public void onBucketFill(PlayerBucketFillEvent event) {
 		if (ClansAPI.getInstance().getClaimManager().getClaim(event.getBlock().getLocation()) != null) {
-			ClaimInteractEvent e = new Vent.Call<>(Vent.Runtime.Synchronous, new ClaimInteractEvent(event.getPlayer(), event.getBlockClicked().getLocation(), ClaimInteractEvent.Type.USE)).run();
+			ClaimInteractEvent e = new ClanVentCall<>(new ClaimInteractEvent(event.getPlayer(), event.getBlockClicked().getLocation(), ClaimInteractEvent.Type.USE)).run();
 			if (e.isCancelled()) {
 				//e.getUtil().sendMessage(e.getPlayer(), MessageFormat.format(e.getUtil().notClaimOwner(e.getClaim().getClan().getName()), e.getClaim().getClan().getName()));
 				final Material bucketType = event.getBucket();
 				final Material type = event.getBlockClicked().getType();
 				if (ClansAPI.getDataInstance().isTrue("Clans.land-claiming.debug")) {
 					TaskScheduler.of(() -> {
-						event.getBlockClicked().setType(type);
+						event.getBlock().setType(type);
 						event.getPlayer().getInventory().getItemInMainHand().setType(bucketType);
 						event.getPlayer().updateInventory();
 					}).schedule();
@@ -776,4 +1016,17 @@ public class PlayerEventListener implements Listener {
 		}
 	}
 
+	static final class Remover extends ItemSync<Remover> implements ItemMatcher {
+
+		final String NAME = "&3[&6Token&3]";
+
+		public Remover(int amount, Inventory inv) {
+			super(Remover.class, inv, amount);
+		}
+
+		@Override
+		public boolean comparesTo(@NotNull ItemStack item) {
+			return item.hasItemMeta() && item.getItemMeta().hasDisplayName() && item.getItemMeta().getDisplayName().contains(StringUtils.use(NAME).translate()) && item.getType() == Material.IRON_NUGGET;
+		}
+	}
 }

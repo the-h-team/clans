@@ -9,7 +9,7 @@ import com.github.sanctum.clans.bridge.internal.kingdoms.listener.KingdomControl
 import com.github.sanctum.clans.construct.api.ClansAPI;
 import com.github.sanctum.labyrinth.LabyrinthProvider;
 import com.github.sanctum.labyrinth.data.FileManager;
-import com.github.sanctum.labyrinth.data.FileType;
+import com.github.sanctum.panther.file.Configurable;
 import java.io.IOException;
 import org.jetbrains.annotations.NotNull;
 
@@ -57,9 +57,9 @@ public class KingdomAddon extends ClanAddon {
 
 		Progressive.capture(new RoundTable(this));
 
-		FileManager kingdoms = getFile(FileType.JSON, "kingdoms", "data");
-		FileManager data = getFile(FileType.JSON, "achievements", "data");
-		FileManager users = getFile(FileType.JSON, "users", "data");
+		FileManager kingdoms = getFile(Configurable.Type.JSON, "kingdoms", "data");
+		FileManager data = getFile(Configurable.Type.JSON, "achievements", "data");
+		FileManager users = getFile(Configurable.Type.JSON, "users", "data");
 
 		if (kingdoms.getRoot().exists()) {
 

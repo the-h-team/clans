@@ -2,11 +2,11 @@ package com.github.sanctum.clans.construct.api;
 
 import com.github.sanctum.clans.construct.impl.entity.AnimalAssociate;
 import com.github.sanctum.clans.construct.impl.entity.ServerAssociate;
-import com.github.sanctum.labyrinth.annotation.Experimental;
 import com.github.sanctum.labyrinth.data.EconomyProvision;
-import com.github.sanctum.labyrinth.data.MemorySpace;
 import com.github.sanctum.labyrinth.interfacing.Nameable;
-import com.github.sanctum.labyrinth.library.HUID;
+import com.github.sanctum.panther.annotation.Experimental;
+import com.github.sanctum.panther.file.MemorySpace;
+import com.github.sanctum.panther.util.HUID;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.Comparator;

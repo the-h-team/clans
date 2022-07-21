@@ -4,7 +4,7 @@ import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClansAPI;
 import com.github.sanctum.clans.construct.impl.DefaultClan;
 import com.github.sanctum.labyrinth.formatting.UniformedComponents;
-import com.github.sanctum.labyrinth.library.HUID;
+import com.github.sanctum.panther.util.HUID;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.Comparator;

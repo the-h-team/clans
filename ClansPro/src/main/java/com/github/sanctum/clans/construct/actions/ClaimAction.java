@@ -10,15 +10,16 @@ import com.github.sanctum.clans.construct.extra.StringLibrary;
 import com.github.sanctum.clans.construct.impl.CooldownClaim;
 import com.github.sanctum.clans.construct.impl.DefaultClaim;
 import com.github.sanctum.clans.event.associate.AssociateClaimEvent;
+import com.github.sanctum.clans.event.associate.AssociateLoseLandEvent;
 import com.github.sanctum.clans.event.associate.AssociateObtainLandEvent;
 import com.github.sanctum.clans.event.associate.AssociateUnClaimEvent;
 import com.github.sanctum.labyrinth.data.FileManager;
-import com.github.sanctum.labyrinth.data.Node;
 import com.github.sanctum.labyrinth.formatting.Message;
 import com.github.sanctum.labyrinth.formatting.pagination.AdvancedPagination;
-import com.github.sanctum.labyrinth.formatting.string.RandomID;
-import com.github.sanctum.labyrinth.library.HUID;
 import com.github.sanctum.labyrinth.task.TaskScheduler;
+import com.github.sanctum.panther.file.Node;
+import com.github.sanctum.panther.util.HUID;
+import com.github.sanctum.panther.util.RandomID;
 import com.google.common.base.Strings;
 import java.text.MessageFormat;
 import java.util.Arrays;
@@ -131,7 +132,7 @@ public class ClaimAction extends StringLibrary {
 			AssociateUnClaimEvent event = ClanVentBus.call(new AssociateUnClaimEvent(p, claim));
 			if (((Clan) claim.getHolder()).getMembers().stream().anyMatch(a -> p.getName().equals(a.getName()))) {
 				if (!event.isCancelled()) {
-
+					ClanVentBus.call(new AssociateLoseLandEvent(p, claim.getChunk()));
 					if (associate.getPriority().toLevel() < Clan.ACTION.claimingClearance()) {
 						sendMessage(p, noClearance());
 						return false;
@@ -227,6 +228,10 @@ public class ClaimAction extends StringLibrary {
 									return false;
 								}
 							}
+							if (ClansAPI.getDataInstance().getConfigString("Clans.raid-shield.mode").equals("TEMPORARY")) {
+								sendMessage(p, "&cLand cannot be overtaken only raided.");
+								return false;
+							}
 
 							for (Chunk chunk : getChunksAroundLocation(owner.getBase(), -1, 0, 1).stream().filter(c -> ClansAPI.getInstance().getClaimManager().isInClaim(c.getX(), c.getZ(), c.getWorld().getName())).collect(Collectors.toList())) {
 								if (chunk.equals(p.getLocation().getChunk())) {
@@ -279,18 +284,24 @@ public class ClaimAction extends StringLibrary {
 	public boolean unclaimAll(Player p) {
 		FileManager d = ClansAPI.getInstance().getClaimManager().getFile();
 		Clan clan = ClansAPI.getInstance().getClanManager().getClan(p.getUniqueId());
-		if (!d.getRoot().isNode(clan.getId().toString())) {
-			sendMessage(p, noClaims());
-			return false;
-		}
-		if (!d.getRoot().getNode(clan.getId().toString()).getKeys(false).isEmpty()) {
-			for (Claim c : clan.getClaims()) {
-				c.remove();
+		if (clan != null) {
+			if (!d.getRoot().isNode(clan.getId().toString())) {
+				sendMessage(p, noClaims());
+				return false;
 			}
-			clan.broadcast(unclaimedAll(p.getName()));
-			return true;
-		} else {
-			sendMessage(p, noClaims());
+			if (!d.getRoot().getNode(clan.getId().toString()).getKeys(false).isEmpty()) {
+				for (Claim c : clan.getClaims()) {
+					AssociateUnClaimEvent e = ClanVentBus.call(new AssociateUnClaimEvent(p, c));
+					if (!e.isCancelled()) {
+						ClanVentBus.call(new AssociateLoseLandEvent(p, c.getChunk()));
+						c.remove();
+					}
+				}
+				clan.broadcast(unclaimedAll(p.getName()));
+				return true;
+			} else {
+				sendMessage(p, noClaims());
+			}
 		}
 		return false;
 	}

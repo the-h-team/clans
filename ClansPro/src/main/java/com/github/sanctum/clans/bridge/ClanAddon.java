@@ -3,18 +3,18 @@ package com.github.sanctum.clans.bridge;
 import com.github.sanctum.clans.construct.api.ClanSubCommand;
 import com.github.sanctum.clans.construct.api.ClansAPI;
 import com.github.sanctum.labyrinth.LabyrinthProvider;
-import com.github.sanctum.labyrinth.data.FileExtension;
 import com.github.sanctum.labyrinth.data.FileList;
 import com.github.sanctum.labyrinth.data.FileManager;
-import com.github.sanctum.labyrinth.data.FileType;
+import com.github.sanctum.labyrinth.data.YamlExtension;
 import com.github.sanctum.labyrinth.data.container.KeyedServiceManager;
-import com.github.sanctum.labyrinth.data.service.AnnotationDiscovery;
-import com.github.sanctum.labyrinth.data.service.Check;
-import com.github.sanctum.labyrinth.event.custom.Subscribe;
 import com.github.sanctum.labyrinth.library.Deployable;
-import com.github.sanctum.labyrinth.library.HUID;
 import com.github.sanctum.labyrinth.library.Mailer;
 import com.github.sanctum.labyrinth.task.TaskScheduler;
+import com.github.sanctum.panther.annotation.AnnotationDiscovery;
+import com.github.sanctum.panther.event.Subscribe;
+import com.github.sanctum.panther.file.Configurable;
+import com.github.sanctum.panther.util.Check;
+import com.github.sanctum.panther.util.HUID;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -381,9 +381,9 @@ public abstract class ClanAddon {
 	 */
 	public final @NotNull FileManager getFile(String name, String... directory) {
 		if (directory == null) {
-			return getFile(FileType.YAML, name);
+			return getFile(YamlExtension.INSTANCE, name);
 		} else {
-			return getFile(FileType.YAML, name, directory);
+			return getFile(YamlExtension.INSTANCE, name, directory);
 		}
 	}
 
@@ -391,11 +391,11 @@ public abstract class ClanAddon {
 	 * Locate and modify an existing file or create a new one.
 	 *
 	 * @param name      The name of the file.
-	 * @param extension The file extension to use. Ex. [{@linkplain com.github.sanctum.labyrinth.data.FileType#JSON}, {@linkplain com.github.sanctum.labyrinth.data.FileType#YAML}]
+	 * @param extension The file extension to use. Ex. [{@linkplain com.github.sanctum.panther.file.Configurable.Type#JSON}, {@linkplain YamlExtension#INSTANCE}]
 	 * @param directory The directory the file lies within.
 	 * @return A cached file manager.
 	 */
-	public final @NotNull FileManager getFile(FileExtension extension, String name, String... directory) {
+	public final @NotNull FileManager getFile(Configurable.Extension extension, String name, String... directory) {
 		String dir = null;
 		StringBuilder builder = new StringBuilder();
 		if (directory.length > 0) {

@@ -8,7 +8,6 @@ import com.github.sanctum.clans.construct.api.War;
 public class WarActiveEvent extends WarEvent {
 
 	public WarActiveEvent(War war) {
-		super(war);
-		setState(CancelState.OFF);
+		super(war, State.IMMUTABLE);
 	}
 }

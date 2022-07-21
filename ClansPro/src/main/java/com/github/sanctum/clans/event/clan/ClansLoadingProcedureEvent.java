@@ -16,9 +16,8 @@ public class ClansLoadingProcedureEvent extends ClanEvent {
 	private final Set<Clan> set = new HashSet<>();
 
 	public ClansLoadingProcedureEvent(@NotNull Collection<Clan> clans) {
-		super(true);
+		super(null, State.IMMUTABLE, true);
 		set.addAll(clans);
-		setState(CancelState.OFF); // We don't want people cancelling the primary loading events.
 	}
 
 	public void insert(Clan clan) {

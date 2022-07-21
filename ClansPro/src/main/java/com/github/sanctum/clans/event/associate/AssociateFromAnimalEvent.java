@@ -8,8 +8,7 @@ import org.bukkit.entity.Tameable;
  */
 public class AssociateFromAnimalEvent extends AssociateEvent {
 	public AssociateFromAnimalEvent(Clan.Associate associate) {
-		super(associate, false);
-		setState(CancelState.OFF);
+		super(associate, associate.getId(), State.IMMUTABLE, false);
 	}
 
 	public Tameable getEntity() {

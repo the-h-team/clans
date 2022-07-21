@@ -3,7 +3,7 @@ package com.github.sanctum.clans.construct.api;
 import com.github.sanctum.clans.construct.impl.DefaultClan;
 import com.github.sanctum.clans.construct.impl.entity.DefaultAssociate;
 import com.github.sanctum.clans.construct.impl.entity.ServerAssociate;
-import com.github.sanctum.labyrinth.library.HUID;
+import com.github.sanctum.panther.util.HUID;
 import java.util.Map;
 import java.util.UUID;
 import org.bukkit.Bukkit;

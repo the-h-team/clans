@@ -6,7 +6,7 @@ import com.github.sanctum.clans.event.bank.BankPreTransactionEvent;
 import com.github.sanctum.clans.event.bank.BankSetBalanceEvent;
 import com.github.sanctum.clans.event.bank.BankTransactionEvent;
 import com.github.sanctum.labyrinth.data.EconomyProvision;
-import com.github.sanctum.labyrinth.event.custom.Vent;
+import com.github.sanctum.labyrinth.event.LabyrinthVentCall;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.Optional;
@@ -15,9 +15,9 @@ import org.jetbrains.annotations.NotNull;
 
 public final class Bank implements ClanBank, Serializable {
     private static final long serialVersionUID = -153639291829056195L;
-    protected BigDecimal balance;
-    protected boolean enabled;
-    protected final String clanId;
+    BigDecimal balance;
+    boolean enabled;
+    final String clanId;
 
     public Bank(@NotNull String clanId) {
         this.balance = BanksAPI.getInstance().startingBalance();
@@ -35,7 +35,7 @@ public final class Bank implements ClanBank, Serializable {
         has = opt.orElse(false);
         final BankPreTransactionEvent preTransactionEvent =
                 new BankPreTransactionEvent(player, this, amount, clanId, has, BankTransactionEvent.Type.DEPOSIT);
-        return new Vent.Call<>(Vent.Runtime.Synchronous, preTransactionEvent).run().isSuccess();
+        return new LabyrinthVentCall<>(preTransactionEvent).run().isSuccess();
     }
 
     @Override
@@ -43,15 +43,11 @@ public final class Bank implements ClanBank, Serializable {
         if (!enabled) return false;
         if (amount.signum() != 1) return false;
         final BankPreTransactionEvent preTransactionEvent;
-        boolean hasWalletAccount = false;
-
-        if (EconomyProvision.getInstance().isValid()) {
-            hasWalletAccount = true;
-        }
+        boolean hasWalletAccount = EconomyProvision.getInstance().isValid();
 
         preTransactionEvent = new BankPreTransactionEvent(player, this, amount, clanId, has(amount) && hasWalletAccount,
                 BankTransactionEvent.Type.WITHDRAWAL);
-        return new Vent.Call<>(Vent.Runtime.Synchronous, preTransactionEvent).run().isSuccess();
+        return new LabyrinthVentCall<>(preTransactionEvent).run().isSuccess();
     }
 
     @Override
@@ -73,7 +69,7 @@ public final class Bank implements ClanBank, Serializable {
     public boolean setBalance(BigDecimal newBalance) {
         ClanBank.super.setBalance(newBalance);
         final BankSetBalanceEvent event = new BankSetBalanceEvent(this, clanId, newBalance);
-        return !(new Vent.Call<>(Vent.Runtime.Synchronous, event).run()).isCancelled();
+        return !(new LabyrinthVentCall<>(event).run()).isCancelled();
     }
 
     public void setEnabled(boolean enabled) {

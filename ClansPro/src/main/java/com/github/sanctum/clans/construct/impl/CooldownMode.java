@@ -3,9 +3,8 @@ package com.github.sanctum.clans.construct.impl;
 import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClanCooldown;
 import com.github.sanctum.clans.construct.api.ClansAPI;
-import com.github.sanctum.labyrinth.library.HUID;
-import com.github.sanctum.labyrinth.library.IllegalTimeFormatException;
-import com.github.sanctum.labyrinth.library.ParsedTimeFormat;
+import com.github.sanctum.panther.util.HUID;
+import com.github.sanctum.panther.util.ParsedTimeFormat;
 
 public class CooldownMode extends ClanCooldown {
 
@@ -27,11 +26,9 @@ public class CooldownMode extends ClanCooldown {
 
 	@Override
 	public void setCooldown() {
-		try {
-			abp("mode-switch", ParsedTimeFormat.of(ClansAPI.getDataInstance().getConfigString("Clans.mode-change.timer.cooldown")).toSeconds());
-		} catch (IllegalTimeFormatException e) {
-			abp("mode-switch", 1800);
-			ClansAPI.getInstance().getPlugin().getLogger().warning("The new cooldown section for mode change isn't up to date.");
+		ParsedTimeFormat timeFormat = ParsedTimeFormat.of(ClansAPI.getDataInstance().getConfigString("Clans.mode-change.timer.cooldown"));
+		if (timeFormat != null) {
+			abp("mode-switch", timeFormat.toSeconds());
 		}
 	}
 

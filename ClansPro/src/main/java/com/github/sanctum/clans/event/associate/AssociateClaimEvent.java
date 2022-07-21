@@ -19,8 +19,4 @@ public class AssociateClaimEvent extends AssociateEvent {
 		return claimer;
 	}
 
-	@Override
-	public String getName() {
-		return getClass().getSimpleName();
-	}
 }

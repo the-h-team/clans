@@ -107,8 +107,9 @@ public interface Relation extends Iterable<InvasiveEntity>, Relatable<Relation>,
 	}
 
 	/**
-	 * One side of a two sided table, an object that acts as a container of rivaled entities.
+	 * One side of a two-sided table, an object that acts as a container of rivaled entities.
 	 * This object also acts as a collection whilst retaining singularity but also inherits from {@link Iterable}
+	 *
 	 * @see Relation
 	 */
 	interface Rivalry extends EntityHolder {
@@ -141,7 +142,7 @@ public interface Relation extends Iterable<InvasiveEntity>, Relatable<Relation>,
 	}
 
 	/**
-	 * One side of a two sided table, an object that acts as a container of allied entities.
+	 * One side of a two-sided table, an object that acts as a container of allied entities.
 	 * This object also acts as a collection whilst retaining singularity but also inherits from {@link Iterable}
 	 * @see Relation
 	 */

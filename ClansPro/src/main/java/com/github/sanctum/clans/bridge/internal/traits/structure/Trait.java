@@ -1,8 +1,8 @@
 package com.github.sanctum.clans.bridge.internal.traits.structure;
 
-import com.github.sanctum.labyrinth.annotation.Note;
 import com.github.sanctum.labyrinth.interfacing.Nameable;
 import com.github.sanctum.labyrinth.library.Deployable;
+import com.github.sanctum.panther.annotation.Note;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 

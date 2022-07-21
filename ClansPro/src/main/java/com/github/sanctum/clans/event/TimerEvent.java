@@ -2,7 +2,7 @@ package com.github.sanctum.clans.event;
 
 import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.event.player.PlayerEvent;
-import com.github.sanctum.labyrinth.event.custom.Vent;
+import com.github.sanctum.panther.event.Vent;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 

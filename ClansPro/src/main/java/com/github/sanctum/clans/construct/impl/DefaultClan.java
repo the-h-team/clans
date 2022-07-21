@@ -1,6 +1,8 @@
 package com.github.sanctum.clans.construct.impl;
 
 import com.github.sanctum.clans.bridge.ClanVentBus;
+import com.github.sanctum.clans.bridge.ClanVentCall;
+import com.github.sanctum.clans.construct.api.AbstractGameRule;
 import com.github.sanctum.clans.construct.api.BanksAPI;
 import com.github.sanctum.clans.construct.api.Claim;
 import com.github.sanctum.clans.construct.api.Clan;
@@ -25,26 +27,25 @@ import com.github.sanctum.clans.event.command.ClanInformationAdaptEvent;
 import com.github.sanctum.clans.event.insignia.InsigniaBuildCarrierEvent;
 import com.github.sanctum.clans.event.player.PlayerJoinClanEvent;
 import com.github.sanctum.labyrinth.LabyrinthProvider;
-import com.github.sanctum.labyrinth.annotation.Ordinal;
 import com.github.sanctum.labyrinth.api.Service;
 import com.github.sanctum.labyrinth.data.DataTable;
 import com.github.sanctum.labyrinth.data.EconomyProvision;
 import com.github.sanctum.labyrinth.data.FileManager;
 import com.github.sanctum.labyrinth.data.LabyrinthUser;
-import com.github.sanctum.labyrinth.data.MemorySpace;
-import com.github.sanctum.labyrinth.data.Node;
-import com.github.sanctum.labyrinth.event.custom.Vent;
 import com.github.sanctum.labyrinth.formatting.Message;
 import com.github.sanctum.labyrinth.formatting.UniformedComponents;
 import com.github.sanctum.labyrinth.formatting.string.RandomHex;
-import com.github.sanctum.labyrinth.formatting.string.RandomID;
 import com.github.sanctum.labyrinth.gui.unity.simple.MemoryDocket;
-import com.github.sanctum.labyrinth.interfacing.OrdinalProcedure;
 import com.github.sanctum.labyrinth.library.Entities;
-import com.github.sanctum.labyrinth.library.HUID;
 import com.github.sanctum.labyrinth.library.NamespacedKey;
 import com.github.sanctum.labyrinth.library.StringUtils;
 import com.github.sanctum.labyrinth.task.TaskScheduler;
+import com.github.sanctum.panther.annotation.Ordinal;
+import com.github.sanctum.panther.file.MemorySpace;
+import com.github.sanctum.panther.file.Node;
+import com.github.sanctum.panther.util.HUID;
+import com.github.sanctum.panther.util.OrdinalProcedure;
+import com.github.sanctum.panther.util.RandomID;
 import java.math.BigDecimal;
 import java.text.MessageFormat;
 import java.util.ArrayList;
@@ -71,10 +72,10 @@ import net.md_5.bungee.api.chat.BaseComponent;
 import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
 import org.bukkit.Location;
-import org.bukkit.World;
 import org.bukkit.attribute.Attributable;
 import org.bukkit.configuration.serialization.SerializableAs;
 import org.bukkit.entity.ArmorStand;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -456,29 +457,8 @@ public final class DefaultClan implements Clan, PersistentEntity {
 
 			requests.addAll(c.read(f -> f.getStringList("ally-requests")));
 
-			if (c.read(f -> f.isNode("base"))) {
-				if (!c.read(f -> f.isLocation("base"))) {
-					Node base = c.getRoot().getNode("base");
-
-					double x = base.getNode("x").toPrimitive().getDouble();
-					double y = base.getNode("y").toPrimitive().getDouble();
-					double z = base.getNode("z").toPrimitive().getDouble();
-					float yaw = base.getNode("float").toPrimitive().getFloatList().get(0);
-					float pitch = base.getNode("float").toPrimitive().getFloatList().get(1);
-					World w = Bukkit.getWorld(Objects.requireNonNull(c.getRoot().getString("base.world")));
-					if (w == null) {
-						w = Bukkit.getWorld(Objects.requireNonNull(ClansAPI.getDataInstance().getConfig().getRoot().getString("Clans.raid-shield.main-world")));
-					}
-					this.base = new Location(w, x, y, z, yaw, pitch);
-					c.write(t -> t.set("base", this.base));
-				} else {
-					this.base = c.read(f -> f.getLocation("base"));
-				}
-
-			} else {
-				if (c.read(f -> f.isLocation("base"))) {
-					this.base = c.read(f -> f.getLocation("base"));
-				}
+			if (c.read(f -> f.getNode("base").isNode("org.bukkit.Location"))) {
+				this.base = c.read(f -> f.getNode("base").get(Location.class));
 			}
 			if (c.read(f -> f.isNode("members"))) {
 				for (String rank : c.read(f -> f.getNode("members").getKeys(false))) {
@@ -502,7 +482,7 @@ public final class DefaultClan implements Clan, PersistentEntity {
 			this.friendlyfire = c.read(f -> f.getBoolean("friendlyfire"));
 
 		}
-		if (ClansAPI.getDataInstance().getMessages().read(n -> n.getNode("deep-edit").toPrimitive().getBoolean())) {
+		if (ClansAPI.getDataInstance().getMessages().read(n -> n.getNode("menu.enabled").toPrimitive().getBoolean())) {
 			TaskScheduler.of(() -> {
 				Node members = ClansAPI.getDataInstance().getMessages().getRoot().getNode("menu.members");
 				MemoryDocket<Associate> docket = new MemoryDocket<>(members);
@@ -512,7 +492,7 @@ public final class DefaultClan implements Clan, PersistentEntity {
 				docket.setUniqueDataConverter(this, Clan.memoryDocketReplacer());
 				docket.setDataConverter(Associate.memoryDocketReplacer());
 				docket.load();
-				DocketUtils.load(Clan.memoryDocketReplacer().accept(members.getNode("id").toPrimitive().getString(), this), docket);
+				DocketUtils.load(Clan.memoryDocketReplacer().apply(members.getNode("id").toPrimitive().getString(), this), docket);
 			}).scheduleLater(2);
 		}
 
@@ -536,13 +516,15 @@ public final class DefaultClan implements Clan, PersistentEntity {
 						int i = 0;
 						for (Integer integer : sortedKeys) {
 							String l = String.valueOf(integer);
-							Location loc = carrierKeys.getNode(l).getNode("location").toBukkit().getLocation();
+							Location loc = carrierKeys.getNode(l).getNode("location").get(Location.class);
 							if (i == sortedKeys.size() - 1) {
 								OrdinalProcedure.select(carrier, 24, loc);
 							}
 							String name = StringUtils.use(carrierKeys.getNode(l).getNode("content").toPrimitive().getString()).translate();
 							InsigniaBuildCarrierEvent event = ClanVentBus.call(new InsigniaBuildCarrierEvent(carrier, i, carrierKeys.getKeys(false).size(), name));
 							if (!event.isCancelled()) {
+								Set<ArmorStand> doubleCheck = LogoHolder.getStands(loc);
+								doubleCheck.forEach(Entity::remove);
 								ArmorStand stand = Entities.ARMOR_STAND.spawn(loc, s -> {
 									s.setVisible(false);
 									s.setSmall(true);
@@ -889,7 +871,7 @@ public final class DefaultClan implements Clan, PersistentEntity {
 		} else {
 			bonus += getWins() * 39.8;
 		}
-		return result + bonus;
+		return Math.min(result + bonus, (double) AbstractGameRule.of(LabyrinthProvider.getInstance().getLocalPrintManager().getPrint(ClansAPI.getInstance().getLocalPrintKey())).get(AbstractGameRule.MAX_POWER));
 	}
 
 	@Override
@@ -1029,7 +1011,7 @@ public final class DefaultClan implements Clan, PersistentEntity {
 		array.add("&f&m---------------------------");
 		array.add("&n" + ClansAPI.getDataInstance().getConfig().getRoot().getString("Formatting.Chat.Styles.Full.Member") + "s&r [&7" + members.size() + "&r] - " + members);
 		array.add(" ");
-		ClanInformationAdaptEvent event = new Vent.Call<>(Vent.Runtime.Synchronous, new ClanInformationAdaptEvent(array, clanID, ClanInformationAdaptEvent.Type.OTHER)).run();
+		ClanInformationAdaptEvent event = new ClanVentCall<>(new ClanInformationAdaptEvent(array, clanID, ClanInformationAdaptEvent.Type.OTHER)).run();
 		return event.getInsertions().toArray(new String[0]);
 	}
 
@@ -1137,7 +1119,7 @@ public final class DefaultClan implements Clan, PersistentEntity {
 			ClansAPI.getInstance().getClaimManager().getFlagManager().getFlags().forEach(finalClaim::register);
 			ClansAPI.getInstance().getClaimManager().load(claim);
 			broadcast(Claim.ACTION.claimed(x, z, world));
-			new Vent.Call<>(Vent.Runtime.Synchronous, new AssociateObtainLandEvent(claim)).run();
+			new ClanVentCall<>(new AssociateObtainLandEvent(claim)).run();
 		}
 		return claim;
 	}
@@ -1154,29 +1136,49 @@ public final class DefaultClan implements Clan, PersistentEntity {
 
 	@Override
 	public synchronized void givePower(double amount) {
+		amount += ClansAPI.getDataInstance().getConfig().read(c -> c.getDouble("Formatting.level-adjustment.give-power.add"));
 		this.powerBonus += amount;
-		broadcast("&fPower: &a+" + amount);
+		boolean msg = ClansAPI.getDataInstance().isTrue("Formatting.level-adjustment.give-power.announce");
+		if (msg) {
+			String text = MessageFormat.format(ClansAPI.getDataInstance().getConfigString("Formatting.level-adjustment.give-power.text"), amount);
+			broadcast(text);
+		}
 		ClansAPI.getInstance().getPlugin().getLogger().info("- Gave " + '"' + amount + '"' + " power to clan " + '"' + clanID + '"');
 	}
 
 	@Override
 	public synchronized void takePower(double amount) {
+		amount += ClansAPI.getDataInstance().getConfig().read(c -> c.getDouble("Formatting.level-adjustment.take-power.add"));
 		this.powerBonus -= amount;
-		broadcast("&fPower: &c-" + amount);
+		boolean msg = ClansAPI.getDataInstance().isTrue("Formatting.level-adjustment.take-power.announce");
+		if (msg) {
+			String text = MessageFormat.format(ClansAPI.getDataInstance().getConfigString("Formatting.level-adjustment.take-power.text"), amount);
+			broadcast(text);
+		}
 		ClansAPI.getInstance().getPlugin().getLogger().info("- Took " + '"' + amount + '"' + " power from clan " + '"' + clanID + '"');
 	}
 
 	@Override
 	public synchronized void giveClaims(int amount) {
+		amount += ClansAPI.getDataInstance().getConfig().read(c -> c.getDouble("Formatting.level-adjustment.give-claims.add"));
 		this.claimBonus += amount;
-		broadcast("&fClaims: &a+" + amount);
+		boolean msg = ClansAPI.getDataInstance().isTrue("Formatting.level-adjustment.give-claims.announce");
+		if (msg) {
+			String text = MessageFormat.format(ClansAPI.getDataInstance().getConfigString("Formatting.level-adjustment.give-claims.text"), amount);
+			broadcast(text);
+		}
 		ClansAPI.getInstance().getPlugin().getLogger().info("- Gave " + '"' + amount + '"' + " claim(s) to clan " + '"' + clanID + '"');
 	}
 
 	@Override
 	public synchronized void takeClaims(int amount) {
+		amount += ClansAPI.getDataInstance().getConfig().read(c -> c.getDouble("Formatting.level-adjustment.take-claims.add"));
 		this.claimBonus -= amount;
-		broadcast("&fClaims: &c-" + amount);
+		boolean msg = ClansAPI.getDataInstance().isTrue("Formatting.level-adjustment.take-claims.announce");
+		if (msg) {
+			String text = MessageFormat.format(ClansAPI.getDataInstance().getConfigString("Formatting.level-adjustment.take-claims.text"), amount);
+			broadcast(text);
+		}
 		ClansAPI.getInstance().getPlugin().getLogger().info("- Took " + '"' + amount + '"' + " claim(s) from clan " + '"' + clanID + '"');
 	}
 
@@ -1549,7 +1551,7 @@ public final class DefaultClan implements Clan, PersistentEntity {
 	}
 
 	@Override
-	public Class<Clan> getClassType() {
+	public Class<Clan> getSerializationSignature() {
 		return Clan.class;
 	}
 

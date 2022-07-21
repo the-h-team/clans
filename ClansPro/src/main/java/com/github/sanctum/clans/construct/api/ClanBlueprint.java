@@ -1,6 +1,6 @@
 package com.github.sanctum.clans.construct.api;
 
-import com.github.sanctum.labyrinth.formatting.string.RandomID;
+import com.github.sanctum.panther.util.RandomID;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;

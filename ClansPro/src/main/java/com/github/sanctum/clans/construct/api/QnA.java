@@ -1,7 +1,7 @@
 package com.github.sanctum.clans.construct.api;
 
-import com.github.sanctum.labyrinth.data.container.ImmutableLabyrinthCollection;
-import com.github.sanctum.labyrinth.data.container.LabyrinthCollection;
+import com.github.sanctum.panther.container.ImmutablePantherCollection;
+import com.github.sanctum.panther.container.PantherCollection;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
@@ -14,8 +14,8 @@ public interface QnA {
 		InoperableSpecialMemory.QNA.add(qnA);
 	}
 
-	static @NotNull LabyrinthCollection<QnA> getAll() {
-		return ImmutableLabyrinthCollection.of(InoperableSpecialMemory.QNA);
+	static @NotNull PantherCollection<QnA> getAll() {
+		return ImmutablePantherCollection.of(InoperableSpecialMemory.QNA);
 	}
 
 }

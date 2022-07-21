@@ -4,9 +4,9 @@ import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClanBank;
 import com.github.sanctum.clans.construct.api.ClansAPI;
 import com.github.sanctum.clans.event.bank.AsyncNewBankEvent;
-import com.github.sanctum.labyrinth.event.custom.Vent;
-import com.github.sanctum.labyrinth.library.HFEncoded;
-import com.github.sanctum.labyrinth.library.HUID;
+import com.github.sanctum.labyrinth.event.LabyrinthVentCall;
+import com.github.sanctum.labyrinth.library.LabyrinthEncoded;
+import com.github.sanctum.panther.util.HUID;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.HashMap;
@@ -39,40 +39,28 @@ public class BankMeta implements Serializable {
 	}
 
 	public void storeBank(Bank bank) {
-		try {
-			this.bank = new HFEncoded(bank).serialize();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+		this.bank = new LabyrinthEncoded(bank).serialize();
 		storeMetaToClan();
 	}
 
 	public void storeAccessMap(BankAction.AccessMap accessMap) {
-		try {
-			this.accessMap = new HFEncoded(accessMap).serialize();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+		this.accessMap = new LabyrinthEncoded(accessMap).serialize();
 		storeMetaToClan();
 	}
 
 	public void storeBankLog(BankLog bankLog) {
-		try {
-			this.bankLog = new HFEncoded(bankLog).serialize();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+		this.bankLog = new LabyrinthEncoded(bankLog).serialize();
 		storeMetaToClan();
 	}
 
 	public Optional<Bank> getBank() {
 		if (bank.isEmpty()) {
 			final Bank bank = new Bank(clanId);
-			new Vent.Call<>(Vent.Runtime.Asynchronous, new AsyncNewBankEvent(getClan(), bank)).complete().join();
+			new LabyrinthVentCall<>(new AsyncNewBankEvent(getClan(), bank)).schedule().join();
 			return Optional.of(bank);
 		}
 		try {
-			return Optional.ofNullable((Bank) new HFEncoded(bank).deserialized());
+			return Optional.ofNullable((Bank) new LabyrinthEncoded(bank).deserialized());
 		} catch (IOException | ClassNotFoundException e) {
 			providingPlugin.getLogger().severe("Unable to load clan bank file! Prepare for NPEs.");
 			return Optional.empty();
@@ -82,7 +70,7 @@ public class BankMeta implements Serializable {
 	public Optional<BankAction.AccessMap> getAccessMap() {
 		if (!this.accessMap.isEmpty()) {
 			try {
-				return Optional.ofNullable((BankAction.AccessMap) new HFEncoded(this.accessMap).deserialized());
+				return Optional.ofNullable((BankAction.AccessMap) new LabyrinthEncoded(this.accessMap).deserialized());
 			} catch (IOException | ClassNotFoundException e) {
 				providingPlugin.getLogger().warning("Unable to load bank access map. Generating new.");
 			}
@@ -93,7 +81,7 @@ public class BankMeta implements Serializable {
 	public Optional<BankLog> getBankLog() {
 		if (!this.bankLog.isEmpty()) {
 			try {
-				return Optional.ofNullable((BankLog) new HFEncoded(this.bankLog).deserialized());
+				return Optional.ofNullable((BankLog) new LabyrinthEncoded(this.bankLog).deserialized());
 			} catch (IOException | ClassNotFoundException e) {
 				providingPlugin.getLogger().warning("Unable to load bank log. Generating new.");
 			}

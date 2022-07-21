@@ -1,7 +1,7 @@
 package com.github.sanctum.clans.bridge.internal.borders;
 
 import com.github.sanctum.labyrinth.data.Region;
-import com.github.sanctum.labyrinth.library.HUID;
+import com.github.sanctum.panther.util.HUID;
 import org.bukkit.World;
 
 public class BorderRegion extends Region {

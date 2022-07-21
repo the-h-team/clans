@@ -18,18 +18,28 @@ public interface ClanBank {
 	 */
 	boolean withdraw(Player player, BigDecimal amount);
 
-	// TODO: introduce inter-clan payments in feature update
-//    /**
-//     * Take an amount from the specified bank and deposit into this bank
-//     * @return true if successful
-//     */
-//    boolean takeFrom(ClanBank payer, BigDecimal amount);
+	/**
+	 * Take an amount from the specified bank and deposit into this bank
+	 *
+	 * @return true if successful
+	 */
+	default boolean takeFrom(ClanBank payer, BigDecimal amount) {
+		return payer.sendTo(this, amount);
+	}
 
-//    /**
-//     * Send an amount from this bank to another specified bank
-//     * @return true if successful
-//     */
-//    boolean sendTo(ClanBank payee, BigDecimal amount);
+	/**
+	 * Send an amount from this bank to another specified bank
+	 *
+	 * @return true if successful
+	 */
+	default boolean sendTo(ClanBank payee, BigDecimal amount) {
+		if (has(amount)) {
+			setBalance(getBalance().subtract(amount));
+			payee.setBalance(payee.getBalance().add(amount));
+			return true;
+		}
+		return false;
+	}
 
 	/**
 	 * Check if the bank has an amount.

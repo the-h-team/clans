@@ -1,6 +1,6 @@
 package com.github.sanctum.clans.construct.extra;
 
-import com.github.sanctum.labyrinth.data.service.Check;
+import com.github.sanctum.panther.util.Check;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 

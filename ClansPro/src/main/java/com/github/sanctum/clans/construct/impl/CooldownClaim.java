@@ -3,7 +3,7 @@ package com.github.sanctum.clans.construct.impl;
 import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClanCooldown;
 import com.github.sanctum.clans.construct.api.ClansAPI;
-import com.github.sanctum.labyrinth.library.HUID;
+import com.github.sanctum.panther.util.HUID;
 
 public class CooldownClaim extends ClanCooldown {
 

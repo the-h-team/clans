@@ -4,11 +4,10 @@ import com.github.sanctum.clans.construct.api.ClanBank;
 import com.github.sanctum.clans.event.bank.BankPreTransactionEvent;
 import com.github.sanctum.clans.event.bank.BankTransactionEvent;
 import com.github.sanctum.labyrinth.data.EconomyProvision;
-import com.github.sanctum.labyrinth.event.custom.Vent;
+import com.github.sanctum.labyrinth.event.LabyrinthVentCall;
+import java.math.BigDecimal;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
-
-import java.math.BigDecimal;
 
 /**
  * The new bank implementation.
@@ -28,7 +27,7 @@ public class BankImpl implements ClanBank {
     public boolean deposit(Player player, BigDecimal amount) {
         if (!backend.readIsDisabled().join()) return false;
         if (amount.signum() != 1) return false;
-        return new Vent.Call<>(Vent.Runtime.Synchronous, new BankPreTransactionEvent(
+        return new LabyrinthVentCall<>(new BankPreTransactionEvent(
                 player,
                 this,
                 amount,
@@ -42,7 +41,7 @@ public class BankImpl implements ClanBank {
     public boolean withdraw(Player player, BigDecimal amount) {
         if (!backend.readIsDisabled().join()) return false;
         if (amount.signum() != 1) return false;
-        return new Vent.Call<>(Vent.Runtime.Synchronous, new BankPreTransactionEvent(
+        return new LabyrinthVentCall<>(new BankPreTransactionEvent(
                 player,
                 this,
                 amount,

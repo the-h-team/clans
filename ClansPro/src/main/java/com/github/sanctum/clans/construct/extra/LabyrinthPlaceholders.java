@@ -1,16 +1,14 @@
 package com.github.sanctum.clans.construct.extra;
 
 import com.github.sanctum.clans.ClansJavaPlugin;
-import com.github.sanctum.labyrinth.placeholders.Placeholder;
-import com.github.sanctum.labyrinth.placeholders.PlaceholderIdentifier;
-import com.github.sanctum.labyrinth.placeholders.PlaceholderTranslation;
-import com.github.sanctum.labyrinth.placeholders.PlaceholderVariable;
+import com.github.sanctum.panther.placeholder.Placeholder;
+import org.bukkit.OfflinePlayer;
 import org.jetbrains.annotations.NotNull;
 
-public class LabyrinthPlaceholders implements PlaceholderTranslation {
+public class LabyrinthPlaceholders implements Placeholder.Translation {
 
 	public ClansJavaPlugin plugin;
-	private final PlaceholderIdentifier identifier = () -> "clanspro";
+	private final Placeholder.Identifier identifier = () -> "clanspro";
 	private final Placeholder[] placeholders = new Placeholder[]{Placeholder.ANGLE_BRACKETS, Placeholder.CURLEY_BRACKETS, Placeholder.PERCENT};
 
 	public LabyrinthPlaceholders(ClansJavaPlugin plugin) {
@@ -18,7 +16,7 @@ public class LabyrinthPlaceholders implements PlaceholderTranslation {
 	}
 
 	@Override
-	public @NotNull PlaceholderIdentifier getIdentifier() {
+	public @NotNull Placeholder.Identifier getIdentifier() {
 		return identifier;
 	}
 
@@ -28,8 +26,8 @@ public class LabyrinthPlaceholders implements PlaceholderTranslation {
 	}
 
 	@Override
-	public String onTranslation(String parameter, PlaceholderVariable variable) {
-		return UnifiedPlaceholders.getInstance().translate(parameter, variable.isPlayer() ? variable.getAsPlayer() : null);
+	public String onTranslation(String parameter, Placeholder.Variable variable) {
+		return UnifiedPlaceholders.getInstance().translate(parameter, variable.get() instanceof OfflinePlayer ? (OfflinePlayer) variable.get() : null);
 	}
 }
 	
