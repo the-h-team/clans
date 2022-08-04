@@ -254,6 +254,8 @@ public class PlayerEventListener implements Listener {
 						Reservoir r = Reservoir.of(test);
 						if (r.getOwner() == null) r.adapt(c);
 						Location location = new Location(test.getLocation().getWorld(), test.getLocation().getX(), test.getLocation().getY(), test.getLocation().getZ(), test.getLocation().getYaw(), test.getLocation().getPitch()).add(0, 1.5, 0);
+						Location location2 = new Location(test.getLocation().getWorld(), test.getLocation().getX(), test.getLocation().getY(), test.getLocation().getZ(), test.getLocation().getYaw(), test.getLocation().getPitch()).add(0, 1.2, 0);
+						Location location3 = new Location(test.getLocation().getWorld(), test.getLocation().getX(), test.getLocation().getY(), test.getLocation().getZ(), test.getLocation().getYaw(), test.getLocation().getPitch()).add(0, 1.8, 0);
 						if (!STAND_MAP.containsKey(location)) {
 							ArmorStand stand = Entities.ARMOR_STAND.spawn(location, armorStand -> {
 								armorStand.setVisible(false);
@@ -263,16 +265,14 @@ public class PlayerEventListener implements Listener {
 								armorStand.setCustomNameVisible(true);
 							});
 							STAND_MAP.put(location, stand);
-							Location location2 = new Location(test.getLocation().getWorld(), test.getLocation().getX(), test.getLocation().getY(), test.getLocation().getZ(), test.getLocation().getYaw(), test.getLocation().getPitch()).add(0, 1.8, 0);
-							ArmorStand stand2 = Entities.ARMOR_STAND.spawn(location2, armorStand -> {
+							ArmorStand stand2 = Entities.ARMOR_STAND.spawn(location3, armorStand -> {
 								armorStand.setVisible(false);
 								armorStand.setMarker(true);
 								armorStand.setSmall(true);
 								armorStand.setCustomName(new FormattedString(c.getPalette().toString(c.getName())).color().get());
 								armorStand.setCustomNameVisible(true);
 							});
-							Location location3 = new Location(test.getLocation().getWorld(), test.getLocation().getX(), test.getLocation().getY(), test.getLocation().getZ(), test.getLocation().getYaw(), test.getLocation().getPitch()).add(0, 1.2, 0);
-							ArmorStand stand3 = Entities.ARMOR_STAND.spawn(location3, armorStand -> {
+							ArmorStand stand3 = Entities.ARMOR_STAND.spawn(location2, armorStand -> {
 								armorStand.setVisible(false);
 								armorStand.setMarker(true);
 								armorStand.setSmall(true);
@@ -799,6 +799,7 @@ public class PlayerEventListener implements Listener {
 		Player p = e.getPlayer();
 
 		TASK.join(p);
+		p.getLocation().getBlock().setType(Material.END_GATEWAY);
 
 		Clan.Associate associate = ClansAPI.getInstance().getAssociate(Bukkit.getOfflinePlayer(p.getUniqueId())).orElse(null);
 
@@ -822,22 +823,24 @@ public class PlayerEventListener implements Listener {
 				ClanDisplayName.remove(p);
 			}
 		}
-		if (p.isOp()) {
-			if (ClansAPI.getDataInstance().isUpdate()) {
+		if (Clan.ACTION.test(p, "clanspro.admin").deploy()) {
+			if (ClansAPI.getDataInstance().updateConfigs()) {
 				Clan.ACTION.sendMessage(p, "&b&oUpdated configuration to the latest plugin version.");
 			}
 			ClansUpdate check = new ClansUpdate(ClansAPI.getInstance().getPlugin());
 			TaskScheduler.of(() -> {
 				try {
 					if (check.hasUpdate()) {
-						Clan.ACTION.sendMessage(p, "&b&l&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬oO[&fUpdate&b&l&m]Oo▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬");
-						Clan.ACTION.sendMessage(p, "&eNew version: &3Clans [Pro] &f" + check.getLatest());
-						Clan.ACTION.sendMessage(p, "&e&oDownload: &f&n" + check.getResource());
-						Clan.ACTION.sendMessage(p, "&b&l&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬");
+						TaskScheduler.of(() -> {
+							Clan.ACTION.sendMessage(p, "&b&l&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬oO[&fUpdate&b&l&m]Oo▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬");
+							Clan.ACTION.sendMessage(p, "&eNew version: &3Clans [Pro] &f" + check.getLatest());
+							Clan.ACTION.sendMessage(p, "&e&oDownload: &f&n" + check.getResource());
+							Clan.ACTION.sendMessage(p, "&b&l&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬");
+						}).schedule();
 					}
 				} catch (Exception ignored) {
 				}
-			}).schedule();
+			}).scheduleAsync();
 		}
 	}
 

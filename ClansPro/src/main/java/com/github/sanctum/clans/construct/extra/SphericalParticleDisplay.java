@@ -4,6 +4,8 @@ import com.github.sanctum.labyrinth.task.LabyrinthApplicable;
 import com.github.sanctum.labyrinth.task.Task;
 import com.github.sanctum.labyrinth.task.TaskMonitor;
 import com.github.sanctum.labyrinth.task.TaskPredicate;
+import com.github.sanctum.panther.container.PantherArrays;
+import com.github.sanctum.panther.container.PantherCollection;
 import java.util.ArrayList;
 import java.util.List;
 import org.bukkit.Bukkit;
@@ -12,33 +14,21 @@ import org.bukkit.Location;
 import org.bukkit.Particle;
 import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class SphericalParticleDisplay {
 
 	private final Particle particle;
-	private final Location location;
 	private TaskPredicate<?>[] flags = new TaskPredicate<?>[0];
 	private final List<Location> toSpawn = new ArrayList<>();
 	private final TaskMonitor monitor = TaskMonitor.getLocalInstance();
 
-	public SphericalParticleDisplay(Location location) {
+	public SphericalParticleDisplay() {
 		this.particle = Particle.REDSTONE;
-		location.subtract(0, 9, 0);
-		this.location = location;
 	}
 
-	public SphericalParticleDisplay configure(int radius, int count) {
-		for (int i = 0; i < 360; i += 360 / count) {
-			double angle = (i * Math.PI / 180);
-			double x = radius * Math.cos(angle);
-			double z = radius * Math.sin(angle);
-			Location loc = location.add(x, 1, z);
-			toSpawn.add(loc);
-		}
-		return this;
-	}
-
-	public SphericalParticleDisplay configure(TaskPredicate<?>... flags) {
+	public SphericalParticleDisplay require(TaskPredicate<?>... flags) {
 		this.flags = flags;
 		return this;
 	}
@@ -58,7 +48,7 @@ public class SphericalParticleDisplay {
 		return result;
 	}
 
-	public boolean remove(Player target) {
+	public boolean hide(Player target) {
 		String taskId = "ClansPro:particle-display;sphere:" + target.getUniqueId();
 		Task task = monitor.get(taskId);
 		if (task == null) return false;
@@ -66,13 +56,25 @@ public class SphericalParticleDisplay {
 		return true;
 	}
 
-	public boolean spawn(Player target) {
+	public boolean show(@NotNull Player target, @Nullable Location location, int radius, int count) {
+		if (location != null) {
+			location.subtract(0, 9, 0);
+			for (int i = 0; i < 360; i += 360 / count) {
+				double angle = (i * Math.PI / 180);
+				double x = radius * Math.cos(angle);
+				double z = radius * Math.sin(angle);
+				Location loc = location.add(x, 1, z);
+				toSpawn.add(loc);
+			}
+		}
 
 		String taskId = "ClansPro:particle-display;sphere:" + target.getUniqueId();
-
 		if (monitor.get(taskId) != null) {
 			return false;
 		}
+
+		PantherCollection<TaskPredicate<?>> collection = PantherArrays.asList(flags);
+		collection.add(TaskPredicate.cancelAfter(target));
 
 		new LabyrinthApplicable(taskId) {
 
@@ -114,12 +116,16 @@ public class SphericalParticleDisplay {
 
 			@Override
 			public void run() {
-
-				if (target == null || !target.isOnline()) {
-					cancel();
-					return;
+				if (location == null) {
+					target.getLocation().subtract(0, 9, 0);
+					for (int i = 0; i < 360; i += 360 / count) {
+						double angle = (i * Math.PI / 180);
+						double x = radius * Math.cos(angle);
+						double z = radius * Math.sin(angle);
+						Location loc = target.getLocation().add(x, 1, z);
+						toSpawn.add(loc);
+					}
 				}
-
 				t = t + Math.PI / 16;
 				double x = r * Math.cos(t);
 				double y = 0;
@@ -151,7 +157,7 @@ public class SphericalParticleDisplay {
 				}
 
 			}
-		}.scheduleTimer(0, 1, flags);
+		}.scheduleTimer(0, 1, collection.stream().toArray(TaskPredicate[]::new));
 		return true;
 	}
 

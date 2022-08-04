@@ -392,7 +392,7 @@ public class CommandClanAdmin extends Command {
 				return true;
 			}
 			if (args0.equalsIgnoreCase("update")) {
-				if (!ClansAPI.getDataInstance().isUpdate()) {
+				if (!ClansAPI.getDataInstance().updateConfigs()) {
 					lib.sendMessage(p, "&3&oThe configuration is already up to date.");
 				} else {
 					lib.sendMessage(p, "&aUpdated configuration to latest...");

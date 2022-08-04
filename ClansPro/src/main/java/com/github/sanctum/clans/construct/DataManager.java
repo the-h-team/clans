@@ -233,7 +233,7 @@ public class DataManager {
 		return main.getRoot().getBoolean("Formatting.nametag-prefix.use");
 	}
 
-	public boolean isUpdate() {
+	public boolean updateConfigs() {
 		ClansAPI api = ClansAPI.getInstance();
 		FileList list = api.getFileList();
 		FileManager main = list.get("Config", "Configuration");

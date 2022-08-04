@@ -5,13 +5,13 @@ import com.github.sanctum.panther.placeholder.Placeholder;
 import org.bukkit.OfflinePlayer;
 import org.jetbrains.annotations.NotNull;
 
-public class LabyrinthPlaceholders implements Placeholder.Translation {
+public class PantherPlaceholders implements Placeholder.Translation {
 
 	public ClansJavaPlugin plugin;
 	private final Placeholder.Identifier identifier = () -> "clanspro";
 	private final Placeholder[] placeholders = new Placeholder[]{Placeholder.ANGLE_BRACKETS, Placeholder.CURLEY_BRACKETS, Placeholder.PERCENT};
 
-	public LabyrinthPlaceholders(ClansJavaPlugin plugin) {
+	public PantherPlaceholders(ClansJavaPlugin plugin) {
 		this.plugin = plugin;
 	}
 

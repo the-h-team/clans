@@ -173,10 +173,10 @@ public final class StartProcedure {
 			instance.getLogger().info("- Checking for placeholders.");
 			if (Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI")) {
 				new PapiPlaceholders(instance).register();
-				new LabyrinthPlaceholders(instance).register();
+				new PantherPlaceholders(instance).register();
 				instance.getLogger().info("- PlaceholderAPI found! Loading clans placeholders");
 			} else {
-				PlaceholderRegistration.getInstance().registerTranslation(new LabyrinthPlaceholders(instance));
+				PlaceholderRegistration.getInstance().registerTranslation(new PantherPlaceholders(instance));
 				instance.getLogger().info("- PlaceholderAPI not found, loading labyrinth provision.");
 			}
 		}).scheduleLater(38);
@@ -371,7 +371,7 @@ public final class StartProcedure {
 	@Ordinal(12)
 	void l() {
 		if (bail) return;
-		if (ClansAPI.getDataInstance().isUpdate()) {
+		if (ClansAPI.getDataInstance().updateConfigs()) {
 			instance.getLogger().info("- Configuration updated to latest.");
 		}
 		bail = true;
