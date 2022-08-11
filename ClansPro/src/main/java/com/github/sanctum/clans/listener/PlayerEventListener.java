@@ -46,9 +46,7 @@ import com.github.sanctum.labyrinth.library.Items;
 import com.github.sanctum.labyrinth.library.Mailer;
 import com.github.sanctum.labyrinth.library.StringUtils;
 import com.github.sanctum.labyrinth.task.Procedure;
-import com.github.sanctum.labyrinth.task.Task;
 import com.github.sanctum.labyrinth.task.TaskMonitor;
-import com.github.sanctum.labyrinth.task.TaskPredicate;
 import com.github.sanctum.labyrinth.task.TaskScheduler;
 import com.github.sanctum.panther.container.PantherCollection;
 import com.github.sanctum.panther.container.PantherEntryMap;
@@ -59,6 +57,8 @@ import com.github.sanctum.panther.event.Vent;
 import com.github.sanctum.panther.util.HUID;
 import com.github.sanctum.panther.util.OrdinalProcedure;
 import com.github.sanctum.panther.util.ProgressBar;
+import com.github.sanctum.panther.util.Task;
+import com.github.sanctum.panther.util.TaskPredicate;
 import java.math.BigDecimal;
 import java.text.MessageFormat;
 import java.text.NumberFormat;
@@ -799,7 +799,6 @@ public class PlayerEventListener implements Listener {
 		Player p = e.getPlayer();
 
 		TASK.join(p);
-		p.getLocation().getBlock().setType(Material.END_GATEWAY);
 
 		Clan.Associate associate = ClansAPI.getInstance().getAssociate(Bukkit.getOfflinePlayer(p.getUniqueId())).orElse(null);
 
@@ -957,7 +956,7 @@ public class PlayerEventListener implements Listener {
 					}
 				} else {
 					Mailer m = Mailer.empty(ClansAPI.getInstance().getPlugin()).prefix().start(ClansAPI.getInstance().getPrefix().joined()).finish();
-					m.announce(player -> player.hasPermission("clanspro.admin"), "The spawn location for team " + t.name() + " is missing!").deploy();
+					m.announce(player -> Clan.ACTION.test(player, "clanspro.admin.alert").deploy(), "The spawn location for team " + t.name() + " is missing!").deploy();
 					Clan.ACTION.sendMessage(p, "&cThe clan arena system isn't properly configured. Contact staff for help.");
 				}
 			}

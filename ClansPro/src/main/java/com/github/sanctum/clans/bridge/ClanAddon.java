@@ -7,13 +7,13 @@ import com.github.sanctum.labyrinth.data.FileList;
 import com.github.sanctum.labyrinth.data.FileManager;
 import com.github.sanctum.labyrinth.data.YamlExtension;
 import com.github.sanctum.labyrinth.data.container.KeyedServiceManager;
-import com.github.sanctum.labyrinth.library.Deployable;
 import com.github.sanctum.labyrinth.library.Mailer;
 import com.github.sanctum.labyrinth.task.TaskScheduler;
 import com.github.sanctum.panther.annotation.AnnotationDiscovery;
 import com.github.sanctum.panther.event.Subscribe;
 import com.github.sanctum.panther.file.Configurable;
 import com.github.sanctum.panther.util.Check;
+import com.github.sanctum.panther.util.Deployable;
 import com.github.sanctum.panther.util.HUID;
 import java.io.File;
 import java.io.IOException;
@@ -93,7 +93,7 @@ public abstract class ClanAddon {
 
 			@Override
 			public Deployable<Void> enableAddon(ClanAddon addon) {
-				return Deployable.of(null, unused -> {
+				return Deployable.of(() -> {
 					if (addon.classLoader.getParent().equals(getClassLoader())) {
 						if (ClanAddonQuery.getAddon(addon.getName()) == null) {
 							ClanAddonQuery.register(addon);
@@ -102,12 +102,12 @@ public abstract class ClanAddon {
 							throw new ClanAddonRegistrationException("Addon " + addon + " is already registered and running!");
 					}
 					throw new InvalidAddonStateException("The provided addon doesn't belong to this loader's " + ClanAddonClassLoader.class);
-				});
+				}, 0);
 			}
 
 			@Override
 			public Deployable<Void> disableAddon(ClanAddon addon) {
-				return Deployable.of(null, unused -> {
+				return Deployable.of(() -> {
 					if (addon.classLoader.getParent().equals(getClassLoader())) {
 						if (ClanAddonQuery.getAddon(addon.getName()) != null) {
 							ClanAddonQuery.remove(addon);
@@ -115,7 +115,7 @@ public abstract class ClanAddon {
 						} else throw new ClanAddonRegistrationException("Addon " + addon + " isn't registered!");
 					}
 					throw new InvalidAddonStateException("The provided addon doesn't belong to this loader's " + ClanAddonClassLoader.class);
-				});
+				}, 0);
 			}
 
 
@@ -247,7 +247,7 @@ public abstract class ClanAddon {
 
 			@Override
 			public Deployable<Void> enableAddon(ClanAddon addon) {
-				return Deployable.of(null, unused -> {
+				return Deployable.of(() -> {
 					if (addon.classLoader.getParent().equals(getClassLoader())) {
 						if (ClanAddonQuery.getAddon(addon.getName()) == null) {
 							ClanAddonQuery.register(addon);
@@ -256,12 +256,12 @@ public abstract class ClanAddon {
 							throw new ClanAddonRegistrationException("Addon " + addon + " is already registered and running!");
 					}
 					throw new InvalidAddonStateException("The provided addon doesn't belong to this loader's " + ClanAddonClassLoader.class);
-				});
+				}, 0);
 			}
 
 			@Override
 			public Deployable<Void> disableAddon(ClanAddon addon) {
-				return Deployable.of(null, unused -> {
+				return Deployable.of(() -> {
 					if (addon.classLoader.getParent().equals(getClassLoader())) {
 						if (ClanAddonQuery.getAddon(addon.getName()) != null) {
 							ClanAddonQuery.remove(addon);
@@ -269,7 +269,7 @@ public abstract class ClanAddon {
 						} else throw new ClanAddonRegistrationException("Addon " + addon + " isn't registered!");
 					}
 					throw new InvalidAddonStateException("The provided addon doesn't belong to this loader's " + ClanAddonClassLoader.class);
-				});
+				}, 0);
 			}
 
 

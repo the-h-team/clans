@@ -1,11 +1,11 @@
 package com.github.sanctum.clans.construct.extra;
 
+import com.github.sanctum.labyrinth.task.BukkitTaskPredicate;
 import com.github.sanctum.labyrinth.task.LabyrinthApplicable;
-import com.github.sanctum.labyrinth.task.Task;
 import com.github.sanctum.labyrinth.task.TaskMonitor;
-import com.github.sanctum.labyrinth.task.TaskPredicate;
 import com.github.sanctum.panther.container.PantherArrays;
 import com.github.sanctum.panther.container.PantherCollection;
+import com.github.sanctum.panther.util.Task;
 import java.util.ArrayList;
 import java.util.List;
 import org.bukkit.Bukkit;
@@ -20,7 +20,7 @@ import org.jetbrains.annotations.Nullable;
 public class SphericalParticleDisplay {
 
 	private final Particle particle;
-	private TaskPredicate<?>[] flags = new TaskPredicate<?>[0];
+	private BukkitTaskPredicate<?>[] flags = new BukkitTaskPredicate<?>[0];
 	private final List<Location> toSpawn = new ArrayList<>();
 	private final TaskMonitor monitor = TaskMonitor.getLocalInstance();
 
@@ -28,7 +28,7 @@ public class SphericalParticleDisplay {
 		this.particle = Particle.REDSTONE;
 	}
 
-	public SphericalParticleDisplay require(TaskPredicate<?>... flags) {
+	public SphericalParticleDisplay require(BukkitTaskPredicate<?>... flags) {
 		this.flags = flags;
 		return this;
 	}
@@ -73,8 +73,8 @@ public class SphericalParticleDisplay {
 			return false;
 		}
 
-		PantherCollection<TaskPredicate<?>> collection = PantherArrays.asList(flags);
-		collection.add(TaskPredicate.cancelAfter(target));
+		PantherCollection<BukkitTaskPredicate<?>> collection = PantherArrays.asList(flags);
+		collection.add(BukkitTaskPredicate.cancelAfter(target));
 
 		new LabyrinthApplicable(taskId) {
 
@@ -157,7 +157,7 @@ public class SphericalParticleDisplay {
 				}
 
 			}
-		}.scheduleTimer(0, 1, collection.stream().toArray(TaskPredicate[]::new));
+		}.scheduleTimer(0, 1, collection.stream().toArray(BukkitTaskPredicate[]::new));
 		return true;
 	}
 

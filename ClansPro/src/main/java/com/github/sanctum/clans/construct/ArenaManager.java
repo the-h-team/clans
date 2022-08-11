@@ -11,7 +11,7 @@ import com.github.sanctum.labyrinth.LabyrinthProvider;
 import com.github.sanctum.labyrinth.api.Service;
 import com.github.sanctum.labyrinth.library.Cooldown;
 import com.github.sanctum.labyrinth.library.Mailer;
-import com.github.sanctum.labyrinth.task.TaskPredicate;
+import com.github.sanctum.labyrinth.task.BukkitTaskPredicate;
 import com.github.sanctum.labyrinth.task.TaskScheduler;
 import com.github.sanctum.panther.annotation.Note;
 import java.util.Arrays;
@@ -136,7 +136,7 @@ public final class ArenaManager implements Iterable<War> {
 					}
 				}.save();
 				TaskScheduler.of(() -> {
-				}).scheduleTimer(UUID.randomUUID().toString(), 0, 1, TaskPredicate.cancelAfter(t -> {
+				}).scheduleTimer(UUID.randomUUID().toString(), 0, 1, BukkitTaskPredicate.cancelAfter(t -> {
 					WarStartEvent e = ClanVentBus.call(new WarStartEvent(free));
 					if (e.isCancelled()) {
 						t.cancel();

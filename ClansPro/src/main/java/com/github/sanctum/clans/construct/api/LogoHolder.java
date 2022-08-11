@@ -1,8 +1,8 @@
 package com.github.sanctum.clans.construct.api;
 
 import com.github.sanctum.clans.construct.extra.SpecialCarrierAdapter;
-import com.github.sanctum.labyrinth.library.Deployable;
 import com.github.sanctum.panther.annotation.Note;
+import com.github.sanctum.panther.util.Deployable;
 import com.github.sanctum.panther.util.HUID;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -59,7 +59,9 @@ public interface LogoHolder extends Savable {
 	}
 
 	static Deployable<Void> newAdapter(@NotNull("Carrier extension's cannot be null!") SpecialCarrierAdapter adapter) {
-		return Deployable.of(null, unused -> InoperableSpecialMemory.ADAPTERS.add(adapter));
+		return Deployable.of(() -> {
+			InoperableSpecialMemory.ADAPTERS.add(adapter);
+		}, 0);
 	}
 
 	/**

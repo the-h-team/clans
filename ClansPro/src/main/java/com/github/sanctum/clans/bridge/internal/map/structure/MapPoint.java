@@ -2,7 +2,7 @@ package com.github.sanctum.clans.bridge.internal.map.structure;
 
 import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClansAPI;
-import com.github.sanctum.labyrinth.library.Applicable;
+import com.github.sanctum.panther.util.Applicable;
 import com.github.sanctum.panther.util.HUID;
 import net.md_5.bungee.api.ChatColor;
 import org.jetbrains.annotations.Nullable;

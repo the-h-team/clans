@@ -1,6 +1,6 @@
 package com.github.sanctum.clans.bridge;
 
-import com.github.sanctum.labyrinth.library.Deployable;
+import com.github.sanctum.panther.util.Deployable;
 import java.io.File;
 import java.io.IOException;
 

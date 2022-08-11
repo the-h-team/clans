@@ -8,10 +8,10 @@ import com.github.sanctum.clans.construct.api.QnA;
 import com.github.sanctum.clans.construct.extra.StringLibrary;
 import com.github.sanctum.labyrinth.gui.unity.construct.Menu;
 import com.github.sanctum.labyrinth.gui.unity.impl.MenuType;
-import com.github.sanctum.labyrinth.library.Deployable;
 import com.github.sanctum.labyrinth.library.Mailer;
 import com.github.sanctum.labyrinth.library.StringUtils;
 import com.github.sanctum.labyrinth.task.TaskScheduler;
+import com.github.sanctum.panther.util.Deployable;
 import com.github.sanctum.skulls.SkullType;
 import java.util.List;
 import org.bukkit.entity.Player;
@@ -52,7 +52,7 @@ public class CommandAsk extends ClanSubCommand {
 								Mailer.empty(player).title(api.getPrefix().joined(), response).deploy(mailer -> {
 									TaskScheduler.of(() -> GUI.MAIN_MENU.get(player).open(player)).scheduleLater(75);
 								});
-							}).deploy();
+							}, 0).deploy();
 						}
 
 					}).open(p);
