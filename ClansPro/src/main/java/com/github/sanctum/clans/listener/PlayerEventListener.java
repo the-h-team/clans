@@ -107,8 +107,8 @@ import org.jetbrains.annotations.NotNull;
 public class PlayerEventListener implements Listener {
 
 	private final static PantherMap<Location, ArmorStand> STAND_MAP = new PantherEntryMap<>();
-	public static final Procedure<Object> STAND_REMOVAL = Procedure.request(() -> Object.class).next(o -> STAND_MAP.values().forEach(ArmorStand::remove));
-	protected static final AsynchronousLoanableTask TASK = new AsynchronousLoanableTask((p, task) -> {
+	public static final Procedure<Object> ARMOR_STAND_REMOVAL = Procedure.request(() -> Object.class).next(o -> STAND_MAP.values().forEach(ArmorStand::remove));
+	public static final AsynchronousLoanableTask LOANABLE_TASK = new AsynchronousLoanableTask((p, task) -> {
 		if (ClansAPI.getInstance() == null) {
 			task.stop();
 			return;
@@ -798,7 +798,7 @@ public class PlayerEventListener implements Listener {
 
 		Player p = e.getPlayer();
 
-		TASK.join(p);
+		LOANABLE_TASK.join(p);
 
 		Clan.Associate associate = ClansAPI.getInstance().getAssociate(Bukkit.getOfflinePlayer(p.getUniqueId())).orElse(null);
 
@@ -846,7 +846,7 @@ public class PlayerEventListener implements Listener {
 	@Subscribe
 	public void onPlayerLeave(DefaultEvent.Leave e) {
 		final Player p = e.getPlayer();
-		TASK.leave(p);
+		LOANABLE_TASK.leave(p);
 		Clan.Associate associate = ClansAPI.getInstance().getAssociate(p).orElse(null);
 		if (associate != null) {
 			if (ClansAPI.getDataInstance().isDisplayTagsAllowed()) {

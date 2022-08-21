@@ -5,7 +5,7 @@
 
     <groupId>com.github.sanctum</groupId>
     <artifactId>ClansPro</artifactId>
-    <version>1.4.0-DEV</version>
+    <version>1.4.0</version>
     <packaging>jar</packaging>
 
     <name>ClansPro</name>
@@ -19,8 +19,8 @@
     <properties>
         <java.version>1.8</java.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <labyrinth.version>1.8.0-SNAPSHOT</labyrinth.version>
-        <panther.version>1.0.0.R8-SNAPSHOT</panther.version>
+        <labyrinth.version>1.8.1</labyrinth.version>
+        <panther.version>1.0.0</panther.version>
     </properties>
 
     <distributionManagement>
@@ -190,7 +190,6 @@
             <version>23.0.0</version>
             <scope>provided</scope>
         </dependency>
-
         <dependency>
             <groupId>com.github.the-h-team.Panther</groupId>
             <artifactId>panther-placeholders</artifactId>
@@ -204,13 +203,13 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>com.github.the-h-team</groupId>
+            <groupId>com.github.the-h-team.Labyrinth</groupId>
             <artifactId>labyrinth-gui</artifactId>
             <version>${labyrinth.version}</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>com.github.the-h-team</groupId>
+            <groupId>com.github.the-h-team.Labyrinth</groupId>
             <artifactId>labyrinth-regions</artifactId>
             <version>${labyrinth.version}</version>
             <scope>provided</scope>
@@ -222,13 +221,13 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>com.github.the-h-team</groupId>
+            <groupId>com.github.the-h-team.Labyrinth</groupId>
             <artifactId>labyrinth-common</artifactId>
             <version>${labyrinth.version}</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>com.github.the-h-team</groupId>
+            <groupId>com.github.the-h-team.Labyrinth</groupId>
             <artifactId>labyrinth-skulls</artifactId>
             <version>${labyrinth.version}</version>
             <scope>provided</scope>

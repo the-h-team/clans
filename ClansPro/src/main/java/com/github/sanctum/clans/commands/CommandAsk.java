@@ -1,18 +1,12 @@
 package com.github.sanctum.clans.commands;
 
+import com.github.sanctum.clans.construct.DataManager;
+import com.github.sanctum.clans.construct.api.Claim;
 import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClanSubCommand;
 import com.github.sanctum.clans.construct.api.ClansAPI;
-import com.github.sanctum.clans.construct.api.GUI;
-import com.github.sanctum.clans.construct.api.QnA;
-import com.github.sanctum.clans.construct.extra.StringLibrary;
-import com.github.sanctum.labyrinth.gui.unity.construct.Menu;
-import com.github.sanctum.labyrinth.gui.unity.impl.MenuType;
-import com.github.sanctum.labyrinth.library.Mailer;
-import com.github.sanctum.labyrinth.library.StringUtils;
-import com.github.sanctum.labyrinth.task.TaskScheduler;
-import com.github.sanctum.panther.util.Deployable;
-import com.github.sanctum.skulls.SkullType;
+import com.github.sanctum.clans.construct.extra.Book;
+import com.github.sanctum.panther.file.Primitive;
 import java.util.List;
 import org.bukkit.entity.Player;
 
@@ -23,39 +17,42 @@ public class CommandAsk extends ClanSubCommand {
 
 	@Override
 	public boolean player(Player p, String label, String[] args) {
-		StringLibrary lib = Clan.ACTION;
 
 		if (args.length == 0) {
-			ClansAPI api = ClansAPI.getInstance();
-			MenuType.PRINTABLE.build()
-					.setTitle("&6&lAsk Question")
-					.setSize(Menu.Rows.ONE)
-					.setHost(api.getPlugin())
-					.setStock(inventoryElement -> inventoryElement.addItem(b -> b.setElement(it -> it.setItem(SkullType.ARROW_BLUE_RIGHT.get()).setTitle(" ").build()).setSlot(0).setClick(c -> {
-						c.setCancelled(true);
-						c.setHotbarAllowed(false);
-					}))).join()
-					.addAction(clickElement -> {
-						clickElement.setCancelled(true);
-						clickElement.setHotbarAllowed(false);
-						if (clickElement.getSlot() == 2) {
-							for (QnA qnA : QnA.getAll()) {
-								if (!qnA.test(clickElement.getElement(), clickElement.getParent().getName()))
-									return;
-							}
-							Deployable.of(clickElement.getElement(), player -> {
-								player.closeInventory();
-								String response = "&cI don't have an answer.";
-								if (StringUtils.use(clickElement.getParent().getName()).containsIgnoreCase("nigger", "fuck", "dumb", "retard", "fag")) {
-									response = "&cThat's not very nice.";
-								}
-								Mailer.empty(player).title(api.getPrefix().joined(), response).deploy(mailer -> {
-									TaskScheduler.of(() -> GUI.MAIN_MENU.get(player).open(player)).scheduleLater(75);
-								});
-							}, 0).deploy();
-						}
+			Book book = new Book(1, false).setTitle("&7[&3&lClans&7] &6&lInfo").setAuthor("Hempfest");
+			book.append("&lYou may have a few questions so we'll answer them here.")
+					.append("")
+					.append("&6&lQ.) &0&nHow do i make a clan?");
+			if (Clan.ACTION.test(p, "clanspro." + DataManager.Security.getPermission("create")).deploy()) {
+				book.append("&2&lA.] &8" + "To make a clan simply type '/clan create <nameHere>', if you have permission this message will be gray.");
+			} else {
+				book.append("&2&lA.] &cTo make a clan simply type '/clan create <nameHere>', if you have permission this message will be gray.");
+			}
+			book.append("&6&lQ.) &0&nHow do i get power?")
+					.append("&2&lA.] &8You can gain power by increasing the overall size of your clan (more members), having more money in the clan bank (optional through server), owning more clan claims & killing enemy clan associates as well a clans reservoir.")
+					.append("&6&lQ.) &0&nHow do i raid?");
+			if (Claim.ACTION.isEnabled()) {
+				book.append("&2&lA.] &8Raiding can be achieved by simply overpowering a target clan's land, un-claiming an individual chunk allows you to access the containers within as well as build/break.");
+			} else {
+				book.append("&2&lA.] &cClan land claiming is disabled on this server! Therefore raiding becomes inherently impossible.");
+			}
+			book.append(" ")
+					.append("&6&lQ.) &0&nHow do i print my logo?")
+					.append("&2&lA.] &8You need to have a logo workspace setup, to do that simply type '/clan logo redraw'. Once done use '/clan logo print' to give yourself a globally usable logo print.")
+					.append(" ")
+					.append("&6&lQ.) &0&nHow do i use a logo print?")
+					.append("&2&lA.] &8When holding a valid clans logo print in your hand, use command '/clan logo upload' to apply it as your clans logo, from there you can choose to share it globally for others to print with '/clan logo share'.")
+					.append(" ")
+					.append("&6&lQ.) &0&nHow do clan wars work?")
+					.append("&2&lA.] &8Clan wars are essentially .");
 
-					}).open(p);
+			Primitive primitive = ClansAPI.getDataInstance().getConfig().read(c -> c.getNode("Formatting.help-book").toPrimitive());
+			if (primitive.isStringList()) {
+				for (String s : primitive.getStringList()) {
+					book.append(s);
+				}
+			}
+			book.give(p);
 			return true;
 		}
 

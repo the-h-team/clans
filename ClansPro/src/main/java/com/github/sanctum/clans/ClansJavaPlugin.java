@@ -219,7 +219,7 @@ public class ClansJavaPlugin extends JavaPlugin implements ClansAPI, Vent.Host {
 		} catch (Exception ignored) {
 		}
 
-		PlayerEventListener.STAND_REMOVAL.run(this).deploy();
+		PlayerEventListener.ARMOR_STAND_REMOVAL.run(this).deploy();
 
 		getClanManager().getClans().forEach(c -> {
 			c.save();
@@ -252,6 +252,7 @@ public class ClansJavaPlugin extends JavaPlugin implements ClansAPI, Vent.Host {
 				System.setProperty("RELOAD", "TRUE");
 			}
 		});
+		PlayerEventListener.LOANABLE_TASK.stop();
 	}
 
 	public void setPrefix(MessagePrefix prefix) {

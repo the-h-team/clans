@@ -400,6 +400,8 @@ Formatting:
   chat-message-format: '&7{0} say''s :'
   # Allow clans to use gradients for clan coloring?
   gradient-name-coloring: true
+  # NEW! Add lines to the information help book! Uncomment to use.
+  #help-book: ["", ""]
   # Adjust level adjustments like claims and power
   level-adjustment:
     give-power:
@@ -592,4 +594,4 @@ Addon:
 ## -- DO NOT EDIT BELOW --
 # Authors: Hempfest, ms5984
 ##------------------------
-Version: 1.4.0-DEV
+Version: 1.4.0

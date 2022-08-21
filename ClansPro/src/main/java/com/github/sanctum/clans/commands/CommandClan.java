@@ -36,7 +36,6 @@ public class CommandClan extends Command implements Message.Factory {
 		List<String> array = ClansAPI.getDataInstance().getConfig().getRoot().getStringList("Formatting.aliase");
 		array.addAll(Arrays.asList("clans", "cl", "c"));
 		setAliases(array);
-		setPermission("clanspro");
 	}
 
 	private void sendMessage(CommandSender player, String message) {
@@ -123,12 +122,6 @@ public class CommandClan extends Command implements Message.Factory {
 				} else {
 					// TODO: modded check
 				}
-			}
-
-			if (this.getPermission() == null) return true;
-			if (!p.hasPermission(this.getPermission())) {
-				lib.sendMessage(p, "&4&oYou don't have permission " + '"' + this.getPermission() + '"');
-				return true;
 			}
 
 			if (length > 0) {

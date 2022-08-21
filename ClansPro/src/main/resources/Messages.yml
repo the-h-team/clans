@@ -307,6 +307,7 @@ Response:
   kick: '&7|&e) &fInvalid usage : /clan kick <playerName>'
   tag: '&7|&e) &fInvalid usage : /clan tag <newTag>'
   mode: '&7|&e) &fInvalid usage : /clan mode <modeType>'
+  invite: '&7|&e) &fInvalid usage : /clan invite <playerName>'
   passowner: '&7|&e) &fInvalid usage : /clan passowner <playerName>'
   nick: '&7|&e) &fInvalid usage : /clan nickname <newNickname>'
   promote: '&7|&e) &fInvalid usage : /clan promote <playerName>'

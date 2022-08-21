@@ -304,6 +304,7 @@ Response:
   kick: '&7|&e) &fUso inválido : /clan kick <playerName>'
   tag: '&7|&e) &fUso inválido : /clan tag <newTag>'
   mode: '&7|&e) &fUso inválido : /clan mode <modeType>'
+  invite: '&7|&e) &fInvalid usage : /clan invite <playerName>'
   passowner: '&7|&e) &fUso inválido : /clan passowner <playerName>'
   nick: '&7|&e) &fUso inválido : /clan nickname <newNickname>'
   permit: '&7|&e) &fUso inválido : /clan permit <permission> <level>'
