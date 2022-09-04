@@ -23,7 +23,7 @@ public class StashCommand extends ClanSubCommand {
 
 		int length = args.length;
 		if (length == 0) {
-			if (ClansAPI.getInstance().isInClan(p.getUniqueId())) {
+			if (ClansAPI.getInstance().getAssociate(p.getUniqueId()).isPresent()) {
 				Clan.Associate associate = ClansAPI.getInstance().getAssociate(p).get();
 				Clan clan = associate.getClan();
 				if (ClansAPI.getInstance().getClaimManager().isInClaim(p.getLocation())) {
@@ -32,7 +32,7 @@ public class StashCommand extends ClanSubCommand {
 						Clan.ACTION.sendMessage(p, Clan.ACTION.noClearance());
 						return true;
 					}
-					if (!((Clan)r.getCurrent().getHolder()).getId().toString().equals(clan.getId().toString())) {
+					if (!((Clan) r.getCurrent().getHolder()).getId().toString().equals(clan.getId().toString())) {
 						Clan.ACTION.sendMessage(p, "&c&oYou can only view the stash @ the clan base.");
 						return true;
 					}

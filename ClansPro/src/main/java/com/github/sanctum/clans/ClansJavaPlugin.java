@@ -1,7 +1,7 @@
 package com.github.sanctum.clans;
 
 import com.github.sanctum.clans.bridge.ClanAddon;
-import com.github.sanctum.clans.bridge.ClanAddonQuery;
+import com.github.sanctum.clans.bridge.ClanAddonQueue;
 import com.github.sanctum.clans.construct.ArenaManager;
 import com.github.sanctum.clans.construct.ClaimManager;
 import com.github.sanctum.clans.construct.ClanManager;
@@ -12,8 +12,6 @@ import com.github.sanctum.clans.construct.api.AbstractGameRule;
 import com.github.sanctum.clans.construct.api.Claim;
 import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClansAPI;
-import com.github.sanctum.clans.construct.api.GUI;
-import com.github.sanctum.clans.construct.api.InvasiveEntity;
 import com.github.sanctum.clans.construct.api.LogoGallery;
 import com.github.sanctum.clans.construct.bank.BankMeta;
 import com.github.sanctum.clans.construct.bank.backend.ClanFileBankBackend;
@@ -37,18 +35,19 @@ import com.github.sanctum.labyrinth.data.container.KeyedServiceManager;
 import com.github.sanctum.labyrinth.data.container.PersistentContainer;
 import com.github.sanctum.labyrinth.formatting.FancyMessageChain;
 import com.github.sanctum.labyrinth.formatting.Message;
-import com.github.sanctum.labyrinth.gui.unity.construct.Menu;
 import com.github.sanctum.labyrinth.library.NamespacedKey;
 import com.github.sanctum.labyrinth.library.StringUtils;
+import com.github.sanctum.panther.annotation.AnnotationDiscovery;
+import com.github.sanctum.panther.annotation.Ordinal;
 import com.github.sanctum.panther.event.Vent;
 import com.github.sanctum.panther.file.Configurable;
 import com.github.sanctum.panther.file.Node;
 import com.github.sanctum.panther.paste.PasteManager;
 import com.github.sanctum.panther.paste.type.Hastebin;
-import com.github.sanctum.panther.util.HUID;
 import com.github.sanctum.panther.util.OrdinalProcedure;
 import com.github.sanctum.panther.util.Task;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
@@ -65,13 +64,17 @@ import org.bukkit.plugin.ServicePriority;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 
-/**
- * ▄▄▄·▄▄▄        ▄▄
- * ▐█ ▄█▀▄ █·▪     ██▌
- * ██▀·▐▀▀▄  ▄█▀▄ ▐█·
- * ▐█▪·•▐█•█▌▐█▌.▐▌.▀
- * .▀   .▀  ▀ ▀█▄▀▪ ▀
- *
+/**<pre>
+ *    ▄████▄   ██▓    ▄▄▄       ███▄    █   ██████   ██████╗ ██████╗  ██████╗ ██╗
+ *   ▒██▀ ▀█  ▓██▒   ▒████▄     ██ ▀█   █ ▒██    ▒ ▓ ██╔══██╗██╔══██╗██╔═══██╗██║
+ *   ▒▓█    ▄ ▒██░   ▒██  ▀█▄  ▓██  ▀█ ██▒░ ▓██▄   ▓ ██████╔╝██████╔╝██║   ██║██║
+ *   ▒▓▓▄ ▄██▒▒██░   ░██▄▄▄▄██ ▓██▒  ▐▌██▒  ▒   ██▒▒ ██╔═══╝ ██╔══██╗██║   ██║╚═╝
+ *   ▒ ▓███▀ ░░██████▒▓█   ▓██▒▒██░   ▓██░▒██████▒▒▒ ██║     ██║  ██║╚██████╔╝██╗
+ *   ░ ░▒ ▒  ░░ ▒░▓  ░▒▒   ▓▒█░░ ▒░   ▒ ▒ ▒ ▒▓▒ ▒ ░▒ ╚═╝     ╚═╝  ╚═╝ ╚═════╝ ╚═╝
+ *       ░  ▒   ░ ░ ▒  ░ ▒   ▒▒ ░░ ░░   ░ ▒░░ ░▒  ░ ░░
+ *         ░          ░ ░    ░   ▒      ░   ░ ░ ░  ░  ░  ░
+ *           ░ ░          ░  ░     ░  ░         ░       ░
+ *             ░
  * <pre>
  * <h3>MIT License</h2>
  * Copyright (c) 2021 Sanctum
@@ -176,6 +179,9 @@ public class ClansJavaPlugin extends JavaPlugin implements ClansAPI, Vent.Host {
 					chain.append(msg -> msg.then("            [Online state change detected]             "));
 					chain.append(msg -> msg.then("[To use this plugin again your clan data must be reset]"));
 					chain.append(msg -> msg.then(" [This is due to a change in unique id's for players.] "));
+					chain.append(msg -> msg.then(" "));
+					chain.append(msg -> msg.then("   [Online uuid provision is persistent but offline] "));
+					chain.append(msg -> msg.then("    [provision is only persistent to the username.] "));
 					chain.append(msg -> msg.then("======================================================="));
 					chain.append(msg -> msg.then("======================================================="));
 					chain.append(msg -> msg.then("-------------------------------------------------------"));
@@ -195,6 +201,7 @@ public class ClansJavaPlugin extends JavaPlugin implements ClansAPI, Vent.Host {
 	}
 
 	public void onDisable() {
+		ClanAddonQueue addonQueue = ClanAddonQueue.getInstance();
 		Optional.ofNullable(LabyrinthProvider.getService(Service.TASK).getScheduler(TaskService.ASYNCHRONOUS).get(AsynchronousLoanableTask.KEY)).ifPresent(Task::cancel);
 		for (PersistentContainer component : LabyrinthProvider.getService(Service.DATA).getContainers(this)) {
 			for (String key : component.keySet()) {
@@ -207,36 +214,37 @@ public class ClansJavaPlugin extends JavaPlugin implements ClansAPI, Vent.Host {
 			}
 		}
 
-		try {
-
-			for (ClanAddon addon : ClanAddonQuery.getRegisteredAddons()) {
-				ClanAddonQuery.remove(addon);
-			}
-
-			BankMeta.clearManagerCache();
-			dataManager.ID_MODE.clear();
-
-		} catch (Exception ignored) {
+		for (ClanAddon addon : addonQueue.get()) {
+			AnnotationDiscovery<Ordinal, ClanAddon> discovery = AnnotationDiscovery.of(Ordinal.class, ClanAddon.class);
+			discovery.filter(method -> method.getName().equals("remove"), true);
+			discovery.ifPresent((ordinal, method) -> {
+				try {
+					method.invoke(addon);
+				} catch (IllegalAccessException | InvocationTargetException ex) {
+					ex.printStackTrace();
+				}
+			});
 		}
+
+		BankMeta.clearManagerCache();
+		dataManager.ID_MODE.clear();
 
 		PlayerEventListener.ARMOR_STAND_REMOVAL.run(this).deploy();
 
 		getClanManager().getClans().forEach(c -> {
-			c.save();
+			c.save(); // save the clan
 			ClanFileBankBackend.saveOldFormat(c);
 			for (Clan.Associate a : c.getMembers()) {
 				if (!(a instanceof AnimalAssociate)) {
-					a.save();
-				} else {
-					a.remove();
-				}
+					a.save(); // save associate data.
+				} else a.remove();
 			}
 			for (Claim claim : c.getClaims()) {
-				claim.save();
+				claim.save(); // save claim data.
 			}
 			Reservoir r = Reservoir.get(c);
-			if (r != null) r.save();
-			c.remove();
+			if (r != null) r.save(); // save reservoir data
+			c.remove(); // clean up the clan from cache.
 		});
 
 		getLogoGallery().save();
@@ -320,7 +328,7 @@ public class ClansJavaPlugin extends JavaPlugin implements ClansAPI, Vent.Host {
 	}
 
 	@Override
-	public @NotNull Hastebin getLocalHastebinInstance() {
+	public @NotNull Hastebin getHastebin() {
 		return hastebin;
 	}
 
@@ -344,16 +352,6 @@ public class ClansJavaPlugin extends JavaPlugin implements ClansAPI, Vent.Host {
 	}
 
 	@Override
-	public boolean isClanMember(UUID target, HUID clanID) {
-		return getClanManager().getClan(clanID).getMember(a -> a.getId().equals(target)) != null;
-	}
-
-	@Override
-	public boolean isInClan(UUID target) {
-		return getAssociate(target).isPresent();
-	}
-
-	@Override
 	public boolean isNameBlackListed(String name) {
 		for (String s : ClansAPI.getDataInstance().getConfig().read(c -> c.getNode("Clans.name-blacklist").get(ConfigurationSection.class)).getKeys(false)) {
 			if (StringUtils.use(name).containsIgnoreCase(s)) {
@@ -361,57 +359,6 @@ public class ClansJavaPlugin extends JavaPlugin implements ClansAPI, Vent.Host {
 			}
 		}
 		return false;
-	}
-
-	@Override
-	public void registerAddons(Plugin plugin, String packageName) {
-		ClanAddonQuery.register(plugin, packageName);
-	}
-
-	@Override
-	public void registerAddon(Class<? extends ClanAddon> cycle) {
-		ClanAddonQuery.register(cycle);
-	}
-
-	@Override
-	public boolean kickUser(UUID uuid) {
-		boolean success = false;
-		Clan test = getClanManager().getClan(uuid);
-		if (test != null && test.getOwner().getId().equals(uuid)) {
-			success = true;
-			Clan.ACTION.remove(uuid, true).deploy();
-		}
-		return success;
-	}
-
-	@Override
-	public Optional<Clan.Associate> obtainUser(UUID uuid, String clanName) {
-		final ClanManager manager = getClanManager();
-		if (!isInClan(uuid)) {
-			HUID id = manager.getClanID(clanName);
-			if (id != null) {
-				Clan toJoin = manager.getClan(id);
-				Clan.ACTION.join(uuid, clanName, toJoin.getPassword() != null ? toJoin.getPassword() : null, false).deploy();
-				return Optional.ofNullable(toJoin.getMember(m -> m.getId().equals(uuid)));
-			}
-		}
-		return Optional.empty();
-	}
-
-	@Override
-	public ClanAddon getAddon(String name) {
-		return ClanAddonQuery.getAddon(name);
-	}
-
-	@Override
-	public Menu getMenu(GUI gui, InvasiveEntity entity) {
-		if (entity.isAssociate()) {
-			return gui.get(entity.getAsAssociate());
-		}
-		if (entity.isClan()) {
-			return gui.get(entity.getAsClan());
-		}
-		return null;
 	}
 
 	@Override
@@ -453,10 +400,11 @@ public class ClansJavaPlugin extends JavaPlugin implements ClansAPI, Vent.Host {
 		commandManager = new CommandManager();
 		serviceManager = new KeyedServiceManager<>();
 		arenaManager = new ArenaManager();
-		// Pre load 3 arena instances into cache so up to 6 clans can be at war at the same time.
-		arenaManager.load(new DefaultArena("PRO-1"));
-		arenaManager.load(new DefaultArena("PRO-2"));
-		arenaManager.load(new DefaultArena("PRO-3"));
+		// load configured arenas, each new arena allows for another war to be held.
+		int arenas = dataManager.getConfigInt("Clans.war.max-wars");
+		for (int i = 0; i < arenas; i++) {
+			arenaManager.load(new DefaultArena("PRO-" + (i + 1)));
+		}
 		Node formatting = main.read(c -> c.getNode("Formatting"));
 		Node prefix = formatting.getNode("prefix");
 		this.prefix = new MessagePrefix(prefix.getNode("prefix").toPrimitive().getString(),

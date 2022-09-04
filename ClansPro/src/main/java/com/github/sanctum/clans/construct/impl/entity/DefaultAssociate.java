@@ -142,7 +142,7 @@ public final class DefaultAssociate implements Clan.Associate, PersistentEntity 
 
 	@Override
 	public Mailer getMailer() {
-		return Mailer.empty(getTag().getPlayer().getPlayer()).prefix().start(ClansAPI.getInstance().getPrefix().joined()).finish();
+		return Mailer.empty(getTag().getPlayer().getPlayer()).prefix().start(ClansAPI.getInstance().getPrefix().toString()).finish();
 	}
 
 	/**

@@ -1,6 +1,6 @@
 package com.github.sanctum.clans.bridge.internal.kingdoms.command;
 
-import com.github.sanctum.clans.bridge.ClanAddonQuery;
+import com.github.sanctum.clans.bridge.ClanAddonQueue;
 import com.github.sanctum.clans.bridge.ClanVentBus;
 import com.github.sanctum.clans.bridge.internal.KingdomAddon;
 import com.github.sanctum.clans.bridge.internal.kingdoms.Kingdom;
@@ -226,7 +226,7 @@ public class KingdomCommand extends ClanSubCommand implements Message.Factory {
 
 						if (k.getMembers().size() == 0) {
 							// TODO: announce kingdom fallen
-							k.remove(ClanAddonQuery.getAddon("Kingdoms"));
+							k.remove(ClanAddonQueue.getInstance().get("Kingdoms"));
 							Bukkit.getOnlinePlayers().forEach(pl -> Clan.ACTION.sendMessage(pl, "&2[&b" + k.getName() + "&2]&r &c&ohas fallen.."));
 						}
 

@@ -1,7 +1,7 @@
 package com.github.sanctum.clans.bridge.external;
 
 import com.github.sanctum.clans.bridge.ClanAddon;
-import com.github.sanctum.clans.bridge.ClanAddonQuery;
+import com.github.sanctum.clans.bridge.ClanAddonQueue;
 import com.github.sanctum.clans.bridge.ClanVentBus;
 import com.github.sanctum.clans.bridge.external.bounty.Bounty;
 import com.github.sanctum.clans.bridge.external.bounty.BountyCommand;
@@ -55,7 +55,7 @@ public class BountyAddon extends ClanAddon {
 
 		ClanVentBus.subscribe(PlayerKillPlayerEvent.class, Vent.Priority.HIGH, (e, subscription) -> {
 
-			ClanAddon cycle = ClanAddonQuery.getAddon("Bounty");
+			ClanAddon cycle = ClanAddonQueue.getInstance().get("Bounty");
 
 			if (cycle != null && !cycle.getContext().isActive()) {
 				subscription.remove();
@@ -63,13 +63,13 @@ public class BountyAddon extends ClanAddon {
 			}
 
 			Player p = e.getPlayer();
-			if (ClansAPI.getInstance().isInClan(p.getUniqueId())) {
+			if (ClansAPI.getInstance().getAssociate(p.getUniqueId()).isPresent()) {
 				Clan c = ClansAPI.getInstance().getClanManager().getClan(p.getUniqueId());
 				Bounty b = BountyList.get(e.getVictim().getUniqueId()).orElse(null);
 				if (b != null) {
 					if (ClansAPI.getDataInstance().isTrue("Addon.Bounty.settings.take-from-killed")) {
 						// take from wallet
-						if (ClansAPI.getInstance().isInClan(e.getVictim().getUniqueId())) {
+						if (ClansAPI.getInstance().getAssociate(e.getVictim().getUniqueId()).isPresent()) {
 							Clan t = ClansAPI.getInstance().getClanManager().getClan(e.getVictim().getUniqueId());
 							// take from victims clan if they are in one
 							if (ClansAPI.getDataInstance().isTrue("Addon.Bounty.settings.announce-defeat")) {

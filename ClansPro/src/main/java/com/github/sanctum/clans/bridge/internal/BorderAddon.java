@@ -1,7 +1,7 @@
 package com.github.sanctum.clans.bridge.internal;
 
 import com.github.sanctum.clans.bridge.ClanAddon;
-import com.github.sanctum.clans.bridge.ClanAddonQuery;
+import com.github.sanctum.clans.bridge.ClanAddonQueue;
 import com.github.sanctum.clans.bridge.ClanVentBus;
 import com.github.sanctum.clans.bridge.internal.borders.BorderListener;
 import com.github.sanctum.clans.bridge.internal.borders.FlagsCommand;
@@ -51,7 +51,7 @@ public class BorderAddon extends ClanAddon {
 
 		ClanVentBus.subscribe(CommandInformationAdaptEvent.class, Vent.Priority.HIGH, (e, subscription) -> {
 
-			ClanAddon cycle = ClanAddonQuery.getAddon("Borders");
+			ClanAddon cycle = ClanAddonQueue.getInstance().get("Borders");
 
 			if (cycle != null && !cycle.getContext().isActive()) {
 				subscription.remove();

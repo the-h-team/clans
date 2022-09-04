@@ -1,7 +1,7 @@
 package com.github.sanctum.clans.bridge.internal;
 
 import com.github.sanctum.clans.bridge.ClanAddon;
-import com.github.sanctum.clans.bridge.ClanAddonQuery;
+import com.github.sanctum.clans.bridge.ClanAddonQueue;
 import com.github.sanctum.clans.bridge.ClanVentBus;
 import com.github.sanctum.clans.bridge.internal.vaults.VaultMenu;
 import com.github.sanctum.clans.bridge.internal.vaults.command.VaultCommand;
@@ -49,7 +49,7 @@ public class VaultsAddon extends ClanAddon {
 
 		ClanVentBus.subscribe(CommandInformationAdaptEvent.class, Vent.Priority.HIGH, (e, subscription) -> {
 
-			ClanAddon cycle = ClanAddonQuery.getAddon("Vaults");
+			ClanAddon cycle = ClanAddonQueue.getInstance().get("Vaults");
 
 			if (cycle != null && !cycle.getContext().isActive()) {
 				subscription.remove();

@@ -1,7 +1,7 @@
 package com.github.sanctum.clans.bridge.external;
 
 import com.github.sanctum.clans.bridge.ClanAddon;
-import com.github.sanctum.clans.bridge.ClanAddonQuery;
+import com.github.sanctum.clans.bridge.ClanAddonQueue;
 import com.github.sanctum.clans.bridge.ClanVentBus;
 import com.github.sanctum.clans.bridge.external.dynmap.DynmapClanMarketSet;
 import com.github.sanctum.clans.bridge.external.dynmap.DynmapCommand;
@@ -50,7 +50,7 @@ public class DynmapAddon extends ClanAddon {
 	public void onEnable() {
 
 		ClanVentBus.MEDIUM_PRIORITY.subscribeTo(CommandInformationAdaptEvent.class, "clanspro;dynmap-info_adapt", (e, subscription) -> {
-			ClanAddon cycle = ClanAddonQuery.getAddon("Dynmap");
+			ClanAddon cycle = ClanAddonQueue.getInstance().get("Dynmap");
 
 			if (cycle != null && !cycle.getContext().isActive()) {
 				subscription.remove();

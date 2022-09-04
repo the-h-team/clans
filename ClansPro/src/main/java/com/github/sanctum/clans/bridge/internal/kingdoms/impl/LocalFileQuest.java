@@ -1,7 +1,7 @@
 package com.github.sanctum.clans.bridge.internal.kingdoms.impl;
 
 import com.github.sanctum.clans.bridge.ClanAddon;
-import com.github.sanctum.clans.bridge.ClanAddonQuery;
+import com.github.sanctum.clans.bridge.ClanAddonQueue;
 import com.github.sanctum.clans.bridge.ClanVentBus;
 import com.github.sanctum.clans.bridge.internal.kingdoms.Kingdom;
 import com.github.sanctum.clans.bridge.internal.kingdoms.Progressive;
@@ -323,13 +323,13 @@ public final class LocalFileQuest implements Quest, Message.Factory {
 
 	@Override
 	public boolean isNode(String key) {
-		ClanAddon cycle = ClanAddonQuery.getAddon("Kingdoms");
+		ClanAddon cycle = ClanAddonQueue.getInstance().get("Kingdoms");
 		FileManager file = cycle.getFile(Configurable.Type.JSON, "achievements", "data");
 		return file.getRoot().getNode(getPath()).isNode(key);
 	}
 
 	Node getParentNode() {
-		ClanAddon cycle = ClanAddonQuery.getAddon("Kingdoms");
+		ClanAddon cycle = ClanAddonQueue.getInstance().get("Kingdoms");
 		FileManager file = cycle.getFile(Configurable.Type.JSON, "achievements", "data");
 		return file.getRoot().getNode(getPath());
 	}

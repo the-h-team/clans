@@ -1,7 +1,7 @@
 package com.github.sanctum.clans.bridge.internal.kingdoms;
 
 import com.github.sanctum.clans.bridge.ClanAddon;
-import com.github.sanctum.clans.bridge.ClanAddonQuery;
+import com.github.sanctum.clans.bridge.ClanAddonQueue;
 import com.github.sanctum.clans.bridge.internal.KingdomAddon;
 import com.github.sanctum.clans.construct.api.Claim;
 import com.github.sanctum.clans.construct.api.Clan;
@@ -271,7 +271,7 @@ public class RoundTable extends Progressive implements Controllable, Iterable<Cl
 	}
 
 	Node getParentNode() {
-		FileManager section = ClanAddonQuery.getAddon("Kingdoms").getFile(Configurable.Type.JSON, "table", "data");
+		FileManager section = ClanAddonQueue.getInstance().get("Kingdoms").getFile(Configurable.Type.JSON, "table", "data");
 		return section.getRoot().getNode(getPath());
 	}
 

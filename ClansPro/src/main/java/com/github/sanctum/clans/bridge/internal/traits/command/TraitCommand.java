@@ -91,7 +91,7 @@ public class TraitCommand extends ClanSubCommand {
 							holder.setSecondary(prim);
 							sendMessage(player, "&aPrimary trait set to &f" + trait.getName() + " &awith abilities &f[&e" + Arrays.stream(trait.getAbilities()).map(Trait.Ability::getName).collect(Collectors.joining(", ")) + "&f]");
 						} else {
-							new FancyMessage().then(ClansAPI.getInstance().getPrefix().joined()).then(" ").then("Setting &e" + trait.getName() + " &fas your primary trait might undo wanted progress from &6" + holder.getPrimary().getName()).then("\n").then("&7&l&m---------------------").then("\n").then(" &fDo you wish to ").then("&6Continue?").hover("&aClick to confirm.").action(() -> {
+							new FancyMessage().then(ClansAPI.getInstance().getPrefix().toString()).then(" ").then("Setting &e" + trait.getName() + " &fas your primary trait might undo wanted progress from &6" + holder.getPrimary().getName()).then("\n").then("&7&l&m---------------------").then("\n").then(" &fDo you wish to ").then("&6Continue?").hover("&aClick to confirm.").action(() -> {
 								holder.setPrimary(trait);
 								sendMessage(player, "&aPrimary trait set to &f" + trait.getName() + " &awith abilities &f[&e" + Arrays.stream(trait.getAbilities()).map(Trait.Ability::getName).collect(Collectors.joining(", ")) + "&f]");
 							}).send(player).deploy();
@@ -123,7 +123,7 @@ public class TraitCommand extends ClanSubCommand {
 						message.then("#&6" + integer + " ").then(trait.getName()).hover("&bClick to set.").action(() -> {
 							if (!holder.getPrimary().getName().equals(trait.getName()) && holder.getSecondary() != null && !holder.getSecondary().getName().equals(trait.getName())) {
 								if (holder.getSecondary() != null) {
-									new FancyMessage().then(ClansAPI.getInstance().getPrefix().joined()).then(" ").then("Setting &e" + trait.getName() + " &fas your secondary trait might undo wanted progress from &6" + holder.getSecondary().getName()).then("\n").then("&7&l&m---------------------").then("\n").then(" &fDo you wish to ").then("&6Continue?").hover("&aClick to confirm.").action(() -> {
+									new FancyMessage().then(ClansAPI.getInstance().getPrefix().toString()).then(" ").then("Setting &e" + trait.getName() + " &fas your secondary trait might undo wanted progress from &6" + holder.getSecondary().getName()).then("\n").then("&7&l&m---------------------").then("\n").then(" &fDo you wish to ").then("&6Continue?").hover("&aClick to confirm.").action(() -> {
 										holder.setSecondary(trait);
 										sendMessage(player, "&aSecondary trait set to &f" + trait.getName() + " &awith abilities &f[&e" + Arrays.stream(trait.getAbilities()).map(Trait.Ability::getName).collect(Collectors.joining(", ")) + "&f]");
 									}).send(player).deploy();
@@ -134,7 +134,7 @@ public class TraitCommand extends ClanSubCommand {
 							} else {
 								if (!holder.getPrimary().getName().equals(trait.getName())) {
 									if (holder.getSecondary() != null) {
-										new FancyMessage().then(ClansAPI.getInstance().getPrefix().joined()).then(" ").then("Setting &e" + trait.getName() + " &fas your secondary trait might undo wanted progress from &6" + holder.getSecondary().getName()).then("\n").then("&7&l&m---------------------").then("\n").then(" &fDo you wish to ").then("&6Continue?").hover("&aClick to confirm.").action(() -> {
+										new FancyMessage().then(ClansAPI.getInstance().getPrefix().toString()).then(" ").then("Setting &e" + trait.getName() + " &fas your secondary trait might undo wanted progress from &6" + holder.getSecondary().getName()).then("\n").then("&7&l&m---------------------").then("\n").then(" &fDo you wish to ").then("&6Continue?").hover("&aClick to confirm.").action(() -> {
 											holder.setSecondary(trait);
 											sendMessage(player, "&aSecondary trait set to &f" + trait.getName() + " &awith abilities &f[&e" + Arrays.stream(trait.getAbilities()).map(Trait.Ability::getName).collect(Collectors.joining(", ")) + "&f]");
 										}).send(player).deploy();

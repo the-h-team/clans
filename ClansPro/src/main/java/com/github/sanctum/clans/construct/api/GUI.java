@@ -2,7 +2,8 @@ package com.github.sanctum.clans.construct.api;
 
 import com.github.sanctum.clans.ClansJavaPlugin;
 import com.github.sanctum.clans.bridge.ClanAddon;
-import com.github.sanctum.clans.bridge.ClanAddonQuery;
+import com.github.sanctum.clans.bridge.ClanAddonQueue;
+import com.github.sanctum.clans.bridge.LoadResult;
 import com.github.sanctum.clans.construct.extra.DocketUtils;
 import com.github.sanctum.clans.construct.extra.MessagePrefix;
 import com.github.sanctum.clans.construct.extra.SimpleLogoCarrier;
@@ -184,6 +185,7 @@ public enum GUI {
 
 	private static final Map<Player, String> tempSpot = new HashMap<>();
 	private final ClansAPI api = ClansAPI.getInstance();
+	private final ClanAddonQueue addonQueue = ClanAddonQueue.getInstance();
 	private final PrintManager printManager = LabyrinthProvider.getInstance().getLocalPrintManager();
 	private final ItemStack special = CustomHeadLoader.provide("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYWFjMTVmNmZjZjJjZTk2M2VmNGNhNzFmMWE4Njg1YWRiOTdlYjc2OWUxZDExMTk0Y2JiZDJlOTY0YTg4OTc4YyJ9fX0=");
 
@@ -608,12 +610,12 @@ public enum GUI {
 								c.setCancelled(true);
 								SETTINGS_SELECT.get().open(c.getElement());
 								api.getFileList().get("Config", "Configuration").getRoot().reload();
-								Mailer.empty(c.getElement()).prefix().start(api.getPrefix().joined()).finish().chat("&aConfig file 'Config' reloaded.").deploy();
+								Mailer.empty(c.getElement()).prefix().start(api.getPrefix().toString()).finish().chat("&aConfig file 'Config' reloaded.").deploy();
 							}));
 							i.addItem(b -> b.setElement(ed -> ed.setType(Material.POTION).setTitle("&5Messages.yml").build()).setSlot(2).setClick(c -> {
 								c.setCancelled(true);
 								api.getFileList().get("Messages", "Configuration").getRoot().reload();
-								Mailer.empty(c.getElement()).prefix().start(api.getPrefix().joined()).finish().chat("&aConfig file 'Messages' reloaded.").deploy();
+								Mailer.empty(c.getElement()).prefix().start(api.getPrefix().toString()).finish().chat("&aConfig file 'Messages' reloaded.").deploy();
 							}));
 							i.addItem(b -> b.setElement(ed -> ed.setType(Material.POTION).setTitle("&2&lAll").build()).setSlot(4).setClick(c -> {
 								c.setCancelled(true);
@@ -637,7 +639,7 @@ public enum GUI {
 										config.getRoot().reload();
 										FileList.search(api.getPlugin()).copyYML("Messages_pt_br", message);
 										message.getRoot().reload();
-										Mailer.empty(p).prefix().start(api.getPrefix().joined()).finish().chat("&a&oAgora traduzido para o brasil!").deploy();
+										Mailer.empty(p).prefix().start(api.getPrefix().toString()).finish().chat("&a&oAgora traduzido para o brasil!").deploy();
 
 									}
 
@@ -734,7 +736,7 @@ public enum GUI {
 								nc.getRoot().reload();
 								FileList.search(api.getPlugin()).copyYML("Messages", nm);
 								nm.getRoot().reload();
-								Mailer.empty(c.getElement()).prefix().start(api.getPrefix().joined()).finish().chat("&a&oTranslated back to default english.").deploy();
+								Mailer.empty(c.getElement()).prefix().start(api.getPrefix().toString()).finish().chat("&a&oTranslated back to default english.").deploy();
 								FileManager main = ClansAPI.getDataInstance().getConfig();
 
 								((ClansJavaPlugin) api.getPlugin()).setPrefix(new MessagePrefix(main.getRoot().getString("Formatting.prefix.prefix"), main.getRoot().getString("Formatting.prefix.text"), main.getRoot().getString("Formatting.prefix.suffix")));
@@ -761,7 +763,7 @@ public enum GUI {
 								nc.getRoot().reload();
 								FileList.search(api.getPlugin()).copyYML("Messages_pt_br", nm);
 								nm.getRoot().reload();
-								Mailer.empty(c.getElement()).prefix().start(api.getPrefix().joined()).finish().chat("&a&oAgora traduzido para o brasil!").deploy();
+								Mailer.empty(c.getElement()).prefix().start(api.getPrefix().toString()).finish().chat("&a&oAgora traduzido para o brasil!").deploy();
 
 								FileManager main = ClansAPI.getDataInstance().getConfig();
 
@@ -780,14 +782,14 @@ public enum GUI {
 						.setSize(Menu.Rows.SIX)
 						.setTitle("&3&oRegistered Cycles &f(&2RUNNING&f) &8&l»")
 						.setStock(i -> {
-							ListElement<ClanAddon> list = new ListElement<>(ClanAddonQuery.getUsedNames().stream().map(ClanAddonQuery::getAddon).collect(Collectors.toList()));
+							ListElement<ClanAddon> list = new ListElement<>(addonQueue.getEnabled().stream().map(addonQueue::get).collect(Collectors.toList()));
 							list.setLimit(28);
 							list.setPopulate((addon, item) -> {
 								ItemStack stack = new ItemStack(Material.CHEST);
 
 								ItemMeta meta = stack.getItemMeta();
 
-								meta.setLore(color("&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬", "&2&oPersistent: &f" + addon.isPersistent(), "&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬", "&2&oDescription: &f" + addon.getDescription(), "&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬", "&2&oVersion: &f" + addon.getVersion(), "&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬", "&2&oAuthors: &f" + Arrays.toString(addon.getAuthors()), "&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬", "&2&oActive: &6&o" + ClanAddonQuery.getUsedNames().contains(addon.getName())));
+								meta.setLore(color("&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬", "&2&oPersistent: &f" + addon.isPersistent(), "&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬", "&2&oDescription: &f" + addon.getDescription(), "&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬", "&2&oVersion: &f" + addon.getVersion(), "&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬", "&2&oAuthors: &f" + Arrays.toString(addon.getAuthors()), "&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬", "&2&oActive: &6&o" + addonQueue.getEnabled().contains(addon.getName())));
 
 								meta.setDisplayName(StringUtils.use("&3&o " + addon.getName() + " &8&l»").translate());
 
@@ -796,8 +798,9 @@ public enum GUI {
 								item.setClick(click -> {
 									click.setCancelled(true);
 									Player p = click.getElement();
-									if (ClanAddonQuery.disable(addon)) {
-										for (String d : ClanAddonQuery.getDataLog()) {
+									LoadResult result = addonQueue.disable(addon);
+									if (result.get()) {
+										for (String d : result.read()) {
 											p.sendMessage(Clan.ACTION.color("&b" + d.replace("Clans [Pro]", "&3Clans &7[&6Pro&7]&b")));
 										}
 									}
@@ -855,14 +858,14 @@ public enum GUI {
 						.setSize(Menu.Rows.SIX)
 						.setTitle("&3&oRegistered Cycles &f(&4DISABLED&f) &8&l»")
 						.setStock(i -> {
-							ListElement<ClanAddon> list = new ListElement<>(ClanAddonQuery.getUnusedNames().stream().map(ClanAddonQuery::getAddon).collect(Collectors.toList()));
+							ListElement<ClanAddon> list = new ListElement<>(addonQueue.getDisabled().stream().map(addonQueue::get).collect(Collectors.toList()));
 							list.setLimit(28);
 							list.setPopulate((addon, item) -> {
 								ItemStack stack = new ItemStack(Material.CHEST);
 
 								ItemMeta meta = stack.getItemMeta();
 
-								meta.setLore(color("&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬", "&2&oPersistent: &f" + addon.isPersistent(), "&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬", "&2&oDescription: &f" + addon.getDescription(), "&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬", "&2&oVersion: &f" + addon.getVersion(), "&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬", "&2&oAuthors: &f" + Arrays.toString(addon.getAuthors()), "&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬", "&2&oActive: &6&o" + ClanAddonQuery.getUsedNames().contains(addon.getName())));
+								meta.setLore(color("&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬", "&2&oPersistent: &f" + addon.isPersistent(), "&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬", "&2&oDescription: &f" + addon.getDescription(), "&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬", "&2&oVersion: &f" + addon.getVersion(), "&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬", "&2&oAuthors: &f" + Arrays.toString(addon.getAuthors()), "&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬", "&2&oActive: &6&o" + addonQueue.getEnabled().contains(addon.getName())));
 
 								meta.setDisplayName(StringUtils.use("&3&o " + addon.getName() + " &8&l»").translate());
 
@@ -871,8 +874,9 @@ public enum GUI {
 								item.setClick(click -> {
 									click.setCancelled(true);
 									Player p = click.getElement();
-									if (ClanAddonQuery.enable(addon)) {
-										for (String d : ClanAddonQuery.getDataLog()) {
+									LoadResult result = addonQueue.enable(addon);
+									if (result.get()) {
+										for (String d : result.read()) {
 											p.sendMessage(Clan.ACTION.color("&b" + Clan.ACTION.format(d, "Clans [Pro]", "&3Clans &7[&6Pro&7]&b")));
 										}
 									}
@@ -930,14 +934,14 @@ public enum GUI {
 						.setSize(Menu.Rows.SIX)
 						.setTitle("&3&oRegistered Cycles &f(&6&lCACHE&f) &8&l»")
 						.setStock(i -> {
-							ListElement<ClanAddon> list = new ListElement<>(new ArrayList<>(ClanAddonQuery.getRegisteredAddons()));
+							ListElement<ClanAddon> list = new ListElement<>(new ArrayList<>(addonQueue.get()));
 							list.setLimit(28);
 							list.setPopulate((addon, item) -> {
 								ItemStack stack = new ItemStack(Material.CHEST);
 
 								ItemMeta meta = stack.getItemMeta();
 
-								meta.setLore(color("&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬", "&2&oPersistent: &f" + addon.isPersistent(), "&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬", "&2&oDescription: &f" + addon.getDescription(), "&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬", "&2&oVersion: &f" + addon.getVersion(), "&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬", "&2&oAuthors: &f" + Arrays.toString(addon.getAuthors()), "&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬", "&2&oActive: &6&o" + ClanAddonQuery.getUsedNames().contains(addon.getName()), "&7Clicking these icons won't do anything."));
+								meta.setLore(color("&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬", "&2&oPersistent: &f" + addon.isPersistent(), "&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬", "&2&oDescription: &f" + addon.getDescription(), "&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬", "&2&oVersion: &f" + addon.getVersion(), "&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬", "&2&oAuthors: &f" + Arrays.toString(addon.getAuthors()), "&f&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬", "&2&oActive: &6&o" + addonQueue.getEnabled().contains(addon.getName()), "&7Clicking these icons won't do anything."));
 
 								meta.setDisplayName(StringUtils.use("&3&o " + addon.getName() + " &8&l»").translate());
 
@@ -2223,7 +2227,7 @@ public enum GUI {
 									}
 									if (v.count(Vote.NO) >= acount) {
 										v.clear();
-										LabyrinthProvider.getService(Service.MESSENGER).getEmptyMailer().prefix().start(api.getPrefix().joined()).finish().announce(p -> true, "&c&oTruce amongst the clans failed. Not enough votes yes.").deploy();
+										LabyrinthProvider.getService(Service.MESSENGER).getEmptyMailer().prefix().start(api.getPrefix().toString()).finish().announce(p -> true, "&c&oTruce amongst the clans failed. Not enough votes yes.").deploy();
 									}
 								});
 								c.getElement().closeInventory();
@@ -2245,13 +2249,13 @@ public enum GUI {
 										if (v.count(Vote.YES) >= acount) {
 											if (v.isUnanimous()) {
 												v.clear();
-												LabyrinthProvider.getService(Service.MESSENGER).getEmptyMailer().prefix().start(api.getPrefix().joined()).finish().announce(p -> true, "&c&oTruce amongst the clans failed . Not enough votes yes.").deploy();
+												LabyrinthProvider.getService(Service.MESSENGER).getEmptyMailer().prefix().start(api.getPrefix().toString()).finish().announce(p -> true, "&c&oTruce amongst the clans failed . Not enough votes yes.").deploy();
 											} else {
 												// good to go cancel
 												if (war.stop()) {
 													war.reset();
 													a.getClan().takePower(8.6);
-													LabyrinthProvider.getService(Service.MESSENGER).getEmptyMailer().prefix().start(api.getPrefix().joined()).finish().announce(p -> true, "&3&oA truce was called and the war is over.").deploy();
+													LabyrinthProvider.getService(Service.MESSENGER).getEmptyMailer().prefix().start(api.getPrefix().toString()).finish().announce(p -> true, "&3&oA truce was called and the war is over.").deploy();
 												}
 											}
 										}
@@ -2287,7 +2291,7 @@ public enum GUI {
 										}
 										if (v.count(Vote.NO) >= acount) {
 											v.clear();
-											LabyrinthProvider.getService(Service.MESSENGER).getEmptyMailer().prefix().start(api.getPrefix().joined()).finish().announce(p -> true, "&c&oClan " + a.getClan().getName() + " failed to surrender. Not enough votes yes.").deploy();
+											LabyrinthProvider.getService(Service.MESSENGER).getEmptyMailer().prefix().start(api.getPrefix().toString()).finish().announce(p -> true, "&c&oClan " + a.getClan().getName() + " failed to surrender. Not enough votes yes.").deploy();
 										}
 									}
 								});
@@ -2311,13 +2315,13 @@ public enum GUI {
 											if (v.isUnanimous()) {
 												v.clear();
 												// Mutual votes. cancel voting
-												LabyrinthProvider.getService(Service.MESSENGER).getEmptyMailer().prefix().start(api.getPrefix().joined()).finish().announce(p -> true, "&c&oClan " + a.getClan().getName() + " failed to surrender. Voting came to a draw.").deploy();
+												LabyrinthProvider.getService(Service.MESSENGER).getEmptyMailer().prefix().start(api.getPrefix().toString()).finish().announce(p -> true, "&c&oClan " + a.getClan().getName() + " failed to surrender. Voting came to a draw.").deploy();
 											} else {
 												// good to go cancel
 												if (war.stop()) {
 													war.reset();
 													a.getClan().takePower(8.6);
-													LabyrinthProvider.getService(Service.MESSENGER).getEmptyMailer().prefix().start(api.getPrefix().joined()).finish().announce(p -> true, "&5&oClan " + a.getClan().getName() + " has surrendered.").deploy();
+													LabyrinthProvider.getService(Service.MESSENGER).getEmptyMailer().prefix().start(api.getPrefix().toString()).finish().announce(p -> true, "&5&oClan " + a.getClan().getName() + " has surrendered.").deploy();
 												}
 											}
 										}

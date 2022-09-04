@@ -22,7 +22,7 @@ public class TamerWolf {
 		wolf.setTamed(true);
 		wolf.setOwner(p);
 		wolf.setBreed(false);
-		wolf.setCustomName(new FormattedString(ClansAPI.getInstance().getPrefix().joined() + " &eTamed &7#" + SpecialID.builder().setLength(4).build(wolf.getUniqueId())).color().get());
+		wolf.setCustomName(new FormattedString(ClansAPI.getInstance().getPrefix().toString() + " &eTamed &7#" + SpecialID.builder().setLength(4).build(wolf.getUniqueId())).color().get());
 		wolf.setCustomNameVisible(true);
 		wolf.setCollarColor(new RandomObject<>(DyeColor.values()).get(new Random().nextInt(16)));
 		wolf.setHealth(20);

@@ -162,7 +162,7 @@ public class PlayerEventListener implements Listener {
 						TaskScheduler.of(() -> {
 							WarWonEvent event = ClanVentBus.call(new WarWonEvent(war, new SimpleEntry<>(w, points), map));
 							if (!event.isCancelled()) {
-								Mailer msg = LabyrinthProvider.getService(Service.MESSENGER).getEmptyMailer().prefix().start(ClansAPI.getInstance().getPrefix().joined()).finish();
+								Mailer msg = LabyrinthProvider.getService(Service.MESSENGER).getEmptyMailer().prefix().start(ClansAPI.getInstance().getPrefix().toString()).finish();
 								Bukkit.broadcastMessage(" ");
 								msg.announce(pl -> true, "&3A war between clans &b[" + Arrays.stream(war.getQueue().getTeams()).map(Clan::getName).collect(Collectors.joining(",")) + "]&3 in arena &7#&e" + war.getId() + " &3concluded with winner &6&l" + w.getName() + " &f(&a" + points + "&f)");
 								Bukkit.broadcastMessage(" ");
@@ -854,7 +854,7 @@ public class PlayerEventListener implements Listener {
 			}
 			War current = ClansAPI.getInstance().getArenaManager().get(associate);
 			if (current != null) {
-				Mailer m = Mailer.empty(ClansAPI.getInstance().getPlugin()).prefix().start(ClansAPI.getInstance().getPrefix().joined()).finish();
+				Mailer m = Mailer.empty(ClansAPI.getInstance().getPlugin()).prefix().start(ClansAPI.getInstance().getPrefix().toString()).finish();
 				if (current.isRunning()) {
 					if (current.getQueue().unque(associate)) {
 						m.announce(player -> true, associate.getNickname() + "&c has left the battlefield.").deploy();
@@ -955,7 +955,7 @@ public class PlayerEventListener implements Listener {
 						}
 					}
 				} else {
-					Mailer m = Mailer.empty(ClansAPI.getInstance().getPlugin()).prefix().start(ClansAPI.getInstance().getPrefix().joined()).finish();
+					Mailer m = Mailer.empty(ClansAPI.getInstance().getPlugin()).prefix().start(ClansAPI.getInstance().getPrefix().toString()).finish();
 					m.announce(player -> Clan.ACTION.test(player, "clanspro.admin.alert").deploy(), "The spawn location for team " + t.name() + " is missing!").deploy();
 					Clan.ACTION.sendMessage(p, "&cThe clan arena system isn't properly configured. Contact staff for help.");
 				}

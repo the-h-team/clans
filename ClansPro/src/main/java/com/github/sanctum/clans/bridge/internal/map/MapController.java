@@ -1,7 +1,7 @@
 package com.github.sanctum.clans.bridge.internal.map;
 
 import com.github.sanctum.clans.bridge.ClanAddon;
-import com.github.sanctum.clans.bridge.ClanAddonQuery;
+import com.github.sanctum.clans.bridge.ClanAddonQueue;
 import com.github.sanctum.clans.bridge.ClanVentBus;
 import com.github.sanctum.clans.bridge.internal.map.event.AsyncMapDrawEvent;
 import com.github.sanctum.clans.bridge.internal.map.event.AsyncMapFormatEvent;
@@ -340,7 +340,7 @@ public class MapController implements Listener {
 	@Subscribe(priority = Vent.Priority.HIGH)
 	public void onFormat(AsyncMapFormatEvent e) {
 
-		ClanAddon ec = ClanAddonQuery.getRegisteredAddons().stream().filter(c -> c.getName().equals("Map")).findFirst().orElse(null);
+		ClanAddon ec = ClanAddonQueue.getInstance().get("Map");
 
 		if (ec != null) {
 
@@ -490,15 +490,15 @@ public class MapController implements Listener {
                     point.setRepresentation('❤');
                 } else {
                     if (point.getClan() != null) {
-                        if (ClansAPI.getInstance().isInClan(player.getUniqueId())) {
-                            ClansAPI.getInstance().getAssociate(player).ifPresent(associate -> {
-                                point.setColor(associate.getClan().relate(point.getClan()));
-                                point.setRepresentation('⬛');
-                            });
-                        } else {
-                            point.setColor("&f");
-                            point.setRepresentation('⬛');
-                        }
+	                    if (ClansAPI.getInstance().getAssociate(player.getUniqueId()).isPresent()) {
+		                    ClansAPI.getInstance().getAssociate(player).ifPresent(associate -> {
+			                    point.setColor(associate.getClan().relate(point.getClan()));
+			                    point.setRepresentation('⬛');
+		                    });
+	                    } else {
+		                    point.setColor("&f");
+		                    point.setRepresentation('⬛');
+	                    }
                     } else {
                         point.setColor("&f");
                         point.setRepresentation('⬜');

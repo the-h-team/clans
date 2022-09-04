@@ -1,7 +1,7 @@
 package com.github.sanctum.clans.construct.extra;
 
 import com.github.sanctum.clans.bridge.ClanAddon;
-import com.github.sanctum.clans.bridge.ClanAddonQuery;
+import com.github.sanctum.clans.bridge.ClanAddonQueue;
 import com.github.sanctum.clans.bridge.internal.map.MapController;
 import com.github.sanctum.clans.construct.DataManager;
 import com.github.sanctum.clans.construct.api.Claim;
@@ -31,7 +31,7 @@ public final class UnifiedPlaceholders {
 
 			Clan c = associate.getClan();
 
-			for (ClanAddon cycle : ClanAddonQuery.getRegisteredAddons()) {
+			for (ClanAddon cycle : ClanAddonQueue.getInstance().get()) {
 				String place = cycle.onPlaceholder(player, context);
 				if (place != null && !place.isEmpty()) {
 					return place;

@@ -1,7 +1,7 @@
 package com.github.sanctum.clans.bridge.internal.kingdoms;
 
 import com.github.sanctum.clans.bridge.ClanAddon;
-import com.github.sanctum.clans.bridge.ClanAddonQuery;
+import com.github.sanctum.clans.bridge.ClanAddonQueue;
 import com.github.sanctum.clans.bridge.internal.KingdomAddon;
 import com.github.sanctum.clans.bridge.internal.kingdoms.impl.LocalFileQuest;
 import com.github.sanctum.clans.construct.api.Clan;
@@ -179,7 +179,7 @@ public class Kingdom extends Progressive implements Controllable, Iterable<Clan>
 
 	public void setName(String name) {
 
-		ClanAddon cycle = ClanAddonQuery.getAddon("Kingdoms");
+		ClanAddon cycle = ClanAddonQueue.getInstance().get("Kingdoms");
 
 		FileManager section = cycle.getFile(Configurable.Type.JSON, "kingdoms", "data");
 
@@ -330,7 +330,7 @@ public class Kingdom extends Progressive implements Controllable, Iterable<Clan>
 	}
 
 	Node getParentNode() {
-		FileManager section = ClanAddonQuery.getAddon("Kingdoms").getFile(Configurable.Type.JSON, "kingdoms", "data");
+		FileManager section = ClanAddonQueue.getInstance().get("Kingdoms").getFile(Configurable.Type.JSON, "kingdoms", "data");
 		return section.getRoot().getNode(getPath());
 	}
 

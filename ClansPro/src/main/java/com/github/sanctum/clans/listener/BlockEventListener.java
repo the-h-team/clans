@@ -31,6 +31,7 @@ import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
+import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -51,6 +52,7 @@ public class BlockEventListener implements Listener {
 				ClaimInteractEvent e = ClanVentBus.call(new ClaimInteractEvent(event.getPlayer(), event.getBlock().get().getLocation(), ClaimInteractEvent.Type.USE));
 				if (e.isCancelled()) {
 					event.setCancelled(true);
+					event.setResult(Event.Result.DENY);
 				}
 			}
 		}

@@ -13,6 +13,8 @@ public interface ClanAddonContext {
 
 	String[] getLoadBefore();
 
+	String[] getLoadAfter();
+
 	int getLevel();
 
 	boolean isActive();

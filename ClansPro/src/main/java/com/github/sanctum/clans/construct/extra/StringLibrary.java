@@ -43,7 +43,7 @@ public class StringLibrary {
 	public String getPrefix() {
 		ClansAPI API = ClansAPI.getInstance();
 		MessagePrefix prefix = API.getPrefix();
-		return prefix.joined();
+		return prefix.toString();
 	}
 
 	public String alreadyInClan() {

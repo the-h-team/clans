@@ -23,12 +23,12 @@ public class ClanAddonRegistrationException extends ClanError {
 				if (f.isDirectory()) continue;
 				try {
 					ClanAddon addon = new ClanAddonClassLoader(f).getMainClass();
-					ClanAddonQuery.load(addon);
+					ClanAddonQueue.getInstance().load(addon);
 					instance.getLogger().info("▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬");
 					instance.getLogger().info("- Injected: " + addon.getName() + " v" + addon.getVersion());
 					instance.getLogger().info("▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬");
 					amount++;
-				} catch (IOException | InvalidAddonException e) {
+				} catch (IOException | InvalidAddonException | ClanAddonRegistrationException | ClanAddonDependencyException e) {
 					e.printStackTrace();
 				}
 			}

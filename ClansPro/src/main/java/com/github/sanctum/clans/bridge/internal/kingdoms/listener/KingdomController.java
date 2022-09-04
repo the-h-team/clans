@@ -669,8 +669,8 @@ public class KingdomController implements Listener {
 				Player online = a.getTag().getPlayer().getPlayer();
 				if (online != null) {
 					reward.give(a);
-					new FancyMessage(ClansAPI.getInstance().getPrefix().joined() + " &bQuest &e" + e.getQuest().getTitle() + " &bcomplete.").send(online).deploy();
-					new FancyMessage(ClansAPI.getInstance().getPrefix().joined()).then(" ").append(new ComponentChunk(reward.getMessage())).send(online).deploy();
+					new FancyMessage(ClansAPI.getInstance().getPrefix().toString() + " &bQuest &e" + e.getQuest().getTitle() + " &bcomplete.").send(online).deploy();
+					new FancyMessage(ClansAPI.getInstance().getPrefix().toString()).then(" ").append(new ComponentChunk(reward.getMessage())).send(online).deploy();
 				}
 			});
 		}
@@ -882,7 +882,7 @@ public class KingdomController implements Listener {
 
 		if (e.getInteraction() == ClaimInteractEvent.Type.BUILD) {
 
-			if (API.isInClan(p.getUniqueId())) {
+			if (API.getAssociate(p.getUniqueId()).isPresent()) {
 
 				Clan c = API.getClanManager().getClan(p.getUniqueId());
 
@@ -937,7 +937,7 @@ public class KingdomController implements Listener {
 
 		if (e.getInteraction() == ClaimInteractEvent.Type.BREAK) {
 
-			if (API.isInClan(p.getUniqueId())) {
+			if (API.getAssociate(p.getUniqueId()).isPresent()) {
 
 				Clan c = API.getClanManager().getClan(p.getUniqueId());
 

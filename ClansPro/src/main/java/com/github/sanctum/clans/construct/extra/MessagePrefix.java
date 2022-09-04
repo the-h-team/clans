@@ -24,7 +24,8 @@ public class MessagePrefix {
 		return text;
 	}
 
-	public String joined() {
+	@Override
+	public String toString() {
 		return getPrefix() + getText() + getSuffix();
 	}
 

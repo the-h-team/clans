@@ -91,7 +91,7 @@ public class LogoGallery implements Savable {
 	}
 
 	/**
-	 * Save all captured logo's so the persistent container.
+	 * Save all captured logo's to the persistent container.
 	 */
 	@Override
 	public void save() {

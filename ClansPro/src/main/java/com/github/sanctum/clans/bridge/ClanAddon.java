@@ -10,6 +10,7 @@ import com.github.sanctum.labyrinth.data.container.KeyedServiceManager;
 import com.github.sanctum.labyrinth.library.Mailer;
 import com.github.sanctum.labyrinth.task.TaskScheduler;
 import com.github.sanctum.panther.annotation.AnnotationDiscovery;
+import com.github.sanctum.panther.annotation.Ordinal;
 import com.github.sanctum.panther.event.Subscribe;
 import com.github.sanctum.panther.file.Configurable;
 import com.github.sanctum.panther.util.Check;
@@ -36,6 +37,7 @@ import org.jetbrains.annotations.Nullable;
 
 public abstract class ClanAddon {
 
+	private static int PLACEMENT = 0;
 	private final HUID id = HUID.randomID();
 	private final ClanAddonLogger logger;
 	private final ClanAddonContext context;
@@ -95,8 +97,8 @@ public abstract class ClanAddon {
 			public Deployable<Void> enableAddon(ClanAddon addon) {
 				return Deployable.of(() -> {
 					if (addon.classLoader.getParent().equals(getClassLoader())) {
-						if (ClanAddonQuery.getAddon(addon.getName()) == null) {
-							ClanAddonQuery.register(addon);
+						if (ClanAddonQueue.getInstance().get(addon.getName()) == null) {
+							ClanAddonQueue.getInstance().register(addon);
 							return;
 						} else
 							throw new ClanAddonRegistrationException("Addon " + addon + " is already registered and running!");
@@ -109,8 +111,8 @@ public abstract class ClanAddon {
 			public Deployable<Void> disableAddon(ClanAddon addon) {
 				return Deployable.of(() -> {
 					if (addon.classLoader.getParent().equals(getClassLoader())) {
-						if (ClanAddonQuery.getAddon(addon.getName()) != null) {
-							ClanAddonQuery.remove(addon);
+						if (ClanAddonQueue.getInstance().get(addon.getName()) != null) {
+							ClanAddonQueue.getInstance().remove(addon);
 							return;
 						} else throw new ClanAddonRegistrationException("Addon " + addon + " isn't registered!");
 					}
@@ -123,21 +125,23 @@ public abstract class ClanAddon {
 		this.context = new ClanAddonContext() {
 
 			private final List<String> depend = new ArrayList<>();
-			private final List<String> load = new ArrayList<>();
+			private final List<String> loadBefore = new ArrayList<>();
+			private final List<String> loadAfter = new ArrayList<>();
 			private final Collection<Listener> listeners = new HashSet<>();
 			private final Collection<ClanSubCommand> commands = new HashSet<>();
 			private boolean active = true;
 			private int level;
 
 			{
-				this.level = ClanAddonQuery.COUNT + 1;
+				this.level = PLACEMENT + 1;
 				InputStream resource = getResource(getName() + ".yml");
 				if (resource != null) {
 					FileManager temp = getFile(getName());
 					FileList.copy(resource, temp.getRoot().getParent());
 					temp.getRoot().reload();
 					depend.addAll(temp.read(f -> f.getStringList("depend")));
-					load.addAll(temp.read(f -> f.getStringList("load-before")));
+					loadBefore.addAll(temp.read(f -> f.getStringList("load-before")));
+					loadAfter.addAll(temp.read(f -> f.getStringList("load-after")));
 					temp.getRoot().delete();
 				} else {
 					getLogger().info("- No dependencies provided.");
@@ -161,7 +165,12 @@ public abstract class ClanAddon {
 
 			@Override
 			public String[] getLoadBefore() {
-				return load.toArray(new String[0]);
+				return loadBefore.toArray(new String[0]);
+			}
+
+			@Override
+			public String[] getLoadAfter() {
+				return loadAfter.toArray(new String[0]);
 			}
 
 			@Override
@@ -249,8 +258,8 @@ public abstract class ClanAddon {
 			public Deployable<Void> enableAddon(ClanAddon addon) {
 				return Deployable.of(() -> {
 					if (addon.classLoader.getParent().equals(getClassLoader())) {
-						if (ClanAddonQuery.getAddon(addon.getName()) == null) {
-							ClanAddonQuery.register(addon);
+						if (ClanAddonQueue.getInstance().get(addon.getName()) == null) {
+							ClanAddonQueue.getInstance().register(addon);
 							return;
 						} else
 							throw new ClanAddonRegistrationException("Addon " + addon + " is already registered and running!");
@@ -263,8 +272,8 @@ public abstract class ClanAddon {
 			public Deployable<Void> disableAddon(ClanAddon addon) {
 				return Deployable.of(() -> {
 					if (addon.classLoader.getParent().equals(getClassLoader())) {
-						if (ClanAddonQuery.getAddon(addon.getName()) != null) {
-							ClanAddonQuery.remove(addon);
+						if (ClanAddonQueue.getInstance().get(addon.getName()) != null) {
+							ClanAddonQueue.getInstance().remove(addon);
 							return;
 						} else throw new ClanAddonRegistrationException("Addon " + addon + " isn't registered!");
 					}
@@ -303,7 +312,7 @@ public abstract class ClanAddon {
 	}
 
 	public static <T extends ClanAddon> @Nullable T getAddon(@NotNull Class<T> c) {
-		for (ClanAddon addon : ClanAddonQuery.getRegisteredAddons()) {
+		for (ClanAddon addon : ClanAddonQueue.getInstance().get()) {
 			if (c.isAssignableFrom(addon.getClass())) {
 				return c.cast(addon);
 			}
@@ -457,24 +466,28 @@ public abstract class ClanAddon {
 	}
 
 	final void register() {
-		ClanAddonQuery.COUNT += 1;
-		ClanAddonQuery.CLAN_ADDONS.add(this);
+		PLACEMENT += 1;
+		ClanAddonQueue.getInstance().ADDONS.add(this);
 	}
 
+	@Ordinal(121)
 	final void remove() {
-		ClanAddonQuery.COUNT -= 1;
-		ClansAPI.getInstance().getPlugin().getLogger().info("- Disabling addon " + '"' + getName() + '"' + " v" + getVersion());
-		for (RegisteredListener l : HandlerList.getRegisteredListeners(ClansAPI.getInstance().getPlugin())) {
-			if (Arrays.asList(getContext().getListeners()).contains(l.getListener())) {
-				if (AnnotationDiscovery.of(Subscribe.class, l.getListener()).isPresent()) {
-					LabyrinthProvider.getInstance().getEventMap().unsubscribe(l.getListener());
-				} else {
-					HandlerList.unregisterAll(l.getListener());
+		PLACEMENT -= 1;
+		if (getContext().isActive()) {
+			ClansAPI.getInstance().getPlugin().getLogger().info("- Disabling addon " + '"' + getName() + '"' + " v" + getVersion());
+			for (RegisteredListener l : HandlerList.getRegisteredListeners(ClansAPI.getInstance().getPlugin())) {
+				if (Arrays.asList(getContext().getListeners()).contains(l.getListener())) {
+					if (AnnotationDiscovery.of(Subscribe.class, l.getListener()).isPresent()) {
+						LabyrinthProvider.getInstance().getEventMap().unsubscribe(l.getListener());
+					} else {
+						HandlerList.unregisterAll(l.getListener());
+					}
 				}
 			}
+			onDisable();
+			getContext().setActive(false);
 		}
-		onDisable();
-		TaskScheduler.of(() -> ClanAddonQuery.CLAN_ADDONS.removeIf(c -> c.getName().equals(getName()))).scheduleLater(1);
+		TaskScheduler.of(() -> ClanAddonQueue.getInstance().ADDONS.removeIf(c -> c.getName().equals(getName()))).scheduleLater(1);
 	}
 
 }

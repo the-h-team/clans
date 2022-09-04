@@ -1,6 +1,6 @@
 package com.github.sanctum.clans.commands;
 
-import com.github.sanctum.clans.bridge.ClanAddonQuery;
+import com.github.sanctum.clans.bridge.ClanAddonQueue;
 import com.github.sanctum.clans.bridge.internal.StashesAddon;
 import com.github.sanctum.clans.bridge.internal.VaultsAddon;
 import com.github.sanctum.clans.construct.ClanManager;
@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import net.md_5.bungee.api.ChatColor;
@@ -66,6 +67,29 @@ public class CommandClanAdmin extends Command {
 	}
 
 	private final List<String> arguments = new ArrayList<>();
+
+	Optional<Clan.Associate> obtainUser(UUID uuid, String clanName) {
+		final ClanManager manager = ClansAPI.getInstance().getClanManager();
+		if (!ClansAPI.getInstance().getAssociate(uuid).isPresent()) {
+			HUID id = manager.getClanID(clanName);
+			if (id != null) {
+				Clan toJoin = manager.getClan(id);
+				Clan.ACTION.join(uuid, clanName, toJoin.getPassword() != null ? toJoin.getPassword() : null, false).deploy();
+				return Optional.ofNullable(toJoin.getMember(m -> m.getId().equals(uuid)));
+			}
+		}
+		return Optional.empty();
+	}
+
+	boolean kickUser(UUID uuid) {
+		boolean success = false;
+		Clan test = ClansAPI.getInstance().getClanManager().getClan(uuid);
+		if (test != null && test.getOwner().getId().equals(uuid)) {
+			success = true;
+			Clan.ACTION.remove(uuid, true).deploy();
+		}
+		return success;
+	}
 
 	@Override
 	public @NotNull List<String> tabComplete(@NotNull CommandSender sender, @NotNull String alias, String[] args) throws IllegalArgumentException {
@@ -550,7 +574,7 @@ public class CommandClanAdmin extends Command {
 					lib.sendMessage(p, "&c&oInvalid usage, try &6/c leave");
 					return true;
 				}
-				if (!ClansAPI.getInstance().kickUser(target)) {
+				if (!kickUser(target)) {
 					lib.sendMessage(p, "&c&oPlayer " + args1 + " isn't in a clan or is the leader (if so use &6/cla close <clanName>&c&o).");
 				} else {
 					lib.sendMessage(p, "&3&oPlayer " + args1 + " was kicked from their clan.");
@@ -667,7 +691,7 @@ public class CommandClanAdmin extends Command {
 					lib.sendMessage(p, "&c&oWhat are you even trying to test?");
 					return true;
 				}
-				Clan.Associate n = ClansAPI.getInstance().obtainUser(target, args2).orElse(null);
+				Clan.Associate n = obtainUser(target, args2).orElse(null);
 				if (n == null) {
 					lib.sendMessage(p, "&c&oPlayer " + args1 + " is already in a clan or the clan specified doesn't exist.");
 				} else {
@@ -769,7 +793,7 @@ public class CommandClanAdmin extends Command {
 					case "vault":
 						if (id != null) {
 							Clan target = ClansAPI.getInstance().getClanManager().getClan(id);
-							if (ClanAddonQuery.getUsedNames().contains("Vaults")) {
+							if (ClanAddonQueue.getInstance().getEnabled().contains("Vaults")) {
 								VaultsAddon.getVault(target.getName()).open(p);
 								return true;
 							} else {
@@ -785,7 +809,7 @@ public class CommandClanAdmin extends Command {
 					case "stash":
 						if (id != null) {
 							Clan target = ClansAPI.getInstance().getClanManager().getClan(id);
-							if (ClanAddonQuery.getUsedNames().contains("Stashes")) {
+							if (ClanAddonQueue.getInstance().getEnabled().contains("Stashes")) {
 								StashesAddon.getStash(target.getName()).open(p);
 								return true;
 							} else {
@@ -825,7 +849,7 @@ public class CommandClanAdmin extends Command {
 				}
 				UUID target = Clan.ACTION.getId(args1).deploy();
 
-				if (ClansAPI.getInstance().isInClan(target)) {
+				if (ClansAPI.getInstance().getAssociate(target).isPresent()) {
 					lib.sendMessage(p, "&c&oPlayer " + args1 + " is already in a clan.");
 					return true;
 				}

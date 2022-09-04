@@ -34,7 +34,7 @@ public final class ClanBuilder {
 	 * forcefully removed.
 	 */
 	public ClanBuilder build() {
-		if (ClansAPI.getInstance().isInClan(leader)) {
+		if (ClansAPI.getInstance().getAssociate(leader).isPresent()) {
 			Clan.ACTION.remove(leader, true).deploy();
 		}
 		HUID newID = HUID.randomID();
@@ -51,7 +51,7 @@ public final class ClanBuilder {
 			test.add(new DefaultAssociate(leader, Clan.Rank.HIGHEST, test));
 		}
 		for (Map.Entry<UUID, Clan.Rank> entry : memberList.entrySet()) {
-			if (ClansAPI.getInstance().isInClan(entry.getKey())) {
+			if (ClansAPI.getInstance().getAssociate(entry.getKey()).isPresent()) {
 				Clan.ACTION.remove(entry.getKey(), true).deploy();
 			}
 			if (entry.getKey().equals(ClansAPI.getInstance().getSessionId())) {

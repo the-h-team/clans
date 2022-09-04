@@ -279,7 +279,7 @@ public class ClanEventListener implements Listener {
 									.then("[")
 									.then("Roster").color(Color.GREEN).style(ChatColor.BOLD).hover(color + "Click to view our roster.").action(() -> {
 										if (ClansAPI.getDataInstance().getMessages().read(n -> n.getNode("menu.enabled").toPrimitive().getBoolean())) {
-											e.getApi().getMenu(GUI.MEMBER_LIST, c).open(p);
+											GUI.MEMBER_LIST.get(c).open(p);
 										} else {
 											new FancyMessage("&2" + c.getName() + " associates:").send(p).deploy();
 											new FancyMessage("&a&l&m---------------------------------").send(p).deploy();
@@ -342,7 +342,7 @@ public class ClanEventListener implements Listener {
 									.then("[")
 									.then("Roster").color(Color.RED).style(ChatColor.BOLD).action(() -> {
 										if (ClansAPI.getDataInstance().getMessages().read(n -> n.getNode("menu.enabled").toPrimitive().getBoolean())) {
-											e.getApi().getMenu(GUI.MEMBER_LIST, c).open(p);
+											GUI.MEMBER_LIST.get(c).open(p);
 										} else {
 											new FancyMessage(c.getPalette().toString("Associates:")).send(p).deploy();
 											new FancyMessage("&f&l&m---------------------------------").send(p).deploy();

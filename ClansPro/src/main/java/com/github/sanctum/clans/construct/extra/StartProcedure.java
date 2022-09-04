@@ -3,7 +3,7 @@ package com.github.sanctum.clans.construct.extra;
 import com.github.sanctum.clans.ClansJavaPlugin;
 import com.github.sanctum.clans.bridge.ClanAddon;
 import com.github.sanctum.clans.bridge.ClanAddonDependencyException;
-import com.github.sanctum.clans.bridge.ClanAddonQuery;
+import com.github.sanctum.clans.bridge.ClanAddonQueue;
 import com.github.sanctum.clans.bridge.ClanAddonRegistrationException;
 import com.github.sanctum.clans.bridge.ClanVentBus;
 import com.github.sanctum.clans.bridge.ClanVentCall;
@@ -42,11 +42,13 @@ import com.github.sanctum.labyrinth.library.StringUtils;
 import com.github.sanctum.labyrinth.library.Workbench;
 import com.github.sanctum.labyrinth.library.WorkbenchSlot;
 import com.github.sanctum.labyrinth.task.TaskScheduler;
+import com.github.sanctum.panther.annotation.AnnotationDiscovery;
 import com.github.sanctum.panther.annotation.Ordinal;
 import com.github.sanctum.panther.event.VentMap;
 import com.github.sanctum.panther.file.Configurable;
 import com.github.sanctum.panther.placeholder.PlaceholderRegistration;
 import com.github.sanctum.skulls.CustomHead;
+import java.lang.reflect.InvocationTargetException;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -89,8 +91,18 @@ public final class StartProcedure {
 		instance.getLogger().info("▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬");
 	}
 
+	String replaceDevKey(String key, int id) {
+		if (key.startsWith("%%__USER")) {
+			return "DEV";
+		}
+		if (key.startsWith("%%__NONCE")) {
+			return "" + id;
+		}
+		return key;
+	}
+
 	List<String> getLogo() {
-		return new ArrayList<>(Arrays.asList("   ▄▄▄·▄▄▄        ▄▄ ", "  ▐█ ▄█▀▄ █·▪     ██▌" + "  User ID: ", "   ██▀·▐▀▀▄  ▄█▀▄ ▐█·" + "   " + instance.USER_ID, "  ▐█▪·•▐█•█▌▐█▌.▐▌.▀ " + "  Unique ID: ", "  .▀   .▀  ▀ ▀█▄▀▪ ▀ " + "   " + instance.NONCE));
+		return new ArrayList<>(Arrays.asList("   ▄▄▄·▄▄▄        ▄▄ ", "  ▐█ ▄█▀▄ █·▪     ██▌" + "  User ID: ", "   ██▀·▐▀▀▄  ▄█▀▄ ▐█·" + "   " + replaceDevKey(instance.USER_ID, 0), "  ▐█▪·•▐█•█▌▐█▌.▐▌.▀ " + "  Unique ID: ", "  .▀   .▀  ▀ ▀█▄▀▪ ▀ " + "   " + replaceDevKey(instance.NONCE, 1)));
 	}
 
 	@Ordinal
@@ -250,31 +262,32 @@ public final class StartProcedure {
 	@Ordinal(9)
 	void i() {
 		if (bail) return;
-		ClanAddonQuery.load(instance, "com.github.sanctum.clans.bridge.internal");
+		ClanAddonQueue queue = ClanAddonQueue.getInstance();
+		queue.load(instance, "com.github.sanctum.clans.bridge.internal");
 		TaskScheduler.of(() -> {
 			if (Bukkit.getPluginManager().isPluginEnabled("dynmap")) {
-				ClanAddonQuery.register(DynmapAddon.class);
+				queue.register(DynmapAddon.class);
 			}
 			if (EconomyProvision.getInstance().isValid()) {
-				ClanAddonQuery.register(BountyAddon.class);
+				queue.register(BountyAddon.class);
 			}
 		}).scheduleLater(160);
-		instance.getLogger().info("- Found (" + ClanAddonQuery.getRegisteredAddons().size() + ") clan addon(s)");
-		ClanAddonQuery.getRegisteredAddons().forEach(ClanAddonQuery::adjust);
-		for (ClanAddon e : ClanAddonQuery.getRegisteredAddons().stream().sorted(Comparator.comparingInt(value -> value.getContext().getLevel())).collect(Collectors.toCollection(LinkedHashSet::new))) {
+		instance.getLogger().info("- Found (" + queue.get().size() + ") clan addon(s)");
+		queue.get().forEach(queue::bump);
+		for (ClanAddon e : queue.get().stream().sorted(Comparator.comparingInt(value -> value.getContext().getLevel())).collect(Collectors.toCollection(LinkedHashSet::new))) {
 			if (e.isPersistent()) {
 				try {
 					for (String precursor : e.getContext().getDependencies()) {
-						ClanAddon addon = ClanAddonQuery.getAddon(precursor);
+						ClanAddon addon = queue.get(precursor);
 						ClanException.call(ClanAddonDependencyException::new).check(addon).run("Missing dependency " + precursor + " for addon " + e.getName() + ". Please install the missing dependency for this addon.");
 					}
 					e.onEnable();
+					e.getContext().setActive(true);
 					sendBorder();
 					instance.getLogger().info("- Addon: " + e.getName());
 					instance.getLogger().info("- Description: " + e.getDescription());
 					instance.getLogger().info("- Persistent: (" + e.isPersistent() + ")");
 					sendBorder();
-
 					instance.getLogger().info("- Listeners: (" + e.getContext().getListeners().length + ")");
 					for (Listener listener : e.getContext().getListeners()) {
 						boolean registered = HandlerList.getRegisteredListeners(instance).stream().anyMatch(r -> r.getListener().equals(listener));
@@ -288,7 +301,7 @@ public final class StartProcedure {
 				} catch (NoClassDefFoundError | NoSuchMethodError ex) {
 					instance.getLogger().severe("- An issue occurred while enabling addon " + e.getName());
 					ex.printStackTrace();
-					ClanAddonQuery.remove(e);
+					queue.remove(e);
 				}
 			} else {
 				sendBorder();
@@ -297,7 +310,15 @@ public final class StartProcedure {
 				instance.getLogger().info("- Persistent: (" + e.isPersistent() + ")");
 				sendBorder();
 				instance.getLogger().info("- Listeners: (" + e.getContext().getListeners().length + ")");
-				ClanAddonQuery.remove(e);
+				AnnotationDiscovery<Ordinal, ClanAddon> discovery = AnnotationDiscovery.of(Ordinal.class, ClanAddon.class);
+				discovery.filter(method -> method.getName().equals("remove"), true);
+				discovery.ifPresent((ordinal, method) -> {
+					try {
+						method.invoke(e);
+					} catch (IllegalAccessException | InvocationTargetException ex) {
+						ex.printStackTrace();
+					}
+				});
 				for (Listener l : e.getContext().getListeners()) {
 					instance.getLogger().info("- [" + l.getClass().getSimpleName() + "] (+1) Listener failed to load due to no persistence.");
 				}
@@ -355,7 +376,7 @@ public final class StartProcedure {
 			metrics.addCustomChart(new Metrics.DrilldownPie("addon_popularity", () -> {
 				Map<String, Map<String, Integer>> map = new HashMap<>();
 				Map<String, Integer> entry = new HashMap<>();
-				for (ClanAddon cycle : ClanAddonQuery.getRegisteredAddons()) {
+				for (ClanAddon cycle : ClanAddonQueue.getInstance().get()) {
 					if (cycle.isPersistent()) {
 						entry.put(Bukkit.getServer().getName(), 1);
 						map.put(cycle.getName(), entry);
@@ -379,6 +400,7 @@ public final class StartProcedure {
 
 	@Ordinal(13)
 	void m() {
+		if (bail) return;
 		// System adapter for locating MOTD carriers.
 		LogoHolder.newAdapter(location -> {
 			LogoHolder.Carrier def = ReservedLogoCarrier.MOTD;
@@ -396,6 +418,7 @@ public final class StartProcedure {
 
 	@Ordinal(14)
 	void n() {
+		if (bail) return;
 		Channel.CLAN.register(context -> {
 			String test = context;
 			for (String word : instance.dataManager.getConfig().getRoot().getNode("Formatting.Chat.Channel.clan.filters").getKeys(false)) {
@@ -453,6 +476,7 @@ public final class StartProcedure {
 
 	@Ordinal(15)
 	void o() {
+		if (bail) return;
 		TaskScheduler.of(() -> {
 			for (Clan owner : instance.getClanManager().getClans()) {
 				TaskScheduler.of(() -> {
@@ -476,6 +500,7 @@ public final class StartProcedure {
 
 	@Ordinal(16)
 	void p() {
+		if (bail) return;
 		FileManager th = instance.getFileList().get("heads", "Configuration", Configurable.Type.JSON);
 		if (th.getRoot().exists()) {
 			th.toMoved("Configuration/Data");
@@ -492,6 +517,7 @@ public final class StartProcedure {
 
 	@Ordinal(17)
 	void q() {
+		if (bail) return;
 		// load dockets
 		ClansAPI api = ClansAPI.getInstance();
 		MemoryDocket<Clan> rosterDocket = Docket.newInstance(ClansAPI.getDataInstance().getMessages().getRoot().getNode("menu.roster"));
@@ -515,7 +541,8 @@ public final class StartProcedure {
 
 	@Ordinal(18)
 	void r() {
-
+		if (bail) return;
+		// I dont even know what goes here but something should...
 	}
 
 

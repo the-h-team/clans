@@ -4,9 +4,11 @@ import com.github.sanctum.clans.construct.api.ClansAPI;
 import com.github.sanctum.labyrinth.LabyrinthProvider;
 import com.github.sanctum.labyrinth.api.Service;
 import com.github.sanctum.labyrinth.api.TaskService;
+import com.github.sanctum.labyrinth.task.BukkitTaskPredicate;
 import com.github.sanctum.labyrinth.task.TaskScheduler;
 import com.github.sanctum.panther.annotation.Note;
 import com.github.sanctum.panther.annotation.Ordinal;
+import com.github.sanctum.panther.annotation.Synchronized;
 import com.github.sanctum.panther.container.PantherCollection;
 import com.github.sanctum.panther.container.PantherSet;
 import com.github.sanctum.panther.util.Applicable;
@@ -24,7 +26,6 @@ public final class AsynchronousLoanableTask {
 	public AsynchronousLoanableTask(Logic logic) {
 		this.logic = logic;
 	}
-
 
 	Task getTask() {
 		return LabyrinthProvider.getService(Service.TASK).getScheduler(TaskService.ASYNCHRONOUS).get(KEY);
@@ -47,7 +48,7 @@ public final class AsynchronousLoanableTask {
 				}
 
 			};
-			LabyrinthProvider.getService(Service.TASK).getScheduler(TaskService.ASYNCHRONOUS).repeat(t, unit.toMillis(size), unit.toMillis(size));
+			TaskScheduler.of(t).scheduleTimerAsync(t.getKey(), unit.toMillis(size), unit.toMillis(size), BukkitTaskPredicate.reduceEmpty());
 		}
 		players.add(player);
 	}
@@ -62,12 +63,15 @@ public final class AsynchronousLoanableTask {
 	}
 
 	public void stop() {
-		getTask().cancel();
+		Task t = getTask();
+		if (t != null) {
+			t.cancel();
+		}
 		players.clear();
 	}
 
 	@Note("Meant to be used WITHIN your task logic")
-	public void synchronize(Applicable data) {
+	public void synchronize(@Synchronized Applicable data) {
 		TaskScheduler.of(data).schedule();
 	}
 

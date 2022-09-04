@@ -26,13 +26,12 @@ public class BountyCommand extends ClanSubCommand {
 	@Override
 	public boolean player(Player p, String label, String[] args) {
 		if (args.length == 2) {
-			if (ClansAPI.getInstance().isInClan(p.getUniqueId())) {
+			if (ClansAPI.getInstance().getAssociate(p.getUniqueId()).isPresent()) {
 				Clan c = ClansAPI.getInstance().getClanManager().getClan(p.getUniqueId());
 				UUID id = Clan.ACTION.getId(args[0]).deploy();
 				if (id != null) {
 					if (c.getMember(a -> a.getId().equals(id)) != null) {
 						Clan.ACTION.sendMessage(p, "&c&oYou cannot put bounties on clan members.");
-
 						return true;
 					}
 					if (BountyList.get(c, id) == null) {

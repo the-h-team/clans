@@ -1,7 +1,7 @@
 package com.github.sanctum.clans.bridge.internal;
 
 import com.github.sanctum.clans.bridge.ClanAddon;
-import com.github.sanctum.clans.bridge.ClanAddonQuery;
+import com.github.sanctum.clans.bridge.ClanAddonQueue;
 import com.github.sanctum.clans.bridge.ClanVentBus;
 import com.github.sanctum.clans.bridge.internal.stashes.StashMenu;
 import com.github.sanctum.clans.bridge.internal.stashes.command.StashCommand;
@@ -48,7 +48,7 @@ public class StashesAddon extends ClanAddon {
 	public void onEnable() {
 
 		ClanVentBus.subscribe(CommandInformationAdaptEvent.class, Vent.Priority.HIGH, (e, subscription) -> {
-			ClanAddon cycle = ClanAddonQuery.getAddon("Stashes");
+			ClanAddon cycle = ClanAddonQueue.getInstance().get("Stashes");
 
 			if (cycle != null && !cycle.getContext().isActive()) {
 				subscription.remove();

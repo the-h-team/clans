@@ -1,7 +1,7 @@
 package com.github.sanctum.clans.commands;
 
 import com.github.sanctum.clans.bridge.ClanAddon;
-import com.github.sanctum.clans.bridge.ClanAddonQuery;
+import com.github.sanctum.clans.bridge.ClanAddonQueue;
 import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClanSubCommand;
 import com.github.sanctum.clans.construct.api.ClansAPI;
@@ -54,7 +54,7 @@ public class CommandClan extends Command implements Message.Factory {
 
 		List<String> result = new ArrayList<>();
 
-		for (ClanAddon cycle : ClanAddonQuery.getRegisteredAddons()) {
+		for (ClanAddon cycle : ClanAddonQueue.getInstance().get()) {
 			if (cycle.getContext().isActive()) {
 				for (ClanSubCommand subCommand : cycle.getContext().getCommands()) {
 					if (subCommand.tab(p, alias, args) != null) {
@@ -76,7 +76,7 @@ public class CommandClan extends Command implements Message.Factory {
 		if (!(sender instanceof Player)) {
 			if (sender instanceof ConsoleCommandSender) {
 
-				for (ClanAddon cycle : ClanAddonQuery.getRegisteredAddons()) {
+				for (ClanAddon cycle : ClanAddonQueue.getInstance().get()) {
 					if (cycle.getContext().isActive()) {
 						for (ClanSubCommand subCommand : cycle.getContext().getCommands()) {
 							if (subCommand.getLabel() != null) {
@@ -125,7 +125,7 @@ public class CommandClan extends Command implements Message.Factory {
 			}
 
 			if (length > 0) {
-				for (ClanAddon cycle : ClanAddonQuery.getRegisteredAddons()) {
+				for (ClanAddon cycle : ClanAddonQueue.getInstance().get()) {
 					if (cycle.getContext().isActive()) {
 						for (ClanSubCommand subCommand : cycle.getContext().getCommands()) {
 							if (subCommand.getLabel() != null) {

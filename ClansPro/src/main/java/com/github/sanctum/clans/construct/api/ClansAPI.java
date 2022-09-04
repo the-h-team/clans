@@ -2,6 +2,7 @@ package com.github.sanctum.clans.construct.api;
 
 import com.github.sanctum.clans.ClansJavaPlugin;
 import com.github.sanctum.clans.bridge.ClanAddon;
+import com.github.sanctum.clans.bridge.ClanAddonQueue;
 import com.github.sanctum.clans.construct.ArenaManager;
 import com.github.sanctum.clans.construct.ClaimManager;
 import com.github.sanctum.clans.construct.ClanManager;
@@ -12,20 +13,18 @@ import com.github.sanctum.clans.construct.extra.MessagePrefix;
 import com.github.sanctum.labyrinth.data.FileList;
 import com.github.sanctum.labyrinth.data.LabyrinthUser;
 import com.github.sanctum.labyrinth.data.container.KeyedServiceManager;
-import com.github.sanctum.labyrinth.gui.unity.construct.Menu;
 import com.github.sanctum.labyrinth.library.NamespacedKey;
 import com.github.sanctum.labyrinth.task.TaskScheduler;
 import com.github.sanctum.panther.annotation.Experimental;
 import com.github.sanctum.panther.annotation.Note;
+import com.github.sanctum.panther.container.PantherCollection;
+import com.github.sanctum.panther.container.PantherCollectors;
 import com.github.sanctum.panther.paste.PasteManager;
 import com.github.sanctum.panther.paste.operative.PasteResponse;
 import com.github.sanctum.panther.paste.type.Hastebin;
 import com.github.sanctum.panther.util.Check;
-import com.github.sanctum.panther.util.HUID;
 import java.text.MessageFormat;
-import java.util.Collections;
 import java.util.Date;
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -36,14 +35,17 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-/**
- * <pre>
- *     ▄▄▄·▄▄▄        ▄▄
- *    ▐█ ▄█▀▄ █·▪     ██▌
- *     ██▀·▐▀▀▄  ▄█▀▄ ▐█·
- *    ▐█▪·•▐█•█▌▐█▌.▐▌.▀
- *   .▀   .▀  ▀ ▀█▄▀▪ ▀
- * </pre>
+/**<pre>
+ *    ▄████▄   ██▓    ▄▄▄       ███▄    █   ██████   ██████╗ ██████╗  ██████╗ ██╗
+ *   ▒██▀ ▀█  ▓██▒   ▒████▄     ██ ▀█   █ ▒██    ▒ ▓ ██╔══██╗██╔══██╗██╔═══██╗██║
+ *   ▒▓█    ▄ ▒██░   ▒██  ▀█▄  ▓██  ▀█ ██▒░ ▓██▄   ▓ ██████╔╝██████╔╝██║   ██║██║
+ *   ▒▓▓▄ ▄██▒▒██░   ░██▄▄▄▄██ ▓██▒  ▐▌██▒  ▒   ██▒▒ ██╔═══╝ ██╔══██╗██║   ██║╚═╝
+ *   ▒ ▓███▀ ░░██████▒▓█   ▓██▒▒██░   ▓██░▒██████▒▒▒ ██║     ██║  ██║╚██████╔╝██╗
+ *   ░ ░▒ ▒  ░░ ▒░▓  ░▒▒   ▓▒█░░ ▒░   ▒ ▒ ▒ ▒▓▒ ▒ ░▒ ╚═╝     ╚═╝  ╚═╝ ╚═════╝ ╚═╝
+ *       ░  ▒   ░ ░ ▒  ░ ▒   ▒▒ ░░ ░░   ░ ▒░░ ░▒  ░ ░░
+ *         ░          ░ ░    ░   ▒      ░   ░ ░ ░  ░  ░  ░
+ *           ░ ░          ░  ░     ░  ░         ░       ░
+ *             ░
  * <pre>
  * <h3>MIT License</h2>
  * Copyright (c) 2021 Sanctum
@@ -198,7 +200,7 @@ public interface ClansAPI {
 	 *
 	 * @return the local hastebin api instance.
 	 */
-	@NotNull Hastebin getLocalHastebinInstance();
+	@NotNull Hastebin getHastebin();
 
 	/**
 	 * Check if pro needs to be updated.
@@ -206,23 +208,6 @@ public interface ClansAPI {
 	 * @return true if the plugin has an update.
 	 */
 	boolean isUpdated();
-
-	/**
-	 * Check if a clan contains the target UUID
-	 *
-	 * @param target The target "Member"
-	 * @param clanID The target clan to search
-	 * @return true if the given clan's members contains the given uuid
-	 */
-	boolean isClanMember(UUID target, HUID clanID);
-
-	/**
-	 * Check if a target player is currently a member of a clan.
-	 *
-	 * @param target The target uuid to search for.
-	 * @return result = true if the target player is in a clan.
-	 */
-	boolean isInClan(UUID target);
 
 	/**
 	 * Check if a specified clan name is black-listed
@@ -233,47 +218,10 @@ public interface ClansAPI {
 	boolean isNameBlackListed(String name);
 
 	/**
-	 * Search and automatically register all found pro addons in a given package location
+	 * Get the local fingerprint key for clans pro data reloading.
 	 *
-	 * @param packageName The package location to browse for addons.
+	 * @return the namespace (key) for the clans pro fingerprint.
 	 */
-	void registerAddons(Plugin plugin, String packageName);
-
-	/**
-	 * Automatically hook a specific addon via class instantiation.
-	 * <p>
-	 * Desired class must inherit ClanAddon.
-	 *
-	 * @param cycle The class that extends EventCycle functionality
-	 */
-	void registerAddon(Class<? extends ClanAddon> cycle);
-
-	/**
-	 * Kick a specified user from a clan they might be in.
-	 *
-	 * @param uuid The user to kick from their clan.
-	 * @return true if the user was kicked otherwise false if the user isn't in a clan.
-	 */
-	boolean kickUser(UUID uuid);
-
-	/**
-	 * Onboard a specified user to a clan of specification.
-	 *
-	 * @param uuid The user to invite
-	 * @return an associate object if the user was able to join otherwise empty.
-	 */
-	Optional<Clan.Associate> obtainUser(UUID uuid, String clanName);
-
-	/**
-	 * Gets an addon by its name.
-	 *
-	 * @param name The name of the addon.
-	 * @return A clan addon.
-	 */
-	@Nullable ClanAddon getAddon(String name);
-
-	@Nullable Menu getMenu(GUI gui, InvasiveEntity entity);
-
 	default NamespacedKey getLocalPrintKey() {
 		return new NamespacedKey(getPlugin(), "reload_data");
 	}
@@ -331,7 +279,7 @@ public interface ClansAPI {
 			if (entity.isClan()) {
 				TaskScheduler.of(() -> {
 					Date now = new Date();
-					Hastebin bin = getLocalHastebinInstance();
+					Hastebin bin = getHastebin();
 					PasteResponse response;
 					boolean isConsole = entity.getAsClan().isConsole();
 					Clan.Implementation implementation = entity.getAsClan().getImplementation();
@@ -382,6 +330,10 @@ public interface ClansAPI {
 		return getAssociate(user.getId());
 	}
 
+	default ClanAddonQueue getAddonQueue() {
+		return ClanAddonQueue.getInstance();
+	}
+
 	/**
 	 * Get the server consultant object if one has been provided.
 	 *
@@ -393,13 +345,13 @@ public interface ClansAPI {
 	}
 
 	@Experimental(dueTo = "Involving usage of the brand new api! Use at your own risk.")
-	default List<InvasiveEntity> getEntities() {
-		List<InvasiveEntity> list = InoperableSpecialMemory.ENTITY_MAP.values().stream().collect(Collectors.toList());
+	default PantherCollection<? extends InvasiveEntity> getEntities() {
+		PantherCollection<InvasiveEntity> list = InoperableSpecialMemory.ENTITY_MAP.values().stream().collect(PantherCollectors.toList());
 		getClanManager().getClans().forEach(c -> {
-			list.addAll(c.getMembers());
+			c.getMembers().forEach(list::add);
 			list.add(c);
 		});
-		return Collections.unmodifiableList(list);
+		return list;
 	}
 
 

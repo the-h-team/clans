@@ -113,7 +113,7 @@ public final class ArenaManager implements Iterable<War> {
 						return this.time;
 					}
 				};
-				LabyrinthProvider.getService(Service.MESSENGER).getEmptyMailer().prefix().start(ClansAPI.getInstance().getPrefix().joined()).finish().announce(p -> true, "&3A new clan war between clans &b[" + Arrays.stream(q.getTeams()).map(Clan::getName).collect(Collectors.joining(",")) + "] &3starts in " + time.getMinutes() + " minute(s) & " + time.getSeconds() + " second(s)").deploy();
+				LabyrinthProvider.getService(Service.MESSENGER).getEmptyMailer().prefix().start(ClansAPI.getInstance().getPrefix().toString()).finish().announce(p -> true, "&3A new clan war between clans &b[" + Arrays.stream(q.getTeams()).map(Clan::getName).collect(Collectors.joining(",")) + "] &3starts in " + time.getMinutes() + " minute(s) & " + time.getSeconds() + " second(s)").deploy();
 				free.stamp();
 				new Cooldown() {
 
@@ -265,7 +265,7 @@ public final class ArenaManager implements Iterable<War> {
 			}
 			WarWonEvent e = ClanVentBus.call(new WarWonEvent(war, new SimpleEntry<>(w, points), map));
 			if (!e.isCancelled()) {
-				Mailer msg = LabyrinthProvider.getService(Service.MESSENGER).getEmptyMailer().prefix().start(ClansAPI.getInstance().getPrefix().joined()).finish();
+				Mailer msg = LabyrinthProvider.getService(Service.MESSENGER).getEmptyMailer().prefix().start(ClansAPI.getInstance().getPrefix().toString()).finish();
 				Bukkit.broadcastMessage(" ");
 				msg.announce(p -> true, "&3A war between clans &b[" + Arrays.stream(war.getQueue().getTeams()).map(Clan::getName).collect(Collectors.joining(",")) + "]&3 in arena &7#&e" + war.getId() + " &3concluded with winner &6&l" + w.getName() + " &f(&a" + points + "&f)");
 				Bukkit.broadcastMessage(" ");
