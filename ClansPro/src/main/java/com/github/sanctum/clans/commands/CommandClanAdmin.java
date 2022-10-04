@@ -10,6 +10,7 @@ import com.github.sanctum.clans.construct.api.ClanBlueprint;
 import com.github.sanctum.clans.construct.api.ClansAPI;
 import com.github.sanctum.clans.construct.api.GUI;
 import com.github.sanctum.clans.construct.api.War;
+import com.github.sanctum.clans.construct.extra.ReloadUtility;
 import com.github.sanctum.clans.construct.extra.StringLibrary;
 import com.github.sanctum.labyrinth.data.FileManager;
 import com.github.sanctum.labyrinth.formatting.pagination.EasyPagination;
@@ -288,6 +289,12 @@ public class CommandClanAdmin extends Command {
 	@Override
 	public boolean execute(@NotNull CommandSender commandSender, @NotNull String commandLabel, String[] args) {
 		if (!(commandSender instanceof Player)) {
+			if (args.length == 1) {
+				ClansAPI.getInstance().getPlugin().getLogger().info("&7|&e) &fAlternative usage : /" + commandLabel + " reload <fileName>");
+				ReloadUtility.reload();
+				ClansAPI.getInstance().getPlugin().getLogger().info("&aPlugin reloaded!");
+				return true;
+			}
 			if (args.length == 2) {
 				if (args[0].equalsIgnoreCase("reload")) {
 					FileManager file = ClansAPI.getInstance().getFileList().get(args[1], "Configuration");
@@ -366,7 +373,9 @@ public class CommandClanAdmin extends Command {
 				return true;
 			}
 			if (args0.equalsIgnoreCase("reload")) {
-				lib.sendMessage(p, "&7|&e) &fInvalid usage : /" + commandLabel + " reload <fileName>");
+				lib.sendMessage(p, "&7|&e) &fAlternative usage : /" + commandLabel + " reload <fileName>");
+				ReloadUtility.reload();
+				lib.sendMessage(p, "&aPlugin reloaded!");
 				return true;
 			}
 			if (args0.equalsIgnoreCase("getid")) {

@@ -44,7 +44,7 @@ public class CommandAsk extends ClanSubCommand {
 					.append("&2&lA.] &8When holding a valid clans logo print in your hand, use command '/clan logo upload' to apply it as your clans logo, from there you can choose to share it globally for others to print with '/clan logo share'.")
 					.append(" ")
 					.append("&6&lQ.) &0&nHow do clan wars work?")
-					.append("&2&lA.] &8Clan wars are essentially .");
+					.append("&2&lA.] &8Clan wars are essentially Team Death Match, but the losing team loses power while visa versa for the winning team.");
 
 			Primitive primitive = ClansAPI.getDataInstance().getConfig().read(c -> c.getNode("Formatting.help-book").toPrimitive());
 			if (primitive.isStringList()) {

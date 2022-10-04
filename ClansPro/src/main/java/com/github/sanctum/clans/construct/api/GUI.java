@@ -1,17 +1,14 @@
 package com.github.sanctum.clans.construct.api;
 
-import com.github.sanctum.clans.ClansJavaPlugin;
 import com.github.sanctum.clans.bridge.ClanAddon;
 import com.github.sanctum.clans.bridge.ClanAddonQueue;
 import com.github.sanctum.clans.bridge.LoadResult;
 import com.github.sanctum.clans.construct.extra.DocketUtils;
-import com.github.sanctum.clans.construct.extra.MessagePrefix;
+import com.github.sanctum.clans.construct.extra.ReloadUtility;
 import com.github.sanctum.clans.construct.extra.SimpleLogoCarrier;
 import com.github.sanctum.labyrinth.LabyrinthProvider;
 import com.github.sanctum.labyrinth.api.Service;
 import com.github.sanctum.labyrinth.data.EconomyProvision;
-import com.github.sanctum.labyrinth.data.FileList;
-import com.github.sanctum.labyrinth.data.FileManager;
 import com.github.sanctum.labyrinth.data.reload.PrintManager;
 import com.github.sanctum.labyrinth.data.service.Constant;
 import com.github.sanctum.labyrinth.formatting.string.FormattedString;
@@ -28,6 +25,7 @@ import com.github.sanctum.labyrinth.gui.unity.simple.Docket;
 import com.github.sanctum.labyrinth.gui.unity.simple.MemoryDocket;
 import com.github.sanctum.labyrinth.interfacing.UnknownGeneric;
 import com.github.sanctum.labyrinth.library.Entities;
+import com.github.sanctum.labyrinth.library.Item;
 import com.github.sanctum.labyrinth.library.Items;
 import com.github.sanctum.labyrinth.library.Mailer;
 import com.github.sanctum.labyrinth.library.StringUtils;
@@ -36,9 +34,9 @@ import com.github.sanctum.panther.container.PantherSet;
 import com.github.sanctum.panther.file.Node;
 import com.github.sanctum.panther.util.HUID;
 import com.github.sanctum.panther.util.RandomObject;
+import com.github.sanctum.skulls.CustomHead;
 import com.github.sanctum.skulls.CustomHeadLoader;
 import com.github.sanctum.skulls.SkullType;
-import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -221,6 +219,9 @@ public enum GUI {
 						.setTitle("&3Session Game Rules &0&l»")
 						.setSize(getSize())
 						.setStock(i -> {
+							FillerElement<?> filler = new FillerElement<>(i);
+							filler.add(ed -> ed.setElement(it -> it.setType(Optional.ofNullable(Items.findMaterial("bluestainedglasspane")).orElse(Items.findMaterial("stainedglasspane"))).setTitle(" ").build()));
+							i.addItem(filler);
 							BorderElement<?> border = new BorderElement<>(i);
 							for (Menu.Panel p : Menu.Panel.values()) {
 								if (p == Menu.Panel.MIDDLE) continue;
@@ -230,9 +231,6 @@ public enum GUI {
 									border.add(p, ed -> ed.setType(ItemElement.ControlType.ITEM_BORDER).setElement(it -> it.setType(Material.GRAY_STAINED_GLASS_PANE).setTitle(" ").build()));
 								}
 							}
-							FillerElement<?> filler = new FillerElement<>(i);
-							filler.add(ed -> ed.setType(ItemElement.ControlType.ITEM_FILLER).setElement(it -> it.setItem(ClansAPI.getDataInstance().getMenuItem("background-theme")).setTitle(" ").build()));
-							i.addItem(filler);
 							i.addItem(border);
 							ListElement<String> rules = new ListElement<>(Constant.values(AbstractGameRule.class, String.class));
 							rules.setLimit(getLimit());
@@ -307,6 +305,9 @@ public enum GUI {
 						.setSize(getSize())
 						.setTitle("&e&lLogo Gallery &0&l»")
 						.setStock(i -> {
+							FillerElement<?> filler = new FillerElement<>(i);
+							filler.add(ed -> ed.setElement(it -> it.setType(Optional.ofNullable(Items.findMaterial("bluestainedglasspane")).orElse(Items.findMaterial("stainedglasspane"))).setTitle(" ").build()));
+							i.addItem(filler);
 							BorderElement<?> border = new BorderElement<>(i);
 							for (Menu.Panel p : Menu.Panel.values()) {
 								if (p == Menu.Panel.MIDDLE) continue;
@@ -316,9 +317,6 @@ public enum GUI {
 									border.add(p, ed -> ed.setType(ItemElement.ControlType.ITEM_BORDER).setElement(it -> it.setType(Material.GRAY_STAINED_GLASS_PANE).setTitle(" ").build()));
 								}
 							}
-							FillerElement<?> filler = new FillerElement<>(i);
-							filler.add(ed -> ed.setType(ItemElement.ControlType.ITEM_FILLER).setElement(it -> it.setItem(ClansAPI.getDataInstance().getMenuItem("background-theme")).setTitle(" ").build()));
-							i.addItem(filler);
 							i.addItem(border);
 							i.addItem(b -> b.setElement(getLeftItem()).setSlot(getLeft()).setTypeAndAddAction(ItemElement.ControlType.BUTTON_BACK, click -> {
 								click.setCancelled(true);
@@ -391,6 +389,9 @@ public enum GUI {
 						.setOpenEvent(open -> tempSpot.put(open.getElement(), CLAN_ROSTER_TOP.name()))
 						.setProcessEvent(open -> tempSpot.put(open.getElement(), CLAN_ROSTER_TOP.name()))
 						.setStock(i -> {
+							FillerElement<?> filler = new FillerElement<>(i);
+							filler.add(ed -> ed.setElement(it -> it.setType(Optional.ofNullable(Items.findMaterial("bluestainedglasspane")).orElse(Items.findMaterial("stainedglasspane"))).setTitle(" ").build()));
+							i.addItem(filler);
 							BorderElement<?> border = new BorderElement<>(i);
 							for (Menu.Panel p : Menu.Panel.values()) {
 								if (p == Menu.Panel.MIDDLE) continue;
@@ -400,9 +401,6 @@ public enum GUI {
 									border.add(p, ed -> ed.setType(ItemElement.ControlType.ITEM_BORDER).setElement(it -> it.setType(Material.GRAY_STAINED_GLASS_PANE).setTitle(" ").build()));
 								}
 							}
-							FillerElement<?> filler = new FillerElement<>(i);
-							filler.add(ed -> ed.setType(ItemElement.ControlType.ITEM_FILLER).setElement(it -> it.setItem(ClansAPI.getDataInstance().getMenuItem("background-theme")).setTitle(" ").build()));
-							i.addItem(filler);
 							i.addItem(border);
 							i.addItem(b -> b.setElement(getLeftItem()).setSlot(getLeft()).setTypeAndAddAction(ItemElement.ControlType.BUTTON_BACK, click -> {
 								click.setCancelled(true);
@@ -440,13 +438,13 @@ public enum GUI {
 
 							i.addItem(new ListElement<>(Clan.ACTION.getMostPowerful()).setLimit(getLimit()).setPopulate((c, element) -> {
 								element.setElement(b -> {
-									String title = MessageFormat.format(ClansAPI.getDataInstance().getMenuCategory("clan"), c.getPalette().toString(), (c.getNickname() != null ? c.getNickname() : c.getName()), c.getId().toString().substring(0, 4));
+									String title = "&6Clan: &r" + (c.getNickname() != null ? c.getPalette().toString(c.getNickname()) : c.getPalette().toString(c.getName()));
 									ItemStack it;
 									if (c.isConsole()) {
 										it = new ItemStack(special);
 										title = title + "&b*";
 									} else {
-										it = new ItemStack(ClansAPI.getDataInstance().getMenuItem("clan"));
+										it = Optional.ofNullable(CustomHead.Manager.get("Clan")).orElse(new ItemStack(Material.PAPER));
 									}
 									b.setItem(it);
 									b.setTitle(title);
@@ -523,7 +521,7 @@ public enum GUI {
 								c.setCancelled(true);
 								SETTINGS_ARENA.get().open(c.getElement());
 							}));
-							i.addItem(b -> b.setElement(new ItemStack(ClansAPI.getDataInstance().getMenuMaterial("clan") != null ? ClansAPI.getDataInstance().getMenuMaterial("clan") : Material.PAPER)).setElement(ed -> ed.setTitle("&7[&eClan List&7]").setLore("&bClick to view the entire &6clan roster").build()).setSlot(14).setClick(c -> {
+							i.addItem(b -> b.setElement(Optional.ofNullable(CustomHead.Manager.get("Clan")).orElse(new ItemStack(Material.PAPER))).setElement(ed -> ed.setTitle("&7[&eClan List&7]").setLore("&bClick to view the entire &6clan roster").build()).setSlot(14).setClick(c -> {
 								c.setCancelled(true);
 								CLAN_ROSTER_SELECTION.get().open(c.getElement());
 							}));
@@ -620,39 +618,7 @@ public enum GUI {
 							i.addItem(b -> b.setElement(ed -> ed.setType(Material.POTION).setTitle("&2&lAll").build()).setSlot(4).setClick(c -> {
 								c.setCancelled(true);
 								Player p = c.getElement();
-								FileManager config = api.getFileList().get("Config", "Configuration");
-								FileManager message = api.getFileList().get("Messages", "Configuration");
-
-
-								FileManager regions = api.getFileList().get("Regions", "Configuration");
-								config.getRoot().reload();
-								message.getRoot().reload();
-								regions.getRoot().reload();
-
-								if (config.read(fc -> fc.getString("Clans.lang").equalsIgnoreCase("en-US"))) {
-
-									if (config.read(fc -> fc.getString("Clans.lang").equalsIgnoreCase("pt-BR"))) {
-
-										config.getRoot().delete();
-										message.getRoot().delete();
-										FileList.search(api.getPlugin()).copyYML("Config_pt_br", config);
-										config.getRoot().reload();
-										FileList.search(api.getPlugin()).copyYML("Messages_pt_br", message);
-										message.getRoot().reload();
-										Mailer.empty(p).prefix().start(api.getPrefix().toString()).finish().chat("&a&oAgora traduzido para o brasil!").deploy();
-
-									}
-
-								}
-
-								SETTINGS_SELECT.get().open(p);
-
-								api.getClanManager().refresh();
-								api.getClaimManager().refresh();
-
-								printManager.getPrint(api.getLocalPrintKey()).reload().deploy();
-
-								Clan.ACTION.sendMessage(p, "&b&oAll configuration files reloaded.");
+								p.performCommand("clanadmin reload");
 							}));
 							i.addItem(b -> b.setElement(ed -> ed.setType(Material.POTION).setTitle("&eLang Change").build()).setSlot(6).setClick(c -> {
 								c.setCancelled(true);
@@ -717,57 +683,17 @@ public enum GUI {
 							i.addItem(b -> b.setElement(ed -> ed.setType(Material.BOOK).setTitle("&aEnglish").build()).setSlot(0).setClick(c -> {
 								c.setCancelled(true);
 								c.getElement().closeInventory();
-								FileManager config = api.getFileList().get("Config", "Configuration");
-								config.getRoot().delete();
-								FileManager messages = api.getFileList().get("Messages", "Configuration");
-								messages.getRoot().delete();
-								FileManager nc = FileList.search(api.getPlugin()).get("Config", "Configuration");
-								FileManager nm = FileList.search(api.getPlugin()).get("Messages", "Configuration");
-								String type = config.read(f -> f.getNode("Formatting").getNode("file-type").toPrimitive().getString());
-								if (type != null) {
-									if (type.equals("JSON")) {
-										FileList.search(api.getPlugin()).copyYML("Config_json", nc);
-									} else {
-										FileList.search(api.getPlugin()).copyYML("Config", nc);
-									}
-								} else {
-									FileList.search(api.getPlugin()).copyYML("Config", nc);
-								}
-								nc.getRoot().reload();
-								FileList.search(api.getPlugin()).copyYML("Messages", nm);
-								nm.getRoot().reload();
-								Mailer.empty(c.getElement()).prefix().start(api.getPrefix().toString()).finish().chat("&a&oTranslated back to default english.").deploy();
-								FileManager main = ClansAPI.getDataInstance().getConfig();
-
-								((ClansJavaPlugin) api.getPlugin()).setPrefix(new MessagePrefix(main.getRoot().getString("Formatting.prefix.prefix"), main.getRoot().getString("Formatting.prefix.text"), main.getRoot().getString("Formatting.prefix.suffix")));
+								ReloadUtility.reload(ReloadUtility.Lang.EN_US, c.getElement());
 							}));
 							i.addItem(b -> b.setElement(ed -> ed.setType(Material.BOOK).setTitle("&bPortuguese").build()).setSlot(2).setClick(c -> {
 								c.setCancelled(true);
 								c.getElement().closeInventory();
-								FileManager config = api.getFileList().get("Config", "Configuration");
-								config.getRoot().delete();
-								FileManager messages = api.getFileList().get("Messages", "Configuration");
-								messages.getRoot().delete();
-								FileManager nc = FileList.search(api.getPlugin()).get("Config", "Configuration");
-								FileManager nm = FileList.search(api.getPlugin()).get("Messages", "Configuration");
-								String type = config.read(f -> f.getNode("Formatting").getNode("file-type").toPrimitive().getString());
-								if (type != null) {
-									if (type.equals("JSON")) {
-										FileList.search(api.getPlugin()).copyYML("Config_pt_br_json", nc);
-									} else {
-										FileList.search(api.getPlugin()).copyYML("Config_pt_br", nc);
-									}
-								} else {
-									FileList.search(api.getPlugin()).copyYML("Config_pt_br", nc);
-								}
-								nc.getRoot().reload();
-								FileList.search(api.getPlugin()).copyYML("Messages_pt_br", nm);
-								nm.getRoot().reload();
-								Mailer.empty(c.getElement()).prefix().start(api.getPrefix().toString()).finish().chat("&a&oAgora traduzido para o brasil!").deploy();
-
-								FileManager main = ClansAPI.getDataInstance().getConfig();
-
-								((ClansJavaPlugin) api.getPlugin()).setPrefix(new MessagePrefix(main.getRoot().getString("Formatting.prefix.prefix"), main.getRoot().getString("Formatting.prefix.text"), main.getRoot().getString("Formatting.prefix.suffix")));
+								ReloadUtility.reload(ReloadUtility.Lang.PT_BR, c.getElement());
+							}));
+							i.addItem(b -> b.setElement(ed -> ed.setType(Material.BOOK).setTitle("&eSpanish").build()).setSlot(4).setClick(c -> {
+								c.setCancelled(true);
+								c.getElement().closeInventory();
+								ReloadUtility.reload(ReloadUtility.Lang.ES_ES, c.getElement());
 							}));
 							i.addItem(b -> b.setElement(ed -> ed.setItem(getBackItem()).build()).setClick(c -> {
 								c.setCancelled(true);
@@ -1054,11 +980,6 @@ public enum GUI {
 		}
 
 		String[] statist = Clan.ACTION.color(stats).split("\\|");
-
-		String test = MessageFormat.format(ClansAPI.getDataInstance().getMenuTitle("member-information"), associate.getName());
-
-		if (test.length() > 32)
-			test = "&0&l» " + associate.getClan().getPalette() + associate.getName() + " &7Info";
 		switch (this) {
 			case RELATIONS_MENU:
 				return MenuType.SINGULAR.build().setHost(api.getPlugin())
@@ -1092,7 +1013,7 @@ public enum GUI {
 										.setStock(paginated -> {
 											addBackground(paginated);
 											ListElement<Clan> list = new ListElement<>(associate.getClan().getRelation().getAlliance().get(Clan.class)).setLimit(7).setPopulate((c, element) -> {
-												element.setElement(edit -> edit.setTitle(c.getPalette() + (c.getNickname() != null ? c.getNickname() : c.getName())).setItem(ClansAPI.getDataInstance().getMenuItem("Clan")).build());
+												element.setElement(edit -> edit.setTitle(c.getPalette() + (c.getNickname() != null ? c.getNickname() : c.getName())).setItem(Optional.ofNullable(CustomHead.Manager.get("Clan")).orElse(new ItemStack(Material.PAPER))).build());
 												element.setClick(clickElement -> {
 													clickElement.setCancelled(true);
 													clickElement.setHotbarAllowed(false);
@@ -1123,7 +1044,7 @@ public enum GUI {
 										.setStock(paginated -> {
 											addBackground(paginated);
 											ListElement<Clan> list = new ListElement<>(associate.getClan().getRelation().getRivalry().get(Clan.class)).setLimit(7).setPopulate((c, element) -> {
-												element.setElement(edit -> edit.setTitle(c.getPalette() + (c.getNickname() != null ? c.getNickname() : c.getName())).setItem(ClansAPI.getDataInstance().getMenuItem("Clan")).build());
+												element.setElement(edit -> edit.setTitle(c.getPalette() + (c.getNickname() != null ? c.getNickname() : c.getName())).setItem(Optional.ofNullable(CustomHead.Manager.get("Clan")).orElse(new ItemStack(Material.PAPER))).build());
 												element.setClick(clickElement -> {
 													clickElement.setCancelled(true);
 													clickElement.setHotbarAllowed(false);
@@ -1263,7 +1184,7 @@ public enum GUI {
 							}
 							i.addItem(border);
 							i.addItem(b -> b.setElement(it -> it.setItem(associate.getHead()).setFlags(ItemFlag.HIDE_ENCHANTS).addEnchantment(Enchantment.ARROW_DAMAGE, 100)
-									.setTitle(ClansAPI.getDataInstance().getMenuNavigation("back")).build()).setSlot(13).setClick(click -> {
+									.setTitle("&cGo back.").build()).setSlot(13).setClick(click -> {
 								click.setHotbarAllowed(false);
 								click.setCancelled(true);
 								Player p = click.getElement();
@@ -1365,7 +1286,7 @@ public enum GUI {
 							}
 							i.addItem(border);
 							i.addItem(b -> b.setElement(it -> it.setItem(associate.getHead() != null ? associate.getHead() : SkullType.PLAYER.get()).setFlags(ItemFlag.HIDE_ENCHANTS).addEnchantment(Enchantment.ARROW_DAMAGE, 100)
-									.setTitle(ClansAPI.getDataInstance().getMenuNavigation("back")).build()).setSlot(13).setClick(click -> {
+									.setTitle("&cGo back.").build()).setSlot(13).setClick(click -> {
 								click.setHotbarAllowed(false);
 								click.setCancelled(true);
 								Player p = click.getElement();
@@ -1663,6 +1584,9 @@ public enum GUI {
 						.setProperty(Menu.Property.LIVE_META)
 						.setTitle("&3&lCLAIMS &0&l»")
 						.setStock(i -> {
+							FillerElement<?> filler = new FillerElement<>(i);
+							filler.add(ed -> ed.setElement(it -> it.setType(Optional.ofNullable(Items.findMaterial("bluestainedglasspane")).orElse(Items.findMaterial("stainedglasspane"))).setTitle(" ").build()));
+							i.addItem(filler);
 							BorderElement<?> border = new BorderElement<>(i);
 							for (Menu.Panel p : Menu.Panel.values()) {
 								if (p == Menu.Panel.MIDDLE) continue;
@@ -1672,9 +1596,6 @@ public enum GUI {
 									border.add(p, ed -> ed.setType(ItemElement.ControlType.ITEM_BORDER).setElement(it -> it.setType(Material.GRAY_STAINED_GLASS_PANE).setTitle(" ").build()));
 								}
 							}
-							FillerElement<?> filler = new FillerElement<>(i);
-							filler.add(ed -> ed.setType(ItemElement.ControlType.ITEM_FILLER).setElement(it -> it.setItem(ClansAPI.getDataInstance().getMenuItem("background-theme")).setTitle(" ").build()));
-							i.addItem(filler);
 							i.addItem(border);
 							i.addItem(b -> b.setElement(getLeftItem()).setSlot(getLeft()).setTypeAndAddAction(ItemElement.ControlType.BUTTON_BACK, click -> {
 								click.setCancelled(true);
@@ -1729,6 +1650,9 @@ public enum GUI {
 						.setSize(getSize())
 						.setTitle("&b&lHOLOGRAMS &0&l»")
 						.setStock(i -> {
+							FillerElement<?> filler = new FillerElement<>(i);
+							filler.add(ed -> ed.setElement(it -> it.setType(Optional.ofNullable(Items.findMaterial("bluestainedglasspane")).orElse(Items.findMaterial("stainedglasspane"))).setTitle(" ").build()));
+							i.addItem(filler);
 							BorderElement<?> border = new BorderElement<>(i);
 							for (Menu.Panel p : Menu.Panel.values()) {
 								if (p == Menu.Panel.MIDDLE) continue;
@@ -1738,9 +1662,6 @@ public enum GUI {
 									border.add(p, ed -> ed.setType(ItemElement.ControlType.ITEM_BORDER).setElement(it -> it.setType(Material.GRAY_STAINED_GLASS_PANE).setTitle(" ").build()));
 								}
 							}
-							FillerElement<?> filler = new FillerElement<>(i);
-							filler.add(ed -> ed.setType(ItemElement.ControlType.ITEM_FILLER).setElement(it -> it.setItem(ClansAPI.getDataInstance().getMenuItem("background-theme")).setTitle(" ").build()));
-							i.addItem(filler);
 							i.addItem(border);
 							i.addItem(b -> b.setElement(getLeftItem()).setSlot(getLeft()).setTypeAndAddAction(ItemElement.ControlType.BUTTON_BACK, click -> {
 								click.setCancelled(true);
@@ -2115,8 +2036,11 @@ public enum GUI {
 						.setHost(api.getPlugin())
 						.setKey("ClansPro:" + clan.getName() + "-members-edit")
 						.setSize(getSize())
-						.setTitle(Clan.ACTION.color(ClansAPI.getDataInstance().getMenuTitle("member-list")))
+						.setTitle(Clan.ACTION.color("Members"))
 						.setStock(i -> {
+							FillerElement<?> filler = new FillerElement<>(i);
+							filler.add(ed -> ed.setElement(it -> it.setType(Optional.ofNullable(Items.findMaterial("bluestainedglasspane")).orElse(Items.findMaterial("stainedglasspane"))).setTitle(" ").build()));
+							i.addItem(filler);
 							BorderElement<?> border = new BorderElement<>(i);
 							for (Menu.Panel p : Menu.Panel.values()) {
 								if (p == Menu.Panel.MIDDLE) continue;
@@ -2126,9 +2050,6 @@ public enum GUI {
 									border.add(p, ed -> ed.setType(ItemElement.ControlType.ITEM_BORDER).setElement(it -> it.setType(Material.GRAY_STAINED_GLASS_PANE).setTitle(" ").build()));
 								}
 							}
-							FillerElement<?> filler = new FillerElement<>(i);
-							filler.add(ed -> ed.setType(ItemElement.ControlType.ITEM_FILLER).setElement(it -> it.setItem(ClansAPI.getDataInstance().getMenuItem("background-theme")).setTitle(" ").build()));
-							i.addItem(filler);
 							i.addItem(border);
 							i.addItem(b -> b.setElement(getLeftItem()).setSlot(getLeft()).setTypeAndAddAction(ItemElement.ControlType.BUTTON_BACK, click -> {
 								click.setCancelled(true);
@@ -2338,7 +2259,7 @@ public enum GUI {
 	}
 
 	Menu.Rows getSize() {
-		return Menu.Rows.valueOf(ClansAPI.getDataInstance().getMessageString("pagination-size"));
+		return Menu.Rows.valueOf(ClansAPI.getDataInstance().getMessageString("default-size"));
 	}
 
 	List<String> color(String... text) {
@@ -2350,25 +2271,26 @@ public enum GUI {
 	}
 
 	ItemStack getRightItem() {
-		ItemStack right = ClansAPI.getDataInstance().getMenuItem("navigate_right");
+		ItemStack right = new Item.Edit(Material.DIRT).setItem(SkullType.ARROW_BLUE_RIGHT.get()).build();
 		ItemMeta meta = right.getItemMeta();
-		meta.setDisplayName(StringUtils.use(ClansAPI.getDataInstance().getMenuNavigation("right")).translate());
+		meta.setDisplayName(StringUtils.use("&aNext.").translate());
 		right.setItemMeta(meta);
 		return right;
 	}
 
 	ItemStack getLeftItem() {
-		ItemStack left = ClansAPI.getDataInstance().getMenuItem("navigate_left");
+		ItemStack left = new Item.Edit(Material.DIRT).setItem(SkullType.ARROW_BLUE_LEFT.get()).build();
 		ItemMeta meta = left.getItemMeta();
-		meta.setDisplayName(StringUtils.use(ClansAPI.getDataInstance().getMenuNavigation("left")).translate());
+		meta.setDisplayName(StringUtils.use("&aPrevious.").translate());
 		left.setItemMeta(meta);
 		return left;
 	}
 
 	ItemStack getBackItem() {
-		ItemStack back = ClansAPI.getDataInstance().getMenuItem("back");
+		ItemStack back = new Item.Edit(Material.DIRT).setItem(SkullType.ARROW_BLACK_DOWN.get()).build();
+		;
 		ItemMeta meta = back.getItemMeta();
-		meta.setDisplayName(StringUtils.use(ClansAPI.getDataInstance().getMenuNavigation("back")).translate());
+		meta.setDisplayName(StringUtils.use("&cBack.").translate());
 		back.setItemMeta(meta);
 		return back;
 	}

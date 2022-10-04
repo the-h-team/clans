@@ -20,14 +20,6 @@ Clans:
 
   ############################################################
   ##                                                        ##
-  ## Select a language for the configuration automatically! ##
-  ## Current turned in languages are: en-US, pt-BR          ##
-  ##                                                        ##
-  ############################################################
-  lang: 'en-US'
-
-  ############################################################
-  ##                                                        ##
   ## A single timer runs the whole show! Decide how frequent##
   ## the timer runs here!                                   ##
   ##                                                        ##
@@ -592,8 +584,9 @@ Addon:
   Vaults:
     enabled: true
     clearance: 1
-##------------------------
-## -- DO NOT EDIT BELOW --
-# Authors: Hempfest, ms5984
-##------------------------
-Version: 1.4.0
+##------------------------##
+## -- DO NOT EDIT BELOW --##
+##------------------------##
+Authors: [ "Hempfest", "ms5984" ]
+Version: 1.4.2
+Language: pt-BR

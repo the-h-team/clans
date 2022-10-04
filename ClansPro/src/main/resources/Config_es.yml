@@ -9,37 +9,39 @@
 #  ███    ███ ███▌    ▄   ███    ███ ███   ███    ▄█    ███        ███          ███    ███ ███    ███
 #  ████████▀  █████▄▄██   ███    █▀   ▀█   █▀   ▄████████▀        ▄████▀        ███    ███  ▀██████▀
 # ------------------------------------------------------------------------------███----███#
-# ------------------ Translation by: Hempfest & Matt --------------------------------- #
+# ------------------ Translation by: Lui --------------------------------------- #
 Clans:
   #################################
   ##                             ##
-  ## Allow plugin update checks? ##
+  ## ¿Permitir comprobaciones de ##
+  ## actualización de            ##
+  ## complementos?               ##
   ##                             ##
   #################################
   check-version: true
 
   ############################################################
   ##                                                        ##
-  ## A single timer runs the whole show! Decide how frequent##
-  ## the timer runs here!                                   ##
-  ##                                                        ##
+  ## ¡Un solo temporizador ejecuta todo el espectáculo!     ##
+  ## ¡Decide con qué frecuencia se ejecuta el temporizador  ##
+  ## aquí!                                                  ##
   ############################################################
   timer:
-    # Valid thresholds: [ MILLISECONDS, SECONDS, MINUTES, HOURS, DAYS ]
+    # Umbrales válidos: [ MILLISECONDS, SECONDS, MINUTES, HOURS, DAYS ]
     threshold: MILLISECONDS
     time-span: 40
 
   ##############################################
   ##                                          ##
-  ## Max amount of clans the server can have. ##
-  ##                                          ##
+  ## Cantidad máxima de clanes que puede      ##
+  ## tener el servidor.                       ##
   ##############################################
   max-clans: 60
 
   ##############################################
   ##                                          ##
-  ##   Max amount of power a clan can have.   ##
-  ##                                          ##
+  ##   Cantidad máxima de poder que puede     ##
+  ##   tener un clan.                         ##
   ##############################################
   max-power: 2000.0
 
@@ -60,8 +62,8 @@ Clans:
 
   #################################
   ##                             ##
-  ## Modify clan pvp mode change ##
-  ##          settings.          ##
+  ## Modificar la configuración  ##
+  ## de cambio del modo clan pvp ##
   ##                             ##
   #################################
   mode-change:
@@ -79,7 +81,7 @@ Clans:
 
   #################################
   ##                             ##
-  ##      Relation Settings      ##
+  ##      Ajustes de relación    ##
   ##                             ##
   #################################
   relations:
@@ -92,8 +94,8 @@ Clans:
 
   ######################################
   ##                                  ##
-  ## Clan pre-creation settings apply ##
-  ##                                  ##
+  ## Se aplica la configuración       ##
+  ## previa a la creación del clan    ##
   ######################################
   creation:
     charge: false
@@ -106,8 +108,8 @@ Clans:
 
   ########################
   ##                    ##
-  ## Clan bank settings ##
-  ##                    ##
+  ## Configuración del  ##
+  ## banco del clan     ##
   ########################
   banks:
     # Allow clans to enable the bank functions?
@@ -129,16 +131,16 @@ Clans:
 
   ###########################
   ##                       ##
-  ## Clan WORLD whitelist. ##
-  ##                       ##
+  ## Lista blanca del      ##
+  ## mundo del clan.       ##
   ###########################
   use-whitelist: true
   world-whitelist: [ "world", "world_nether", "world_the_end" ]
 
   ##########################
   ##                      ##
-  ## Clan NAME blacklist. ##
-  ##                      ##
+  ## Lista negra de       ##
+  ## NOMBRE del clan.     ##
   ##########################
   # Any words here found within a clans name will NOT be tolerated and an optional action will be enforced upon use.
   name-blacklist:
@@ -149,16 +151,16 @@ Clans:
 
   ##########################
   ##                      ##
-  ## Clan COLOR blacklist. ##
-  ##                      ##
+  ## Lista negra de       ##
+  ## clanes COLOR.        ##
   ##########################
   # Any color-codes attempted to be used from this list will NOT be allowed.
   color-blacklist: [ "&k" ]
 
   #########################
   ##                     ##
-  ## Clan claim settings ##
-  ##                     ##
+  ## Configuración de    ##
+  ## reclamo de clan     ##
   #########################
   land-claiming:
     allow: true
@@ -204,18 +206,18 @@ Clans:
     # Change the information displayed to the player
     in-land:
       # {0} = Claim owner
-      title: '&3&oOwned land &6{0}'
-      sub-title: 'This land is owned by &b{0}'
-      message: '&7You are now entering {0}&7''s land'
+      title: '&3&oDueño de la tierra &6{0}'
+      sub-title: 'Este terreno es propiedad de &b{0}'
+      message: '&7ahora estas entrando a la tierra de {0}&7'
     wilderness:
-      title: 'Leaving &6{0}'
-      sub-title: 'Leaving {0}''s land'
-      message: '&7Now leaving {0}&7''s land'
+      title: 'Saliendo &6{0}'
+      sub-title: 'Saliendo de la tierra de {0}.'
+      message: '&7Ahora estas saliendo de la tierra de {0}&7.'
 
   #################################
   ##                             ##
-  ## Clan friendly-fire settings ##
-  ##                             ##
+  ## Configuraciones de fuego    ##
+  ## amigo del clan              ##
   #################################
   friendly-fire:
     clearance: 3
@@ -249,8 +251,8 @@ Clans:
     send-messages: true
     # Change the messages for the raid-shield announcements, {0} = Configured prefix
     messages:
-      enabled: '{0} &8» &aRaid shield enabled.'
-      disabled: '{0} &8» &cRaid shield lifted.'
+      enabled: '{0} &8» &aEscudo de incursión habilitado.'
+      disabled: '{0} &8» &cEscudo de incursión deshabilitado.'
 
 
   ##################################
@@ -333,8 +335,6 @@ Clans:
       losing: 1.5
     # Change the max amount of clans allowed within a clan war. Hard-cap = 4
     max-clans: 2
-    # NEW! Change the max amount of clan wars allowed to be held.
-    max-wars: 3
     # The amount of members queued required to start a war.
     que-needed: 4
     # The amount of seconds to wait when a war is ready to start.
@@ -390,7 +390,7 @@ Formatting:
   # Allow console to spy on messages from clan/ally chat channels
   chat-spy-console: true
   # Change the format for the /clan message command
-  chat-message-format: '&7{0} say''s :'
+  chat-message-format: '&7{0} Dice:'
   # Allow clans to use gradients for clan coloring?
   gradient-name-coloring: true
   # NEW! Add lines to the information help book! Uncomment to use.
@@ -400,19 +400,19 @@ Formatting:
     give-power:
       add: 0.0
       announce: true
-      text: '&fPower &a+{0}'
+      text: '&fPoder &a+{0}'
     take-power:
       add: 0.0
       announce: true
-      text: '&fPower &c-{0}'
+      text: '&fPoder &c-{0}'
     give-claims:
       add: 0.0
       announce: true
-      text: '&fClaims &a+{0}'
+      text: '&fReclamar &a+{0}'
     take-claims:
       add: 0.0
       announce: true
-      text: '&fClaims &c-{0}'
+      text: '&fReclamar &c-{0}'
   # Change the prefix displayed for the plugin messaging.
   prefix:
     prefix: '&7['
@@ -436,10 +436,10 @@ Formatting:
       Full:
         # Note: Changing these styles will have an effect regardless of rank style.
         # They are displayed in certain areas of the plugin.
-        Member: 'Member'
-        Moderator: 'Moderator'
-        Admin: 'Admin'
-        Owner: 'Owner'
+        Member: 'Miembro'
+        Moderator: 'Moderador'
+        Admin: 'Administrador'
+        Owner: 'Dueño'
       Wordless:
         Member: '•'
         Moderator: '••'
@@ -456,22 +456,22 @@ Formatting:
         prefix: '&8(&3&lCC&8) &b{0} '
         divider: '&8: &r'
         highlight: '&8({2}{1}&8)'
-        hover: 'My clan rank is: &a{3}'
+        hover: 'El rango de mi clan es: &a{3}'
         # NEW! Words used from here will be filtered in game!
         filters:
-          faggot: 'cake'
-          nigger: 'cheese'
+          faggot: 'galleta'
+          nigger: 'queso'
 
       ally:
         # {0} = Player name, {1} = Clan name colored, {2} = Clan color, {3} = Player rank, {4} = Clan name colorless
         prefix: '&8(&2&lAC&8) &b{0} '
         divider: '&8: &r'
         highlight: '&8({2}{1}&8)'
-        hover: 'My clan rank is: &d{3}'
+        hover: 'El rango de mi clan es: &d{3}'
         # NEW! Words used from here will be filtered in game!
         filters:
-          faggot: 'cake'
-          nigger: 'cheese'
+          faggot: 'galleta'
+          nigger: 'queso'
 #-------------------------------------------------------------------
 #
 #----------------------------------------------------------------
@@ -504,9 +504,9 @@ Addon:
       # Otherwise the money will be taken from the killed player's wallet.
       take-from-killed: true
       # The message broadcast when a bounty gets called on a player.
-      called-message: '&6{PLAYER} &7from clan {CLAN} put a bounty on {TARGET} for &6&l$&e{BOUNTY}'
+      called-message: '&6{PLAYER} &7del clan {CLAN} puso una recompensa a {TARGET} de &6&l$&e{BOUNTY}'
       # The message broadcast when a players bounty gets collected.
-      defeat-message: '&c&o{KILLER} from clan {KILLER_CLAN} collected the &6${BOUNTY} &c&obounty for killing {PLAYER}'
+      defeat-message: '&c&o{KILLER} del clan {KILLER_CLAN} recolectó la recompensa &6${BOUNTY} &c&opor matar a {PLAYER}'
   ##################################################################
   ##                                                              ##
   ## Allows users to see chunk borders in relation to clan status ##
@@ -535,7 +535,7 @@ Addon:
     required-creation-power: 180.00
     roundtable:
       # The consistent name of the hierarchy of clan users.
-      name: 'Roundtable'
+      name: 'MesaRedonda'
       # The amount of clan power required to start the roundtable.
       required-power: 10000.00
       perms:
@@ -589,4 +589,4 @@ Addon:
 ##------------------------##
 Authors: [ "Hempfest", "ms5984" ]
 Version: 1.4.2
-Language: en-US
+Language: es-ES

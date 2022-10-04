@@ -4,7 +4,7 @@ authors: [ Hempfest, ms5984 ]
 api-version: 1.13
 depend: [ Labyrinth ]
 softdepend: [ Enterprise, Vault ]
-loadbefore: [ DiscordSRV ]
+loadbefore: [ DiscordSRV, Guppy ]
 description: A premium & unique player grouping plugin.
 website: https://github.com/the-h-team/ClansPro/wiki
 main: com.github.sanctum.clans.ClansJavaPlugin

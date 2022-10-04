@@ -12,6 +12,7 @@ import com.github.sanctum.clans.bridge.external.DynmapAddon;
 import com.github.sanctum.clans.bridge.internal.StashesAddon;
 import com.github.sanctum.clans.bridge.internal.VaultsAddon;
 import com.github.sanctum.clans.construct.DataManager;
+import com.github.sanctum.clans.construct.api.AbstractGameRule;
 import com.github.sanctum.clans.construct.api.BanksAPI;
 import com.github.sanctum.clans.construct.api.Channel;
 import com.github.sanctum.clans.construct.api.Claim;
@@ -47,15 +48,13 @@ import com.github.sanctum.panther.annotation.Ordinal;
 import com.github.sanctum.panther.event.VentMap;
 import com.github.sanctum.panther.file.Configurable;
 import com.github.sanctum.panther.placeholder.PlaceholderRegistration;
+import com.github.sanctum.panther.util.RandomID;
 import com.github.sanctum.skulls.CustomHead;
 import java.lang.reflect.InvocationTargetException;
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -78,6 +77,7 @@ public final class StartProcedure {
 
 	final ClansJavaPlugin instance;
 	static boolean bail;
+	static boolean softBail;
 
 	public StartProcedure(ClansJavaPlugin clansJavaPlugin) {
 		this.instance = clansJavaPlugin;
@@ -93,7 +93,7 @@ public final class StartProcedure {
 
 	String replaceDevKey(String key, int id) {
 		if (key.startsWith("%%__USER")) {
-			return "DEV";
+			return "UN-VERIFIED";
 		}
 		if (key.startsWith("%%__NONCE")) {
 			return "" + id;
@@ -102,33 +102,33 @@ public final class StartProcedure {
 	}
 
 	List<String> getLogo() {
-		return new ArrayList<>(Arrays.asList("   ▄▄▄·▄▄▄        ▄▄ ", "  ▐█ ▄█▀▄ █·▪     ██▌" + "  User ID: ", "   ██▀·▐▀▀▄  ▄█▀▄ ▐█·" + "   " + replaceDevKey(instance.USER_ID, 0), "  ▐█▪·•▐█•█▌▐█▌.▐▌.▀ " + "  Unique ID: ", "  .▀   .▀  ▀ ▀█▄▀▪ ▀ " + "   " + replaceDevKey(instance.NONCE, 1)));
+		return new ArrayList<>(Arrays.asList("   ▄▄▄·▄▄▄        ▄▄ ", "  ▐█ ▄█▀▄ █·▪     ██▌" + "  User ID: ", "   ██▀·▐▀▀▄  ▄█▀▄ ▐█·" + "   " + replaceDevKey(instance.USER_ID, 0), "  ▐█▪·•▐█•█▌▐█▌.▐▌.▀ " + "  Unique ID: ", "  .▀   .▀  ▀ ▀█▄▀▪ ▀ " + "   " + replaceDevKey(instance.NONCE, Integer.parseInt(new RandomID(5, "0123456789").generate()))));
 	}
 
 	@Ordinal
 	void x() {
 		if (System.getProperty("RELOAD") != null && System.getProperty("RELOAD").equals("TRUE")) {
-			bail = true;
-			FileManager file = instance.getFileList().get("ignore", Configurable.Type.JSON);
-			String location = new Date().toInstant().atZone(ZoneId.systemDefault()).format(DateTimeFormatter.ISO_LOCAL_DATE);
-			List<String> toAdd = new ArrayList<>(file.getRoot().getStringList(location));
-			toAdd.add("RELOAD DETECTED! Shutting down...");
-			toAdd.add("      ██╗");
-			toAdd.add("  ██╗██╔╝");
-			toAdd.add("  ╚═╝██║ ");
-			toAdd.add("  ██╗██║ ");
-			toAdd.add("  ╚═╝╚██╗");
-			toAdd.add("      ╚═╝");
-			toAdd.add("(You are not supported in the case of corrupt data)");
-			toAdd.add("(Reloading is NEVER safe and you should always restart instead.)");
-			for (String t : toAdd) {
-				instance.getLogger().severe(t);
-			}
-			file.write(t -> t.set(location, toAdd));
-			Bukkit.getPluginManager().disablePlugin(instance);
+			instance.getLogger().warning("Attempting soft load. (Reload)");
+			instance.getLogger().warning("This feature can work but is not recommended. You should always restart to apply major changes.");
+			softBail = true;
 		} else {
 			System.setProperty("RELOAD", "FALSE");
 		}
+		// Pre-handle game rule injection.
+		LabyrinthProvider.getInstance().getLocalPrintManager().register(() -> {
+			Map<String, Object> map = new HashMap<>();
+			DataManager manager = ClansAPI.getDataInstance();
+			manager.getConfig().getRoot().reload();
+			manager.getMessages().getRoot().reload();
+			map.put(AbstractGameRule.WAR_START_TIME, manager.getConfigInt("Clans.war.start-wait"));
+			map.put(AbstractGameRule.BLOCKED_WAR_COMMANDS, manager.getConfig().getRoot().getStringList("Clans.war.blocked-commands"));
+			map.put(AbstractGameRule.MAX_CLANS, manager.getConfigInt("Clans.max-clans"));
+			map.put(AbstractGameRule.MAX_POWER, manager.getConfig().getRoot().getNode("Clans.max-power").toPrimitive().getDouble());
+			map.put(AbstractGameRule.DEFAULT_WAR_MODE, manager.getConfigString("Clans.mode-change.default"));
+			map.putAll(manager.getResetTable().values());
+			manager.getResetTable().clear();
+			return map;
+		}, instance.getLocalPrintKey());
 	}
 
 	@Ordinal(1)
@@ -146,6 +146,9 @@ public final class StartProcedure {
 	@Ordinal(2)
 	void b() {
 		if (bail) return;
+		if (softBail) {
+			VentMap.getInstance().unsubscribeAll(instance);
+		}
 		instance.getLogger().info("- Starting registry procedures.");
 		instance.dataManager.copyDefaults();
 		new Registry<>(Listener.class).source(instance).filter("com.github.sanctum.clans.listener").operate(listener -> VentMap.getInstance().subscribe(instance, listener));
@@ -181,17 +184,19 @@ public final class StartProcedure {
 	@Ordinal(6)
 	void f() {
 		if (bail) return;
-		TaskScheduler.of(() -> {
-			instance.getLogger().info("- Checking for placeholders.");
-			if (Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI")) {
-				new PapiPlaceholders(instance).register();
-				new PantherPlaceholders(instance).register();
-				instance.getLogger().info("- PlaceholderAPI found! Loading clans placeholders");
-			} else {
-				PlaceholderRegistration.getInstance().registerTranslation(new PantherPlaceholders(instance));
-				instance.getLogger().info("- PlaceholderAPI not found, loading labyrinth provision.");
-			}
-		}).scheduleLater(38);
+		if (!softBail) {
+			TaskScheduler.of(() -> {
+				instance.getLogger().info("- Checking for placeholders.");
+				if (Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI")) {
+					new PapiPlaceholders(instance).register();
+					new PantherPlaceholders(instance).register();
+					instance.getLogger().info("- PlaceholderAPI found! Loading clans placeholders");
+				} else {
+					PlaceholderRegistration.getInstance().registerTranslation(new PantherPlaceholders(instance));
+					instance.getLogger().info("- PlaceholderAPI not found, loading labyrinth provision.");
+				}
+			}).scheduleLater(38);
+		}
 
 		if (!LabyrinthProvider.getInstance().isModded()) {
 			Consumer<Workbench> workbench = w -> {
@@ -357,6 +362,7 @@ public final class StartProcedure {
 	@Ordinal(11)
 	void k() {
 		if (bail) return;
+		if (softBail) return;
 		runMetrics(metrics -> {
 			metrics.addCustomChart(new Metrics.SimplePie("using_claiming", () -> {
 				String result = "No";
@@ -395,7 +401,6 @@ public final class StartProcedure {
 		if (ClansAPI.getDataInstance().updateConfigs()) {
 			instance.getLogger().info("- Configuration updated to latest.");
 		}
-		bail = true;
 	}
 
 	@Ordinal(13)
@@ -507,7 +512,7 @@ public final class StartProcedure {
 		}
 		FileManager man = instance.getFileList().get("heads", "Configuration/Data", Configurable.Type.JSON);
 		if (!man.getRoot().exists()) {
-			instance.getFileList().copy("heads.data", man);
+			instance.getFileList().copy("heads.json", man);
 			man.getRoot().reload();
 		}
 		CustomHead.Manager.newLoader(man.getRoot())

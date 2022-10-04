@@ -26,6 +26,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -136,24 +137,6 @@ public class DataManager {
 		return getConfig().getRoot().getBoolean(path);
 	}
 
-	public String getMenuTitle(String menu) {
-		FileManager main = ClansAPI.getInstance().getFileList().get("Messages", "Configuration");
-		create(main);
-		return main.getRoot().getString("menu-titles." + menu);
-	}
-
-	public String getMenuCategory(String menu) {
-		FileManager main = ClansAPI.getInstance().getFileList().get("Messages", "Configuration");
-		create(main);
-		return main.getRoot().getString("menu-categories." + menu);
-	}
-
-	public String getMenuNavigation(String menu) {
-		FileManager main = ClansAPI.getInstance().getFileList().get("Messages", "Configuration");
-		create(main);
-		return main.getRoot().getString("gui-navigation." + menu);
-	}
-
 	private ItemStack improvise(String value) {
 		Material mat = Items.findMaterial(value);
 		if (mat != null) {
@@ -165,18 +148,6 @@ public class DataManager {
 				return CustomHeadLoader.provide(value);
 			}
 		}
-	}
-
-	public ItemStack getMenuItem(String object) {
-		FileManager main = ClansAPI.getInstance().getFileList().get("Messages", "Configuration");
-		create(main);
-		return improvise(Objects.requireNonNull(main.getRoot().getString("menu-items." + object)));
-	}
-
-	public Material getMenuMaterial(String object) {
-		FileManager main = ClansAPI.getInstance().getFileList().get("Messages", "Configuration");
-		create(main);
-		return Items.findMaterial(Objects.requireNonNull(main.getRoot().getString("menu-items." + object)));
 	}
 
 	public String getMessageString(String path) {
@@ -253,17 +224,45 @@ public class DataManager {
 
 			TaskScheduler.of(() -> {
 				InputStream mainGrab;
-				if (type != null) {
-					if (type.equals("JSON")) {
-						mainGrab = api.getPlugin().getResource("Config_json.yml");
-					} else {
-						mainGrab = api.getPlugin().getResource("Config.yml");
-					}
-				} else {
-					mainGrab = api.getPlugin().getResource("Config.yml");
-				}
 				InputStream msgGrab;
-				msgGrab = api.getPlugin().getResource("Messages.yml");
+				switch (main.read(c -> c.getString("Clans.lang")).toLowerCase(Locale.ROOT)) {
+					case "pt-br":
+						msgGrab = api.getPlugin().getResource("Messages_pt_br.yml");
+						if (type != null) {
+							if (type.equals("JSON")) {
+								mainGrab = api.getPlugin().getResource("Config_pt_br_json.yml");
+							} else {
+								mainGrab = api.getPlugin().getResource("Config_pt_br.yml");
+							}
+						} else {
+							mainGrab = api.getPlugin().getResource("Config_pt_br.yml");
+						}
+						break;
+					case "es-es":
+						msgGrab = api.getPlugin().getResource("Messages_es.yml");
+						if (type != null) {
+							if (type.equals("JSON")) {
+								mainGrab = api.getPlugin().getResource("Config_es_json.yml");
+							} else {
+								mainGrab = api.getPlugin().getResource("Config_es.yml");
+							}
+						} else {
+							mainGrab = api.getPlugin().getResource("Config_es.yml");
+						}
+						break;
+					default:
+						msgGrab = api.getPlugin().getResource("Messages.yml");
+						if (type != null) {
+							if (type.equals("JSON")) {
+								mainGrab = api.getPlugin().getResource("Config_json.yml");
+							} else {
+								mainGrab = api.getPlugin().getResource("Config.yml");
+							}
+						} else {
+							mainGrab = api.getPlugin().getResource("Config.yml");
+						}
+						break;
+				}
 				if (mainGrab == null) throw new IllegalStateException("Unable to load Config.yml from the jar!");
 				if (msgGrab == null) throw new IllegalStateException("Unable to load Messages.yml from the jar!");
 				FileList.copy(mainGrab, main.getRoot().getParent());

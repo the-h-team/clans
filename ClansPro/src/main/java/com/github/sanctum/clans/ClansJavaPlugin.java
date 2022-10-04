@@ -8,7 +8,6 @@ import com.github.sanctum.clans.construct.ClanManager;
 import com.github.sanctum.clans.construct.CommandManager;
 import com.github.sanctum.clans.construct.DataManager;
 import com.github.sanctum.clans.construct.ShieldManager;
-import com.github.sanctum.clans.construct.api.AbstractGameRule;
 import com.github.sanctum.clans.construct.api.Claim;
 import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClansAPI;
@@ -48,9 +47,7 @@ import com.github.sanctum.panther.util.OrdinalProcedure;
 import com.github.sanctum.panther.util.Task;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
-import java.util.HashMap;
 import java.util.Locale;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
@@ -132,24 +129,6 @@ public class ClansJavaPlugin extends JavaPlugin implements ClansAPI, Vent.Host {
 		Configurable.registerClass(Claim.class);
 		ConfigurationSerialization.registerClass(Claim.class);
 		ConfigurationSerialization.registerClass(Clan.class);
-
-		// Pre-handle game rule injection.
-		LabyrinthProvider.getInstance().getLocalPrintManager().register(() -> {
-			Map<String, Object> map = new HashMap<>();
-			DataManager manager = ClansAPI.getDataInstance();
-			manager.getConfig().getRoot().reload();
-			manager.getMessages().getRoot().reload();
-			map.put(AbstractGameRule.WAR_START_TIME, manager.getConfigInt("Clans.war.start-wait"));
-			map.put(AbstractGameRule.BLOCKED_WAR_COMMANDS, manager.getConfig().getRoot().getStringList("Clans.war.blocked-commands"));
-			map.put(AbstractGameRule.MAX_CLANS, manager.getConfigInt("Clans.max-clans"));
-			map.put(AbstractGameRule.MAX_POWER, manager.getConfig().getRoot().getNode("Clans.max-power").toPrimitive().getDouble());
-			map.put(AbstractGameRule.DEFAULT_WAR_MODE, manager.getConfigString("Clans.mode-change.default"));
-			map.put(AbstractGameRule.CLAN_ROSTER_TOP_TITLE, manager.getMenuTitle("top-list"));
-			map.put(AbstractGameRule.CLAN_ROSTER_TITLE, manager.getMenuTitle("roster-list"));
-			map.putAll(manager.getResetTable().values());
-			manager.getResetTable().clear();
-			return map;
-		}, getLocalPrintKey());
 
 		getClaimManager().getFlagManager().register(DefaultClaimFlag.values());
 
