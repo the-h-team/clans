@@ -157,6 +157,7 @@ Commands:
   removeenemy:
     text: '&7|&e) &6{label} &fenemy <&cremove&f> <&7clanName&f>'
     permission: 'enemy.remove'
+
 #=====================================================#
 #  ██╗   ██╗ █████╗ ██╗     ██╗██████╗
 #  ██║   ██║██╔══██╗██║     ██║██╔══██╗
@@ -224,6 +225,7 @@ Response:
   bank-hover-withdraw: 'Retire dinheiro do banco do clã' #describes withdraw subcommand
   bank-deposit-message-player: '&7Você depositou &a{0} &7no banco do clã.'
   bank-withdraw-message-player: '&7Você retirou &c{0} &7do banco do clã.'
+
   #==========================================================================#
   #  ███╗   ██╗ ██████╗ ███╗   ██╗      ██╗   ██╗ █████╗ ██╗     ██╗██████╗
   #  ████╗  ██║██╔═══██╗████╗  ██║      ██║   ██║██╔══██╗██║     ██║██╔══██╗
@@ -316,6 +318,7 @@ Response:
   message: '&7|&e) &fUso inválido : /clan message <message>'
   war-usage: '&7|&e) &fUso inválido : /clan war <clanName>'
   peace-usage: '&7|&e) &fUso inválido : /clan peace <clanName>'
+
   # =================================================#
   #  ██████╗  █████╗ ███╗   ██╗██╗  ██╗███████╗
   #  ██╔══██╗██╔══██╗████╗  ██║██║ ██╔╝██╔════╝
@@ -339,6 +342,99 @@ Response:
   bank-transaction-withdraw: 'Transação bancária [{0}]: {1} withdrew {2} from clan {3}'
   # {0} = clanId
   bank-verbose-clan-id: 'clanId={0}'
+
+#==================================#
+#  ██╗███╗   ██╗███████╗ ██████╗
+#  ██║████╗  ██║██╔════╝██╔═══██╗
+#  ██║██╔██╗ ██║█████╗  ██║   ██║
+#  ██║██║╚██╗██║██╔══╝  ██║   ██║
+#  ██║██║ ╚████║██║     ╚██████╔╝
+#  ╚═╝╚═╝  ╚═══╝╚═╝      ╚═════╝
+#==================================#
+info:
+  line-1:
+    prefix: '&f['
+    text: '&#ed601a&lStats'
+    suffix: '&f]'
+    # 0 = clan tag, 1 = clan description, 2 = clan power level, 3 = full clan color code, 4 = current owned clan claims, 5 = current clan max claims, 6 = clan allies, 7 = clan enemies, 8 = clan alliance requests, 9 = clan color isolated.
+    hover: [ "{9}Name: &f{0}", "{9}Description: &f{1}", "{9}Power: &f{2}", "{9}Color: &f{3}", "{9}Claims: &6{4}&f/&6{5}", "{9}Allies: &f{6}", "{9}Enemies: &f{7}", "{9}Requests: &f{8}" ]
+    # Un-comment the below sections to use, only one click action can be used at a time. they can go on any line or appendage.
+    #command: 'clan info'
+    #suggest: '/clan info'
+    #copy: 'This text will be copied'
+    #url: 'This url can be copied'
+  line-2:
+    text: ' '
+  line-3:
+    prefix: '&f['
+    text: '&#ed601a&lRoster'
+    suffix: '&f]'
+    hover: [ "&bClick to view the clan roster." ]
+    command: 'clan members'
+    appendage:
+      prefix: '&f['
+      text: '&#ed601a&lPerms'
+      suffix: '&f]'
+      hover: [ "&bClick to manage clan permissions" ]
+      command: 'clan perms'
+  line-4:
+    text: ' '
+  line-5:
+    prefix: '&f['
+    text: '&#ed601a&lMode'
+    suffix: '&f]'
+    hover: [ "&bClick to toggle your clan's pvp mode." ]
+    command: 'clan mode'
+  line-6:
+    text: ' '
+  line-7:
+    prefix: '&f['
+    text: '&#ed601a&lBank'
+    suffix: '&f]'
+    hover: [ "&bClick to access the clan bank" ]
+    command: 'clan bank'
+    appendage:
+      prefix: '&f['
+      text: '&#ed601a&lBase'
+      suffix: '&f]'
+      hover: [ "&bClick to teleport to the clan base." ]
+      command: 'clan base'
+      appendage:
+        prefix: '&f['
+        text: '&#ed601a&lVault'
+        suffix: '&f]'
+        hover: [ "&bClick to open the clan vault." ]
+        command: 'clan vault'
+  line-8:
+    text: ' '
+  line-9:
+    prefix: '&f['
+    text: '&#ed601a&lStash'
+    suffix: '&f]'
+    hover: [ "&bClick to open the clan stash. (Works in base chunk only)" ]
+    command: 'clan stash'
+info-other:
+  line-1:
+    prefix: '&f['
+    text: '&#179967&lStats'
+    suffix: '&f]'
+    # 0 = clan tag, 1 = clan description, 2 = clan power level, 3 = full clan color code, 4 = current owned clan claims, 5 = current clan max claims, 9 = clan color isolated.
+    hover: [ "{9}Name: &f{0}", "{9}Description: &f{1}", "{9}Power: &f{2}", "{9}Color: &f{3}", "{9}Claims: &6{4}&f/&6{5}" ]
+    # Un-comment the below sections to use, only one click action can be used at a time. they can go on any line or appendage.
+    #command: 'clan info'
+    #suggest: '/clan info'
+    #copy: 'This text will be copied'
+    #url: 'This url can be copied'
+  line-2:
+    text: ' '
+  line-3:
+    prefix: '&f['
+    text: '&#179967&lRoster'
+    suffix: '&f]'
+    hover: [ "&bClick to view our clan roster." ]
+    command: 'clan members {0}'
+  line-4:
+    text: ' '
 
 #==================================#
 #   ██████╗ ██╗   ██╗██╗

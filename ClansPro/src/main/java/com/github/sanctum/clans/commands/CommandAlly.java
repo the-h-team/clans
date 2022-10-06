@@ -8,7 +8,6 @@ import com.github.sanctum.clans.construct.api.Clearance;
 import com.github.sanctum.clans.construct.extra.StringLibrary;
 import com.github.sanctum.labyrinth.formatting.completion.SimpleTabCompletion;
 import com.github.sanctum.labyrinth.formatting.completion.TabCompletionIndex;
-import com.github.sanctum.panther.util.HUID;
 import java.util.ArrayList;
 import java.util.List;
 import org.bukkit.Bukkit;
@@ -108,7 +107,7 @@ public class CommandAlly extends ClanSubCommand {
 						lib.sendMessage(p, lib.clanUnknown(args[1]));
 						return true;
 					}
-					Clan t = ClansAPI.getInstance().getClanManager().getClan(HUID.parseID(args[1]).toID());
+					Clan t = ClansAPI.getInstance().getClanManager().getClan(ClansAPI.getInstance().getClanManager().getClanID(args[1]));
 					if (args[1].equals(c.getName())) {
 						lib.sendMessage(p, lib.allianceDenial());
 						return true;

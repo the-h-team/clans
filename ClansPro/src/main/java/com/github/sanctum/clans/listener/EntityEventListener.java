@@ -28,6 +28,7 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.entity.EntitySpawnEvent;
+import org.bukkit.event.entity.ExplosionPrimeEvent;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 
@@ -81,6 +82,16 @@ public class EntityEventListener implements Listener {
 			Reservoir r = Reservoir.get(e.getEntity());
 			if (r != null) {
 				r.take(e.getDamage());
+				e.setCancelled(true);
+			}
+		}
+	}
+
+	@EventHandler(priority = EventPriority.HIGHEST)
+	public void onExplode(ExplosionPrimeEvent e) {
+		if (e.getEntity() instanceof EnderCrystal) {
+			Reservoir r = Reservoir.get(e.getEntity());
+			if (r != null) {
 				e.setCancelled(true);
 			}
 		}

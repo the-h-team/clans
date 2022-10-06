@@ -76,7 +76,6 @@ import org.bukkit.permissions.Permission;
 public final class StartProcedure {
 
 	final ClansJavaPlugin instance;
-	static boolean bail;
 	static boolean softBail;
 
 	public StartProcedure(ClansJavaPlugin clansJavaPlugin) {
@@ -110,6 +109,9 @@ public final class StartProcedure {
 		if (System.getProperty("RELOAD") != null && System.getProperty("RELOAD").equals("TRUE")) {
 			instance.getLogger().warning("Attempting soft load. (Reload)");
 			instance.getLogger().warning("This feature can work but is not recommended. You should always restart to apply major changes.");
+			TaskScheduler.of(() -> {
+				Bukkit.broadcastMessage(StringUtils.use(instance.getPrefix() + " Alright... so it appears an admin has reloaded the server, someone will need to re-log. Just one person.").translate());
+			}).scheduleLater(20L);
 			softBail = true;
 		} else {
 			System.setProperty("RELOAD", "FALSE");
@@ -133,7 +135,6 @@ public final class StartProcedure {
 
 	@Ordinal(1)
 	void a() {
-		if (bail) return;
 		instance.getLogger().info("▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬");
 		instance.getLogger().info("- Clans [Pro]. Loading plugin information...");
 		instance.getLogger().info("▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬");
@@ -145,7 +146,6 @@ public final class StartProcedure {
 
 	@Ordinal(2)
 	void b() {
-		if (bail) return;
 		if (softBail) {
 			VentMap.getInstance().unsubscribeAll(instance);
 		}
@@ -163,7 +163,6 @@ public final class StartProcedure {
 
 	@Ordinal(4)
 	void d() {
-		if (bail) return;
 		sendBorder();
 		instance.getLogger().info("- Cleaning misc files.");
 		final FileList fileList = instance.getFileList();
@@ -183,7 +182,6 @@ public final class StartProcedure {
 
 	@Ordinal(6)
 	void f() {
-		if (bail) return;
 		if (!softBail) {
 			TaskScheduler.of(() -> {
 				instance.getLogger().info("- Checking for placeholders.");
@@ -231,7 +229,6 @@ public final class StartProcedure {
 
 	@Ordinal(7)
 	void g() {
-		if (bail) return;
 		sendBorder();
 		if (ClansAPI.getDataInstance().isTrue("Clans.check-version")) {
 			ClansAPI.getInstance().isUpdated();
@@ -243,7 +240,6 @@ public final class StartProcedure {
 
 	@Ordinal(8)
 	void h() {
-		if (bail) return;
 		ClansAPI.getInstance().getShieldManager().setEnabled(true);
 		boolean configAllow = instance.dataManager.getConfig().getRoot().getBoolean("Clans.raid-shield.allow");
 		if (Claim.ACTION.isEnabled()) {
@@ -266,7 +262,6 @@ public final class StartProcedure {
 
 	@Ordinal(9)
 	void i() {
-		if (bail) return;
 		ClanAddonQueue queue = ClanAddonQueue.getInstance();
 		queue.load(instance, "com.github.sanctum.clans.bridge.internal");
 		TaskScheduler.of(() -> {
@@ -335,7 +330,6 @@ public final class StartProcedure {
 
 	@Ordinal(10)
 	void j() {
-		if (bail) return;
 		final Permission balance = new Permission(BankPermissions.BANKS_BALANCE.getNode());
 		final Permission deposit = new Permission(BankPermissions.BANKS_DEPOSIT.getNode());
 		final Permission withdraw = new Permission(BankPermissions.BANKS_WITHDRAW.getNode());
@@ -361,7 +355,6 @@ public final class StartProcedure {
 
 	@Ordinal(11)
 	void k() {
-		if (bail) return;
 		if (softBail) return;
 		runMetrics(metrics -> {
 			metrics.addCustomChart(new Metrics.SimplePie("using_claiming", () -> {
@@ -397,7 +390,6 @@ public final class StartProcedure {
 
 	@Ordinal(12)
 	void l() {
-		if (bail) return;
 		if (ClansAPI.getDataInstance().updateConfigs()) {
 			instance.getLogger().info("- Configuration updated to latest.");
 		}
@@ -405,7 +397,6 @@ public final class StartProcedure {
 
 	@Ordinal(13)
 	void m() {
-		if (bail) return;
 		// System adapter for locating MOTD carriers.
 		LogoHolder.newAdapter(location -> {
 			LogoHolder.Carrier def = ReservedLogoCarrier.MOTD;
@@ -423,7 +414,6 @@ public final class StartProcedure {
 
 	@Ordinal(14)
 	void n() {
-		if (bail) return;
 		Channel.CLAN.register(context -> {
 			String test = context;
 			for (String word : instance.dataManager.getConfig().getRoot().getNode("Formatting.Chat.Channel.clan.filters").getKeys(false)) {
@@ -481,7 +471,6 @@ public final class StartProcedure {
 
 	@Ordinal(15)
 	void o() {
-		if (bail) return;
 		TaskScheduler.of(() -> {
 			for (Clan owner : instance.getClanManager().getClans()) {
 				TaskScheduler.of(() -> {
@@ -505,7 +494,6 @@ public final class StartProcedure {
 
 	@Ordinal(16)
 	void p() {
-		if (bail) return;
 		FileManager th = instance.getFileList().get("heads", "Configuration", Configurable.Type.JSON);
 		if (th.getRoot().exists()) {
 			th.toMoved("Configuration/Data");
@@ -522,7 +510,6 @@ public final class StartProcedure {
 
 	@Ordinal(17)
 	void q() {
-		if (bail) return;
 		// load dockets
 		ClansAPI api = ClansAPI.getInstance();
 		MemoryDocket<Clan> rosterDocket = Docket.newInstance(ClansAPI.getDataInstance().getMessages().getRoot().getNode("menu.roster"));
@@ -542,12 +529,6 @@ public final class StartProcedure {
 		rosterSelect.setNamePlaceholder(":not_supported:");
 		rosterSelect.load();
 		DocketUtils.load(rosterSelect.toMenu().getKey().orElseThrow(RuntimeException::new), rosterSelect);
-	}
-
-	@Ordinal(18)
-	void r() {
-		if (bail) return;
-		// I dont even know what goes here but something should...
 	}
 
 

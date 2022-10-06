@@ -120,6 +120,7 @@ public class PlayerEventListener implements Listener {
 	});
 	ItemMatcher itemMatcher;
 	ItemMatcher tokenMatcher;
+	final int time_span = ClansAPI.getDataInstance().getConfigInt("Clans.timer.time-span");
 
 	@Subscribe(priority = Vent.Priority.LOW)
 	public void onInitial(TimerEvent e) {
@@ -214,24 +215,20 @@ public class PlayerEventListener implements Listener {
 				LogoHolder.Carrier t = LogoHolder.getCarrier(test.getLocation());
 				if (t != null) {
 					Location location = new Location(t.getTop().getWorld(), t.getTop().getX(), t.getTop().getY(), t.getTop().getZ(), t.getTop().getYaw(), t.getTop().getPitch()).add(0, 0.5, 0);
-					PlayerLookAtCarrierEvent event = ClanVentBus.call(new PlayerLookAtCarrierEvent(p, t, "(" + t.getId() + ") " + OrdinalProcedure.select(t, 2).cast(() -> Clan.class).getName(), 20));
+					PlayerLookAtCarrierEvent event = ClanVentBus.call(new PlayerLookAtCarrierEvent(p, t, "(" + t.getId() + ") " + OrdinalProcedure.select(t, 2).cast(() -> Clan.class).getName(), time_span));
 					if (!event.isCancelled()) {
-						if (!STAND_MAP.containsKey(location)) {
-							ArmorStand stand = Entities.ARMOR_STAND.spawn(location, armorStand -> {
-								armorStand.setVisible(false);
-								armorStand.setMarker(true);
-								armorStand.setSmall(true);
-								armorStand.setCustomName(event.getTitle());
-								armorStand.setCustomNameVisible(true);
-							});
-							STAND_MAP.put(location, stand);
-							TaskScheduler.of(() -> {
-								if (stand.isValid()) {
-									STAND_MAP.remove(stand.getLocation());
-									stand.remove();
-								}
-							}).scheduleLater(event.getDespawn());
-						}
+						ArmorStand stand = Entities.ARMOR_STAND.spawn(location, armorStand -> {
+							armorStand.setVisible(false);
+							armorStand.setMarker(true);
+							armorStand.setSmall(true);
+							armorStand.setCustomName(event.getTitle());
+							armorStand.setCustomNameVisible(true);
+						});
+						TaskScheduler.of(() -> {
+							if (stand.isValid()) {
+								stand.remove();
+							}
+						}).scheduleLater(event.getDespawn());
 					}
 				}
 			}
@@ -256,42 +253,38 @@ public class PlayerEventListener implements Listener {
 						Location location = new Location(test.getLocation().getWorld(), test.getLocation().getX(), test.getLocation().getY(), test.getLocation().getZ(), test.getLocation().getYaw(), test.getLocation().getPitch()).add(0, 1.5, 0);
 						Location location2 = new Location(test.getLocation().getWorld(), test.getLocation().getX(), test.getLocation().getY(), test.getLocation().getZ(), test.getLocation().getYaw(), test.getLocation().getPitch()).add(0, 1.2, 0);
 						Location location3 = new Location(test.getLocation().getWorld(), test.getLocation().getX(), test.getLocation().getY(), test.getLocation().getZ(), test.getLocation().getYaw(), test.getLocation().getPitch()).add(0, 1.8, 0);
-						if (!STAND_MAP.containsKey(location)) {
-							ArmorStand stand = Entities.ARMOR_STAND.spawn(location, armorStand -> {
-								armorStand.setVisible(false);
-								armorStand.setMarker(true);
-								armorStand.setSmall(true);
-								armorStand.setCustomName(new FormattedString(new ProgressBar().setProgress((int) r.getPower()).setGoal(Math.max(250, (int) c.getPower())).setFullColor("&5&l").setPrefix(null).setSuffix(null).toString() + " &f(&6" + NumberFormat.getNumberInstance().format(c.getPower()) + "&f)").color().get());
-								armorStand.setCustomNameVisible(true);
-							});
-							STAND_MAP.put(location, stand);
-							ArmorStand stand2 = Entities.ARMOR_STAND.spawn(location3, armorStand -> {
-								armorStand.setVisible(false);
-								armorStand.setMarker(true);
-								armorStand.setSmall(true);
-								armorStand.setCustomName(new FormattedString(c.getPalette().toString(c.getName())).color().get());
-								armorStand.setCustomNameVisible(true);
-							});
-							ArmorStand stand3 = Entities.ARMOR_STAND.spawn(location2, armorStand -> {
-								armorStand.setVisible(false);
-								armorStand.setMarker(true);
-								armorStand.setSmall(true);
-								armorStand.setCustomName(new FormattedString("&5Reservoir").color().get());
-								armorStand.setCustomNameVisible(true);
-							});
-							TaskScheduler.of(() -> {
-								STAND_MAP.remove(stand.getLocation());
-								if (stand.isValid()) {
-									stand.remove();
-								}
-								if (stand2.isValid()) {
-									stand2.remove();
-								}
-								if (stand3.isValid()) {
-									stand3.remove();
-								}
-							}).scheduleLater(20);
-						}
+						ArmorStand stand = Entities.ARMOR_STAND.spawn(location, armorStand -> {
+							armorStand.setVisible(false);
+							armorStand.setMarker(true);
+							armorStand.setSmall(true);
+							armorStand.setCustomName(new FormattedString(new ProgressBar().setProgress((int) r.getPower()).setGoal(Math.max(250, (int) c.getPower())).setFullColor("&5&l").setPrefix(null).setSuffix(null).toString() + " &f(&6" + NumberFormat.getNumberInstance().format(c.getPower()) + "&f)").color().get());
+							armorStand.setCustomNameVisible(true);
+						});
+						ArmorStand stand2 = Entities.ARMOR_STAND.spawn(location3, armorStand -> {
+							armorStand.setVisible(false);
+							armorStand.setMarker(true);
+							armorStand.setSmall(true);
+							armorStand.setCustomName(new FormattedString(c.getPalette().toString(c.getName())).color().get());
+							armorStand.setCustomNameVisible(true);
+						});
+						ArmorStand stand3 = Entities.ARMOR_STAND.spawn(location2, armorStand -> {
+							armorStand.setVisible(false);
+							armorStand.setMarker(true);
+							armorStand.setSmall(true);
+							armorStand.setCustomName(new FormattedString("&5Reservoir").color().get());
+							armorStand.setCustomNameVisible(true);
+						});
+						TaskScheduler.of(() -> {
+							if (stand.isValid()) {
+								stand.remove();
+							}
+							if (stand2.isValid()) {
+								stand2.remove();
+							}
+							if (stand3.isValid()) {
+								stand3.remove();
+							}
+						}).scheduleLater(time_span);
 					}
 				}
 			}

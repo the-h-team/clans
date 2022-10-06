@@ -10,10 +10,10 @@ import com.github.sanctum.clans.construct.api.ClanBlueprint;
 import com.github.sanctum.clans.construct.api.ClanCooldown;
 import com.github.sanctum.clans.construct.api.ClansAPI;
 import com.github.sanctum.clans.construct.api.Consultant;
-import com.github.sanctum.clans.construct.api.GUI;
 import com.github.sanctum.clans.construct.api.Ticket;
 import com.github.sanctum.clans.construct.api.War;
 import com.github.sanctum.clans.construct.extra.AnimalConsultantListener;
+import com.github.sanctum.clans.construct.extra.InfoSection;
 import com.github.sanctum.clans.construct.impl.CooldownCreate;
 import com.github.sanctum.clans.construct.impl.SimpleEntry;
 import com.github.sanctum.clans.event.associate.AssociateDisplayInfoEvent;
@@ -43,6 +43,7 @@ import com.github.sanctum.labyrinth.library.TimeWatch;
 import com.github.sanctum.labyrinth.task.TaskScheduler;
 import com.github.sanctum.panther.event.Subscribe;
 import com.github.sanctum.panther.event.Vent;
+import com.github.sanctum.panther.file.Configurable;
 import java.math.BigDecimal;
 import java.util.Random;
 import java.util.UUID;
@@ -50,7 +51,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
-import org.bukkit.Color;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
@@ -240,63 +240,129 @@ public class ClanEventListener implements Listener {
 			String color;
 			FancyMessageChain chain = null;
 			String idMode = ClansAPI.getDataInstance().ID_MODE.containsKey(p) ? " &a(&e*" + c.getId() + "&a)" : "";
+			Configurable configurable = ClansAPI.getDataInstance().getMessages().getRoot();
 			switch (e.getType()) {
 				case OTHER:
 					color = "&2";
+					InfoSection section_1 = new InfoSection(configurable.getNode("info-other.line-1"));
+					FancyMessage section_1_msg = new FancyMessage();
+					if (section_1.getPrefix() != null) section_1_msg.then(section_1.getPrefix());
+					if (section_1.getText() != null) {
+						section_1_msg.then(section_1.getText());
+						if (!section_1.getHover().isEmpty()) {
+							section_1.getHover().forEach(s -> {
+								section_1_msg.hover(s.replace("{0}", c.getName() + idMode)
+										.replace("{1}", c.getDescription())
+										.replace("{2}", Clan.ACTION.format(c.getPower()))
+										.replace("{3}", (c.getPalette().isGradient() ? c.getPalette().toString((c.getPalette().toArray()[0]).replace("&", "").replace("#", "")) + "&f»" + c.getPalette().toString((c.getPalette().toArray()[1]).replace("&", "").replace("#", "")) : color.replace("&", "&f»" + color).replace("#", "&f»" + color)))
+										.replace("{4}", String.valueOf(c.getClaims().length))
+										.replace("{5}", String.valueOf(c.getClaimLimit()))
+										.replace("{9}", c.getPalette().getStart()));
+							});
+						}
+						if (section_1.getCommand() != null) {
+							section_1_msg.command(section_1.getCommand());
+						}
+						if (section_1.getSuggestion() != null) {
+							section_1_msg.suggest(section_1.getSuggestion());
+						}
+						if (section_1.getCopyText() != null) {
+							section_1_msg.copy(section_1.getCopyText());
+						}
+						if (section_1.getUrlCopyText() != null) {
+							section_1_msg.url(section_1.getUrlCopyText());
+						}
+					}
+					if (section_1.getSuffix() != null) section_1_msg.then(section_1.getSuffix());
+					InfoSection section_2 = new InfoSection(configurable.getNode("info-other.line-2"));
+					InfoSection section_3 = new InfoSection(configurable.getNode("info-other.line-3"));
+					InfoSection section_4 = new InfoSection(configurable.getNode("info-other.line-4"));
+					FancyMessage section_3_msg = new FancyMessage();
+					if (section_3.getPrefix() != null) section_3_msg.then(section_3.getPrefix());
+					if (section_3.getText() != null) {
+						section_3_msg.then(section_3.getText());
+						if (!section_3.getHover().isEmpty()) {
+							section_3.getHover().forEach(s -> {
+								section_3_msg.hover(s.replace("{0}", c.getName())
+										.replace("{1}", c.getDescription())
+										.replace("{2}", Clan.ACTION.format(c.getPower()))
+										.replace("{3}", (c.getPalette().isGradient() ? c.getPalette().toString((c.getPalette().toArray()[0]).replace("&", "").replace("#", "")) + "&f»" + c.getPalette().toString((c.getPalette().toArray()[1]).replace("&", "").replace("#", "")) : color.replace("&", "&f»" + color).replace("#", "&f»" + color)))
+										.replace("{4}", String.valueOf(c.getClaims().length))
+										.replace("{5}", String.valueOf(c.getClaimLimit()))
+										.replace("{9}", c.getPalette().getStart()));
+							});
+						}
+						if (section_3.getCommand() != null) {
+							section_3_msg.command(section_3.getCommand().replace("{0}", c.getName()));
+						}
+						if (section_3.getSuggestion() != null) {
+							section_3_msg.suggest(section_3.getSuggestion());
+						}
+						if (section_3.getCopyText() != null) {
+							section_3_msg.copy(section_3.getCopyText());
+						}
+						if (section_3.getUrlCopyText() != null) {
+							section_3_msg.url(section_3.getUrlCopyText());
+						}
+					}
+					if (section_3.getSuffix() != null) section_3_msg.then(section_3.getSuffix());
 					chain = new FancyMessageChain()
 							.append(space -> space.then(" "))
-							.append(top -> top.then(" ")
-									.then(" ")
-									.then(" ")
-									.then(" ")
-									.then(" ")
-									.then(" ")
-									.then(" ")
-									.then(" ")
-									.then(" ")
-									.then(" ")
-									.then("[")
-									.then("Stats").color(Color.GREEN).style(ChatColor.BOLD).hover(color + "Name: &f" + c.getName() + idMode).hover(color + "Description: &f" + c.getDescription()).hover(color + "Power: &f" + Clan.ACTION.format(c.getPower())).hover(color + "Color: &f" + (c.getPalette().isGradient() ? (c.getPalette().toArray()[0] + c.getPalette().toArray()[1]).replace("&", "").replace("#", "&f»" + color + "&r") : color.replace("&", "&f»" + color).replace("#", "&f»" + color))).hover(color + "Claims: &f" + c.getClaims().length + "/" + c.getClaimLimit())
-									.then("]")
-									.then(" ")
-									.then(" ")
-									.then(" ")
-									.then(" ")
-									.then(" ")
-									.then(" ")
-									.then(" ")
-									.then(" "))
-							.append(space -> space.then(" "))
-							.append(middle -> middle.then(" ")
-									.then(" ")
-									.then(" ")
-									.then(" ")
-									.then(" ")
-									.then(" ")
-									.then(" ")
-									.then(" ")
-									.then(" ")
-									.then("[")
-									.then("Roster").color(Color.GREEN).style(ChatColor.BOLD).hover(color + "Click to view our roster.").action(() -> {
-										if (ClansAPI.getDataInstance().getMessages().read(n -> n.getNode("menu.enabled").toPrimitive().getBoolean())) {
-											GUI.MEMBER_LIST.get(c).open(p);
-										} else {
-											new FancyMessage("&2" + c.getName() + " associates:").send(p).deploy();
-											new FancyMessage("&a&l&m---------------------------------").send(p).deploy();
-											c.getMembers().forEach(a -> new FancyMessage(" " + a.getRankFull() + " - " + c.getPalette().toString(a.getNickname())).send(p).queue());
-											new FancyMessage("&a&l&m---------------------------------").send(p).deploy();
-										}
-									})
-									.then("]")
-									.then(" ")
-									.then(" ")
-									.then(" ")
-									.then(" ")
-									.then(" ")
-									.then(" ")
-									.then(" ")
-									.then(" "))
-							.append(space -> space.then(" "));
+							.append(top -> {
+								top.then(" ")
+										.then(" ")
+										.then(" ")
+										.then(" ")
+										.then(" ")
+										.then(" ")
+										.then(" ")
+										.then(" ")
+										.then(" ")
+										.then(" ");
+								if (section_1.isValid()) {
+									top.append(section_1_msg);
+								}
+								top.then(" ")
+										.then(" ")
+										.then(" ")
+										.then(" ")
+										.then(" ")
+										.then(" ")
+										.then(" ")
+										.then(" ");
+							})
+							.append(space -> {
+								if (section_2.isValid()) {
+									space.append(section_2.toMsg());
+								}
+							})
+							.append(middle -> {
+								middle.then(" ")
+										.then(" ")
+										.then(" ")
+										.then(" ")
+										.then(" ")
+										.then(" ")
+										.then(" ")
+										.then(" ")
+										.then(" ");
+								if (section_3.isValid()) {
+									middle.append(section_3_msg);
+								}
+								middle.then(" ")
+										.then(" ")
+										.then(" ")
+										.then(" ")
+										.then(" ")
+										.then(" ")
+										.then(" ")
+										.then(" ");
+							})
+							.append(space -> {
+								if (section_4.isValid()) {
+									space.append(section_4.toMsg());
+								}
+							});
 					break;
 				case PERSONAL:
 					String allies = c.getRelation().getAlliance().stream().map(Nameable::getName).collect(Collectors.joining(", "));
@@ -315,105 +381,167 @@ public class ClanEventListener implements Listener {
 					String finalAllies = allies;
 					String finalEnemies = enemies;
 					String finalAlliesR = alliesR;
+					InfoSection line_1 = new InfoSection(configurable.getNode("info.line-1"));
+					FancyMessage line_1_msg = new FancyMessage();
+					if (line_1.getPrefix() != null) line_1_msg.then(line_1.getPrefix());
+					if (line_1.getText() != null) {
+						line_1_msg.then(line_1.getText());
+						if (!line_1.getHover().isEmpty()) {
+							line_1.getHover().forEach(s -> {
+								line_1_msg.hover(s.replace("{0}", c.getName() + idMode)
+										.replace("{1}", c.getDescription())
+										.replace("{2}", Clan.ACTION.format(c.getPower()))
+										.replace("{3}", (c.getPalette().isGradient() ? c.getPalette().toString((c.getPalette().toArray()[0]).replace("&", "").replace("#", "")) + "&f»" + c.getPalette().toString((c.getPalette().toArray()[1]).replace("&", "").replace("#", "")) : color.replace("&", "&f»" + color).replace("#", "&f»" + color)))
+										.replace("{4}", String.valueOf(c.getClaims().length))
+										.replace("{5}", String.valueOf(c.getClaimLimit()))
+										.replace("{6}", finalAllies)
+										.replace("{7}", finalEnemies)
+										.replace("{8}", finalAlliesR)
+										.replace("{9}", c.getPalette().getStart()));
+							});
+						}
+						if (line_1.getCommand() != null) {
+							line_1_msg.command(line_1.getCommand());
+						}
+						if (line_1.getSuggestion() != null) {
+							line_1_msg.suggest(line_1.getSuggestion());
+						}
+						if (line_1.getCopyText() != null) {
+							line_1_msg.copy(line_1.getCopyText());
+						}
+						if (line_1.getUrlCopyText() != null) {
+							line_1_msg.url(line_1.getUrlCopyText());
+						}
+					}
+					if (line_1.getSuffix() != null) line_1_msg.then(line_1.getSuffix());
+					InfoSection line_2 = new InfoSection(configurable.getNode("info.line-2"));
+					InfoSection line_3 = new InfoSection(configurable.getNode("info.line-3"));
+					InfoSection line_4 = new InfoSection(configurable.getNode("info.line-4"));
+					InfoSection line_5 = new InfoSection(configurable.getNode("info.line-5"));
+					InfoSection line_6 = new InfoSection(configurable.getNode("info.line-6"));
+					InfoSection line_7 = new InfoSection(configurable.getNode("info.line-7"));
+					InfoSection line_8 = new InfoSection(configurable.getNode("info.line-8"));
+					InfoSection line_9 = new InfoSection(configurable.getNode("info.line-9"));
 					chain = new FancyMessageChain()
-							.append(top -> top.then(" ")
-									.then(" ")
-									.then(" ")
-									.then(" ")
-									.then(" ")
-									.then(" ")
-									.then(" ")
-									.then(" ")
-									.then(" ")
-									.then(" ")
-									.then("[")
-									.then("Stats").color(Color.RED).style(ChatColor.BOLD).hover(color + "Name: &f" + c.getName() + idMode).hover(color + "Description: &f" + c.getDescription()).hover(color + "Power: &f" + Clan.ACTION.format(c.getPower())).hover(color + "Color: " + (c.getPalette().isGradient() ? c.getPalette().toString((c.getPalette().toArray()[0]).replace("&", "").replace("#", "")) + "&f»" + c.getPalette().toString((c.getPalette().toArray()[1]).replace("&", "").replace("#", "")): color.replace("&", "&f»" + color).replace("#", "&f»" + color))).hover(color + "Claims: &f" + c.getClaims().length + "/" + c.getClaimLimit()).hover(color + "Allies: &f" + finalAllies).hover(color + "Enemies: &f" + finalEnemies).hover(color + "Requests: &f" + finalAlliesR)
-									.then("]")
-									.then(" ")
-									.then(" ")
-									.then(" ")
-									.then(" ")
-									.then(" ")
-									.then(" ")
-									.then(" ")
-									.then(" "))
-							.append(space1 -> space1.then(" "))
-							.append(top_middle -> top_middle.then(" ")
-									.then("[")
-									.then("Roster").color(Color.RED).style(ChatColor.BOLD).action(() -> {
-										if (ClansAPI.getDataInstance().getMessages().read(n -> n.getNode("menu.enabled").toPrimitive().getBoolean())) {
-											GUI.MEMBER_LIST.get(c).open(p);
-										} else {
-											new FancyMessage(c.getPalette().toString("Associates:")).send(p).deploy();
-											new FancyMessage("&f&l&m---------------------------------").send(p).deploy();
-											c.getMembers().forEach(a -> new FancyMessage(" " + a.getRankFull() + " - " + c.getPalette().toString(a.getNickname()) + " &8*(" + a.getName() + ")").send(p).queue());
-											new FancyMessage("&f&l&m---------------------------------").send(p).deploy();
-										}
-									}).hover(color + "&oClick to view the clan roster.")
-									.then("]")
-									.then(" ")
-									.then(" ")
-									.then(" ")
-									.then(" ")
-									.then(" ")
-									.then(" ")
-									.then("[")
-									.then("Perms").color(Color.RED).style(ChatColor.BOLD).hover(color + "Click to manage clan permissions.").command("/c perms")
-									.then("]")
-									.then(" "))
-							.append(space2 -> space2.then(" "))
-							.append(middle -> middle.then(" ")
-									.then(" ")
-									.then(" ")
-									.then(" ")
-									.then(" ")
-									.then(" ")
-									.then(" ")
-									.then(" ")
-									.then(" ")
-									.then(" ")
-									.then("[")
-									.then("Mode").color(Color.RED).style(ChatColor.BOLD).hover(color + "Click to toggle our pvp mode.").command("/c mode")
-									.then("]")
-									.then(" ")
-									.then(" ")
-									.then(" ")
-									.then(" ")
-									.then(" ")
-									.then(" ")
-									.then(" ")
-									.then(" "))
-							.append(space3 -> space3.then(" "))
-							.append(bottom_middle -> bottom_middle.then(" ")
-									.then("[")
-									.then("Bank").color(Color.RED).style(ChatColor.BOLD).command("/c bank").hover(color + "&oClick to view the clan bank.")
-									.then("]")
-									.then(" ")
-									.then("[")
-									.then("Base").color(Color.RED).style(ChatColor.BOLD).hover(color + "Click to teleport to base.").command("/c base")
-									.then("]")
-									.then(" ")
-									.then("[")
-									.then("Vault").color(Color.RED).style(ChatColor.BOLD).hover(color + "Click to open the clan vault.").command("/c vault")
-									.then("]")
-									.then(" "))
-							.append(space4 -> space4.then(" "))
-							.append(bottom -> bottom.then(" ")
-									.then(" ")
-									.then(" ")
-									.then(" ")
-									.then(" ")
-									.then(" ")
-									.then(" ")
-									.then(" ")
-									.then(" ")
-									.then(" ")
-									.then("[")
-									.then("Stash").color(Color.RED).style(ChatColor.BOLD).hover(color + "Click to open the clan stash.").command("/c stash")
-									.then("]")
-									.then(" ")
-									.then(" ")
-									.then(" "));
+							.append(top -> {
+								top.then(" ")
+										.then(" ")
+										.then(" ")
+										.then(" ")
+										.then(" ")
+										.then(" ")
+										.then(" ")
+										.then(" ")
+										.then(" ")
+										.then(" ");
+								if (line_1.isValid()) {
+									top.append(line_1_msg);
+								}
+								top.then(" ")
+										.then(" ")
+										.then(" ")
+										.then(" ")
+										.then(" ")
+										.then(" ")
+										.then(" ")
+										.then(" ");
+							})
+							.append(space1 -> {
+								if (line_2.isValid()) {
+									space1.append(line_2.toMsg());
+								}
+							})
+							.append(top_middle -> {
+								top_middle.then(" ");
+								if (line_3.isValid()) {
+									top_middle.append(line_3.toMsg());
+								}
+								top_middle
+										.then(" ")
+										.then(" ")
+										.then(" ")
+										.then(" ")
+										.then(" ")
+										.then(" ");
+								if (line_3.getAppendage().isValid()) {
+									top_middle.append(line_3.getAppendage().toMsg());
+								}
+								top_middle
+										.then(" ");
+							})
+							.append(space2 -> {
+								if (line_4.isValid()) {
+									space2.append(line_4.toMsg());
+								}
+							})
+							.append(middle -> {
+								middle.then(" ")
+										.then(" ")
+										.then(" ")
+										.then(" ")
+										.then(" ")
+										.then(" ")
+										.then(" ")
+										.then(" ")
+										.then(" ")
+										.then(" ");
+								if (line_5.isValid()) {
+									middle.append(line_5.toMsg());
+								}
+								middle
+										.then(" ")
+										.then(" ")
+										.then(" ")
+										.then(" ")
+										.then(" ")
+										.then(" ")
+										.then(" ")
+										.then(" ");
+							})
+							.append(space3 -> {
+								if (line_6.isValid()) {
+									space3.append(line_6.toMsg());
+								}
+							})
+							.append(bottom_middle -> {
+								bottom_middle.then(" ");
+								if (line_7.isValid()) {
+									bottom_middle.append(line_7.toMsg());
+								}
+								bottom_middle
+										.then(" ");
+								if (line_7.getAppendage().isValid()) {
+									bottom_middle.append(line_7.getAppendage().toMsg());
+								}
+								bottom_middle.then(" ");
+								if (line_7.getAppendage().getAppendage().isValid()) {
+									bottom_middle.append(line_7.getAppendage().getAppendage().toMsg());
+								}
+								bottom_middle.then(" ");
+							})
+							.append(space4 -> {
+								if (line_8.isValid()) {
+									space4.append(line_8.toMsg());
+								}
+							})
+							.append(bottom -> {
+								bottom.then(" ")
+										.then(" ")
+										.then(" ")
+										.then(" ")
+										.then(" ")
+										.then(" ")
+										.then(" ")
+										.then(" ")
+										.then(" ")
+										.then(" ");
+								if (line_9.isValid()) {
+									bottom.append(line_9.toMsg());
+								}
+								bottom.then(" ")
+										.then(" ")
+										.then(" ");
+							});
 					break;
 			}
 			chain.send(e.getPlayer()).deploy();

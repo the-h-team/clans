@@ -193,6 +193,8 @@ public class ClansJavaPlugin extends JavaPlugin implements ClansAPI, Vent.Host {
 			}
 		}
 
+		PlayerEventListener.LOANABLE_TASK.stop();
+
 		for (ClanAddon addon : addonQueue.get()) {
 			AnnotationDiscovery<Ordinal, ClanAddon> discovery = AnnotationDiscovery.of(Ordinal.class, ClanAddon.class);
 			discovery.filter(method -> method.getName().equals("remove"), true);
@@ -239,7 +241,6 @@ public class ClansJavaPlugin extends JavaPlugin implements ClansAPI, Vent.Host {
 				System.setProperty("RELOAD", "TRUE");
 			}
 		});
-		PlayerEventListener.LOANABLE_TASK.stop();
 	}
 
 	public void setPrefix(MessagePrefix prefix) {

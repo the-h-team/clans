@@ -120,7 +120,7 @@ public class BlockEventListener implements Listener {
 
 	@EventHandler
 	public void onSign(SignChangeEvent e) {
-		if (e.getLine(0).equalsIgnoreCase("[Clan]")) {
+		if (e.getLines().length == 1 && e.getLine(0).equalsIgnoreCase("[Clan]")) {
 			ClansAPI.getInstance().getAssociate(e.getPlayer()).ifPresent(a -> {
 				Sign s = (Sign) e.getBlock().getState();
 				if (!Clearance.LOGO_DISPLAY.test(a)) {

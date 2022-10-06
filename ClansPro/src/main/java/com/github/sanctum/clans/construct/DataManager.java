@@ -225,7 +225,7 @@ public class DataManager {
 			TaskScheduler.of(() -> {
 				InputStream mainGrab;
 				InputStream msgGrab;
-				switch (main.read(c -> c.getString("Clans.lang")).toLowerCase(Locale.ROOT)) {
+				switch (main.read(c -> c.getString("Language")).toLowerCase(Locale.ROOT)) {
 					case "pt-br":
 						msgGrab = api.getPlugin().getResource("Messages_pt_br.yml");
 						if (type != null) {

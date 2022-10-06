@@ -48,7 +48,7 @@ public final class AsynchronousLoanableTask {
 				}
 
 			};
-			TaskScheduler.of(t).scheduleTimerAsync(t.getKey(), unit.toMillis(size), unit.toMillis(size), BukkitTaskPredicate.reduceEmpty());
+			TaskScheduler.of(t).scheduleTimerAsync(t.getKey(), 0, unit.toMillis(size), BukkitTaskPredicate.reduceEmpty());
 		}
 		players.add(player);
 	}
