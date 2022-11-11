@@ -6,5 +6,5 @@ depend: [ Labyrinth ]
 softdepend: [ Enterprise, Vault ]
 loadbefore: [ DiscordSRV, Guppy ]
 description: A premium & unique player grouping plugin.
-website: https://github.com/the-h-team/ClansPro/wiki
+website: ${project.url}/wiki
 main: com.github.sanctum.clans.ClansJavaPlugin
