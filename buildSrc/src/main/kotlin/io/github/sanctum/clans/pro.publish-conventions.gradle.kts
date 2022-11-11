@@ -1,3 +1,5 @@
+import java.util.Base64
+
 plugins {
     id("pro.java-conventions")
     `maven-publish`
@@ -5,7 +7,8 @@ plugins {
 
 afterEvaluate {
     publishing {
-        publications.create<MavenPublication>(name) {
+        val publicationName = name
+        publications.create<MavenPublication>(publicationName) {
             pom {
                 name.set("ClansPro")
                 description.set(project.description!!)
@@ -40,8 +43,24 @@ afterEvaluate {
                     url.set("https://github.com/the-h-team/ClansPro/tree/main")
                 }
             }
-            // TODO signing plugin
             from(components["java"])
         }
+        val signingKey = findProperty("base64SigningKey")
+        val signingKeyPassphrase = findProperty("signingKeyPassphrase")
+        if (signingKey is String && signingKeyPassphrase is String) {
+            apply(plugin = "signing")
+            configure<SigningExtension> {
+                useInMemoryPgpKeys(
+                    base64Decode(signingKey),
+                    signingKeyPassphrase
+                )
+                sign(publishing.publications[publicationName])
+            }
+        }
     }
+}
+
+fun base64Decode(base64: String?) : String? {
+    if (base64 == null) return null
+    return Base64.getDecoder().decode(base64).toString(Charsets.UTF_8)
 }
