@@ -21,6 +21,7 @@ import org.bukkit.entity.Player;
 public class CommandColor extends ClanSubCommand {
 	public CommandColor() {
 		super("color");
+		setUsage(ClansAPI.getDataInstance().getMessageString("Commands.color.text"));
 	}
 
 	@Override
@@ -34,7 +35,7 @@ public class CommandColor extends ClanSubCommand {
 		}
 
 		if (args.length == 0) {
-			if (!Clan.ACTION.test(p, "clanspro." + DataManager.Security.getPermission("color")).deploy()) {
+			if (!Clan.ACTION.test(p, this.getPermission() + "." + DataManager.Security.getPermission("color")).deploy()) {
 				lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("color")));
 				return true;
 			}
@@ -44,7 +45,7 @@ public class CommandColor extends ClanSubCommand {
 		}
 
 		if (args.length == 1) {
-			if (!Clan.ACTION.test(p, "clanspro." + DataManager.Security.getPermission("color")).deploy()) {
+			if (!Clan.ACTION.test(p, this.getPermission() + "." + DataManager.Security.getPermission("color")).deploy()) {
 				lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("color")));
 				return true;
 			}
@@ -54,7 +55,7 @@ public class CommandColor extends ClanSubCommand {
 				if (args[0].equalsIgnoreCase("empty") || args[0].equalsIgnoreCase("reset")) {
 					clan.getPalette().setStart("&f");
 					clan.getPalette().setEnd(null);
-					lib.sendMessage(p, "&aGradient color removed.");
+					lib.sendMessage(p, "&aColor removed.");
 					clan.getMembers().forEach(a -> {
 						OfflinePlayer op = a.getTag().getPlayer();
 						try {
@@ -140,13 +141,22 @@ public class CommandColor extends ClanSubCommand {
 		}
 
 		if (args.length == 2) {
-			if (!Clan.ACTION.test(p, "clanspro." + DataManager.Security.getPermission("color")).deploy()) {
+			if (!Clan.ACTION.test(p, this.getPermission() + "." + DataManager.Security.getPermission("color")).deploy()) {
 				lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("color")));
 				return true;
 			}
 
 			if (!LabyrinthProvider.getService(Service.LEGACY).isNew()) {
 				lib.sendMessage(p, "&cOlder version detected! To use gradients the server version must be no lower than 1.16");
+				return true;
+			}
+
+			if (ClansAPI.getInstance().isTrial()) {
+				if (Clan.ACTION.test(p, this.getPermission() + ".admin").deploy()) {
+					lib.sendMessage(p, "&cYou're using a free version of the plugin! Gradients are only supported with pro.");
+				} else {
+					lib.sendMessage(p, "&cThis feature is locked!");
+				}
 				return true;
 			}
 

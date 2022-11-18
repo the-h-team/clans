@@ -16,6 +16,7 @@ import org.bukkit.entity.Player;
 public class CommandEnemy extends ClanSubCommand {
 	public CommandEnemy() {
 		super("enemy");
+		setUsage(ClansAPI.getDataInstance().getMessageString("Commands.enemy.text"));
 	}
 
 	@Override
@@ -24,7 +25,7 @@ public class CommandEnemy extends ClanSubCommand {
 		Clan.Associate associate = ClansAPI.getInstance().getAssociate(p).orElse(null);
 
 		if (args.length == 0) {
-			if (!Clan.ACTION.test(p, "clanspro." + DataManager.Security.getPermission("enemy")).deploy()) {
+			if (!Clan.ACTION.test(p, this.getPermission() + "." + DataManager.Security.getPermission("enemy")).deploy()) {
 				lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("enemy")));
 				return true;
 			}
@@ -38,7 +39,7 @@ public class CommandEnemy extends ClanSubCommand {
 
 		if (args.length == 2) {
 			if (args[0].equalsIgnoreCase("add")) {
-				if (!Clan.ACTION.test(p, "clanspro." + DataManager.Security.getPermission("enemy")).deploy()) {
+				if (!Clan.ACTION.test(p, this.getPermission() + "." + DataManager.Security.getPermission("enemy")).deploy()) {
 					lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("enemy")));
 					return true;
 				}
@@ -101,7 +102,7 @@ public class CommandEnemy extends ClanSubCommand {
 				return true;
 			}
 			if (args[0].equalsIgnoreCase("remove")) {
-				if (!Clan.ACTION.test(p, "clanspro." + DataManager.Security.getPermission("removeenemy")).deploy()) {
+				if (!Clan.ACTION.test(p, this.getPermission() + "." + DataManager.Security.getPermission("removeenemy")).deploy()) {
 					lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("removeenemy")));
 					return true;
 				}

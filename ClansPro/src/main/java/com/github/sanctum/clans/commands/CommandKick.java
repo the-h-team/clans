@@ -17,6 +17,7 @@ import org.bukkit.entity.Player;
 public class CommandKick extends ClanSubCommand {
 	public CommandKick() {
 		super("kick");
+		setUsage(ClansAPI.getDataInstance().getMessageString("Commands.kick.text"));
 	}
 
 	@Override
@@ -25,7 +26,7 @@ public class CommandKick extends ClanSubCommand {
 		Clan.Associate associate = ClansAPI.getInstance().getAssociate(p).orElse(null);
 
 		if (args.length == 0) {
-			if (!Clan.ACTION.test(p, "clanspro." + DataManager.Security.getPermission("kick")).deploy()) {
+			if (!Clan.ACTION.test(p, this.getPermission() + "." + DataManager.Security.getPermission("kick")).deploy()) {
 				lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("kick")));
 				return true;
 			}
@@ -34,7 +35,7 @@ public class CommandKick extends ClanSubCommand {
 		}
 
 		if (args.length == 1) {
-			if (!Clan.ACTION.test(p, "clanspro." + DataManager.Security.getPermission("kick")).deploy()) {
+			if (!Clan.ACTION.test(p, this.getPermission() + "." + DataManager.Security.getPermission("kick")).deploy()) {
 				lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("kick")));
 				return true;
 			}

@@ -22,6 +22,7 @@ import org.bukkit.entity.Player;
 public class CommandPermit extends ClanSubCommand {
 	public CommandPermit() {
 		super("permit");
+		setUsage(ClansAPI.getDataInstance().getMessageString("Commands.permit.text"));
 	}
 
 	@Override
@@ -30,7 +31,7 @@ public class CommandPermit extends ClanSubCommand {
 		Clan.Associate associate = ClansAPI.getInstance().getAssociate(p).orElse(null);
 
 		if (args.length == 0) {
-			if (!Clan.ACTION.test(p, "clanspro." + DataManager.Security.getPermission("permit")).deploy()) {
+			if (!Clan.ACTION.test(p, this.getPermission() + "." + DataManager.Security.getPermission("permit")).deploy()) {
 				lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("permit")));
 				return true;
 			}
@@ -51,7 +52,7 @@ public class CommandPermit extends ClanSubCommand {
 		}
 
 		if (args.length == 2) {
-			if (!Clan.ACTION.test(p, "clanspro." + DataManager.Security.getPermission("permit")).deploy()) {
+			if (!Clan.ACTION.test(p, this.getPermission() + "." + DataManager.Security.getPermission("permit")).deploy()) {
 				lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("permit")));
 				return true;
 			}
@@ -109,7 +110,7 @@ public class CommandPermit extends ClanSubCommand {
 				.then(TabCompletionIndex.TWO, getLabel(), TabCompletionIndex.ONE, () -> {
 					Optional<Clan.Associate> associate = ClansAPI.getInstance().getAssociate(p);
 					List<String> result = new ArrayList<>();
-					if (!Clan.ACTION.test(p, "clanspro." + DataManager.Security.getPermission("permit")).deploy()) {
+					if (!Clan.ACTION.test(p, this.getPermission() + "." + DataManager.Security.getPermission("permit")).deploy()) {
 						return result;
 					}
 					if (associate.isPresent()) {

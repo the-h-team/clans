@@ -10,6 +10,7 @@ import org.bukkit.entity.Player;
 public class CommandChat extends ClanSubCommand {
 	public CommandChat() {
 		super("chat");
+		setUsage(ClansAPI.getDataInstance().getMessageString("Commands.chat.text"));
 	}
 
 	@Override
@@ -18,7 +19,7 @@ public class CommandChat extends ClanSubCommand {
 		Clan.Associate associate = ClansAPI.getInstance().getAssociate(p).orElse(null);
 
 		if (args.length == 0) {
-			if (!Clan.ACTION.test(p, "clanspro." + DataManager.Security.getPermission("chat")).deploy()) {
+			if (!Clan.ACTION.test(p, this.getPermission() + "." + DataManager.Security.getPermission("chat")).deploy()) {
 				lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("chat")));
 				return true;
 			}

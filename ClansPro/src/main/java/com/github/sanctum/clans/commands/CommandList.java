@@ -12,6 +12,7 @@ import org.bukkit.entity.Player;
 public class CommandList extends ClanSubCommand {
 	public CommandList() {
 		super("list");
+		setUsage(ClansAPI.getDataInstance().getMessageString("Commands.list.text"));
 	}
 
 	@Override
@@ -20,7 +21,7 @@ public class CommandList extends ClanSubCommand {
 		Clan.Associate associate = ClansAPI.getInstance().getAssociate(p).orElse(null);
 
 		if (args.length == 0) {
-			if (!Clan.ACTION.test(p, "clanspro." + DataManager.Security.getPermission("list")).deploy()) {
+			if (!Clan.ACTION.test(p, this.getPermission() + "." + DataManager.Security.getPermission("list")).deploy()) {
 				lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("list")));
 				return true;
 			}
@@ -33,7 +34,7 @@ public class CommandList extends ClanSubCommand {
 				lib.sendMessage(p, lib.pageUnknown());
 				return true;
 			}
-			if (!Clan.ACTION.test(p, "clanspro." + DataManager.Security.getPermission("list")).deploy()) {
+			if (!Clan.ACTION.test(p, this.getPermission() + "." + DataManager.Security.getPermission("list")).deploy()) {
 				lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("list")));
 				return true;
 			}

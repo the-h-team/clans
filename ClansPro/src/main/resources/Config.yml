@@ -2,10 +2,10 @@
 # --------------------------------------------------------------------------------------- #
 #   ▄████████  ▄█          ▄████████ ███▄▄▄▄      ▄████████         ▄███████▄    ▄████████  ▄██████▄
 #  ███    ███ ███         ███    ███ ███▀▀▀██▄   ███    ███        ███    ███   ███    ███ ███    ███
-#  ███    █▀  ███         ███    ███ ███   ███   ███    █▀         ███    ███   ███    ███ ███    ███
-#  ███        ███         ███    ███ ███   ███   ███               ███    ███  ▄███▄▄▄▄██▀ ███    ███
-#  ███        ███       ▀███████████ ███   ███ ▀███████████      ▀█████████▀  ▀▀███▀▀▀▀▀   ███    ███
-#  ███    █▄  ███         ███    ███ ███   ███          ███        ███        ▀███████████ ███    ███
+#  ███    █▀  ███         ███    ███ ███   ███   ███    █▀         ███    ███   ███    ███ ███    ███Demo
+#  ███        ███         ███    ███ ███   ███   ███               ███    ███  ▄███▄▄▄▄██▀ ███    ███ Demo
+#  ███        ███       ▀███████████ ███   ███ ▀███████████      ▀█████████▀  ▀▀███▀▀▀▀▀   ███    ███  Demo
+#  ███    █▄  ███         ███    ███ ███   ███          ███        ███        ▀███████████ ███    ███   Demo
 #  ███    ███ ███▌    ▄   ███    ███ ███   ███    ▄█    ███        ███          ███    ███ ███    ███
 #  ████████▀  █████▄▄██   ███    █▀   ▀█   █▀   ▄████████▀        ▄████▀        ███    ███  ▀██████▀
 # ------------------------------------------------------------------------------███----███#
@@ -45,7 +45,7 @@ Clans:
 
   ##############################################
   ##                                          ##
-  ##        Clan reservoir settings.          ##
+  ##        Clan reservoir settings.          ## # Pro only!
   ##                                          ##
   ##############################################
   reservoir:
@@ -67,7 +67,7 @@ Clans:
   mode-change:
     # Change what pvp mode a clan gets put in on creation {Valid types = peace, war}
     default: peace
-    # NEW! With this option enabled clans can only switch to war mode by having a reservoir built!
+    # NEW! With this option enabled clans can only switch to war mode by having a reservoir built! Pro only!
     require-reservoir: true
     # Allow a cooldown every use of mode switch? If so how long.
     timer:
@@ -147,11 +147,11 @@ Clans:
     nigger:
       action: 'ban {PLAYER} This type of name use is not allowed!'
 
-  ##########################
-  ##                      ##
+  ###########################
+  ##                       ##
   ## Clan COLOR blacklist. ##
-  ##                      ##
-  ##########################
+  ##                       ##
+  ###########################
   # Any color-codes attempted to be used from this list will NOT be allowed.
   color-blacklist: [ "&k" ]
 
@@ -489,7 +489,7 @@ Formatting:
 Addon:
   ##############################################################
   ##                                                          ##
-  ## Requires Vault or Enterprise. Place bounties on players! ##
+  ## Requires Vault or Enterprise. Place bounties on players! ## # Pro only!
   ##                                                          ##
   ##############################################################
   Bounty:
@@ -517,7 +517,7 @@ Addon:
   #####################################################
   ##                                                 ##
   ##        An ms5984 (Regurgitator) original        ##
-  ##   Map surrounding chunks around you and display ##
+  ##   Map surrounding chunks around you and display ## # Pro only!
   ##          information for them in chat.          ##
   ##                                                 ##
   #####################################################
@@ -527,7 +527,7 @@ Addon:
     enabled: true
   ###########################################################################
   ##                                                                       ##
-  ## Kingdoms is a progression tracking feature with rewarding attributes  ##
+  ## Kingdoms is a progression tracking feature with rewarding attributes  ## # Pro only!
   ##                                                                       ##
   ###########################################################################
   Kingdoms:
@@ -556,7 +556,7 @@ Addon:
   ######################################################
   ##                                                  ##
   ## A good additive to kingdoms, bringing back some  ##
-  ##    early clans free stuff, adds classes with     ##
+  ##    early clans free stuff, adds classes with     ## # Pro only!
   ##                  abilities.                      ##
   ##                                                  ##
   ######################################################
@@ -588,5 +588,5 @@ Addon:
 ## -- DO NOT EDIT BELOW --##
 ##------------------------##
 Authors: [ "Hempfest", "ms5984" ]
-Version: 1.4.3
+Version: 3.0.0
 Language: en-US

@@ -11,6 +11,7 @@ import org.bukkit.entity.Player;
 public class CommandNickname extends ClanSubCommand {
 	public CommandNickname() {
 		super("nickname");
+		setUsage(ClansAPI.getDataInstance().getMessageString("Commands.nickname.text"));
 		setAliases(Collections.singletonList("nick"));
 	}
 
@@ -20,7 +21,7 @@ public class CommandNickname extends ClanSubCommand {
 		Clan.Associate associate = ClansAPI.getInstance().getAssociate(p).orElse(null);
 
 		if (args.length == 0) {
-			if (!Clan.ACTION.test(p, "clanspro." + DataManager.Security.getPermission("nickname")).deploy()) {
+			if (!Clan.ACTION.test(p, this.getPermission() + "." + DataManager.Security.getPermission("nickname")).deploy()) {
 				lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("nickname")));
 				return true;
 			}
@@ -29,7 +30,7 @@ public class CommandNickname extends ClanSubCommand {
 		}
 
 		if (args.length == 1) {
-			if (!Clan.ACTION.test(p, "clanspro." + DataManager.Security.getPermission("nickname")).deploy()) {
+			if (!Clan.ACTION.test(p, this.getPermission() + "." + DataManager.Security.getPermission("nickname")).deploy()) {
 				lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("nickname")));
 				return true;
 			}

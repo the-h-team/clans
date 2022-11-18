@@ -12,6 +12,7 @@ import org.bukkit.entity.Player;
 public class CommandGui extends ClanSubCommand {
 	public CommandGui() {
 		super("gui");
+		setInvisible(ClansAPI.getInstance().isTrial());
 	}
 
 	@Override

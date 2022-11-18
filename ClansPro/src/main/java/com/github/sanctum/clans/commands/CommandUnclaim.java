@@ -15,6 +15,7 @@ import org.bukkit.entity.Player;
 public class CommandUnclaim extends ClanSubCommand {
 	public CommandUnclaim() {
 		super("unclaim");
+		setUsage(ClansAPI.getDataInstance().getMessageString("Commands.unclaim.text"));
 	}
 
 	@Override
@@ -23,7 +24,7 @@ public class CommandUnclaim extends ClanSubCommand {
 		Clan.Associate associate = ClansAPI.getInstance().getAssociate(p).orElse(null);
 
 		if (args.length == 0) {
-			if (!Clan.ACTION.test(p, "clanspro." + DataManager.Security.getPermission("unclaim")).deploy()) {
+			if (!Clan.ACTION.test(p, this.getPermission() + "." + DataManager.Security.getPermission("unclaim")).deploy()) {
 				lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("unclaim")));
 				return true;
 			}
@@ -47,7 +48,7 @@ public class CommandUnclaim extends ClanSubCommand {
 		if (args.length == 1) {
 			if (Claim.ACTION.isEnabled()) {
 				if (args[0].equalsIgnoreCase("all")) {
-					if (!Clan.ACTION.test(p, "clanspro." + DataManager.Security.getPermission("unclaimall")).deploy()) {
+					if (!Clan.ACTION.test(p, this.getPermission() + "." + DataManager.Security.getPermission("unclaimall")).deploy()) {
 						lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("unclaimall")));
 						return true;
 					}

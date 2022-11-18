@@ -15,6 +15,7 @@ import org.bukkit.entity.Player;
 public class CommandWar extends ClanSubCommand {
 	public CommandWar() {
 		super("war");
+		setUsage(ClansAPI.getDataInstance().getMessageString("Commands.war.text"));
 	}
 
 	@Override
@@ -23,7 +24,7 @@ public class CommandWar extends ClanSubCommand {
 		Clan.Associate associate = ClansAPI.getInstance().getAssociate(p).orElse(null);
 
 		if (args.length == 0) {
-			if (!Clan.ACTION.test(p, "clanspro." + DataManager.Security.getPermission("war")).deploy()) {
+			if (!Clan.ACTION.test(p, this.getPermission() + "." + DataManager.Security.getPermission("war")).deploy()) {
 				lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("war")));
 				return true;
 			}

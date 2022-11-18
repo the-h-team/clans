@@ -30,6 +30,8 @@ import org.bukkit.inventory.ItemStack;
 public class CommandLogo extends ClanSubCommand {
 	public CommandLogo() {
 		super("logo");
+		setUsage(ClansAPI.getDataInstance().getMessageString("Commands.logo.text"));
+		setInvisible(ClansAPI.getInstance().isTrial());
 	}
 
 	@Override
@@ -68,7 +70,7 @@ public class CommandLogo extends ClanSubCommand {
 				return true;
 			}
 
-			if (!Clan.ACTION.test(p, "clanspro." + DataManager.Security.getPermission("logo")).deploy()) {
+			if (!Clan.ACTION.test(p, this.getPermission() + "." + DataManager.Security.getPermission("logo")).deploy()) {
 				lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("logo")));
 				return true;
 			}
@@ -284,7 +286,7 @@ public class CommandLogo extends ClanSubCommand {
 				return true;
 			}
 
-			if (!Clan.ACTION.test(p, "clanspro." + DataManager.Security.getPermission("logo")).deploy()) {
+			if (!Clan.ACTION.test(p, this.getPermission() + "." + DataManager.Security.getPermission("logo")).deploy()) {
 				lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("logo")));
 				return true;
 			}
@@ -332,7 +334,7 @@ public class CommandLogo extends ClanSubCommand {
 
 		if (args.length == 3) {
 
-			if (!Clan.ACTION.test(p, "clanspro." + DataManager.Security.getPermission("logo")).deploy()) {
+			if (!Clan.ACTION.test(p, this.getPermission() + "." + DataManager.Security.getPermission("logo")).deploy()) {
 				lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("logo")));
 				return true;
 			}

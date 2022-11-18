@@ -11,6 +11,8 @@ import org.bukkit.entity.Player;
 public class CommandDisplay extends ClanSubCommand {
 	public CommandDisplay() {
 		super("display");
+		setUsage(ClansAPI.getDataInstance().getMessageString("Commands.display.text"));
+		setInvisible(ClansAPI.getInstance().isTrial());
 	}
 
 	@Override
@@ -24,7 +26,7 @@ public class CommandDisplay extends ClanSubCommand {
 		}
 
 		if (args.length == 0) {
-			if (!Clan.ACTION.test(p, "clanspro." + DataManager.Security.getPermission("display")).deploy()) {
+			if (!Clan.ACTION.test(p, this.getPermission() + "." + DataManager.Security.getPermission("display")).deploy()) {
 				lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("display")));
 				return true;
 			}
@@ -33,7 +35,7 @@ public class CommandDisplay extends ClanSubCommand {
 		}
 
 		if (args.length == 1) {
-			if (!Clan.ACTION.test(p, "clanspro." + DataManager.Security.getPermission("display")).deploy()) {
+			if (!Clan.ACTION.test(p, this.getPermission() + "." + DataManager.Security.getPermission("display")).deploy()) {
 				lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("display")));
 				return true;
 			}
@@ -56,7 +58,7 @@ public class CommandDisplay extends ClanSubCommand {
 		}
 
 		if (args.length == 2) {
-			if (!Clan.ACTION.test(p, "clanspro." + DataManager.Security.getPermission("display")).deploy()) {
+			if (!Clan.ACTION.test(p, this.getPermission() + "." + DataManager.Security.getPermission("display")).deploy()) {
 				lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("display")));
 				return true;
 			}

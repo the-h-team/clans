@@ -18,6 +18,7 @@ import org.bukkit.entity.Player;
 public class CommandDemote extends ClanSubCommand {
 	public CommandDemote() {
 		super("demote");
+		setUsage(ClansAPI.getDataInstance().getMessageString("Commands.demote.text"));
 	}
 
 	@Override
@@ -26,7 +27,7 @@ public class CommandDemote extends ClanSubCommand {
 		Clan.Associate associate = ClansAPI.getInstance().getAssociate(p).orElse(null);
 
 		if (args.length == 0) {
-			if (!Clan.ACTION.test(p, "clanspro." + DataManager.Security.getPermission("demote")).deploy()) {
+			if (!Clan.ACTION.test(p, this.getPermission() + "." + DataManager.Security.getPermission("demote")).deploy()) {
 				lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("demote")));
 				return true;
 			}
@@ -35,7 +36,7 @@ public class CommandDemote extends ClanSubCommand {
 		}
 
 		if (args.length == 1) {
-			if (!Clan.ACTION.test(p, "clanspro." + DataManager.Security.getPermission("demote")).deploy()) {
+			if (!Clan.ACTION.test(p, this.getPermission() + "." + DataManager.Security.getPermission("demote")).deploy()) {
 				lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("demote")));
 				return true;
 			}

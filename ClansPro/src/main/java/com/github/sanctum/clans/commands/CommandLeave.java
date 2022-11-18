@@ -14,6 +14,7 @@ import org.bukkit.entity.Player;
 public class CommandLeave extends ClanSubCommand {
 	public CommandLeave() {
 		super("leave");
+		setUsage(ClansAPI.getDataInstance().getMessageString("Commands.leave.text"));
 	}
 
 	@Override
@@ -36,7 +37,7 @@ public class CommandLeave extends ClanSubCommand {
 		Clan.Associate associate = ClansAPI.getInstance().getAssociate(p).orElse(null);
 
 		if (args.length == 0) {
-			if (!Clan.ACTION.test(p, "clanspro." + DataManager.Security.getPermission("leave")).deploy()) {
+			if (!Clan.ACTION.test(p, this.getPermission() + "." + DataManager.Security.getPermission("leave")).deploy()) {
 				lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("leave")));
 				return true;
 			}

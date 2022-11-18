@@ -12,6 +12,7 @@ import org.bukkit.entity.Player;
 public class CommandPrompt extends ClanSubCommand {
 	public CommandPrompt() {
 		super("prompt");
+		setUsage("&7|&f) &6{label} &8(*gui)");
 	}
 
 	@Override

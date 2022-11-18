@@ -19,6 +19,7 @@ import org.bukkit.entity.Player;
 public class CommandPromote extends ClanSubCommand {
 	public CommandPromote() {
 		super("promote");
+		setUsage(ClansAPI.getDataInstance().getMessageString("Commands.promote.text"));
 	}
 
 	@Override
@@ -27,7 +28,7 @@ public class CommandPromote extends ClanSubCommand {
 		Clan.Associate associate = ClansAPI.getInstance().getAssociate(p).orElse(null);
 
 		if (args.length == 0) {
-			if (!Clan.ACTION.test(p, "clanspro." + DataManager.Security.getPermission("promote")).deploy()) {
+			if (!Clan.ACTION.test(p, this.getPermission() + "." + DataManager.Security.getPermission("promote")).deploy()) {
 				lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("promote")));
 				return true;
 			}
@@ -36,7 +37,7 @@ public class CommandPromote extends ClanSubCommand {
 		}
 
 		if (args.length == 1) {
-			if (!Clan.ACTION.test(p, "clanspro." + DataManager.Security.getPermission("promote")).deploy()) {
+			if (!Clan.ACTION.test(p, this.getPermission() + "." + DataManager.Security.getPermission("promote")).deploy()) {
 				lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("promote")));
 				return true;
 			}

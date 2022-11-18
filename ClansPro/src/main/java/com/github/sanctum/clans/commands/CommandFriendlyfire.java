@@ -13,6 +13,7 @@ import org.bukkit.entity.Player;
 public class CommandFriendlyfire extends ClanSubCommand {
 	public CommandFriendlyfire() {
 		super("friendlyfire");
+		setUsage(ClansAPI.getDataInstance().getMessageString("Commands.friendlyfire.text"));
 		setAliases(Collections.singletonList("ff"));
 	}
 
@@ -22,7 +23,7 @@ public class CommandFriendlyfire extends ClanSubCommand {
 		Clan.Associate associate = ClansAPI.getInstance().getAssociate(p).orElse(null);
 
 		if (args.length == 0) {
-			if (!Clan.ACTION.test(p, "clanspro." + DataManager.Security.getPermission("friendlyfire")).deploy()) {
+			if (!Clan.ACTION.test(p, this.getPermission() + "." + DataManager.Security.getPermission("friendlyfire")).deploy()) {
 				lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("friendlyfire")));
 				return true;
 			}

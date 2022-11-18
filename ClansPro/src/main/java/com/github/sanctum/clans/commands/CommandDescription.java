@@ -11,6 +11,7 @@ import org.bukkit.entity.Player;
 public class CommandDescription extends ClanSubCommand {
 	public CommandDescription() {
 		super("description");
+		setUsage(ClansAPI.getDataInstance().getMessageString("Commands.description.text"));
 	}
 
 	@Override
@@ -19,7 +20,7 @@ public class CommandDescription extends ClanSubCommand {
 		Clan.Associate associate = ClansAPI.getInstance().getAssociate(p).orElse(null);
 
 		if (args.length == 1) {
-			if (!Clan.ACTION.test(p, "clanspro." + DataManager.Security.getPermission("description")).deploy()) {
+			if (!Clan.ACTION.test(p, this.getPermission() + "." + DataManager.Security.getPermission("description")).deploy()) {
 				lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("description")));
 				return true;
 			}
@@ -36,7 +37,7 @@ public class CommandDescription extends ClanSubCommand {
 		}
 
 		if (args.length == 2) {
-			if (!Clan.ACTION.test(p, "clanspro." + DataManager.Security.getPermission("description")).deploy()) {
+			if (!Clan.ACTION.test(p, this.getPermission() + "." + DataManager.Security.getPermission("description")).deploy()) {
 				lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("description")));
 				return true;
 			}
@@ -56,7 +57,7 @@ public class CommandDescription extends ClanSubCommand {
 		for (int i = 1; i < args.length; i++)
 			rsn.append(args[i]).append(" ");
 		int stop = rsn.length() - 1;
-		if (!Clan.ACTION.test(p, "clanspro." + DataManager.Security.getPermission("description")).deploy()) {
+		if (!Clan.ACTION.test(p, this.getPermission() + "." + DataManager.Security.getPermission("description")).deploy()) {
 			lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("description")));
 			return true;
 		}

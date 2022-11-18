@@ -72,9 +72,9 @@ public class TraitCommand extends ClanSubCommand {
 		if (args.length == 1) {
 
 			if (args[0].equalsIgnoreCase("select")) {
-				if (!Clan.ACTION.test(player, "clanspro.trait.primary").deploy()) {
+				if (!Clan.ACTION.test(player, "clans.trait.primary").deploy()) {
 					sendMessage(player, "&cYou don't have access to setting your primary trait!");
-					sendMessage(player, "&cPermission required: &fclanspro.trait.primary");
+					sendMessage(player, "&cPermission required: &fclans.trait.primary");
 					return true;
 				}
 				TraitSelectEvent event = ClanVentBus.call(new TraitSelectEvent(DefaultTrait.values()));
@@ -109,9 +109,9 @@ public class TraitCommand extends ClanSubCommand {
 		if (args.length == 2) {
 			if (args[0].equalsIgnoreCase("select")) {
 				if (args[1].equalsIgnoreCase("secondary")) {
-					if (!Clan.ACTION.test(player, "clanspro.trait.primary").deploy() || !Clan.ACTION.test(player, "clanspro.trait.secondary").deploy()) {
+					if (!Clan.ACTION.test(player, "clans.trait.primary").deploy() || !Clan.ACTION.test(player, "clans.trait.secondary").deploy()) {
 						sendMessage(player, "&cYou don't have access to setting your secondary trait!");
-						sendMessage(player, "&cPermissions required: &fclanspro.trait.primary, clanspro.trait.secondary");
+						sendMessage(player, "&cPermissions required: &fclans.trait.primary, clans.trait.secondary");
 						return true;
 					}
 					TraitSelectEvent event = ClanVentBus.call(new TraitSelectEvent(DefaultTrait.values()));

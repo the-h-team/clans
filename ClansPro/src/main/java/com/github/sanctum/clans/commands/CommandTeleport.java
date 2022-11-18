@@ -20,6 +20,7 @@ public class CommandTeleport extends ClanSubCommand {
 	public CommandTeleport() {
 		super("teleport");
 		setAliases(Collections.singletonList("tp"));
+		setUsage(ClansAPI.getDataInstance().getMessageString("Commands.teleport.text"));
 	}
 
 	@Override
@@ -27,7 +28,7 @@ public class CommandTeleport extends ClanSubCommand {
 		StringLibrary lib = Clan.ACTION;
 		Clan.Associate passociate = ClansAPI.getInstance().getAssociate(p).orElse(null);
 
-		if (!Clan.ACTION.test(p, "clanspro." + DataManager.Security.getPermission("teleport")).deploy()) {
+		if (!Clan.ACTION.test(p, this.getPermission() + "." + DataManager.Security.getPermission("teleport")).deploy()) {
 			lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("teleport")));
 			return true;
 		}

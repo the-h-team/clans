@@ -19,6 +19,7 @@ import org.bukkit.entity.Player;
 public class CommandInvite extends ClanSubCommand implements Message.Factory {
 	public CommandInvite() {
 		super("invite");
+		setUsage(ClansAPI.getDataInstance().getMessageString("Commands.invite.text"));
 	}
 
 	@Override
@@ -27,7 +28,7 @@ public class CommandInvite extends ClanSubCommand implements Message.Factory {
 		Clan.Associate associate = ClansAPI.getInstance().getAssociate(p).orElse(null);
 
 		if (args.length == 0) {
-			if (!Clan.ACTION.test(p, "clanspro." + DataManager.Security.getPermission("invite")).deploy()) {
+			if (!Clan.ACTION.test(p, this.getPermission() + "." + DataManager.Security.getPermission("invite")).deploy()) {
 				lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("invite")));
 				return true;
 			}
@@ -36,7 +37,7 @@ public class CommandInvite extends ClanSubCommand implements Message.Factory {
 		}
 
 		if (args.length == 1) {
-			if (!Clan.ACTION.test(p, "clanspro." + DataManager.Security.getPermission("invite")).deploy()) {
+			if (!Clan.ACTION.test(p, this.getPermission() + "." + DataManager.Security.getPermission("invite")).deploy()) {
 				lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("invite")));
 				return true;
 			}

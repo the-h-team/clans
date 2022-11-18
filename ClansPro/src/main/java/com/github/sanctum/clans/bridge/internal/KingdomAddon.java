@@ -17,7 +17,7 @@ public class KingdomAddon extends ClanAddon {
 
 	@Override
 	public boolean isPersistent() {
-		return ClansAPI.getDataInstance().isTrue("Addon.Kingdoms.enabled") && !LabyrinthProvider.getInstance().isLegacy();
+		return ClansAPI.getDataInstance().isTrue("Addon.Kingdoms.enabled") && !LabyrinthProvider.getInstance().isLegacy() && !getApi().isTrial();
 	}
 
 	@Override
@@ -42,8 +42,6 @@ public class KingdomAddon extends ClanAddon {
 
 	@Override
 	public void onLoad() {
-
-		getLogger().info("- Attention all passengers, let the games begin :)");
 		getContext().stage(new KingdomCommand(this, "kingdom"));
 		getContext().stage(new KingdomController(this));
 	}
@@ -87,8 +85,6 @@ public class KingdomAddon extends ClanAddon {
 		for (Progressive progressable : Progressive.getProgressives()) {
 			progressable.save(this);
 		}
-
-		getLogger().info("- Adios amigos :D");
 
 	}
 }
