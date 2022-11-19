@@ -109,7 +109,7 @@ Commands:
   nickname:
     text: '&7|&e) &6{label} &fnickname <&7nickName&f>'
     permission: 'nickname'
-  display:
+  display: # Premium only!
     text: '&7|&e) &6{label} &fdisplay <&7nickName&f>'
     permission: 'display'
   list:
@@ -149,17 +149,11 @@ Commands:
     text: '&7|&e) &6{label} &fbank <&cwithdraw&f> <&7amount&f>'
     permission: 'banks.use.withdraw'
   ally:
-    text: '&7|&e) &6{label} &fally <&7clanName&f>'
+    text: '&7|&e) &6{label} &fally &8[add/remove]&f <&7clanName&f>'
     permission: 'ally'
-  removeally:
-    text: '&7|&e) &6{label} &fally <&cremove&f> <&7clanName&f>'
-    permission: 'ally.remove'
   enemy:
-    text: '&7|&e) &6{label} &fenemy <&7clanName&f>'
+    text: '&7|&e) &6{label} &fenemy &8[add/remove]&f <&7clanName&f>'
     permission: 'enemy'
-  removeenemy:
-    text: '&7|&e) &6{label} &fenemy <&cremove&f> <&7clanName&f>'
-    permission: 'enemy.remove'
 
 #=====================================================#
 #  ██╗   ██╗ █████╗ ██╗     ██╗██████╗

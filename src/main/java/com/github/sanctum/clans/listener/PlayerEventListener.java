@@ -210,6 +210,7 @@ public class PlayerEventListener implements Listener {
 	public void onViewLogo(TimerEvent e) {
 		Player p = e.getPlayer();
 		if (!e.isAsynchronous()) {
+			if (e.getApi().isTrial()) return; // no pro, no provided holograms
 			ArmorStand test = Clan.ACTION.getArmorStandInSight(p, 5);
 			if (test != null) {
 				LogoHolder.Carrier t = LogoHolder.getCarrier(test.getLocation());
@@ -240,6 +241,7 @@ public class PlayerEventListener implements Listener {
 		Player p = e.getPlayer();
 		if (!e.isAsynchronous()) {
 			if (!LabyrinthProvider.getInstance().isNew()) return;
+			if (e.getApi().isTrial()) return; // no pro no reservoir
 			EnderCrystal test = Clan.ACTION.getEnderCrystalInSight(p, 5);
 			if (test != null) {
 				PersistentDataContainer container = test.getPersistentDataContainer();
@@ -330,6 +332,7 @@ public class PlayerEventListener implements Listener {
 	@EventHandler
 	public void onHealReservoir(PlayerInteractAtEntityEvent e) {
 		if (!LabyrinthProvider.getInstance().isNew()) return;
+		if (ClansAPI.getInstance().isTrial()) return;
 		Clan.Associate a = ClansAPI.getInstance().getAssociate(e.getPlayer()).orElse(null);
 		if (a != null) {
 			if (e.getRightClicked() instanceof EnderCrystal) {
@@ -815,24 +818,26 @@ public class PlayerEventListener implements Listener {
 				ClanDisplayName.remove(p);
 			}
 		}
-		if (Clan.ACTION.test(p, "clanspro.admin").deploy()) {
-			if (ClansAPI.getDataInstance().updateConfigs()) {
-				Clan.ACTION.sendMessage(p, "&b&oUpdated configuration to the latest plugin version.");
-			}
-			ClansUpdate check = new ClansUpdate(ClansAPI.getInstance().getPlugin());
-			TaskScheduler.of(() -> {
-				try {
-					if (check.hasUpdate()) {
-						TaskScheduler.of(() -> {
-							Clan.ACTION.sendMessage(p, "&b&l&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬oO[&fUpdate&b&l&m]Oo▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬");
-							Clan.ACTION.sendMessage(p, "&eNew version: &3Clans [Pro] &f" + check.getLatest());
-							Clan.ACTION.sendMessage(p, "&e&oDownload: &f&n" + check.getResource());
-							Clan.ACTION.sendMessage(p, "&b&l&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬");
-						}).schedule();
-					}
-				} catch (Exception ignored) {
+		if (Clan.ACTION.test(p, "clans.admin").deploy()) {
+			if (ClansAPI.getDataInstance().isTrue("Clans.check-version")) {
+				if (ClansAPI.getDataInstance().updateConfigs()) {
+					Clan.ACTION.sendMessage(p, "&b&oUpdated configuration to the latest plugin version.");
 				}
-			}).scheduleAsync();
+				ClansUpdate check = new ClansUpdate(ClansAPI.getInstance().getPlugin());
+				TaskScheduler.of(() -> {
+					try {
+						if (check.hasUpdate()) {
+							TaskScheduler.of(() -> {
+								Clan.ACTION.sendMessage(p, "&b&l&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬oO[&fUpdate&b&l&m]Oo▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬");
+								Clan.ACTION.sendMessage(p, "&eNew version: &3Clans [Pro] &f" + check.getLatest());
+								Clan.ACTION.sendMessage(p, "&e&oDownload: &f&n" + check.getResource());
+								Clan.ACTION.sendMessage(p, "&b&l&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬");
+							}).schedule();
+						}
+					} catch (Exception ignored) {
+					}
+				}).scheduleAsync();
+			}
 		}
 	}
 
@@ -949,7 +954,7 @@ public class PlayerEventListener implements Listener {
 					}
 				} else {
 					Mailer m = Mailer.empty(ClansAPI.getInstance().getPlugin()).prefix().start(ClansAPI.getInstance().getPrefix().toString()).finish();
-					m.announce(player -> Clan.ACTION.test(player, "clanspro.admin.alert").deploy(), "The spawn location for team " + t.name() + " is missing!").deploy();
+					m.announce(player -> Clan.ACTION.test(player, "clans.admin.alert").deploy(), "The spawn location for team " + t.name() + " is missing!").deploy();
 					Clan.ACTION.sendMessage(p, "&cThe clan arena system isn't properly configured. Contact staff for help.");
 				}
 			}

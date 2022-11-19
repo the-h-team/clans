@@ -49,7 +49,7 @@ public class MapAddon extends ClanAddon {
 
 		getServicesManager().unregisterAll(this);
 
-		getServicesManager().register(ClansAPI.getDataInstance().isTrue("Addon.Map.enhanced"), this, ServicePriority.High);
+		getServicesManager().register(ClansAPI.getDataInstance().isTrue("Addon.Map.enhanced") && !getApi().isTrial(), this, ServicePriority.High);
 
 		ClanVentBus.subscribe(CommandInformationAdaptEvent.class, Vent.Priority.HIGH, (e, subscription) -> {
 

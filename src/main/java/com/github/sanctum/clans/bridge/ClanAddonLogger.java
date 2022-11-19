@@ -5,18 +5,18 @@ import java.util.logging.Level;
 
 public interface ClanAddonLogger {
 
-	public void log(Level level, String info);
+	void log(Level level, String info);
 
-	public void info(Supplier<String> info);
+	void info(Supplier<String> info);
 
-	public void warn(Supplier<String> info);
+	void warn(Supplier<String> info);
 
-	public void error(Supplier<String> info);
+	void error(Supplier<String> info);
 
-	public void info(String info);
+	void info(String info);
 
-	public void warn(String info);
+	void warn(String info);
 
-	public void error(String info);
+	void error(String info);
 
 }

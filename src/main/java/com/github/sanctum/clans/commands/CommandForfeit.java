@@ -16,6 +16,7 @@ import org.bukkit.entity.Player;
 public class CommandForfeit extends ClanSubCommand {
 	public CommandForfeit() {
 		super("forfeit");
+		setUsage(ClansAPI.getDataInstance().getMessageString("Commands.forfeit.text"));
 		setAliases(Collections.singletonList("surrender"));
 	}
 
@@ -25,7 +26,7 @@ public class CommandForfeit extends ClanSubCommand {
 		Clan.Associate associate = ClansAPI.getInstance().getAssociate(p).orElse(null);
 
 		if (args.length == 0) {
-			if (!Clan.ACTION.test(p, "clanspro." + DataManager.Security.getPermission("forfeit")).deploy()) {
+			if (!Clan.ACTION.test(p, this.getPermission() + "." + DataManager.Security.getPermission("forfeit")).deploy()) {
 				lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("forfeit")));
 				return true;
 			}

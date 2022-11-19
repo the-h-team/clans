@@ -12,6 +12,7 @@ import org.bukkit.entity.Player;
 public class CommandTruce extends ClanSubCommand {
 	public CommandTruce() {
 		super("truce");
+		setUsage(ClansAPI.getDataInstance().getMessageString("Commands.truce.text"));
 	}
 
 	@Override
@@ -20,7 +21,7 @@ public class CommandTruce extends ClanSubCommand {
 		Clan.Associate associate = ClansAPI.getInstance().getAssociate(p).orElse(null);
 
 		if (args.length == 0) {
-			if (!Clan.ACTION.test(p, "clanspro." + DataManager.Security.getPermission("truce")).deploy()) {
+			if (!Clan.ACTION.test(p, this.getPermission() + "." + DataManager.Security.getPermission("truce")).deploy()) {
 				lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("truce")));
 				return true;
 			}

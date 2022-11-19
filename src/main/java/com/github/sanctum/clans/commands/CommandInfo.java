@@ -8,14 +8,54 @@ import com.github.sanctum.clans.construct.api.ClansAPI;
 import com.github.sanctum.clans.construct.api.GUI;
 import com.github.sanctum.clans.construct.extra.StringLibrary;
 import com.github.sanctum.clans.event.associate.AssociateDisplayInfoEvent;
+import com.github.sanctum.labyrinth.data.service.PlayerSearch;
+import com.github.sanctum.labyrinth.formatting.completion.SimpleTabCompletion;
+import com.github.sanctum.labyrinth.formatting.completion.TabCompletionIndex;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import java.util.UUID;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 
 public class CommandInfo extends ClanSubCommand {
 	public CommandInfo() {
 		super("info");
 		setAliases(Collections.singletonList("i"));
+		setUsage(ClansAPI.getDataInstance().getMessageString("Commands.info.text"));
+	}
+
+	@Override
+	public List<String> tab(Player player, String label, String[] args) {
+		return SimpleTabCompletion.of(args)
+				.then(TabCompletionIndex.ONE, getBaseCompletion(args))
+				.then(TabCompletionIndex.TWO, getLabel(), TabCompletionIndex.ONE, () -> {
+					List<String> list = new ArrayList<>();
+					for (PlayerSearch search : PlayerSearch.values()) {
+						OfflinePlayer pl = search.getPlayer();
+						ClansAPI.getInstance().getAssociate(pl).ifPresent(test -> list.add(test.getName()));
+					}
+					return list;
+				})
+				.then(TabCompletionIndex.TWO, getLabel(), TabCompletionIndex.ONE, () -> {
+					List<String> list = new ArrayList<>();
+					ClansAPI.getInstance().getClanManager().getClans().forEach(c -> list.add(c.getName()));
+					return list;
+				})
+				.then(TabCompletionIndex.TWO, "i", TabCompletionIndex.ONE, () -> {
+					List<String> list = new ArrayList<>();
+					for (PlayerSearch search : PlayerSearch.values()) {
+						OfflinePlayer pl = search.getPlayer();
+						ClansAPI.getInstance().getAssociate(pl).ifPresent(test -> list.add(test.getName()));
+					}
+					return list;
+				})
+				.then(TabCompletionIndex.TWO, "i", TabCompletionIndex.ONE, () -> {
+					List<String> list = new ArrayList<>();
+					ClansAPI.getInstance().getClanManager().getClans().forEach(c -> list.add(c.getName()));
+					return list;
+				})
+				.get();
 	}
 
 	@Override
@@ -23,7 +63,7 @@ public class CommandInfo extends ClanSubCommand {
 		StringLibrary lib = Clan.ACTION;
 		Clan.Associate associate = ClansAPI.getInstance().getAssociate(p).orElse(null);
 		if (args.length == 0) {
-			if (!Clan.ACTION.test(p, "clanspro." + DataManager.Security.getPermission("info")).deploy()) {
+			if (!Clan.ACTION.test(p, this.getPermission() + "." + DataManager.Security.getPermission("info")).deploy()) {
 				lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("info")));
 				return true;
 			}
@@ -40,7 +80,7 @@ public class CommandInfo extends ClanSubCommand {
 		}
 
 		if (args.length == 1) {
-			if (!Clan.ACTION.test(p, "clanspro." + DataManager.Security.getPermission("info-other")).deploy()) {
+			if (!Clan.ACTION.test(p, this.getPermission() + "." + DataManager.Security.getPermission("info-other")).deploy()) {
 				lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("info-other")));
 				return true;
 			}

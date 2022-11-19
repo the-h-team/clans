@@ -10,12 +10,14 @@ import com.github.sanctum.clans.construct.extra.StringLibrary;
 import com.github.sanctum.clans.event.associate.AssociateRenameClanEvent;
 import com.github.sanctum.labyrinth.LabyrinthProvider;
 import java.util.regex.Pattern;
+import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 
 public class CommandTag extends ClanSubCommand {
 	public CommandTag() {
 		super("tag");
+		setUsage(ClansAPI.getDataInstance().getMessageString("Commands.tag.text"));
 	}
 
 	@Override
@@ -24,7 +26,7 @@ public class CommandTag extends ClanSubCommand {
 		Clan.Associate associate = ClansAPI.getInstance().getAssociate(p).orElse(null);
 
 		if (args.length == 0) {
-			if (!Clan.ACTION.test(p, "clanspro." + DataManager.Security.getPermission("tag")).deploy()) {
+			if (!Clan.ACTION.test(p, this.getPermission() + "." + DataManager.Security.getPermission("tag")).deploy()) {
 				lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("tag")));
 				return true;
 			}
@@ -33,12 +35,12 @@ public class CommandTag extends ClanSubCommand {
 		}
 
 		if (args.length == 1) {
-			if (!Clan.ACTION.test(p, "clanspro." + DataManager.Security.getPermission("tag")).deploy()) {
+			if (!Clan.ACTION.test(p, this.getPermission() + "." + DataManager.Security.getPermission("tag")).deploy()) {
 				lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("tag")));
 				return true;
 			}
 			if (associate != null) {
-				Clan clan = ClansAPI.getInstance().getClanManager().getClan(p.getUniqueId());
+				Clan clan = associate.getClan();
 				if (associate.getPriority().toLevel() >= Clan.ACTION.tagChangeClearance()) {
 					if (!isAlphaNumeric(args[0])) {
 						lib.sendMessage(p, lib.nameInvalid(args[0]));
@@ -52,9 +54,13 @@ public class CommandTag extends ClanSubCommand {
 						lib.sendMessage(p, lib.alreadyMade(args[0]));
 						return true;
 					}
-					for (String s : ClansAPI.getDataInstance().getConfig().getRoot().getStringList("Clans.name-blacklist")) {
+					for (String s : ClansAPI.getDataInstance().getConfig().getRoot().getNode("Clans.name-blacklist").getKeys(false)) {
 						if (Pattern.compile(Pattern.quote(args[0]), Pattern.CASE_INSENSITIVE).matcher(s).find()) {
 							lib.sendMessage(p, "&c&oThis name is not allowed!");
+							String response = ClansAPI.getDataInstance().getConfig().getRoot().getNode("Clans.name-blacklist").getNode(s).getNode("action").toPrimitive().getString();
+							if (response != null && !response.isEmpty()) {
+								Bukkit.dispatchCommand(Bukkit.getConsoleSender(), response.replace("{PLAYER}", p.getName()));
+							}
 							return true;
 						}
 					}

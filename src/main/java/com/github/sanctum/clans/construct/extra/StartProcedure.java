@@ -101,6 +101,9 @@ public final class StartProcedure {
 	}
 
 	List<String> getLogo() {
+		if (instance.isTrial()) {
+			return new ArrayList<>(Arrays.asList("  ·▄▄▄▄▄▄  ▄▄▄ .▄▄▄ .▄▄ ", "  ▐▄▄·▀▄ █·▀▄.▀·▀▄.▀·██▌", "  ██▪ ▐▀▀▄ ▐▀▀▪▄▐▀▀▪▄▐█·", "  ██▌.▐█•█▌▐█▄▄▌▐█▄▄▌.▀ ", "  ▀▀▀ .▀  ▀ ▀▀▀  ▀▀▀  ▀ "));
+		}
 		return new ArrayList<>(Arrays.asList("   ▄▄▄·▄▄▄        ▄▄ ", "  ▐█ ▄█▀▄ █·▪     ██▌" + "  User ID: ", "   ██▀·▐▀▀▄  ▄█▀▄ ▐█·" + "   " + replaceDevKey(instance.USER_ID, 0), "  ▐█▪·•▐█•█▌▐█▌.▐▌.▀ " + "  Unique ID: ", "  .▀   .▀  ▀ ▀█▄▀▪ ▀ " + "   " + replaceDevKey(instance.NONCE, Integer.parseInt(new RandomID(5, "0123456789").generate()))));
 	}
 
@@ -136,7 +139,7 @@ public final class StartProcedure {
 	@Ordinal(1)
 	void a() {
 		instance.getLogger().info("▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬");
-		instance.getLogger().info("- Clans [Pro]. Loading plugin information...");
+		instance.getLogger().info("- Clans. Loading plugin information...");
 		instance.getLogger().info("▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬");
 		for (String ch : getLogo()) {
 			instance.getLogger().info("- " + ch);

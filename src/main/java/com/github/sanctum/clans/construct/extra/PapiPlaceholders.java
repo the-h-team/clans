@@ -31,7 +31,7 @@ public class PapiPlaceholders extends PlaceholderExpansion {
 
 	@Override
 	public @NotNull String getIdentifier() {
-		return "clanspro";
+		return "clans";
 	}
 
 	@Override

@@ -804,6 +804,10 @@ public interface Clan extends ClanBank, ConfigurationSerializable, EntityHolder,
 		}
 
 		public Color setEnd(String end) {
+			if (this.start == null) {
+				this.start = end; // you don't have a start color yet bruh lemme just do this for you..
+				return this;
+			}
 			this.end = end;
 			return this;
 		}
@@ -825,7 +829,10 @@ public interface Clan extends ClanBank, ConfigurationSerializable, EntityHolder,
 		}
 
 		public boolean isGradient() {
-			return end != null && start.contains("#") && end.contains("#");
+			boolean result = end != null && start.contains("#") && end.contains("#");
+			if (result && ClansAPI.getInstance().isTrial())
+				result = false; // gradients are for premium only. But hey you still get hex!
+			return result;
 		}
 
 		public boolean isHex() {

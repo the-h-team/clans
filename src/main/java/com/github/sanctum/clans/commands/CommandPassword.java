@@ -11,6 +11,7 @@ import org.bukkit.entity.Player;
 public class CommandPassword extends ClanSubCommand {
 	public CommandPassword() {
 		super("password");
+		setUsage(ClansAPI.getDataInstance().getMessageString("Commands.password.text"));
 	}
 
 	@Override
@@ -24,7 +25,7 @@ public class CommandPassword extends ClanSubCommand {
 		}
 
 		if (args.length == 0) {
-			if (!Clan.ACTION.test(p, "clanspro." + DataManager.Security.getPermission("password")).deploy()) {
+			if (!Clan.ACTION.test(p, this.getPermission() + "." + DataManager.Security.getPermission("password")).deploy()) {
 				lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("password")));
 				return true;
 			}
@@ -32,7 +33,7 @@ public class CommandPassword extends ClanSubCommand {
 		}
 
 		if (args.length == 1) {
-			if (!Clan.ACTION.test(p, "clanspro." + DataManager.Security.getPermission("password")).deploy()) {
+			if (!Clan.ACTION.test(p, this.getPermission() + "." + DataManager.Security.getPermission("password")).deploy()) {
 				lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("password")));
 				return true;
 			}

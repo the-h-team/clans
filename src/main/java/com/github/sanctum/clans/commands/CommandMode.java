@@ -19,6 +19,7 @@ import org.bukkit.entity.Player;
 public class CommandMode extends ClanSubCommand {
 	public CommandMode() {
 		super("mode");
+		setUsage(ClansAPI.getDataInstance().getMessageString("Commands.mode.text"));
 	}
 
 	@Override
@@ -34,16 +35,18 @@ public class CommandMode extends ClanSubCommand {
 		Reservoir r = Reservoir.get(associate.getClan());
 
 		if (args.length == 0) {
-			if (!Clan.ACTION.test(p, "clanspro." + DataManager.Security.getPermission("mode")).deploy()) {
+			if (!Clan.ACTION.test(p, this.getPermission() + "." + DataManager.Security.getPermission("mode")).deploy()) {
 				lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("mode")));
 				return true;
 			}
 			if (Clearance.MANAGE_MODE.test(associate)) {
 				DefaultClan c = (DefaultClan) associate.getClan();
 				if (c.isPeaceful()) {
-					if (r == null && ClansAPI.getDataInstance().isTrue("Clans.mode-change.require-reservoir")) {
-						lib.sendMessage(p, "&cYour clan must have a reservoir! Craft and place an end crystal on claimed land.");
-						return true;
+					if (!ClansAPI.getInstance().isTrial()) {
+						if (r == null && ClansAPI.getDataInstance().isTrue("Clans.mode-change.require-reservoir")) {
+							lib.sendMessage(p, "&cYour clan must have a reservoir! Craft and place an end crystal on claimed land.");
+							return true;
+						}
 					}
 					if (ClansAPI.getDataInstance().isTrue("Clans.mode-change.charge")) {
 						double amount = ClansAPI.getDataInstance().getConfig().getRoot().getDouble("Clans.mode-change.amount");
@@ -107,7 +110,7 @@ public class CommandMode extends ClanSubCommand {
 		}
 
 		if (args.length == 1) {
-			if (!Clan.ACTION.test(p, "clanspro." + DataManager.Security.getPermission("mode")).deploy()) {
+			if (!Clan.ACTION.test(p, this.getPermission() + "." + DataManager.Security.getPermission("mode")).deploy()) {
 				lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("mode")));
 				return true;
 			}

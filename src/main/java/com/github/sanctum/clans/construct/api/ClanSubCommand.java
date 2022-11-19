@@ -11,44 +11,50 @@ import org.bukkit.entity.Player;
 
 public abstract class ClanSubCommand {
 
-	private List<String> ALIASES = Collections.emptyList();
-
-	private String NOPERMISSION = "&cYou don't have permission <permission>";
-
-	private String PERMISSION = "clanspro";
-
+	private List<String> aliases = Collections.emptyList();
+	private String permMsg = "&cYou don't have permission <permission>";
+	private String permission = "clans";
+	private String usage = "&7|&f) &6{label}";
 	private String lastLabel;
-
-	private final String LABEL;
-
+	private final String label;
 	private boolean invisible;
 
 	public ClanSubCommand(String label) {
-		this.LABEL = label;
+		this.label = label;
 	}
 
 	public String getLabel() {
-		return this.LABEL;
+		return this.label;
 	}
 
 	protected final List<String> getBaseCompletion(String... args) {
-		return SimpleTabCompletion.of(args).then(TabCompletionIndex.ONE, getLabel()).get();
+		return SimpleTabCompletion.of(args)
+				.then(TabCompletionIndex.ONE, getLabel())
+				.get();
 	}
 
 	public void setNoPermissionMessage(String message) {
-		this.NOPERMISSION = message;
+		this.permMsg = message;
 	}
 
 	public void setPermission(String permission) {
-		this.PERMISSION = permission;
+		this.permission = permission;
+	}
+
+	public void setUsage(String usage) {
+		this.usage = usage;
 	}
 
 	public void setAliases(List<String> ALIASES) {
-		this.ALIASES = ALIASES;
+		this.aliases = ALIASES;
 	}
 
 	public String getPermission() {
-		return this.PERMISSION;
+		return this.permission;
+	}
+
+	public String getUsage() {
+		return usage;
 	}
 
 	public boolean isInvisible() {
@@ -59,6 +65,9 @@ public abstract class ClanSubCommand {
 		this.invisible = invisible;
 	}
 
+	/**
+	 * @return the last known label associated with this command.
+	 */
 	public String getLastLabel() {
 		return lastLabel;
 	}
@@ -68,11 +77,11 @@ public abstract class ClanSubCommand {
 	}
 
 	public boolean testPermission(Player target) {
-		if (this.PERMISSION != null && !this.PERMISSION.isEmpty()) {
-			if (target.hasPermission(this.PERMISSION)) {
+		if (this.permission != null && !this.permission.isEmpty()) {
+			if (target.hasPermission(this.permission)) {
 				return true;
 			} else {
-				Mailer.empty(target).chat(this.NOPERMISSION).deploy();
+				Mailer.empty(target).chat(this.permMsg).deploy();
 				return false;
 			}
 		} else {
@@ -94,7 +103,7 @@ public abstract class ClanSubCommand {
 	}
 
 	public List<String> getAliases() {
-		return this.ALIASES;
+		return this.aliases;
 	}
 
 	public abstract boolean player(Player player, String label, String[] args);

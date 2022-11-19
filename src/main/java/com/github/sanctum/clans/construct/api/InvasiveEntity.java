@@ -771,7 +771,7 @@ public interface InvasiveEntity extends Nameable, LogoHolder, Comparable<Invasiv
 	 * Create a brand-new teleportation for this entity.
 	 *
 	 * @param location The location to teleport [player, location]
-	 * @return A new teleportation or null
+	 * @return A new teleportation or null, a possible reason a teleport object could return as null is due to one already existing for an entity.
 	 */
 	default @Nullable Teleport newTeleport(Object location) {
 		if (getTeleport() != null) return null;

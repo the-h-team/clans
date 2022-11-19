@@ -388,22 +388,22 @@ public class ClanAction extends StringLibrary {
 
 	public Action<Boolean> test(@NotNull CommandSender p, @NotNull String permission) {
 		return () -> {
-			if (p.hasPermission("clanspro.*")) return true;
+			if (p.hasPermission("clans.*")) return true;
 			final StringUtils utils = StringUtils.use(permission);
 			if (utils.containsIgnoreCase(".admin")) {
-				if (p.hasPermission("clanspro.admin.*")) return true;
+				if (p.hasPermission("clans.admin.*")) return true;
 			}
 			if (utils.containsIgnoreCase(".ally")) {
-				if (p.hasPermission("clanspro.ally.*")) return true;
+				if (p.hasPermission("clans.ally.*")) return true;
 			}
 			if (utils.containsIgnoreCase(".enemy")) {
-				if (p.hasPermission("clanspro.enemy.*")) return true;
+				if (p.hasPermission("clans.enemy.*")) return true;
 			}
 			if (utils.containsIgnoreCase(".bank")) {
 				if (p.hasPermission(BankPermissions.BANKS_STAR.getNode()) || p.hasPermission(BankPermissions.BANKS_USE_STAR.getNode())) return true;
 			}
 			if (!utils.containsIgnoreCase(".admin")) {
-				if (p.hasPermission("clanspro.use.*")) return true;
+				if (p.hasPermission("clans.use.*")) return true;
 			}
 			return p.hasPermission(permission);
 		};

@@ -23,7 +23,7 @@ public class CommandAsk extends ClanSubCommand {
 			book.append("&lYou may have a few questions so we'll answer them here.")
 					.append("")
 					.append("&6&lQ.) &0&nHow do i make a clan?");
-			if (Clan.ACTION.test(p, "clanspro." + DataManager.Security.getPermission("create")).deploy()) {
+			if (Clan.ACTION.test(p, this.getPermission() + "." + DataManager.Security.getPermission("create")).deploy()) {
 				book.append("&2&lA.] &8" + "To make a clan simply type '/clan create <nameHere>', if you have permission this message will be gray.");
 			} else {
 				book.append("&2&lA.] &cTo make a clan simply type '/clan create <nameHere>', if you have permission this message will be gray.");

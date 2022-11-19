@@ -30,7 +30,7 @@ public class TraitsAddon extends ClanAddon {
 
 	@Override
 	public boolean isPersistent() {
-		return ClansAPI.getDataInstance().isTrue("Addon.Traits.enabled");
+		return ClansAPI.getDataInstance().isTrue("Addon.Traits.enabled") && !getApi().isTrial();
 	}
 
 	@Override

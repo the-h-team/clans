@@ -1,12 +1,9 @@
 package com.github.sanctum.clans.commands;
 
-import com.github.sanctum.clans.bridge.ClanVentBus;
 import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClanSubCommand;
 import com.github.sanctum.clans.construct.api.ClansAPI;
 import com.github.sanctum.clans.construct.extra.StringLibrary;
-import com.github.sanctum.clans.event.command.CommandInformationAdaptEvent;
-import com.github.sanctum.labyrinth.data.FileManager;
 import com.github.sanctum.labyrinth.formatting.pagination.EasyPagination;
 import com.github.sanctum.labyrinth.formatting.string.FormattedString;
 import com.github.sanctum.labyrinth.library.StringUtils;
@@ -25,12 +22,12 @@ public class CommandHelp extends ClanSubCommand {
 
 	private List<String> helpMenu(String label) {
 		List<String> help = new ArrayList<>();
-		FileManager msg = ClansAPI.getInstance().getFileList().get("Messages", "Configuration");
-		for (String s : msg.getRoot().getNode("Commands").getKeys(false)) {
-			help.add(msg.getRoot().getString("Commands." + s + ".text"));
-		}
-		CommandInformationAdaptEvent e = ClanVentBus.call(new CommandInformationAdaptEvent(help));
-		return e.getMenu().stream().map(s -> new FormattedString(s).replace("{label}", "/" + label).color().get()).collect(Collectors.toList());
+		ClansAPI.getInstance().getCommandManager().getCommands().forEach(c -> {
+			if (c.getUsage().equals("&7|&f) &6{label}")) {
+				help.add(c.getUsage().replace("{label}", "{label} " + c.getLabel()));
+			} else help.add(c.getUsage());
+		});
+		return help.stream().map(s -> new FormattedString(s).replace("{label}", "/" + label).get()).collect(Collectors.toList());
 	}
 
 	@Override

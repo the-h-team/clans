@@ -16,6 +16,7 @@ import org.bukkit.entity.Player;
 public class CommandAlly extends ClanSubCommand {
 	public CommandAlly() {
 		super("ally");
+		setUsage(ClansAPI.getDataInstance().getMessageString("Commands.ally.text"));
 	}
 
 	@Override

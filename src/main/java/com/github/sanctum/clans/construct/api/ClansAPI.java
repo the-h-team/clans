@@ -210,6 +210,13 @@ public interface ClansAPI {
 	boolean isUpdated();
 
 	/**
+	 * Check if this version of the plugin is limited.
+	 *
+	 * @return true if this is a trial version of pro.
+	 */
+	boolean isTrial();
+
+	/**
 	 * Check if a specified clan name is black-listed
 	 *
 	 * @param name The clan name in question

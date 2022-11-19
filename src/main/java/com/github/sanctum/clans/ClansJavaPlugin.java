@@ -332,6 +332,11 @@ public class ClansJavaPlugin extends JavaPlugin implements ClansAPI, Vent.Host {
 	}
 
 	@Override
+	public boolean isTrial() {
+		return true;
+	}
+
+	@Override
 	public boolean isNameBlackListed(String name) {
 		for (String s : ClansAPI.getDataInstance().getConfig().read(c -> c.getNode("Clans.name-blacklist").get(ConfigurationSection.class)).getKeys(false)) {
 			if (StringUtils.use(name).containsIgnoreCase(s)) {

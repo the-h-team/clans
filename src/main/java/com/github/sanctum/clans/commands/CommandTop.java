@@ -14,6 +14,7 @@ import org.bukkit.entity.Player;
 public class CommandTop extends ClanSubCommand {
 	public CommandTop() {
 		super("top");
+		setUsage(ClansAPI.getDataInstance().getMessageString("Commands.top.text"));
 	}
 
 	@Override
@@ -22,7 +23,7 @@ public class CommandTop extends ClanSubCommand {
 		Clan.Associate associate = ClansAPI.getInstance().getAssociate(p).orElse(null);
 
 		if (args.length == 0) {
-			if (!Clan.ACTION.test(p, "clanspro." + DataManager.Security.getPermission("top")).deploy()) {
+			if (!Clan.ACTION.test(p, this.getPermission() + "." + DataManager.Security.getPermission("top")).deploy()) {
 				lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("top")));
 				return true;
 			}
@@ -31,7 +32,7 @@ public class CommandTop extends ClanSubCommand {
 		}
 
 		if (args.length == 1) {
-			if (!Clan.ACTION.test(p, "clanspro." + DataManager.Security.getPermission("top")).deploy()) {
+			if (!Clan.ACTION.test(p, this.getPermission() + "." + DataManager.Security.getPermission("top")).deploy()) {
 				lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("top")));
 				return true;
 			}
@@ -56,7 +57,7 @@ public class CommandTop extends ClanSubCommand {
 		}
 
 		if (args.length == 2) {
-			if (!Clan.ACTION.test(p, "clanspro." + DataManager.Security.getPermission("top")).deploy()) {
+			if (!Clan.ACTION.test(p, this.getPermission() + "." + DataManager.Security.getPermission("top")).deploy()) {
 				lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("top")));
 				return true;
 			}

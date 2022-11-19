@@ -22,6 +22,7 @@ import org.bukkit.entity.Player;
 public class CommandClaim extends ClanSubCommand {
 	public CommandClaim() {
 		super("claim");
+		setUsage(ClansAPI.getDataInstance().getMessageString("Commands.claim.text"));
 	}
 
 	@Override
@@ -30,7 +31,7 @@ public class CommandClaim extends ClanSubCommand {
 		Clan.Associate associate = ClansAPI.getInstance().getAssociate(p).orElse(null);
 
 		if (args.length == 0) {
-			if (!Clan.ACTION.test(p, "clanspro." + DataManager.Security.getPermission("claim")).deploy()) {
+			if (!Clan.ACTION.test(p, this.getPermission() + "." + DataManager.Security.getPermission("claim")).deploy()) {
 				lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("claim")));
 				return true;
 			}
@@ -64,7 +65,7 @@ public class CommandClaim extends ClanSubCommand {
 		}
 
 		if (args.length == 1) {
-			if (!Clan.ACTION.test(p, "clanspro." + DataManager.Security.getPermission("claim")).deploy()) {
+			if (!Clan.ACTION.test(p, this.getPermission() + "." + DataManager.Security.getPermission("claim")).deploy()) {
 				lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("claim")));
 				return true;
 			}
@@ -176,7 +177,7 @@ public class CommandClaim extends ClanSubCommand {
 		}
 
 		if (args.length == 2) {
-			if (!Clan.ACTION.test(p, "clanspro." + DataManager.Security.getPermission("claim")).deploy()) {
+			if (!Clan.ACTION.test(p, this.getPermission() + "." + DataManager.Security.getPermission("claim")).deploy()) {
 				lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("claim")));
 				return true;
 			}
@@ -235,7 +236,7 @@ public class CommandClaim extends ClanSubCommand {
 		}
 
 		if (args.length == 3) {
-			if (!Clan.ACTION.test(p, "clanspro." + DataManager.Security.getPermission("claim")).deploy()) {
+			if (!Clan.ACTION.test(p, this.getPermission() + "." + DataManager.Security.getPermission("claim")).deploy()) {
 				lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("claim")));
 				return true;
 			}
@@ -280,7 +281,7 @@ public class CommandClaim extends ClanSubCommand {
 		for (int i = 1; i < args.length; i++)
 			rsn.append(args[i]).append(" ");
 		int stop = rsn.length() - 1;
-		if (!Clan.ACTION.test(p, "clanspro." + DataManager.Security.getPermission("claim")).deploy()) {
+		if (!Clan.ACTION.test(p, this.getPermission() + "." + DataManager.Security.getPermission("claim")).deploy()) {
 			lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("claim")));
 			return true;
 		}

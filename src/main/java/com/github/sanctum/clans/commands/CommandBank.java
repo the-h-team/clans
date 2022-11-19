@@ -36,6 +36,7 @@ public class CommandBank extends ClanSubCommand implements Message.Factory {
 		super("bank");
 		setAliases(Collections.singletonList("b"));
 		setInvisible(!ClansAPI.getDataInstance().isTrue("Clans.banks.enabled"));
+		setUsage(ClansAPI.getDataInstance().getMessageString("Commands.bank.text"));
 	}
 
 	@Override
@@ -447,7 +448,7 @@ public class CommandBank extends ClanSubCommand implements Message.Factory {
 				.then(TabCompletionIndex.TWO, getLabel(), TabCompletionIndex.ONE, () -> {
 					List<String> result = new ArrayList<>();
 					Optional<Clan.Associate> associate = ClansAPI.getInstance().getAssociate(p);
-					if (!Clan.ACTION.test(p, "clanspro." + DataManager.Security.getPermission("bank")).deploy()) {
+					if (!Clan.ACTION.test(p, this.getPermission() + "." + DataManager.Security.getPermission("bank")).deploy()) {
 						return result;
 					}
 
@@ -475,7 +476,7 @@ public class CommandBank extends ClanSubCommand implements Message.Factory {
 					return result;
 				}).then(TabCompletionIndex.THREE, "setperm", TabCompletionIndex.TWO, () -> {
 					List<String> result = new ArrayList<>();
-					if (!Clan.ACTION.test(p, "clanspro." + DataManager.Security.getPermission("bank")).deploy()) {
+					if (!Clan.ACTION.test(p, this.getPermission() + "." + DataManager.Security.getPermission("bank")).deploy()) {
 						return result;
 					}
 					if (EconomyProvision.getInstance().isValid()) {
@@ -492,7 +493,7 @@ public class CommandBank extends ClanSubCommand implements Message.Factory {
 					return result;
 				}).then(TabCompletionIndex.THREE, "deposit", TabCompletionIndex.TWO, () -> {
 					List<String> result = new ArrayList<>();
-					if (!Clan.ACTION.test(p, "clanspro." + DataManager.Security.getPermission("bank")).deploy()) {
+					if (!Clan.ACTION.test(p, this.getPermission() + "." + DataManager.Security.getPermission("bank")).deploy()) {
 						return result;
 					}
 					if (EconomyProvision.getInstance().isValid()) {
@@ -502,7 +503,7 @@ public class CommandBank extends ClanSubCommand implements Message.Factory {
 					return result;
 				}).then(TabCompletionIndex.THREE, "send", TabCompletionIndex.TWO, () -> {
 					List<String> result = new ArrayList<>();
-					if (!Clan.ACTION.test(p, "clanspro." + DataManager.Security.getPermission("bank")).deploy()) {
+					if (!Clan.ACTION.test(p, this.getPermission() + "." + DataManager.Security.getPermission("bank")).deploy()) {
 						return result;
 					}
 					if (EconomyProvision.getInstance().isValid()) {
@@ -512,7 +513,7 @@ public class CommandBank extends ClanSubCommand implements Message.Factory {
 					return result;
 				}).then(TabCompletionIndex.THREE, "withdraw", TabCompletionIndex.TWO, () -> {
 					List<String> result = new ArrayList<>();
-					if (!Clan.ACTION.test(p, "clanspro." + DataManager.Security.getPermission("bank")).deploy()) {
+					if (!Clan.ACTION.test(p, this.getPermission() + "." + DataManager.Security.getPermission("bank")).deploy()) {
 						return result;
 					}
 					if (EconomyProvision.getInstance().isValid()) {
@@ -522,7 +523,7 @@ public class CommandBank extends ClanSubCommand implements Message.Factory {
 					return result;
 				}).then(TabCompletionIndex.FOUR, "setperm", TabCompletionIndex.TWO, () -> {
 					List<String> result = new ArrayList<>();
-					if (!Clan.ACTION.test(p, "clanspro." + DataManager.Security.getPermission("bank")).deploy()) {
+					if (!Clan.ACTION.test(p, this.getPermission() + "." + DataManager.Security.getPermission("bank")).deploy()) {
 						return result;
 					}
 					if (EconomyProvision.getInstance().isValid()) {

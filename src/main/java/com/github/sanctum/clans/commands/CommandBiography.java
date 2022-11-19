@@ -10,6 +10,7 @@ import org.bukkit.entity.Player;
 public class CommandBiography extends ClanSubCommand {
 	public CommandBiography() {
 		super("bio");
+		setUsage(ClansAPI.getDataInstance().getMessageString("Commands.bio.text"));
 	}
 
 	@Override
@@ -21,7 +22,7 @@ public class CommandBiography extends ClanSubCommand {
 			return true;
 		}
 		if (args.length == 1) {
-			if (!Clan.ACTION.test(p, "clanspro." + DataManager.Security.getPermission("bio")).deploy()) {
+			if (!Clan.ACTION.test(p, this.getPermission() + "." + DataManager.Security.getPermission("bio")).deploy()) {
 				lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("bio")));
 				return true;
 			}
@@ -32,7 +33,7 @@ public class CommandBiography extends ClanSubCommand {
 		}
 
 		if (args.length == 2) {
-			if (!Clan.ACTION.test(p, "clanspro." + DataManager.Security.getPermission("bio")).deploy()) {
+			if (!Clan.ACTION.test(p, this.getPermission() + "." + DataManager.Security.getPermission("bio")).deploy()) {
 				lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("bio")));
 				return true;
 			}
@@ -48,7 +49,7 @@ public class CommandBiography extends ClanSubCommand {
 		for (int i = 1; i < args.length; i++)
 			rsn.append(args[i]).append(" ");
 		int stop = rsn.length() - 1;
-		if (!Clan.ACTION.test(p, "clanspro." + DataManager.Security.getPermission("bio")).deploy()) {
+		if (!Clan.ACTION.test(p, this.getPermission() + "." + DataManager.Security.getPermission("bio")).deploy()) {
 			lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("bio")));
 			return true;
 		}

@@ -13,6 +13,7 @@ import org.bukkit.entity.Player;
 public class CommandSetbase extends ClanSubCommand {
 	public CommandSetbase() {
 		super("setbase");
+		setUsage(ClansAPI.getDataInstance().getMessageString("Commands.setbase.text"));
 	}
 
 	@Override
@@ -21,7 +22,7 @@ public class CommandSetbase extends ClanSubCommand {
 		Clan.Associate associate = ClansAPI.getInstance().getAssociate(p).orElse(null);
 
 		if (args.length == 0) {
-			if (!Clan.ACTION.test(p, "clanspro." + DataManager.Security.getPermission("setbase")).deploy()) {
+			if (!Clan.ACTION.test(p, this.getPermission() + "." + DataManager.Security.getPermission("setbase")).deploy()) {
 				lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("setbase")));
 				return true;
 			}

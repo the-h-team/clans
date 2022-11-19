@@ -7,10 +7,10 @@ import com.github.sanctum.clans.construct.api.ClansAPI;
 import com.github.sanctum.clans.construct.extra.StringLibrary;
 import com.github.sanctum.labyrinth.formatting.completion.SimpleTabCompletion;
 import com.github.sanctum.labyrinth.formatting.completion.TabCompletionIndex;
+import com.github.sanctum.panther.container.PantherEntryMap;
+import com.github.sanctum.panther.container.PantherMap;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import org.bukkit.Bukkit;
@@ -19,9 +19,10 @@ import org.bukkit.entity.Player;
 public class CommandBlock extends ClanSubCommand {
 	public CommandBlock() {
 		super("block");
+		setUsage(ClansAPI.getDataInstance().getMessageString("Commands.block.text"));
 	}
 
-	static final Map<Player, List<UUID>> blockedUsers = new HashMap<>();
+	static final PantherMap<Player, List<UUID>> blockedUsers = new PantherEntryMap<>();
 
 	@Override
 	public boolean player(Player p, String label, String[] args) {
@@ -39,33 +40,26 @@ public class CommandBlock extends ClanSubCommand {
 		}
 
 		if (args.length == 1) {
-			if (!Clan.ACTION.test(p, "clanspro." + DataManager.Security.getPermission("block")).deploy()) {
+			if (!Clan.ACTION.test(p, this.getPermission() + "." + DataManager.Security.getPermission("block")).deploy()) {
 				lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("block")));
 				return true;
 			}
 			Player target = Bukkit.getPlayer(args[0]);
 			if (target != null) {
-				if (blockedUsers.containsKey(p)) {
-					List<UUID> a = blockedUsers.get(p);
-					if (a.contains(target.getUniqueId())) {
-						// already blocked
-						a.remove(target.getUniqueId());
-						blockedUsers.put(p, a);
-						lib.sendMessage(p, target.getName() + " &a&ohas been unblocked.");
-					} else {
-						a.add(target.getUniqueId());
-						blockedUsers.put(p, a);
-						lib.sendMessage(p, target.getName() + " &c&ohas been blocked.");
-						return true;
-					}
+				List<UUID> a = blockedUsers.computeIfAbsent(p, new ArrayList<>());
+				if (a.contains(target.getUniqueId())) {
+					// already blocked
+					a.remove(target.getUniqueId());
+					blockedUsers.put(p, a);
+					lib.sendMessage(p, target.getName() + " &a&ohas been unblocked.");
 				} else {
-					// make it
-					List<UUID> ids = new ArrayList<>();
-					ids.add(target.getUniqueId());
-					blockedUsers.put(p, ids);
+					a.add(target.getUniqueId());
+					blockedUsers.put(p, a);
 					lib.sendMessage(p, target.getName() + " &c&ohas been blocked.");
 					return true;
 				}
+			} else {
+				lib.sendMessage(p, lib.playerUnknown(args[0]));
 			}
 			return true;
 		}

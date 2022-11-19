@@ -15,6 +15,7 @@ import org.bukkit.entity.Player;
 public class CommandRelations extends ClanSubCommand {
 	public CommandRelations() {
 		super("relations");
+		setUsage("&7|&f) &6{label} &8(*gui)");
 	}
 
 	@Override

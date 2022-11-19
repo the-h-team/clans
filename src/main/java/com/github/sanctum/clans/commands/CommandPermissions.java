@@ -20,6 +20,7 @@ import org.bukkit.entity.Player;
 public class CommandPermissions extends ClanSubCommand {
 	public CommandPermissions() {
 		super("permissions");
+		setUsage(ClansAPI.getDataInstance().getMessageString("Commands.permissions.text"));
 		setAliases(Collections.singletonList("perms"));
 	}
 
@@ -46,7 +47,7 @@ public class CommandPermissions extends ClanSubCommand {
 		}
 
 		if (args.length == 0) {
-			if (!Clan.ACTION.test(p, "clanspro." + DataManager.Security.getPermission("permissions")).deploy()) {
+			if (!Clan.ACTION.test(p, this.getPermission() + "." + DataManager.Security.getPermission("permissions")).deploy()) {
 				lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("permissions")));
 				return true;
 			}

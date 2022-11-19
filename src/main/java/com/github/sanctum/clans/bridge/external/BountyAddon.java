@@ -22,7 +22,7 @@ public class BountyAddon extends ClanAddon {
 
 	@Override
 	public boolean isPersistent() {
-		return EconomyProvision.getInstance().isValid();
+		return EconomyProvision.getInstance().isValid() && !getApi().isTrial();
 	}
 
 	@Override
@@ -32,7 +32,7 @@ public class BountyAddon extends ClanAddon {
 
 	@Override
 	public @NotNull String getDescription() {
-		return "Just like GTA, Mark bounties on players! Earn money for you or your clan.";
+		return "Mark bounties on players! Earn money for you or your clan.";
 	}
 
 	@Override
