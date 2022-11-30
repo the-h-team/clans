@@ -1,7 +1,23 @@
 plugins {
     id("pro.java-conventions")
+//    id("com.diffplug.spotless")
 }
 
-dependencies {
-    compileOnly("org.jetbrains:annotations:23.0.0")
-}
+//spotless {
+//    java {
+//        importOrder()
+//        removeUnusedImports()
+//        googleJavaFormat()
+//        indentWithSpaces(4)
+//        formatAnnotations()
+//        trimTrailingWhitespace()
+//        endWithNewline()
+//    }
+//    format("configs") {
+//        target("**/*.yml")
+//        targetExclude("run/**")
+//        indentWithSpaces(2)
+//        trimTrailingWhitespace()
+//        endWithNewline()
+//    }
+//}
