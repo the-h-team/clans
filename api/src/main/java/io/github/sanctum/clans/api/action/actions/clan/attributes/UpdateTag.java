@@ -7,53 +7,54 @@ import org.jetbrains.annotations.NotNull;
 
 /**
  * API for updating a clan's tag.
+ * <p>
+ * The output of {@link #getClan()} is the new tag.
  *
  * @since 3.0.0
  * @author ms5984
  */
-public interface UpdateTag extends HasClanContext {
+public interface UpdateTag extends ApiAction.Result<UpdateTag.Args>, HasClanContext {
     /**
-     * Get the new tag of the clan.
+     * Get the old clan tag.
      *
-     * @return a new clan tag
+     * @return the old clan tag
      */
-    default @NotNull @Clan.Tag String getNewTag() {
+    default @NotNull @Clan.Tag String getOldTag() {
         //noinspection PatternValidation
-        return (String) getArgs().get("new-tag");
+        return (String) getResults().get("old-tag");
     }
 
     /**
-     * Set the new tag of the clan.
+     * Evaluate whether the tag was updated.
      *
-     * @param tag a new clan tag
+     * @return true if the tag was updated
      */
-    void setNewTag(@NotNull @Clan.Tag String tag);
+    default boolean isChanged() {
+        return !getClan().equals(getOldTag());
+    }
 
     /**
-     * The result of {@link UpdateTag}.
-     * <p>
-     * The output of {@link #getClan()} is the new tag.
+     * Arguments for {@link UpdateTag}.
      *
+     * @implSpec {@link #setClan(String)} must be supported
      * @since 3.0.0
      */
-    interface Result extends ApiAction.Result<UpdateTag>, HasClanContext {
+    interface Args extends HasClanContext {
         /**
-         * Get the old clan tag.
+         * Get the new tag of the clan.
          *
-         * @return the old clan tag
+         * @return a new clan tag
          */
-        default @NotNull @Clan.Tag String getOldTag() {
+        default @NotNull @Clan.Tag String getNewTag() {
             //noinspection PatternValidation
-            return (String) getResults().get("old-tag");
+            return (String) getArgs().get("new-tag");
         }
 
         /**
-         * Evaluate whether the tag was updated.
+         * Set the new tag of the clan.
          *
-         * @return true if the tag was updated
+         * @param tag a new clan tag
          */
-        default boolean isChanged() {
-            return !getClan().equals(getOldTag());
-        }
+        void setNewTag(@NotNull @Clan.Tag String tag);
     }
 }

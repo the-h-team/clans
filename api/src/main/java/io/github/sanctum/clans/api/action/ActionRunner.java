@@ -18,5 +18,5 @@ public interface ActionRunner {
      * @param input steps to prepare the action
      * @return an action result future
      */
-    @NotNull <R extends ApiAction.Result<A>, A extends ApiAction> CompletableFuture<R> run(@NotNull Class<R> result, @NotNull ApiAction.ProcessStep<A> input);
+    @NotNull <R extends ApiAction.Result<A>, A extends ApiAction> CompletableFuture<R> run(@NotNull Class<R> result, @NotNull ProcessStep<A> input);
 }
