@@ -14,17 +14,9 @@ public interface ActionRunner {
     /**
      * Run an API action.
      *
-     * @param action the action type to evaluate
+     * @param result the results class
+     * @param input steps to prepare the action
      * @return an action result future
      */
-    @NotNull <T extends ApiAction> CompletableFuture<ApiAction.Result<T>> getActionResult(@NotNull Class<T> action);
-
-    /**
-     * Run an API action.
-     *
-     * @param action the action type to evaluate
-     * @param processing a process step to perform on the action
-     * @return an action result future
-     */
-    @NotNull <T extends ApiAction> CompletableFuture<ApiAction.Result<T>> getActionResult(@NotNull Class<T> action, @NotNull ApiAction.ProcessStep<T> processing);
+    @NotNull <R extends ApiAction.Result<A>, A extends ApiAction> CompletableFuture<R> run(@NotNull Class<R> result, @NotNull ApiAction.ProcessStep<A> input);
 }

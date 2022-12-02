@@ -21,7 +21,7 @@ public interface GetBio extends ApiAction {
      * @since 3.0.0
      */
     @ApiStatus.NonExtendable
-    interface Result extends ApiAction.Result<GetBio> {
+    interface Result<A extends GetBio> extends ApiAction.Result<A> {
         /**
          * Get the bio.
          *
@@ -46,7 +46,7 @@ public interface GetBio extends ApiAction {
          * @since 3.0.0
          */
         @ApiStatus.NonExtendable
-        interface Result extends GetBio.Result, HasClanContext {}
+        interface Result extends GetBio.Result<OfClan>, HasClanContext {}
     }
 
     /**
@@ -62,6 +62,6 @@ public interface GetBio extends ApiAction {
          * @since 3.0.0
          */
         @ApiStatus.NonExtendable
-        interface Result extends GetBio.Result, HasAssociateContext {}
+        interface Result extends GetBio.Result<OfAssociate>, HasAssociateContext {}
     }
 }

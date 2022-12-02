@@ -19,7 +19,7 @@ public interface Clan {
     @RegExp String TAG_FORMAT = "^\\w(?:[\\w-]*\\w)?$";
 
     /**
-     * The required format of a clan password.
+     * The required format of a clan password (if defined).
      * <p>
      * In general, clan passwords may contain any non-whitespace character.
      * Additionally, they must not be an empty string.

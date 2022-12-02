@@ -32,7 +32,33 @@ public interface UpdateBio extends ApiAction {
      */
     void setNewBio(@Nullable @Bio.Format String newBio);
 
-    // TODO add result api
+
+    /**
+     * The result of {@link UpdateBio}.
+     *
+     * @since 3.0.0
+     */
+    interface Result<A extends UpdateBio> extends ApiAction.Result<A> {
+        /**
+         * Get the previous bio of this object.
+         *
+         * @return the previous bio or null if none
+         */
+        default @Nullable @Bio.Format String getOldBio() {
+            //noinspection PatternValidation
+            return (String) getResults().get("old-bio");
+        }
+
+        /**
+         * Get the new bio of this object.
+         *
+         * @return the new bio or null if none
+         */
+        default @Nullable @Bio.Format String getNewBio() {
+            //noinspection PatternValidation
+            return (String) getResults().get("new-bio");
+        }
+    }
 
     /**
      * API for updating a clan's bio.
@@ -40,7 +66,15 @@ public interface UpdateBio extends ApiAction {
      * @since 3.0.0
      */
     @ApiStatus.NonExtendable
-    interface OfClan extends UpdateBio, HasClanContext {}
+    interface OfClan extends UpdateBio, HasClanContext {
+        /**
+         * The result of {@link OfClan}.
+         *
+         * @since 3.0.0
+         */
+        @ApiStatus.NonExtendable
+        interface Result extends UpdateBio.Result<OfClan>, HasClanContext {}
+    }
 
     /**
      * API for updating an associate's bio.
@@ -48,5 +82,13 @@ public interface UpdateBio extends ApiAction {
      * @since 3.0.0
      */
     @ApiStatus.NonExtendable
-    interface OfAssociate extends UpdateBio, HasAssociateContext {}
+    interface OfAssociate extends UpdateBio, HasAssociateContext {
+        /**
+         * The result of {@link OfAssociate}.
+         *
+         * @since 3.0.0
+         */
+        @ApiStatus.NonExtendable
+        interface Result extends UpdateBio.Result<OfAssociate>, HasAssociateContext {}
+    }
 }
