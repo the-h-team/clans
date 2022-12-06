@@ -60,7 +60,7 @@ public interface AssociateClan {
     @ApiStatus.NonExtendable
     interface Get extends ApiAction.Result<Get.Args>, HasAssociateContext {
         /**
-         * Get the associate's clan, if any.
+         * Gets the associate's clan, if any.
          *
          * @return a clan tag or null if associate not in a clan
          */
@@ -87,7 +87,7 @@ public interface AssociateClan {
     @ApiStatus.NonExtendable
     interface Update extends ApiAction.Result<Update>, HasAssociateContext {
         /**
-         * Get the update type.
+         * Gets the update type.
          *
          * @return the update type
          */
@@ -96,7 +96,7 @@ public interface AssociateClan {
         }
 
         /**
-         * Get the previous clan of the associate, if any.
+         * Gets the previous clan of the associate, if any.
          *
          * @return the old clan or null if none
          */
@@ -106,7 +106,7 @@ public interface AssociateClan {
         }
 
         /**
-         * Get the new clan of the associate, if any.
+         * Gets the new clan of the associate, if any.
          *
          * @return the new clan of the associate or null if none
          */
@@ -124,7 +124,7 @@ public interface AssociateClan {
         @ApiStatus.NonExtendable
         interface Args extends HasAssociateContext {
             /**
-             * Get the update type.
+             * Gets the update type.
              *
              * @return the update type
              */
@@ -133,14 +133,14 @@ public interface AssociateClan {
             }
 
             /**
-             * Set the update type.
+             * Sets the update type.
              *
              * @param type the update type
              */
             void setType(@NotNull UpdateType type);
 
             /**
-             * Get the new clan of the associate, if any.
+             * Gets the new clan of the associate, if any.
              *
              * @return a new clan or null if none
              */
@@ -150,7 +150,7 @@ public interface AssociateClan {
             }
 
             /**
-             * Set the new clan of the associate.
+             * Sets the new clan of the associate.
              *
              * @param clan a new clan or null if none
              */

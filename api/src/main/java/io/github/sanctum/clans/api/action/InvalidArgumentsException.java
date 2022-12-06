@@ -39,7 +39,7 @@ public class InvalidArgumentsException extends RuntimeException {
     }
 
     /**
-     * Get the arguments map.
+     * Gets the arguments map.
      *
      * @return the arguments map
      */

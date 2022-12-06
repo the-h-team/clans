@@ -16,7 +16,7 @@ import org.jetbrains.annotations.Nullable;
 @ApiStatus.NonExtendable
 public interface CreateClan extends ApiAction {
     /**
-     * Get the tag of the clan to be created.
+     * Gets the tag of the clan to be created.
      *
      * @return a clan tag
      */
@@ -26,7 +26,7 @@ public interface CreateClan extends ApiAction {
     }
 
     /**
-     * Set the tag of the clan to be created.
+     * Sets the tag of the clan to be created.
      *
      * @param tag a clan tag
      * @throws IllegalArgumentException if {@code tag} format invalid
@@ -39,7 +39,7 @@ public interface CreateClan extends ApiAction {
     }
 
     /**
-     * Get the password that will be required for those joining the clan.
+     * Gets the password that will be required for those joining the clan.
      * <p>
      * It is not required to set a password. The default response is null.
      *
@@ -51,7 +51,7 @@ public interface CreateClan extends ApiAction {
     }
 
     /**
-     * Set the password that will be required for those joining the clan.
+     * Sets the password that will be required for those joining the clan.
      *
      * @param password the password or null if no password is desired
      */
@@ -59,12 +59,14 @@ public interface CreateClan extends ApiAction {
 
     /**
      * The result of {@link CreateClan}.
+     * <p>
+     * The output of {@link #getClan()} is the new clan.
      *
      * @since 3.0.0
      */
     interface Result extends ApiAction.Result<CreateClan>, HasClanContext {
         /**
-         * Get the password (if any) required by those joining the clan.
+         * Gets the password (if any) required by those joining the clan.
          *
          * @return the password or null if no password is required
          */

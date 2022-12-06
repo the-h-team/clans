@@ -11,7 +11,7 @@ import org.jetbrains.annotations.NotNull;
  */
 public interface HasAnotherAssociateContext extends HasAssociateContext {
     /**
-     * Get the other context associate of this action.
+     * Gets the other context associate of this action.
      *
      * @return the other associate's name
      */
@@ -21,7 +21,7 @@ public interface HasAnotherAssociateContext extends HasAssociateContext {
     }
 
     /**
-     * Set the other context associate of this action.
+     * Sets the other context associate of this action.
      *
      * @param otherName the other associate's name
      * @throws IllegalArgumentException if {@code otherName} format invalid

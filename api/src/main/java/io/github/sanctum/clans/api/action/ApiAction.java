@@ -14,7 +14,7 @@ import java.util.Map;
 @ApiStatus.NonExtendable
 public interface ApiAction {
     /**
-     * Get the raw arguments map of this action.
+     * Gets the raw arguments map of this action.
      *
      * @return a map of arguments
      */
@@ -33,14 +33,14 @@ public interface ApiAction {
     @ApiStatus.NonExtendable
     interface Result<T extends ApiAction> extends ApiAction {
         /**
-         * Get the action which produced this result.
+         * Gets the action which produced this result.
          *
          * @return the action
          */
         @NotNull T getAction();
 
         /**
-         * Get the results of this action.
+         * Gets the results of this action.
          *
          * @return a map of results
          */

@@ -7,9 +7,10 @@ import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.Nullable;
 
 /**
- * API for join password.
+ * Actions for join password.
  *
  * @since 3.0.0
+ * @see Clan.Password
  * @author ms5984
  */
 @ApiStatus.NonExtendable
@@ -22,7 +23,7 @@ public interface JoinPassword {
     @ApiStatus.NonExtendable
     interface Get extends ApiAction.Result<Get.Args> {
         /**
-         * Get the join password, if defined.
+         * Gets the join password, if defined.
          *
          * @return the password or null if not set
          */
@@ -46,7 +47,7 @@ public interface JoinPassword {
     @ApiStatus.NonExtendable
     interface Update extends ApiAction.Result<Update.Args> {
         /**
-         * Get the old join password, if it was defined.
+         * Gets the old join password, if it was defined.
          *
          * @return the old password or null if it was not set
          */
@@ -56,7 +57,7 @@ public interface JoinPassword {
         }
 
         /**
-         * Get the new join password.
+         * Gets the new join password.
          *
          * @return the new password or null if it was unset
          */
@@ -74,7 +75,7 @@ public interface JoinPassword {
         @ApiStatus.NonExtendable
         interface Args extends HasClanContext {
             /**
-             * Get the new join password.
+             * Gets the new join password.
              *
              * @return the new password or null if it was unset
              */

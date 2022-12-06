@@ -12,7 +12,7 @@ import java.util.concurrent.CompletableFuture;
  */
 public interface ActionRunner {
     /**
-     * Run an API action.
+     * Runs an API action.
      *
      * @param result the results class
      * @param input steps to prepare the action

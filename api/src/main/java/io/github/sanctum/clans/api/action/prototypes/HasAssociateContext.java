@@ -12,7 +12,7 @@ import org.jetbrains.annotations.NotNull;
  */
 public interface HasAssociateContext extends ApiAction {
     /**
-     * Get the context associate of this action.
+     * Gets the context associate of this action.
      *
      * @return the context associate's name
      */
@@ -22,7 +22,7 @@ public interface HasAssociateContext extends ApiAction {
     }
 
     /**
-     * Set the context associate of this action.
+     * Sets the context associate of this action.
      *
      * @param name the context associate's name
      * @throws IllegalArgumentException if {@code associate} format invalid

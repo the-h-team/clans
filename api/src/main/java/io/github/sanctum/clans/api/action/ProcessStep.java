@@ -20,7 +20,7 @@ interface ProcessStep<T extends ApiAction> {
     void process(@NotNull T action);
 
     /**
-     * Chain a process step to execute after this one.
+     * Chains a process step to execute after this one.
      *
      * @param another another process step
      * @return a process step chain
@@ -33,7 +33,7 @@ interface ProcessStep<T extends ApiAction> {
     }
 
     /**
-     * Get a process step that does nothing.
+     * Creates a process step that does nothing.
      *
      * @return a no-op process step
      */

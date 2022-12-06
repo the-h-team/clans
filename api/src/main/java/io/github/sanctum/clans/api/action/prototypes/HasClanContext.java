@@ -12,7 +12,7 @@ import org.jetbrains.annotations.NotNull;
  */
 public interface HasClanContext extends ApiAction {
     /**
-     * Get the context clan of this action.
+     * Gets the context clan of this action.
      *
      * @return the context clan tag
      */
@@ -22,7 +22,7 @@ public interface HasClanContext extends ApiAction {
     }
 
     /**
-     * Set the context clan of this action.
+     * Sets the context clan of this action.
      *
      * @param tag the context clan tag
      * @throws IllegalArgumentException if {@code tag} format invalid

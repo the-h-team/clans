@@ -11,7 +11,7 @@ import org.jetbrains.annotations.NotNull;
  */
 public interface HasAnotherClanContext extends HasClanContext {
     /**
-     * Get the other context clan of this action.
+     * Gets the other context clan of this action.
      *
      * @return the tag of the other clan
      */
@@ -21,7 +21,7 @@ public interface HasAnotherClanContext extends HasClanContext {
     }
 
     /**
-     * Set the other context clan of this action.
+     * Sets the other context clan of this action.
      *
      * @param otherTag the tag of the other clan
      * @throws IllegalArgumentException if {@code otherTag} format invalid

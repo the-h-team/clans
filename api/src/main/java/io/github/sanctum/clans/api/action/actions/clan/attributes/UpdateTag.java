@@ -15,7 +15,7 @@ import org.jetbrains.annotations.NotNull;
  */
 public interface UpdateTag extends ApiAction.Result<UpdateTag.Args>, HasClanContext {
     /**
-     * Get the old clan tag.
+     * Gets the old clan tag.
      *
      * @return the old clan tag
      */
@@ -25,7 +25,7 @@ public interface UpdateTag extends ApiAction.Result<UpdateTag.Args>, HasClanCont
     }
 
     /**
-     * Evaluate whether the tag was updated.
+     * Evaluates whether the tag was updated.
      *
      * @return true if the tag was updated
      */
@@ -41,7 +41,7 @@ public interface UpdateTag extends ApiAction.Result<UpdateTag.Args>, HasClanCont
      */
     interface Args extends HasClanContext {
         /**
-         * Get the new tag of the clan.
+         * Gets the new tag of the clan.
          *
          * @return a new clan tag
          */
@@ -51,7 +51,7 @@ public interface UpdateTag extends ApiAction.Result<UpdateTag.Args>, HasClanCont
         }
 
         /**
-         * Set the new tag of the clan.
+         * Sets the new tag of the clan.
          *
          * @param tag a new clan tag
          */
