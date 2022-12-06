@@ -85,7 +85,7 @@ public interface AssociateClan {
      * @since 3.0.0
      */
     @ApiStatus.NonExtendable
-    interface Update extends ApiAction.Result<Update>, HasAssociateContext {
+    interface Update extends ApiAction.Result<Update.Args>, HasAssociateContext {
         /**
          * Gets the update type.
          *
