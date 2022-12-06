@@ -12,9 +12,11 @@ plugins {
     id("pro.dynmap-conventions")
     id("pro.codestyle-conventions")
     id("pro.publish-conventions")
+    id("com.github.johnrengelman.shadow") version "7.1.2"
 }
 
 dependencies {
+    implementation(project(":api"))
     implementation("com.github.the-h-team:Enterprise:1.5")
     implementation("com.github.the-h-team.Panther:panther-placeholders:1.0.0")
     implementation("com.github.the-h-team.Panther:panther-common:1.0.0")
@@ -26,6 +28,17 @@ dependencies {
 }
 
 tasks.withType<ProcessResources> {
-    include("plugin.yml")
-    expand(project.properties)
+    // Include all resources...
+    filesMatching("plugin.yml") {
+        // but only expand properties for the plugin.yml
+        expand(project.properties)
+    }
+}
+
+tasks.withType<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar> {
+    archiveFileName.set("${rootProject.name}-plugin-${project.version}.jar")
+    archiveClassifier.set("plugin")
+    dependencies {
+        include(project(":api"))
+    }
 }

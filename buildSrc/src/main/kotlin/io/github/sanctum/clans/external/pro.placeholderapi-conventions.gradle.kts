@@ -14,5 +14,7 @@ repositories {
 }
 
 dependencies {
-    implementation("me.clip:placeholderapi:$placeholderApiVersion")
+    // Mark as compileOnly to prevent shadow from trying to analyze it
+    // This is okay because PlaceholderAPI is provided at runtime
+    compileOnly("me.clip:placeholderapi:$placeholderApiVersion")
 }
