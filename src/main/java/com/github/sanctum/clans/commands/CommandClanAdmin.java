@@ -588,7 +588,7 @@ public class CommandClanAdmin extends Command {
 				} else {
 					lib.sendMessage(p, "&3&oPlayer " + args1 + " was kicked from their clan.");
 					if (Bukkit.getOfflinePlayer(target).isOnline()) {
-						lib.sendMessage(Bukkit.getPlayer(target), "&5&oA staff member has removed you from your current clan.");
+						lib.sendMessage(Bukkit.getPlayer(target), ClansAPI.getDataInstance().getMessageResponse("removed-out"));
 					}
 					return true;
 				}
