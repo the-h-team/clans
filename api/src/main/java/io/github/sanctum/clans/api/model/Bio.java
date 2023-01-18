@@ -2,6 +2,9 @@ package io.github.sanctum.clans.api.model;
 
 import org.intellij.lang.annotations.Pattern;
 import org.intellij.lang.annotations.RegExp;
+import org.jetbrains.annotations.Nullable;
+
+import java.lang.annotation.Documented;
 
 /**
  * The format of a bio.
@@ -21,6 +24,37 @@ public interface Bio {
     /**
      * Meta-annotation which marks a bio.
      */
+    @Documented
     @Pattern(BIO_FORMAT)
     @interface Format {}
+
+    /**
+     * An object that can have a bio.
+     *
+     * @since 3.0.0
+     */
+    interface Target {
+        /**
+         * Gets the bio of this object if one is set.
+         *
+         * @return a bio or null
+         */
+        @Nullable @Bio.Format String getBio();
+
+        /**
+         * An object that can update its bio.
+         *
+         * @since 3.0.0
+         */
+        interface Mutable extends Target {
+            /**
+             * Sets the bio of this object.
+             * <p>
+             * If the {@code bio} is null the bio is removed.
+             *
+             * @param bio a new bio or null
+             */
+            void setBio(@Nullable @Bio.Format String bio);
+        }
+    }
 }

@@ -9,6 +9,7 @@ plugins {
     id("pro.spigot-conventions")
     id("pro.placeholderapi-conventions")
     id("pro.jitpack-conventions")
+    id("pro.panther-conventions")
     id("pro.dynmap-conventions")
     id("pro.codestyle-conventions")
     id("pro.publish-conventions")
@@ -18,11 +19,10 @@ plugins {
 dependencies {
     implementation(project(":api"))
     implementation("com.github.the-h-team:Enterprise:1.5")
-    implementation("com.github.the-h-team.Panther:panther-placeholders:1.0.0")
-    implementation("com.github.the-h-team.Panther:panther-common:1.0.0")
+    implementation("com.github.the-h-team:panther-placeholders:${findProperty("pantherVersion")}")
     implementation("com.github.the-h-team.Labyrinth:labyrinth-gui:1.8.2")
     implementation("com.github.the-h-team.Labyrinth:labyrinth-regions:1.8.2")
-    implementation("com.github.the-h-team.Panther:panther-paste:1.0.0")
+    implementation("com.github.the-h-team:panther-paste:${findProperty("pantherVersion")}")
     implementation("com.github.the-h-team.Labyrinth:labyrinth-common:1.8.2")
     implementation("com.github.the-h-team.Labyrinth:labyrinth-skulls:1.8.2")
 }

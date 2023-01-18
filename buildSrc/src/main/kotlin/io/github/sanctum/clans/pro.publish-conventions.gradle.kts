@@ -5,6 +5,17 @@ plugins {
     `maven-publish`
 }
 
+java {
+    withJavadocJar()
+    withSourcesJar()
+}
+
+tasks.withType<Javadoc> {
+    options.encoding = "UTF-8"
+    (options as StandardJavadocDocletOptions).addBooleanOption("Xdoclint:reference", true)
+    options.quiet()
+}
+
 afterEvaluate {
     publishing {
         val publicationName = name
