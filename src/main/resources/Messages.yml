@@ -212,6 +212,7 @@ Response:
   claim-overpowered: '&7&oLand was &4over-powered&7&o @ Chunk position: &7X:&b{0} &7Z:&b{1} &3&oin world &7{2}'
   cooldown-expired: '&6&oCooldown &f[&b&o{0}&f] &6&oexpired.'
   bank-header: '&fBanks' # displays with Clans prefix prepended
+  removed-out: '&5&oA staff member has removed you from your current clan.'
   bank-greeting: '&bWelcome, {0}&b.' # {0} = Player name
   bank-greeting-hover: "&6In clan: &f{0}\n&aClick to get balance" # {0} = clan name
   bank-current-balance: "&bCurrent bank balance: &a{0}" # {0} = Balance
