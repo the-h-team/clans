@@ -1,53 +1,29 @@
 #
-# --------------------------------------------------------------------------------------- #
-#   ▄████████  ▄█          ▄████████ ███▄▄▄▄      ▄████████         ▄███████▄    ▄████████  ▄██████▄
-#  ███    ███ ███         ███    ███ ███▀▀▀██▄   ███    ███        ███    ███   ███    ███ ███    ███
-#  ███    █▀  ███         ███    ███ ███   ███   ███    █▀         ███    ███   ███    ███ ███    ███Demo
-#  ███        ███         ███    ███ ███   ███   ███               ███    ███  ▄███▄▄▄▄██▀ ███    ███ Demo
-#  ███        ███       ▀███████████ ███   ███ ▀███████████      ▀█████████▀  ▀▀███▀▀▀▀▀   ███    ███  Demo
-#  ███    █▄  ███         ███    ███ ███   ███          ███        ███        ▀███████████ ███    ███   Demo
-#  ███    ███ ███▌    ▄   ███    ███ ███   ███    ▄█    ███        ███          ███    ███ ███    ███
-#  ████████▀  █████▄▄██   ███    █▀   ▀█   █▀   ▄████████▀        ▄████▀        ███    ███  ▀██████▀
-# ------------------------------------------------------------------------------███----███#
-# ------------------ Translation by: Hempfest & Matt --------------------------------- #
+# ----------------------------------------------- #
+#     ▄▄▄▄▀ ▄███▄     ▄▄▄▄▀_▄__█_▄███▄__█▄▄▄▄
+#  ▀▀▀ █  \-█▀---▀-▀▀▀/█   █   █ █▀   ▀  █  ▄▀
+#      █    ██▄▄       █   ██▀▀█ ██▄▄    █▀▀▌
+#     █     █▄   ▄▀   █    █   █ █▄   ▄▀ █  █
+#    ▀      ▀███▀    ▀        █  ▀███▀     █
+#                            ▀            ▀
+# -------- Translation by: Hempfest & Matt ------ #
 Clans:
-  #################################
-  ##                             ##
-  ## Allow plugin update checks? ##
-  ##                             ##
-  #################################
+  # Allow plugin update checks?
   check-version: true
-
-  ############################################################
-  ##                                                        ##
-  ## A single timer runs the whole show! Decide how frequent##
-  ## the timer runs here!                                   ##
-  ##                                                        ##
-  ############################################################
+  # A single timer runs the whole show! Decide how frequent-
+  # -the timer runs here!
   timer:
     # Valid thresholds: [ MILLISECONDS, SECONDS, MINUTES, HOURS, DAYS ]
     threshold: MILLISECONDS
     time-span: 40
 
-  ##############################################
-  ##                                          ##
-  ## Max amount of clans the server can have. ##
-  ##                                          ##
-  ##############################################
+  # Max amount of clans the server can have.
   max-clans: 60
 
-  ##############################################
-  ##                                          ##
-  ##   Max amount of power a clan can have.   ##
-  ##                                          ##
-  ##############################################
+  # Max amount of power a clan can have.
   max-power: 2000.0
 
-  ##############################################
-  ##                                          ##
-  ##        Clan reservoir settings.          ## # Pro only!
-  ##                                          ##
-  ##############################################
+  # Clan reservoir settings. [Pro only]
   reservoir:
     # Set the worth for tokens used to gain power.
     power-multiplier: 3.17
@@ -58,12 +34,7 @@ Clans:
       #ITEMHERE: WORTH
       #ITEMHERE: WORTH
 
-  #################################
-  ##                             ##
-  ## Modify clan pvp mode change ##
-  ##          settings.          ##
-  ##                             ##
-  #################################
+  # Modify clan pvp mode and change settings
   mode-change:
     # Change what pvp mode a clan gets put in on creation {Valid types = peace, war}
     default: peace
@@ -77,11 +48,7 @@ Clans:
     charge: false
     amount: 420.0
 
-  #################################
-  ##                             ##
-  ##      Relation Settings      ##
-  ##                             ##
-  #################################
+  # Relation Settings
   relations:
     enemy:
       # Allow players to modify enemy relations with a fully offline clan?
@@ -90,11 +57,7 @@ Clans:
       # Allow players to modify alliance relations with a fully offline clan?
       cancel-if-empty: true
 
-  ######################################
-  ##                                  ##
-  ## Clan pre-creation settings apply ##
-  ##                                  ##
-  ######################################
+  # Clan pre-creation settings apply
   creation:
     charge: false
     amount: 420.0
@@ -104,11 +67,7 @@ Clans:
       # After how long in seconds will the cooldown expire?
       time: 120
 
-  ########################
-  ##                    ##
-  ## Clan bank settings ##
-  ##                    ##
-  ########################
+  # Clan bank settings
   banks:
     # Allow clans to enable the bank functions?
     enabled: true
@@ -127,19 +86,11 @@ Clans:
       withdraw: 2 # Clan rank 2 can withdraw
       view-log: 3 # Clan rank 3 can view transaction log
 
-  ###########################
-  ##                       ##
-  ## Clan WORLD whitelist. ##
-  ##                       ##
-  ###########################
+  # Clan WORLD whitelist.
   use-whitelist: true
   world-whitelist: [ "world", "world_nether", "world_the_end" ]
 
-  ##########################
-  ##                      ##
-  ## Clan NAME blacklist. ##
-  ##                      ##
-  ##########################
+  # Clan NAME blacklist.
   # Any words here found within a clans name will NOT be tolerated and an optional action will be enforced upon use.
   name-blacklist:
     faggot:
@@ -147,19 +98,11 @@ Clans:
     nigger:
       action: 'ban {PLAYER} This type of name use is not allowed!'
 
-  ###########################
-  ##                       ##
-  ## Clan COLOR blacklist. ##
-  ##                       ##
-  ###########################
+  # Clan COLOR blacklist.
   # Any color-codes attempted to be used from this list will NOT be allowed.
   color-blacklist: [ "&k" ]
 
-  #########################
-  ##                     ##
-  ## Clan claim settings ##
-  ##                     ##
-  #########################
+  # Clan claim settings
   land-claiming:
     allow: true
     # Charge users to claim land.
@@ -212,11 +155,7 @@ Clans:
       sub-title: 'Leaving {0}''s land'
       message: '&7Now leaving {0}&7''s land'
 
-  #################################
-  ##                             ##
-  ## Clan friendly-fire settings ##
-  ##                             ##
-  #################################
+  # Clan friendly-fire settings
   friendly-fire:
     clearance: 3
     # Allow a cooldown every use of friendly fire? If so how long.
@@ -224,11 +163,7 @@ Clans:
       use: false
       cooldown-in-seconds: 120
 
-  ##########################
-  ##                      ##
-  ## Raid-shield settings ##
-  ##                      ##
-  ##########################
+  # Raid-shield settings
   raid-shield:
     # Allow the raid-shield to run, enabling claim raiding?
     allow: true
@@ -252,14 +187,7 @@ Clans:
       enabled: '{0} &8» &aRaid shield enabled.'
       disabled: '{0} &8» &cRaid shield lifted.'
 
-
-  ##################################
-  ##                              ##
-  ## Clan miscellaneous clearance ##
-  ##           section.           ##
-  ##                              ##
-  ##################################
-
+  # Clan miscellaneous clearance section
   ##----------------------------( Clearance start )----------------------------##
   ## Clearance levels: [Member: 0, Moderator: 1, Admin: 2, Owner:3]
 
@@ -306,11 +234,7 @@ Clans:
   mode-clearance: 2
   ##----------------------------( Clearance end )----------------------------##
 
-  ###################################
-  ##                               ##
-  ## Clan war (TDM) & pvp settings ##
-  ##                               ##
-  ###################################
+  # Clan war (TDM) & pvp settings
   war:
     # If someone is getting spawn camped penalize the attacker?
     killstreak:
@@ -344,20 +268,15 @@ Clans:
     # The max amount of points a team can get before the winner is concluded.
     max-points: 24
 
-#-------------------------------------------------------------------
-#
-#-------------------------------------------------------------
-#     ▄████████  ▄██████▄     ▄████████   ▄▄▄▄███▄▄▄▄      ▄████████     ███
-#    ███    ███ ███    ███   ███    ███ ▄██▀▀▀███▀▀▀██▄   ███    ███ ▀█████████▄
-#    ███    █▀  ███    ███   ███    ███ ███   ███   ███   ███    ███    ▀███▀▀██
-#   ▄███▄▄▄     ███    ███  ▄███▄▄▄▄██▀ ███   ███   ███   ███    ███     ███   ▀
-#  ▀▀███▀▀▀     ███    ███ ▀▀███▀▀▀▀▀   ███   ███   ███ ▀███████████     ███
-#    ███        ███    ███ ▀███████████ ███   ███   ███   ███    ███     ███
-#    ███        ███    ███   ███    ███ ███   ███   ███   ███    ███     ███
-#    ███         ▀██████▀    ███    ███  ▀█   ███   █▀    ███    █▀     ▄████▀
-#----------------------------███----███-----------------------
-#
-#-------------------------------------------------------------------
+#----------------------------------------#
+#  ▄████  ████▄ █▄▄▄▄ █▀▄▀█ ██     ▄▄▄▄▀
+#  █▀   ▀ █   █ █  ▄▀ █ █ █ █ █ ▀▀▀ █
+#  █▀▀    █   █ █▀▀▌  █ ▄ █ █▄▄█    █
+#  █      ▀████ █  █  █   █ █  █   █
+#   █             █      █     █  ▀
+#    ▀           ▀      ▀     █
+#                            ▀
+#----------------------------------------#
 Formatting:
   # Let the plugin include native chat formatting? If your chat plugin uses BaseComponents for formatting this will not work by default,
   # and you'll need to use the placeholders from the wiki within your chat management plugin.
@@ -472,26 +391,17 @@ Formatting:
         filters:
           faggot: 'cake'
           nigger: 'cheese'
-#-------------------------------------------------------------------
-#
-#----------------------------------------------------------------
-#     ▄████████ ████████▄  ████████▄   ▄██████▄  ███▄▄▄▄      ▄████████
-#    ███    ███ ███   ▀███ ███   ▀███ ███    ███ ███▀▀▀██▄   ███    ███
-#    ███    ███ ███    ███ ███    ███ ███    ███ ███   ███   ███    █▀
-#    ███    ███ ███    ███ ███    ███ ███    ███ ███   ███   ███
-#  ▀███████████ ███    ███ ███    ███ ███    ███ ███   ███ ▀███████████
-#    ███    ███ ███    ███ ███    ███ ███    ███ ███   ███          ███
-#    ███    ███ ███   ▄███ ███   ▄███ ███    ███ ███   ███    ▄█    ███
-#    ███    █▀  ████████▀  ████████▀   ▀██████▀   ▀█   █▀   ▄████████▀
-#----------------------------------------------------------------
-#
-#-------------------------------------------------------------------
+#------------------------------------------------#
+#  ██   ██▄   ██▄   ████▄    ▄      ▄▄▄▄▄
+#  █ █  █  █  █  █  █   █     █    █     ▀▄
+#  █▄▄█ █   █ █   █ █   █ ██   █ ▄  ▀▀▀▀▄
+#  █  █ █  █  █  █  ▀████ █ █  █  ▀▄▄▄▄▀
+#     █ ███▀  ███▀        █  █ █
+#    █                    █   ██
+#   ▀
+#------------------------------------------------#
 Addon:
-  ##############################################################
-  ##                                                          ##
-  ## Requires Vault or Enterprise. Place bounties on players! ## # Pro only!
-  ##                                                          ##
-  ##############################################################
+  # Requires Vault or Enterprise. Place bounties on players! [Pro only!]
   Bounty:
     enabled: true
     settings:
@@ -507,29 +417,18 @@ Addon:
       called-message: '&6{PLAYER} &7from clan {CLAN} put a bounty on {TARGET} for &6&l$&e{BOUNTY}'
       # The message broadcast when a players bounty gets collected.
       defeat-message: '&c&o{KILLER} from clan {KILLER_CLAN} collected the &6${BOUNTY} &c&obounty for killing {PLAYER}'
-  ##################################################################
-  ##                                                              ##
-  ## Allows users to see chunk borders in relation to clan status ##
-  ##                                                              ##
-  ##################################################################
+
+  # Allows users to see chunk borders in relation to clan status
   Borders:
     enabled: true
-  #####################################################
-  ##                                                 ##
-  ##        An ms5984 (Regurgitator) original        ##
-  ##   Map surrounding chunks around you and display ## # Pro only!
-  ##          information for them in chat.          ##
-  ##                                                 ##
-  #####################################################
+
+  # An ms5984 (Regurgitator) original, map surrounding chunks around you and display information for them in chat [Pro only!]
   Map:
     # NEW feature by Hempfest, enhances interaction with map symbols.
     enhanced: true
     enabled: true
-  ###########################################################################
-  ##                                                                       ##
-  ## Kingdoms is a progression tracking feature with rewarding attributes  ## # Pro only!
-  ##                                                                       ##
-  ###########################################################################
+
+  # Kingdoms is a progression tracking feature with rewarding attributes [Pro only!]
   Kingdoms:
     enabled: false
     required-creation-power: 180.00
@@ -544,22 +443,13 @@ Addon:
         promote: 3
         demote: 3
         kick: 3
-  ################################################
-  ##                                            ##
-  ## A private clan inventory with only 9 slots ##
-  ##         Default clearance is 2             ##
-  ##                                            ##
-  ################################################
+
+  # A private clan inventory with only 9 slots
   Stashes:
     enabled: true
     clearance: 2
-  ######################################################
-  ##                                                  ##
-  ## A good additive to kingdoms, bringing back some  ##
-  ##    early clans free stuff, adds classes with     ## # Pro only!
-  ##                  abilities.                      ##
-  ##                                                  ##
-  ######################################################
+
+  # A good additive to kingdoms, bringing back some early clans free stuff, adds classes with abilities. [Pro only!]
   Traits:
     enabled: false
     abilities:
@@ -575,12 +465,8 @@ Addon:
       SELECTIVE_KILL:
         # Change the amount of damage dealt on a selective kill ability cast.
         damage: 7.0
-  #######################################################
-  ##                                                   ##
-  ## A virtual clan vault inventory for storing items. ##
-  ##            Default clearance is 1                 ##
-  ##                                                   ##
-  #######################################################
+
+  # A virtual clan vault inventory for storing items.
   Vaults:
     enabled: true
     clearance: 1

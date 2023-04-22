@@ -102,9 +102,9 @@ public final class StartProcedure {
 
 	List<String> getLogo() {
 		if (instance.isTrial()) {
-			return new ArrayList<>(Arrays.asList("  ·▄▄▄▄▄▄  ▄▄▄ .▄▄▄ .▄▄ ", "  ▐▄▄·▀▄ █·▀▄.▀·▀▄.▀·██▌", "  ██▪ ▐▀▀▄ ▐▀▀▪▄▐▀▀▪▄▐█·", "  ██▌.▐█•█▌▐█▄▄▌▐█▄▄▌.▀ ", "  ▀▀▀ .▀  ▀ ▀▀▀  ▀▀▀  ▀ "));
+			return new ArrayList<>(Arrays.asList("▄▄▄▄▄▄▄▄ .▄▄▄▄▄ ▄ .▄▄▄▄ .▄▄▄  ", "•██  ▀▄.▀·•██  ██▪▐█▀▄.▀·▀▄ █·", " ▐█.▪▐▀▀▪▄ ▐█.▪██▀▐█▐▀▀▪▄▐▀▀▄ ", " ▐█▌·▐█▄▄▌ ▐█▌·██▌▐▀▐█▄▄▌▐█•█▌", " ▀▀▀  ▀▀▀  ▀▀▀ ▀▀▀ · ▀▀▀ .▀  ▀"));
 		}
-		return new ArrayList<>(Arrays.asList("   ▄▄▄·▄▄▄        ▄▄ ", "  ▐█ ▄█▀▄ █·▪     ██▌" + "  User ID: ", "   ██▀·▐▀▀▄  ▄█▀▄ ▐█·" + "   " + replaceDevKey(instance.USER_ID, 0), "  ▐█▪·•▐█•█▌▐█▌.▐▌.▀ " + "  Unique ID: ", "  .▀   .▀  ▀ ▀█▄▀▪ ▀ " + "   " + replaceDevKey(instance.NONCE, Integer.parseInt(new RandomID(5, "0123456789").generate()))));
+		return new ArrayList<>(Arrays.asList("▄▄▄▄▄▄▄▄ .▄▄▄▄▄ ▄ .▄▄▄▄ .▄▄▄  ", "•██  ▀▄.▀·•██  ██▪▐█▀▄.▀·▀▄ █·" + "  User ID: ", " ▐█.▪▐▀▀▪▄ ▐█.▪██▀▐█▐▀▀▪▄▐▀▀▄ " + "   " + replaceDevKey(instance.USER_ID, 0), " ▐█▌·▐█▄▄▌ ▐█▌·██▌▐▀▐█▄▄▌▐█•█▌" + "  Unique ID: ", " ▀▀▀  ▀▀▀  ▀▀▀ ▀▀▀ · ▀▀▀ .▀  ▀" + "   " + replaceDevKey(instance.NONCE, Integer.parseInt(new RandomID(5, "0123456789").generate()))));
 	}
 
 	@Ordinal

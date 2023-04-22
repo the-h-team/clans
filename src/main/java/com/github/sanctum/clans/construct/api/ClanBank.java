@@ -49,6 +49,15 @@ public interface ClanBank {
 	boolean has(BigDecimal amount);
 
 	/**
+	 * Check if the bank has any interest.
+	 *
+	 * @return false if no interest.
+	 */
+	default boolean hasInterest() {
+		return false;
+	}
+
+	/**
 	 * Get the balance of the bank.
 	 *
 	 * @return balance as double
@@ -63,6 +72,35 @@ public interface ClanBank {
 	 * @return balance as BigDecimal
 	 */
 	BigDecimal getBalance();
+
+	/**
+	 * Get the interest in the bank.
+	 *
+	 * @return the banks interest as BigDecimal.
+	 */
+	default BigDecimal getInterest() {
+		return BigDecimal.ZERO;
+	}
+
+	/**
+	 * Set the interest percentage for the bank.
+	 *
+	 * @param newInterest the interest percentage.
+	 * @return true if the interest has been updated.
+	 */
+	default boolean setInterest(double newInterest) {
+		return setInterest(BigDecimal.valueOf(newInterest));
+	}
+
+	/**
+	 * Set the interest percentage for the bank.
+	 *
+	 * @param newInterest the interest percentage.
+	 * @return true if the interest has been updated.
+	 */
+	default boolean setInterest(BigDecimal newInterest) {
+		return false;
+	}
 
 	/**
 	 * Set the balance of the bank.
