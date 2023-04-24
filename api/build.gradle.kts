@@ -1,9 +1,12 @@
 plugins {
     id("pro.java-conventions")
-    id("pro.panther-conventions")
-    id("pro.codestyle-conventions")
+    `java-library`
+    id("tether.adventure-conventions")
+    id("tether.upstream-conventions")
 }
 
 dependencies {
-    implementation("com.github.the-h-team", "labyrinth-loci", "1.9.0")
+    // api configuration = exposed to consumers
+    api("com.github.the-h-team.Labyrinth:labyrinth-loci:${findProperty("labyrinthVersion")}")
+    implementation("com.github.the-h-team.Panther:panther-common:${findProperty("pantherVersion")}")
 }
