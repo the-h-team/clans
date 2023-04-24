@@ -1,5 +1,5 @@
 plugins {
-    id("pro.java-conventions")
+    id("tether.java-conventions")
 }
 
 val dynmapApiVersion by extra("v2.5")

@@ -1,7 +1,7 @@
 import java.util.Base64
 
 plugins {
-    id("pro.java-conventions")
+    id("tether.java-conventions")
     `maven-publish`
 }
 
@@ -21,7 +21,7 @@ afterEvaluate {
         val publicationName = name
         publications.create<MavenPublication>(publicationName) {
             pom {
-                name.set("ClansPro")
+                name.set("Tether")
                 description.set(project.description!!)
                 url.set(project.properties["url"] as String)
                 inceptionYear.set(project.properties["inceptionYear"] as String)
@@ -49,6 +49,7 @@ afterEvaluate {
                     }
                 }
                 scm {
+                    // FIXME
                     connection.set("scm:git:git://github.com/the-h-team/ClansPro.git")
                     developerConnection.set("scm:git:ssh://github.com/the-h-team/ClansPro.git")
                     url.set("https://github.com/the-h-team/ClansPro/tree/main")

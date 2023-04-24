@@ -1,5 +1,5 @@
 plugins {
-    id("pro.java-conventions")
+    id("tether.java-conventions")
     id("tether.upstream-conventions")
 }
 

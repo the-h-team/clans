@@ -1,12 +1,12 @@
 @file:Suppress("UnstableApiUsage")
 
 plugins {
-    id("pro.java-conventions")
-    id("pro.spigot-conventions")
-    id("pro.placeholderapi-conventions")
+    id("tether.java-conventions")
+    id("tether.spigot-conventions")
+    id("tether.placeholderapi-conventions")
     id("tether.upstream-conventions")
-    id("pro.dynmap-conventions")
-    id("pro.publish-conventions")
+    id("tether.dynmap-conventions")
+    id("tether.publish-conventions")
     id("com.github.johnrengelman.shadow")
 }
 
