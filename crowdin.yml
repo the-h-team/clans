@@ -1,5 +1,0 @@
-files:
-  - source: /src/main/resources/Config.yml
-    translation: /src/main/resources/Config_%locale%.yml
-  - source: /src/main/resources/Messages.yml
-    translation: /src/main/resources/Messages_%locale%.yml
