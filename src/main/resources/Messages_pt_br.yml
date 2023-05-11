@@ -5,26 +5,24 @@
 ##  ██╔══██║██╔══╝  ██║     ██╔═══╝
 ##  ██║  ██║███████╗███████╗██║
 ##  ╚═╝  ╚═╝╚══════╝╚══════╝╚═╝
-# Auto-translation can only happen with the help of you guys!
-# If you want the ability to simply type a command to translate to your
-# desired language each update, turn in your already translated language files!
-#
-# Translation by: Lan
-#
-# Newly improved permission handling for functions in 1.3.9+
-# clanspro.* = New wildcard permission for giving access to all functions (Including admin functions).
-# clanspro.admin.* = New wildcard permission for giving access to all admin related functions.
-# clanspro.ally.* = New wildcard permission for giving access to all alliance related functions.
-# clanspro.enemy.* = New wildcard permission for giving access to all enemy related functions.
-# clanspro.bank.* = New wildcard permission for giving access to all bank related functions.
-# clanspro.use.* = New wildcard permission for giving access to all normal non admin related functions.
+#Auto-translation can only happen with the help of you guys!
+#If you want the ability to simply type a command to translate to your
+#desired language each update, turn in your already translated language files!
+#Newly improved permission handling for functions in 1.3.9+
+#clanspro.* = New wildcard permission for giving access to all functions (Including admin functions).
+#clanspro.admin.* = New wildcard permission for giving access to all admin related functions.
+#clanspro.ally.* = New wildcard permission for giving access to all alliance related functions.
+#clanspro.enemy.* = New wildcard permission for giving access to all enemy related functions.
+#clanspro.bank.* = New wildcard permission for giving access to all bank related functions.
+#clanspro.use.* = New wildcard permission for giving access to all normal non admin related functions.
+#Command configurations now have a {label} placeholder, make sure to use it for fluidity when using the command.
 #==================================================#
 Title: '&r- Command help. (&7{label} help #page&r)'
 Border: '&7&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬'
 Lines: 5
 Commands:
-  # Make sure users have access to the base permission "clanspro" if allotting only specific permissions.
-  # When you give access to individual perms use "clanspro.your.configured.nodename"
+  #Make sure users have access to the base permission "clanspro" if allotting only specific permissions.
+  #When you give access to individual perms use "clanspro.your.configured.nodename"
   create:
     text: '&7|&e) &6{label} &fcreate <&7clanName&f> <&7password&f>'
     permission: 'create'
@@ -58,6 +56,9 @@ Commands:
   forfeit:
     text: '&7|&e) &6{label} &fforfeit, surrender'
     permission: 'forfeit'
+  truce:
+    text: '&7|&e) &6{label} &ftruce'
+    permission: 'truce'
   mode:
     text: '&7|&e) &6{label} &fmode <&apeace&f, &4war&f>'
     permission: 'mode'
@@ -97,9 +98,6 @@ Commands:
   tag:
     text: '&7|&e) &6{label} &ftag <&7newTag&f>'
     permission: 'tag'
-  display:
-    text: '&7|&e) &6{label} &fdisplay <&7nickName&f>'
-    permission: 'display'
   logo:
     text: '&7|&e) &6{label} &flogo &7| &f[&eedit, apply, save, color, print, redraw&r]'
     permission: 'logo'
@@ -109,6 +107,9 @@ Commands:
   nickname:
     text: '&7|&e) &6{label} &fnickname <&7nickName&f>'
     permission: 'nickname'
+  display:  #Premium only!
+    text: '&7|&e) &6{label} &fdisplay <&7nickName&f>'
+    permission: 'display'
   list:
     text: '&7|&e) &6{label} &flist'
     permission: 'list'
@@ -148,24 +149,17 @@ Commands:
   ally:
     text: '&7|&e) &6{label} &fally <&7clanName&f>'
     permission: 'ally'
-  removeally:
-    text: '&7|&e) &6{label} &fally <&cremove&f> <&7clanName&f>'
-    permission: 'ally.remove'
   enemy:
     text: '&7|&e) &6{label} &fenemy <&7clanName&f>'
     permission: 'enemy'
-  removeenemy:
-    text: '&7|&e) &6{label} &fenemy <&cremove&f> <&7clanName&f>'
-    permission: 'enemy.remove'
-
 #=====================================================#
-#  ██╗   ██╗ █████╗ ██╗     ██╗██████╗
-#  ██║   ██║██╔══██╗██║     ██║██╔══██╗
-#  ██║   ██║███████║██║     ██║██║  ██║
-#  ╚██╗ ██╔╝██╔══██║██║     ██║██║  ██║
-#   ╚████╔╝ ██║  ██║███████╗██║██████╔╝
-#    ╚═══╝  ╚═╝  ╚═╝╚══════╝╚═╝╚═════╝
-# Messages that get sent on a successful completion.
+#██╗   ██╗ █████╗ ██╗     ██╗██████╗
+#██║   ██║██╔══██╗██║     ██║██╔══██╗
+#██║   ██║███████║██║     ██║██║  ██║
+#╚██╗ ██╔╝██╔══██║██║     ██║██║  ██║
+#╚████╔╝ ██║  ██║███████╗██║██████╔╝
+#╚═══╝  ╚═╝  ╚═╝╚══════╝╚═╝╚═════╝
+#Messages that get sent on a successful completion.
 #=====================================================#
 Response:
   creation: '&a&o{0} Criou um &f{1} &a&oclã &7{2}'
@@ -214,10 +208,11 @@ Response:
   claim-higherpower: '&7[&4PODER SUPERIOR&7] &d&o{0} &r&o:'
   claim-overpowered: '&7&oTerra era &4over-powered&7&o @ Chunk position: &7X:&b{0} &7Z:&b{1} &3&ono mundo &7{2}'
   cooldown-expired: '&6&oCooldown &f[&b&o{0}&f] &6&oexpirado.'
-  bank-header: '&fBancos' # displays with Clans prefix prepended
-  bank-greeting: '&bBem-vinda, {0}&b.' # {0} = Player name
-  bank-greeting-hover: "&6No clã: &f{0}\n&aClique para obter o equilíbrio" # {0} = clan name
-  bank-current-balance: "&bSaldo bancário atual: &a{0}" # {0} = Balance
+  bank-header: '&fBancos' #displays with Clans prefix prepended
+  removed-out: '&5&oA staff member has removed you from your current clan.'
+  bank-greeting: '&bBem-vinda, {0}&b.' #{0} = Player name
+  bank-greeting-hover: "&6No clã: &f{0}\n&aClique para obter o equilíbrio" #{0} = clan name
+  bank-current-balance: "&bSaldo bancário atual: &a{0}" #{0} = Balance
   bank-command-listing: '&6Comandos:'
   bank-command-usage: '&6Use:'
   bank-hover-balance: 'Obtenha o saldo bancário atual' #describes balance subcommand
@@ -225,15 +220,14 @@ Response:
   bank-hover-withdraw: 'Retire dinheiro do banco do clã' #describes withdraw subcommand
   bank-deposit-message-player: '&7Você depositou &a{0} &7no banco do clã.'
   bank-withdraw-message-player: '&7Você retirou &c{0} &7do banco do clã.'
-
   #==========================================================================#
-  #  ███╗   ██╗ ██████╗ ███╗   ██╗      ██╗   ██╗ █████╗ ██╗     ██╗██████╗
-  #  ████╗  ██║██╔═══██╗████╗  ██║      ██║   ██║██╔══██╗██║     ██║██╔══██╗
-  #  ██╔██╗ ██║██║   ██║██╔██╗ ██║█████╗██║   ██║███████║██║     ██║██║  ██║
-  #  ██║╚██╗██║██║   ██║██║╚██╗██║╚════╝╚██╗ ██╔╝██╔══██║██║     ██║██║  ██║
-  #  ██║ ╚████║╚██████╔╝██║ ╚████║       ╚████╔╝ ██║  ██║███████╗██║██████╔╝
-  #  ╚═╝  ╚═══╝ ╚═════╝ ╚═╝  ╚═══╝        ╚═══╝  ╚═╝  ╚═╝╚══════╝╚═╝╚═════╝
-  # Messages that get sent when something goes wrong executing something.
+  #███╗   ██╗ ██████╗ ███╗   ██╗      ██╗   ██╗ █████╗ ██╗     ██╗██████╗
+  #████╗  ██║██╔═══██╗████╗  ██║      ██║   ██║██╔══██╗██║     ██║██╔══██╗
+  #██╔██╗ ██║██║   ██║██╔██╗ ██║█████╗██║   ██║███████║██║     ██║██║  ██║
+  #██║╚██╗██║██║   ██║██║╚██╗██║╚════╝╚██╗ ██╔╝██╔══██║██║     ██║██║  ██║
+  #██║ ╚████║╚██████╔╝██║ ╚████║       ╚████╔╝ ██║  ██║███████╗██║██████╔╝
+  #╚═╝  ╚═══╝ ╚═════╝ ╚═╝  ╚═══╝        ╚═══╝  ╚═╝  ╚═╝╚══════╝╚═╝╚═════╝
+  #Messages that get sent when something goes wrong executing something.
   #============================================================================#
   cooldown-active: '&7Yvocê pode fazer isso de novo em &f(&3D&f)&b %d &7: &f(&3H&f)&b %h &7: &f(&3M&f)&b %m &7: &f(&3S&f)&b %s'
   no-clan: 'Você não está em um clã.'
@@ -242,10 +236,10 @@ Response:
   no-claims: 'Seu clã não tem terras para cancelar. Considere obter algum?'
   no-clearance: '&cVocê não tem autorização do clã.'
   no-permission: '&cVocê não tem permissão &4{0}'
-  blocked: '&c{0} has you blocked, unable to send invite.'
   no-removal: '&c&oEste clã iniciou você como um &4inimigo. &cIncapaz de perdoar.'
   friendly-fire: '&cVocê não pode machucar aliados!'
   clan-unknown: '&c{0} não foi encontrado.'
+  blocked: '&c{0} has you blocked, unable to send invite.'
   clan-neutral: '&c&oVocê não é inimigo deste clã. Incapaz de dominar a reivindicação aliada.'
   clan-not-ready: '&c&oO outro clã ainda não concordou com uma guerra total.'
   player-unknown: '&cAlvo {0} não foi encontrado.'
@@ -263,8 +257,8 @@ Response:
   clan-max-claims: '&c&oAtingido o limite máximo de reivindicações, aumente o poder e o tamanho do seu clã para obter mais terras.'
   already-max-claims: '&c&oLimite máximo de reclamações atingido, entre em contato com um membro da equipe para obter mais informações.'
   already-neutral: '&fVocê já é neutro com {0}'
-  already-enemies: '&c&oVocê já é inimigo deste clã. Para se tornar um tipo neutro &7/clan enemy remove {0}'
   already-allies: '&c&oVocê já é inimigo deste clã. Para se tornar um tipo neutro &7/clan ally remove {0}'
+  already-enemies: '&c&oVocê já é inimigo deste clã. Para se tornar um tipo neutro &7/clan enemy remove {0}'
   already-requested: '&e&oEsperando uma resposta de &f{0}'
   already-peace: '&cVocê já está em modo pacífico.'
   already-war: '&cVocê já está em modo de guerra.'
@@ -284,21 +278,21 @@ Response:
   peaceful-deny: '&cVocê não pode fazer isso no modo pacífico!'
   peaceful-deny-other: '&cVocê não pode fazer isso enquanto {0} está em modo pacífico!'
   shield-deny: '&5&oVocê não pode tentar nada agora .. O escudo é resistente.'
-  bank-deposit-error-player: '&cIncapaz de depositar {0}' # {0} = amount
-  bank-withdraw-error-player: '&cIncapaz de retirar {0}' # {0} = amount
-  bank-amount: 'quantia' # Displayed when prompting user for number
-  bank-amount-hover: 'Nenhuma quantia fornecida!' # Displayed when hovering over amount^
+  bank-deposit-error-player: '&cIncapaz de depositar {0}' #{0} = amount
+  bank-withdraw-error-player: '&cIncapaz de retirar {0}' #{0} = amount
+  bank-amount: 'quantia' #Displayed when prompting user for number
+  bank-amount-hover: 'Nenhuma quantia fornecida!' #Displayed when hovering over amount^
   bank-invalid-amount: '&cNúmero inválido!'
   bank-invalid-subcommand: '&cSubcomando inválido!'
   bank-no-permission-command: '&cVocê não tem permissão para executar este comando.'
-
   #=================================================#
-  #  ██╗   ██╗███████╗ █████╗  ██████╗ ███████╗
-  #  ██║   ██║██╔════╝██╔══██╗██╔════╝ ██╔════╝
-  #  ██║   ██║███████╗███████║██║  ███╗█████╗
-  #  ██║   ██║╚════██║██╔══██║██║   ██║██╔══╝
-  #  ╚██████╔╝███████║██║  ██║╚██████╔╝███████╗
-  #   ╚═════╝ ╚══════╝╚═╝  ╚═╝ ╚═════╝ ╚══════╝
+  #██╗   ██╗███████╗ █████╗  ██████╗ ███████╗
+  #██║   ██║██╔════╝██╔══██╗██╔════╝ ██╔════╝
+  #██║   ██║███████╗███████║██║  ███╗█████╗
+  #██║   ██║╚════██║██╔══██║██║   ██║██╔══╝
+  #╚██████╔╝███████║██║  ██║╚██████╔╝███████╗
+  #╚═════╝ ╚══════╝╚═╝  ╚═╝ ╚═════╝ ╚══════╝
+  #Messages that get sent when commands are used wrong.
   #=================================================#
   create: '&7|&e) &fUso inválido : /clan create <clanName> <password>'
   password: '&7|&e) &fUso inválido : /clan password <newPassword>'
@@ -309,73 +303,83 @@ Response:
   invite: '&7|&e) &fInvalid usage : /clan invite <playerName>'
   passowner: '&7|&e) &fUso inválido : /clan passowner <playerName>'
   nick: '&7|&e) &fUso inválido : /clan nickname <newNickname>'
-  permit: '&7|&e) &fUso inválido : /clan permit <permission> <level>'
   promote: '&7|&e) &fUso inválido : /clan promote <playerName>'
   demote: '&7|&e) &fUso inválido : /clan demote <playerName>'
+  display: '&7|&e) &fInvalid usage : /clan display <clanNickname>'
+  permit: '&7|&e) &fUso inválido : /clan permit <permission> <level>'
   ally: '&7|&e) &fUso inválido : /clan ally <clanName>'
   enemy: '&7|&e) &fUso inválido : /clan enemy <clanName>'
   color: '&7|&e) &fUso inválido : /clan color <newTagColor>'
   message: '&7|&e) &fUso inválido : /clan message <message>'
   war-usage: '&7|&e) &fUso inválido : /clan war <clanName>'
   peace-usage: '&7|&e) &fUso inválido : /clan peace <clanName>'
-
-  # =================================================#
-  #  ██████╗  █████╗ ███╗   ██╗██╗  ██╗███████╗
-  #  ██╔══██╗██╔══██╗████╗  ██║██║ ██╔╝██╔════╝
-  #  ██████╔╝███████║██╔██╗ ██║█████╔╝ ███████╗
-  #  ██╔══██╗██╔══██║██║╚██╗██║██╔═██╗ ╚════██║
-  #  ██████╔╝██║  ██║██║ ╚████║██║  ██╗███████║
-  #  ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═══╝╚═╝  ╚═╝╚══════╝
-  # =================================================#
+  #=================================================#
+  #██████╗  █████╗ ███╗   ██╗██╗  ██╗███████╗
+  #██╔══██╗██╔══██╗████╗  ██║██║ ██╔╝██╔════╝
+  #██████╔╝███████║██╔██╗ ██║█████╔╝ ███████╗
+  #██╔══██╗██╔══██║██║╚██╗██║██╔═██╗ ╚════██║
+  #██████╔╝██║  ██║██║ ╚████║██║  ██╗███████║
+  #╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═══╝╚═╝  ╚═╝╚══════╝
+  #Bank transaction messages for console.
+  #=================================================#
   bank-pretransaction-success: 'PENDENTE'
   bank-pretransaction-failure: 'NEGADO'
-  # {0} = success, {1} = name, {2} = amount, {3} = clan name
+  #{0} = success, {1} = name, {2} = amount, {3} = clan name
   bank-transaction-deposit-pre: 'Transação bancária >>PRE-Não cancelado [{0}]: {1} depositar {2} com clã {3}'
   bank-transaction-deposit-pre-cancelled: 'Transação bancária >>PRE-Cancelado [{0}]: {1} depositar {2} com clã {3}'
   bank-transaction-withdraw-pre: 'Transação bancária >>PRE-Não cancelado [{0}]: {1} sacar {2} do clã {3}'
   bank-transaction-withdraw-pre-cancelled: 'Transação bancária >>PRE-Cancelado [{0}]: {1} sacar {2} do clã {3}'
-
   bank-transaction-success: 'SUCESSO'
   bank-transaction-failed: 'FRACASSADO'
-  # {0} = success, {1} = name, {2} = amount, {3} = clan name
+  #{0} = success, {1} = name, {2} = amount, {3} = clan name
   bank-transaction-deposit: 'Transação bancária [{0}]: {1} deposited {2} with clan {3}'
   bank-transaction-withdraw: 'Transação bancária [{0}]: {1} withdrew {2} from clan {3}'
-  # {0} = clanId
+  #{0} = clanId
   bank-verbose-clan-id: 'clanId={0}'
-
 #==================================#
-#  ██╗███╗   ██╗███████╗ ██████╗
-#  ██║████╗  ██║██╔════╝██╔═══██╗
-#  ██║██╔██╗ ██║█████╗  ██║   ██║
-#  ██║██║╚██╗██║██╔══╝  ██║   ██║
-#  ██║██║ ╚████║██║     ╚██████╔╝
-#  ╚═╝╚═╝  ╚═══╝╚═╝      ╚═════╝
+#██╗███╗   ██╗███████╗ ██████╗
+#██║████╗  ██║██╔════╝██╔═══██╗
+#██║██╔██╗ ██║█████╗  ██║   ██║
+#██║██║╚██╗██║██╔══╝  ██║   ██║
+#██║██║ ╚████║██║     ╚██████╔╝
+#╚═╝╚═╝  ╚═══╝╚═╝      ╚═════╝
+#NEW! Customize the /clan info display.
 #==================================#
 info:
   line-1:
     prefix: '&f['
     text: '&#ed601a&lStats'
     suffix: '&f]'
-    # 0 = clan tag, 1 = clan description, 2 = clan power level, 3 = full clan color code, 4 = current owned clan claims, 5 = current clan max claims, 6 = clan allies, 7 = clan enemies, 8 = clan alliance requests, 9 = clan color isolated.
-    hover: [ "{9}Name: &f{0}", "{9}Description: &f{1}", "{9}Power: &f{2}", "{9}Color: &f{3}", "{9}Claims: &6{4}&f/&6{5}", "{9}Allies: &f{6}", "{9}Enemies: &f{7}", "{9}Requests: &f{8}" ]
-    # Un-comment the below sections to use, only one click action can be used at a time. they can go on any line or appendage.
-    #command: 'clan info'
-    #suggest: '/clan info'
-    #copy: 'This text will be copied'
-    #url: 'This url can be copied'
+    #0 = clan tag, 1 = clan description, 2 = clan power level, 3 = full clan color code, 4 = current owned clan claims, 5 = current clan max claims, 6 = clan allies, 7 = clan enemies, 8 = clan alliance requests, 9 = clan color isolated.
+    hover:
+      - "{9}Name: &f{0}"
+      - "{9}Description: &f{1}"
+      - "{9}Power: &f{2}"
+      - "{9}Color: &f{3}"
+      - "{9}Claims: &6{4}&f/&6{5}"
+      - "{9}Allies: &f{6}"
+      - "{9}Enemies: &f{7}"
+      - "{9}Requests: &f{8}"
+  #Un-comment the below sections to use, only one click action can be used at a time. they can go on any line or appendage.
+  #command: 'clan info'
+  #suggest: '/clan info'
+  #copy: 'This text will be copied'
+  #url: 'This url can be copied'
   line-2:
     text: ' '
   line-3:
     prefix: '&f['
     text: '&#ed601a&lRoster'
     suffix: '&f]'
-    hover: [ "&bClick to view the clan roster." ]
+    hover:
+      - "&bClick to view the clan roster."
     command: 'clan members'
     appendage:
       prefix: '&f['
       text: '&#ed601a&lPerms'
       suffix: '&f]'
-      hover: [ "&bClick to manage clan permissions" ]
+      hover:
+        - "&bClick to manage clan permissions"
       command: 'clan perms'
   line-4:
     text: ' '
@@ -383,7 +387,8 @@ info:
     prefix: '&f['
     text: '&#ed601a&lMode'
     suffix: '&f]'
-    hover: [ "&bClick to toggle your clan's pvp mode." ]
+    hover:
+      - "&bClick to toggle your clan's pvp mode."
     command: 'clan mode'
   line-6:
     text: ' '
@@ -391,19 +396,22 @@ info:
     prefix: '&f['
     text: '&#ed601a&lBank'
     suffix: '&f]'
-    hover: [ "&bClick to access the clan bank" ]
+    hover:
+      - "&bClick to access the clan bank"
     command: 'clan bank'
     appendage:
       prefix: '&f['
       text: '&#ed601a&lBase'
       suffix: '&f]'
-      hover: [ "&bClick to teleport to the clan base." ]
+      hover:
+        - "&bClick to teleport to the clan base."
       command: 'clan base'
       appendage:
         prefix: '&f['
         text: '&#ed601a&lVault'
         suffix: '&f]'
-        hover: [ "&bClick to open the clan vault." ]
+        hover:
+          - "&bClick to open the clan vault."
         command: 'clan vault'
   line-8:
     text: ' '
@@ -411,179 +419,184 @@ info:
     prefix: '&f['
     text: '&#ed601a&lStash'
     suffix: '&f]'
-    hover: [ "&bClick to open the clan stash. (Works in base chunk only)" ]
+    hover:
+      - "&bClick to open the clan stash. (Works in base chunk only)"
     command: 'clan stash'
 info-other:
   line-1:
     prefix: '&f['
     text: '&#179967&lStats'
     suffix: '&f]'
-    # 0 = clan tag, 1 = clan description, 2 = clan power level, 3 = full clan color code, 4 = current owned clan claims, 5 = current clan max claims, 9 = clan color isolated.
-    hover: [ "{9}Name: &f{0}", "{9}Description: &f{1}", "{9}Power: &f{2}", "{9}Color: &f{3}", "{9}Claims: &6{4}&f/&6{5}" ]
-    # Un-comment the below sections to use, only one click action can be used at a time. they can go on any line or appendage.
-    #command: 'clan info'
-    #suggest: '/clan info'
-    #copy: 'This text will be copied'
-    #url: 'This url can be copied'
+    #0 = clan tag, 1 = clan description, 2 = clan power level, 3 = full clan color code, 4 = current owned clan claims, 5 = current clan max claims, 9 = clan color isolated.
+    hover:
+      - "{9}Name: &f{0}"
+      - "{9}Description: &f{1}"
+      - "{9}Power: &f{2}"
+      - "{9}Color: &f{3}"
+      - "{9}Claims: &6{4}&f/&6{5}"
+  #Un-comment the below sections to use, only one click action can be used at a time. they can go on any line or appendage.
+  #command: 'clan info'
+  #suggest: '/clan info'
+  #copy: 'This text will be copied'
+  #url: 'This url can be copied'
   line-2:
     text: ' '
   line-3:
     prefix: '&f['
     text: '&#179967&lRoster'
     suffix: '&f]'
-    hover: [ "&bClick to view our clan roster." ]
+    hover:
+      - "&bClick to view our clan roster."
     command: 'clan members {0}'
   line-4:
     text: ' '
-
 #==================================#
-#   ██████╗ ██╗   ██╗██╗
-#  ██╔════╝ ██║   ██║██║
-#  ██║  ███╗██║   ██║██║
-#  ██║   ██║██║   ██║██║
-#  ╚██████╔╝╚██████╔╝██║
-#   ╚═════╝  ╚═════╝ ╚═╝
+#██████╗ ██╗   ██╗██╗
+#██╔════╝ ██║   ██║██║
+#██║  ███╗██║   ██║██║
+#██║   ██║██║   ██║██║
+#╚██████╔╝╚██████╔╝██║
+#╚═════╝  ╚═════╝ ╚═╝
 #==================================#
-# Welcome to the brand new gui configuration section! The top section for the members screen
-# shows documentation on usages. Use it to fully customize 100% of the gui to your liking!! Newly improved!
+#Welcome to the brand new gui configuration section! The top section for the members screen
+#shows documentation on usages. Use it to fully customize 100% of the gui to your liking!! Newly improved!
 menu:
-  # Allow the plugin to forward use of GUI?
+  #Allow the plugin to forward use of GUI?
   enabled: true
-  # A roster screen of members for a given clan.
-  # Clan provided placeholders work here:
-  # :member_list:  "Get all members of this clan in string form."
-  # :member_count:  "Get the count of members for this clan"
-  # :clan_name:  "Get the name of the clan."
-  # :clan_color: "Get the starting color for this clan"
-  # :clan_logo:  "Get the clan logo (use for lore)"
-  # :clan_name_colored:  "Get the name of the clan colored"
-  # :clan_nick_name:  "Get the nick name of the clan"
-  # :clan_nick_name_colored:  "Get the nick name of the clan colored"
+  #A roster screen of members for a given clan.
+  #Clan provided placeholders work here:
+  #:member_list:  "Get all members of this clan in string form."
+  #:member_count:  "Get the count of members for this clan"
+  #:clan_name:  "Get the name of the clan."
+  #:clan_color: "Get the starting color for this clan"
+  #:clan_logo:  "Get the clan logo (use for lore)"
+  #:clan_name_colored:  "Get the name of the clan colored"
+  #:clan_nick_name:  "Get the nick name of the clan"
+  #:clan_nick_name_colored:  "Get the nick name of the clan colored"
   members:
-    # Change the title of the inventory.
+    #Change the title of the inventory.
     title: '&3&o:clan_name: members &0&l» &0{0}/{1}'
-    # Change how many rows of inventory space to be used.
-    # Allowed rows are: [ONE, TWO, THREE, FOUR, FIVE, SIX]
+    #Change how many rows of inventory space to be used.
+    #Allowed rows are: [ONE, TWO, THREE, FOUR, FIVE, SIX]
     rows: THREE
-    # Change the type of the inventory.
-    # Allowed types are: [SINGULAR, PAGINATED, PRINTABLE]
+    #Change the type of the inventory.
+    #Allowed types are: [SINGULAR, PAGINATED, PRINTABLE]
     type: PAGINATED
-    # Set this menu's unique identifier, this option is optional but without it the menu cannot cache itself.
+    #Set this menu's unique identifier, this option is optional but without it the menu cannot cache itself.
     id: 'ClansPro::clan_name:-members'
-    # Setup an optional filler item for blank slots. (Comment out or remove to not use)
+    #Setup an optional filler item for blank slots. (Comment out or remove to not use)
     filler:
       name: ' '
       locked: true
       type: stone
-    # Set up an optional border item to use. (Comment out or remove to not use)
+    #Set up an optional border item to use. (Comment out or remove to not use)
     border:
       name: ' '
       locked: true
       type: glasspane
-    # This section is optional as its only required for use with PAGINATED inventory types. Customize the inventory space into further depth.
-    # Associate provided placeholders work here:
-    # :member_name:  "Get the associates name"
-    # :member_bio:  "Get the associates personal biography"
-    # :member_balance:  "Get the associates money balance"
-    # :member_nick_name:  "Get the associates nickname otherwise returning their normal name"
-    # :member_nick_name_colored:  "Get the associates nickname otherwise returning their normal name, all wrapped in the color of their clan"
-    # :member_rank_full:  "Get the associates rank in full"
-    # :member_rank_wordless:  "Get the associates rank symbol"
-    # :member_list:  "Get all members of this associates clan in string form."
-    # :member_count:  "Get the count of members for this associates clan"
-    # :clan_name:  "Get the name of the clan for this associate."
-    # :clan_name_colored:  "Get the name of the clan for this associate colored"
-    # :clan_logo:  "Get the clan logo (use for lore)"
-    # :clan_nick_name:  "Get the nick name of the clan for this associate"
-    # :clan_nick_name_colored:  "Get the nick name of the clan for this associate colored"
-    # Normal placeholders work here aswell.
+    #This section is optional as its only required for use with PAGINATED inventory types. Customize the inventory space into further depth.
+    #Associate provided placeholders work here:
+    #:member_name:  "Get the associates name"
+    #:member_bio:  "Get the associates personal biography"
+    #:member_balance:  "Get the associates money balance"
+    #:member_nick_name:  "Get the associates nickname otherwise returning their normal name"
+    #:member_nick_name_colored:  "Get the associates nickname otherwise returning their normal name, all wrapped in the color of their clan"
+    #:member_rank_full:  "Get the associates rank in full"
+    #:member_rank_wordless:  "Get the associates rank symbol"
+    #:member_list:  "Get all members of this associates clan in string form."
+    #:member_count:  "Get the count of members for this associates clan"
+    #:clan_name:  "Get the name of the clan for this associate."
+    #:clan_name_colored:  "Get the name of the clan for this associate colored"
+    #:clan_logo:  "Get the clan logo (use for lore)"
+    #:clan_nick_name:  "Get the nick name of the clan for this associate"
+    #:clan_nick_name_colored:  "Get the nick name of the clan for this associate colored"
+    #Normal placeholders work here aswell.
     pagination:
-      # This area lets you customize the name & lore for each given paginated element using custom provided placeholders.
+      #This area lets you customize the name & lore for each given paginated element using custom provided placeholders.
       name: '&6Member: :member_nick_name_colored:'
-      lore: [ "&f&m,----------", "Click for info on :member_nick_name_colored:.", "&f&m----------" ]
-      # This is optional, it will send the user a message when an item is clicked. (Uncomment to use)
+      lore:
+        - "&f&m,----------"
+        - "Click for info on :member_nick_name_colored:."
+        - "&f&m----------"
+      #This is optional, it will send the user a message when an item is clicked. (Uncomment to use)
       ##message: '<:color1:>This is what a gradient color looks like</:color2:>>'
-      # Change the appearance of the item for the UI. This value can either be a valid base64 string, minecraft material or registered labyrinth skull item.
-      # If you use a playerhead or skullitem where associate or player translations occur it will magically replace the steve head with the relative skinned head.
+      #Change the appearance of the item for the UI. This value can either be a valid base64 string, minecraft material or registered labyrinth skull item.
+      #If you use a playerhead or skullitem where associate or player translations occur it will magically replace the steve head with the relative skinned head.
       type: playerhead
-      # Change the slot of the item, -1 = no specific slot. (Does nothing for paginated)
+      #Change the slot of the item, -1 = no specific slot. (Does nothing for paginated)
       ##slot: -1
-      # Changes the max amount of items that can be displayed per page (Uncomment to change, may add more pages)
+      #Changes the max amount of items that can be displayed per page (Uncomment to change, may add more pages)
       ##limit: 5
-      # Change whether or not the user can remove the item.
+      #Change whether or not the user can remove the item.
       locked: true
-      # Force close the inventory when the user clicks an item? (Uncomment to use)
+      #Force close the inventory when the user clicks an item? (Uncomment to use)
       #close: true
-      # With this option you can either open another registered menu using its menu id or make the user execute a command
+      #With this option you can either open another registered menu using its menu id or make the user execute a command
       open: '/c gui :member_name:'
-      # Here's the reflection magic, define method names to pull results for custom placeholders on known objects.
-      # --------------------------------------------
-      # Clans Pro Example:
-      #
-      # Clan clan = instance;
-      # Clan.Color palette = clan.getPalette();
-      #
-      # The above text is what the api usage would look like but this stuff lets you act like your doing it using bukkit like '.' node separation.
-      #
-      #      Now to pull colors from the palette that you could use below in an allowed circumstance;
-      #        getPalette.toGradient.getStart (Starting hex)
-      #        getPalette.toGradient.getEnd (Ending hex)
-      #
-      # Labyrinth DefaultColor Example:
-      #
-      # DefaultColor color = DefaultColor.MANGO;
-      # String name = color.getName();
-      #
-      #      Now to pull colors codes directly you could use the already configured section below.
-      #
-      # Following basic common sense and wiki available api knowledge you have access to many results.
+      #Here's the reflection magic, define method names to pull results for custom placeholders on known objects.
+      #--------------------------------------------
+      #Clans Pro Example:
+      #Clan clan = instance;
+      #Clan.Color palette = clan.getPalette();
+      #The above text is what the api usage would look like but this stuff lets you act like your doing it using bukkit like '.' node separation.
+      #Now to pull colors from the palette that you could use below in an allowed circumstance;
+      #getPalette.toGradient.getStart (Starting hex)
+      #getPalette.toGradient.getEnd (Ending hex)
+      #Labyrinth DefaultColor Example:
+      #DefaultColor color = DefaultColor.MANGO;
+      #String name = color.getName();
+      #Now to pull colors codes directly you could use the already configured section below.
+      #Following basic common sense and wiki available api knowledge you have access to many results.
       replacements:
         ':member_kd:': getKD
         ':clan_starting_color:': getClan.getPalette.getStart
-      # Setup navigation buttons here
+      #Setup navigation buttons here
       navigation:
         next:
           name: '&cNext'
           slot: 26
           locked: true
           type: enderpearl
-          lore: [ "&f&oClick to go to the next page." ]
+          lore:
+            - "&f&oClick to go to the next page."
         exit:
           name: '&cExit'
           slot: 22
           locked: true
           open: 'ClansPro:Roster'
           type: enderpearl
-          lore: [ "&f&oClick to escape." ]
+          lore:
+            - "&f&oClick to escape."
         previous:
           name: '&cBack'
           slot: 18
           locked: true
           type: enderpearl
-          lore: [ "&f&oClick to go back a page." ]
-          # Add additional items to your menu here. Works on any menu type (Uncomment to use)
-          ##items:
-          #'&6Example Extra Item &f[&7&k420&f]':
-          #slot: 10
-          #locked: true
-          #close: true
-          #type: goldingot
-          #open: /shop
-          #lore: [ "&f&oWaddup du" ]
-          # Optionally add enchantments to your item, unsafe enchantments allowed. (Uncomment to use)
-          # Allowed enchantments are: [PROTECTION_ENVIRONMENTAL, PROTECTION_FIRE, PROTECTION_FALL, PROTECTION_EXPLOSIONS, PROTECTION_PROJECTILE,
-          # OXYGEN, WATER_WORKER, THORNS, DEPTH_STRIDER, FROST_WALKER, BINDING_CURSE, DAMAGE_ALL, DAMAGE_UNDEAD, DAMAGE_ARTHROPODS, KNOCKBACK,
-          # LOOT_BONUS_MOBS, SWEEPING_EDGE, DIG_SPEED, SILK_TOUCH, DURABILITY, LOOT_BONUS_BLOCKS, ARROW_DAMAGE, ARROW_KNOCKBACK, ARROW_FIRE,
-          # ARROW_INFINITE, LUCK, LURE, LOYALTY, IMPALING, RIPTIDE, CHANNELING, MULTISHOT, QUICK_CHARGE, PIERCING, MENDING, VANISHING_CURSE, SOUL_SPEED]
-          #enchantments:
-          #ARROW_DAMAGE: 3
-  # A roster screen of all registered clans.
+          lore:
+            - "&f&oClick to go back a page."
+  #Add additional items to your menu here. Works on any menu type (Uncomment to use)
+  ##items:
+  #'&6Example Extra Item &f[&7&k420&f]':
+  #slot: 10
+  #locked: true
+  #close: true
+  #type: goldingot
+  #open: /shop
+  #lore: [ "&f&oWaddup du" ]
+  #Optionally add enchantments to your item, unsafe enchantments allowed. (Uncomment to use)
+  #Allowed enchantments are: [PROTECTION_ENVIRONMENTAL, PROTECTION_FIRE, PROTECTION_FALL, PROTECTION_EXPLOSIONS, PROTECTION_PROJECTILE,
+  #OXYGEN, WATER_WORKER, THORNS, DEPTH_STRIDER, FROST_WALKER, BINDING_CURSE, DAMAGE_ALL, DAMAGE_UNDEAD, DAMAGE_ARTHROPODS, KNOCKBACK,
+  #LOOT_BONUS_MOBS, SWEEPING_EDGE, DIG_SPEED, SILK_TOUCH, DURABILITY, LOOT_BONUS_BLOCKS, ARROW_DAMAGE, ARROW_KNOCKBACK, ARROW_FIRE,
+  #ARROW_INFINITE, LUCK, LURE, LOYALTY, IMPALING, RIPTIDE, CHANNELING, MULTISHOT, QUICK_CHARGE, PIERCING, MENDING, VANISHING_CURSE, SOUL_SPEED]
+  #enchantments:
+  #ARROW_DAMAGE: 3
+  #A roster screen of all registered clans.
   roster:
     title: '&3&oComplete Roster &0&l» &0{0}/{1}'
     rows: THREE
     type: PAGINATED
     id: 'ClansPro:Roster'
-    # =======================
+    #=======================
     filler:
       name: ' '
       locked: true
@@ -592,53 +605,59 @@ menu:
       name: ' '
       locked: true
       type: glasspane
-    # =======================
-    # Clan provided placeholders work here:
-    # :member_list:  "Get all members of this clan in string form."
-    # :member_count:  "Get the count of members for this clan"
-    # :clan_name:  "Get the name of the clan."
-    # :clan_color: "Get the starting color for this clan"
-    # :clan_logo:  "Get the clan logo (use for lore)"
-    # :clan_name_colored:  "Get the name of the clan colored"
-    # :clan_nick_name:  "Get the nick name of the clan"
-    # :clan_nick_name_colored:  "Get the nick name of the clan colored"
+    #=======================
+    #Clan provided placeholders work here:
+    #:member_list:  "Get all members of this clan in string form."
+    #:member_count:  "Get the count of members for this clan"
+    #:clan_name:  "Get the name of the clan."
+    #:clan_color: "Get the starting color for this clan"
+    #:clan_logo:  "Get the clan logo (use for lore)"
+    #:clan_name_colored:  "Get the name of the clan colored"
+    #:clan_nick_name:  "Get the nick name of the clan"
+    #:clan_nick_name_colored:  "Get the nick name of the clan colored"
     pagination:
       name: '&6Clan: :clan_color::clan_name:'
-      lore: [ "&f&m,----------", "Click for members.", "&f&m----------" ]
+      lore:
+        - "&f&m,----------"
+        - "Click for members."
+        - "&f&m----------"
       type: clan
       locked: true
       open: 'ClansPro::clan_name:-members'
-      # =========================
+      #=========================
       replacements:
         ':clan_money:': getBalanceDouble
-      # =========================
+      #=========================
       navigation:
         next:
           name: '&cNext'
           slot: 26
           locked: true
           type: enderpearl
-          lore: [ "&f&oClick to go to the next page." ]
+          lore:
+            - "&f&oClick to go to the next page."
         exit:
           name: '&cExit'
           slot: 22
           locked: true
           open: 'ClansPro:Roster:Select'
           type: enderpearl
-          lore: [ "&f&oClick to escape." ]
+          lore:
+            - "&f&oClick to escape."
         previous:
           name: '&cBack'
           slot: 18
           locked: true
           type: enderpearl
-          lore: [ "&f&oClick to go back a page." ]
-  # A roster screen of all registered clans ordered by most power.
+          lore:
+            - "&f&oClick to go back a page."
+  #A roster screen of all registered clans ordered by most power.
   roster-top:
     title: '&3&oTop Clans &0&l» &0{0}/{1}'
     rows: THREE
     type: PAGINATED
     id: 'ClansPro:Roster:Top'
-    # =======================
+    #=======================
     filler:
       name: ' '
       locked: true
@@ -647,47 +666,53 @@ menu:
       name: ' '
       locked: true
       type: glasspane
-    # =======================
-    # Clan provided placeholders work here:
-    # :member_list:  "Get all members of this clan in string form."
-    # :member_count:  "Get the count of members for this clan"
-    # :clan_name:  "Get the name of the clan."
-    # :clan_color: "Get the starting color for this clan"
-    # :clan_logo:  "Get the clan logo (use for lore)"
-    # :clan_name_colored:  "Get the name of the clan colored"
-    # :clan_nick_name:  "Get the nick name of the clan"
-    # :clan_nick_name_colored:  "Get the nick name of the clan colored"
+    #=======================
+    #Clan provided placeholders work here:
+    #:member_list:  "Get all members of this clan in string form."
+    #:member_count:  "Get the count of members for this clan"
+    #:clan_name:  "Get the name of the clan."
+    #:clan_color: "Get the starting color for this clan"
+    #:clan_logo:  "Get the clan logo (use for lore)"
+    #:clan_name_colored:  "Get the name of the clan colored"
+    #:clan_nick_name:  "Get the nick name of the clan"
+    #:clan_nick_name_colored:  "Get the nick name of the clan colored"
     pagination:
       name: '&6Clan: :clan_color::clan_name:'
-      lore: [ "&f&m,----------", "Click for members.", "&f&m----------" ]
+      lore:
+        - "&f&m,----------"
+        - "Click for members."
+        - "&f&m----------"
       type: clan
       locked: true
       open: 'ClansPro::clan_name:-members'
-      # =========================
+      #=========================
       replacements:
         ':clan_money:': getBalanceDouble
-      # =========================
+      #=========================
       navigation:
         next:
           name: '&cNext'
           slot: 26
           locked: true
           type: enderpearl
-          lore: [ "&f&oClick to go to the next page." ]
+          lore:
+            - "&f&oClick to go to the next page."
         exit:
           name: '&cExit'
           slot: 22
           locked: true
           open: 'ClansPro:Roster:Select'
           type: enderpearl
-          lore: [ "&f&oClick to escape." ]
+          lore:
+            - "&f&oClick to escape."
         previous:
           name: '&cBack'
           slot: 18
           locked: true
           type: enderpearl
-          lore: [ "&f&oClick to go back a page." ]
-  # A roster type selection screen.
+          lore:
+            - "&f&oClick to go back a page."
+  #A roster type selection screen.
   roster-select:
     title: '&3Select'
     rows: ONE
@@ -708,36 +733,37 @@ menu:
         locked: true
         type: barrier
         open: '/clan'
-        lore: ["&cClick to go back a step."]
+        lore:
+          - "&cClick to go back a step."
       '&7[&bRoster&7]':
         slot: 5
         locked: true
         type: clan
         open: 'ClansPro:Roster'
-  # A clan associates gui screen. Normal placeholders work here as-well.
-  # Associate provided placeholders work here:
-  # :member_name:  "Get the associates name"
-  # :member_bio:  "Get the associates personal biography"
-  # :member_balance:  "Get the associates money balance"
-  # :member_nick_name:  "Get the associates nickname otherwise returning their normal name"
-  # :member_nick_name_colored:  "Get the associates nickname otherwise returning their normal name, all wrapped in the color of their clan"
-  # :member_rank_full:  "Get the associates rank in full"
-  # :member_rank_wordless:  "Get the associates rank symbol"
-  # :member_list:  "Get all members of this associates clan in string form."
-  # :member_count:  "Get the count of members for this associates clan"
-  # :clan_name:  "Get the name of the clan for this associate."
-  # :clan_name_colored:  "Get the name of the clan for this associate colored"
-  # :clan_nick_name:  "Get the nick name of the clan for this associate"
-  # :clan_logo:  "Get the clan logo (use for lore)"
-  # :clan_nick_name_colored:  "Get the nick name of the clan for this associate colored"
-  # Normal placeholders work here aswell.
+  #A clan associates gui screen. Normal placeholders work here as-well.
+  #Associate provided placeholders work here:
+  #:member_name:  "Get the associates name"
+  #:member_bio:  "Get the associates personal biography"
+  #:member_balance:  "Get the associates money balance"
+  #:member_nick_name:  "Get the associates nickname otherwise returning their normal name"
+  #:member_nick_name_colored:  "Get the associates nickname otherwise returning their normal name, all wrapped in the color of their clan"
+  #:member_rank_full:  "Get the associates rank in full"
+  #:member_rank_wordless:  "Get the associates rank symbol"
+  #:member_list:  "Get all members of this associates clan in string form."
+  #:member_count:  "Get the count of members for this associates clan"
+  #:clan_name:  "Get the name of the clan for this associate."
+  #:clan_name_colored:  "Get the name of the clan for this associate colored"
+  #:clan_nick_name:  "Get the nick name of the clan for this associate"
+  #:clan_logo:  "Get the clan logo (use for lore)"
+  #:clan_nick_name_colored:  "Get the nick name of the clan for this associate colored"
+  #Normal placeholders work here aswell.
   member:
-    # An optional menu, to use this for this menu use '/c prompt :member_name:' in your open statement.
-    # Associate provided placeholders work here as-well.
+    #An optional menu, to use this for this menu use '/c prompt :member_name:' in your open statement.
+    #Associate provided placeholders work here as-well.
     message:
       title: 'Message :member_name:'
       type: PRINTABLE
-      # anvil menus work a tiny bit differently as there is less to customize.
+      #anvil menus work a tiny bit differently as there is less to customize.
       item:
         name: ' '
         locked: true
@@ -757,54 +783,61 @@ menu:
         open: '/c tp :member_name:'
         locked: true
         type: playerhead
-        lore: [ "&f:member_bio:", "- :member_name:" ]
+        lore:
+          - "&f:member_bio:"
+          - "- :member_name:"
       '&6K/D':
         slot: 10
         locked: true
         type: diamondsword
-        lore: [ "&f:member_kd:"]
+        lore:
+          - "&f:member_kd:"
       '&6Clan':
         slot: 13
         locked: true
         type: ironchestplate
-        lore: [ "&f:clan_name:" ]
+        lore:
+          - "&f:clan_name:"
       '&6Rank':
         slot: 16
         locked: true
         type: goldenpickaxe
-        lore: [ "&f:member_rank_full:" ]
+        lore:
+          - "&f:member_rank_full:"
       '&cBack':
         slot: 19
         locked: true
         type: barrier
         open: 'ClansPro::clan_name:-members'
-        lore: [ "&c&oClick to go back a step." ]
+        lore:
+          - "&c&oClick to go back a step."
       '&9Message':
         slot: 22
         locked: true
         type: book
         open: '/c prompt :member_name:'
-        lore: [ "&c&oClick to message me." ]
-  # This is the home menu for all the gui. Typing just /clan with no arguments in game leads you here.
-  # Normal placeholders work here.
+        lore:
+          - "&c&oClick to message me."
+  #This is the home menu for all the gui. Typing just /clan with no arguments in game leads you here.
+  #Normal placeholders work here.
   home:
-    # This is an optional sub menu for this menu to use it simply call '/clan bank gui' in your open statement.
-    # Associate provided placeholders work here:
-    # :member_name:  "Get the associates name"
-    # :member_bio:  "Get the associates personal biography"
-    # :member_balance:  "Get the associates money balance"
-    # :member_nick_name:  "Get the associates nickname otherwise returning their normal name"
-    # :member_nick_name_colored:  "Get the associates nickname otherwise returning their normal name, all wrapped in the color of their clan"
-    # :member_rank_full:  "Get the associates rank in full"
-    # :member_rank_wordless:  "Get the associates rank symbol"
-    # :member_list:  "Get all members of this associates clan in string form."
-    # :member_count:  "Get the count of members for this associates clan"
-    # :clan_name:  "Get the name of the clan for this associate."
-    # :clan_name_colored:  "Get the name of the clan for this associate colored"
-    # :clan_logo:  "Get the clan logo (use for lore)"
-    # :clan_nick_name:  "Get the nick name of the clan for this associate"
-    # :clan_nick_name_colored:  "Get the nick name of the clan for this associate colored"
-    # Normal placeholders work here aswell.
+    #This is an optional sub menu for this menu to use it simply call '/clan bank gui' in your open statement.
+    #Associate provided placeholders work here:
+    #:member_name:  "Get the associates name"
+    #:member_bio:  "Get the associates personal biography"
+    #:member_balance:  "Get the associates money balance"
+    #:member_nick_name:  "Get the associates nickname otherwise returning their normal name"
+    #:member_nick_name_colored:  "Get the associates nickname otherwise returning their normal name, all wrapped in the color of their clan"
+    #:member_rank_full:  "Get the associates rank in full"
+    #:member_rank_wordless:  "Get the associates rank symbol"
+    #:member_list:  "Get all members of this associates clan in string form."
+    #:member_count:  "Get the count of members for this associates clan"
+    #:clan_name:  "Get the name of the clan for this associate."
+    #:clan_name_colored:  "Get the name of the clan for this associate colored"
+    #:clan_logo:  "Get the clan logo (use for lore)"
+    #:clan_nick_name:  "Get the nick name of the clan for this associate"
+    #:clan_nick_name_colored:  "Get the nick name of the clan for this associate colored"
+    #Normal placeholders work here aswell.
     bank:
       title: '&6:clan_name: Bank options'
       rows: THREE
@@ -816,60 +849,64 @@ menu:
       items:
         '&a+5':
           slot: 10
-          lore: ["&fDeposit 5 dollars"]
+          lore:
+            - "&fDeposit 5 dollars"
           locked: true
           close: true
           type: goldingot
           open: '/clan bank deposit 5'
         '&a+10':
           slot: 12
-          lore: [ "&fDeposit 10 dollars" ]
+          lore:
+            - "&fDeposit 10 dollars"
           locked: true
           close: true
           type: goldingot
           open: '/clan bank deposit 10'
         '&a+100':
           slot: 14
-          lore: [ "&fDeposit 100 dollars" ]
+          lore:
+            - "&fDeposit 100 dollars"
           locked: true
           close: true
           type: goldingot
           open: '/clan bank deposit 100'
         '&a+500':
           slot: 16
-          lore: [ "&fDeposit 500 dollars" ]
+          lore:
+            - "&fDeposit 500 dollars"
           locked: true
           close: true
           type: goldingot
           open: '/clan bank deposit 500'
-    # This is a default sub menu it allows users to control their allies and enemies through gui.
-    # Associate provided placeholders work here:
-    # :member_name:  "Get the associates name"
-    # :member_bio:  "Get the associates personal biography"
-    # :member_balance:  "Get the associates money balance"
-    # :member_nick_name:  "Get the associates nickname otherwise returning their normal name"
-    # :member_nick_name_colored:  "Get the associates nickname otherwise returning their normal name, all wrapped in the color of their clan"
-    # :member_rank_full:  "Get the associates rank in full"
-    # :member_rank_wordless:  "Get the associates rank symbol"
-    # :member_list:  "Get all members of this associates clan in string form."
-    # :member_count:  "Get the count of members for this associates clan"
-    # :clan_name:  "Get the name of the clan for this associate."
-    # :clan_name_colored:  "Get the name of the clan for this associate colored"
-    # :clan_nick_name:  "Get the nick name of the clan for this associate"
-    # :clan_logo:  "Get the clan logo (use for lore)"
-    # :clan_nick_name_colored:  "Get the nick name of the clan for this associate colored"
-    # Normal placeholders work here aswell.
+    #This is a default sub menu it allows users to control their allies and enemies through gui.
+    #Associate provided placeholders work here:
+    #:member_name:  "Get the associates name"
+    #:member_bio:  "Get the associates personal biography"
+    #:member_balance:  "Get the associates money balance"
+    #:member_nick_name:  "Get the associates nickname otherwise returning their normal name"
+    #:member_nick_name_colored:  "Get the associates nickname otherwise returning their normal name, all wrapped in the color of their clan"
+    #:member_rank_full:  "Get the associates rank in full"
+    #:member_rank_wordless:  "Get the associates rank symbol"
+    #:member_list:  "Get all members of this associates clan in string form."
+    #:member_count:  "Get the count of members for this associates clan"
+    #:clan_name:  "Get the name of the clan for this associate."
+    #:clan_name_colored:  "Get the name of the clan for this associate colored"
+    #:clan_nick_name:  "Get the nick name of the clan for this associate"
+    #:clan_logo:  "Get the clan logo (use for lore)"
+    #:clan_nick_name_colored:  "Get the nick name of the clan for this associate colored"
+    #Normal placeholders work here aswell.
     relations:
-      # A sub menu for this menu that lists all enemy clans a user has. (/c relations enemies)
-      # Clan provided placeholders work here:
-      # :member_list:  "Get all members of this clan in string form."
-      # :member_count:  "Get the count of members for this clan"
-      # :clan_name:  "Get the name of the clan."
-      # :clan_color: "Get the starting color for this clan"
-      # :clan_logo:  "Get the clan logo (use for lore)"
-      # :clan_name_colored:  "Get the name of the clan colored"
-      # :clan_nick_name:  "Get the nick name of the clan"
-      # :clan_nick_name_colored:  "Get the nick name of the clan colored"
+      #A sub menu for this menu that lists all enemy clans a user has. (/c relations enemies)
+      #Clan provided placeholders work here:
+      #:member_list:  "Get all members of this clan in string form."
+      #:member_count:  "Get the count of members for this clan"
+      #:clan_name:  "Get the name of the clan."
+      #:clan_color: "Get the starting color for this clan"
+      #:clan_logo:  "Get the clan logo (use for lore)"
+      #:clan_name_colored:  "Get the name of the clan colored"
+      #:clan_nick_name:  "Get the nick name of the clan"
+      #:clan_nick_name_colored:  "Get the nick name of the clan colored"
       enemy-list:
         title: '&cEnemies'
         rows: THREE
@@ -884,44 +921,50 @@ menu:
           type: glasspane
         pagination:
           name: '&cClan: :clan_color::clan_name:'
-          lore: [ "&f&m,----------", "Click for members.", "&f&m----------" ]
+          lore:
+            - "&f&m,----------"
+            - "Click for members."
+            - "&f&m----------"
           type: clan
           locked: true
           open: 'ClansPro::clan_name:-members'
-          # =========================
+          #=========================
           replacements:
             ':clan_money:': getBalanceDouble
-          # =========================
+          #=========================
           navigation:
             next:
               name: '&cNext'
               slot: 26
               locked: true
               type: enderpearl
-              lore: [ "&f&oClick to go to the next page." ]
+              lore:
+                - "&f&oClick to go to the next page."
             exit:
               name: '&cExit'
               slot: 22
               locked: true
               open: '/clan relations'
               type: enderpearl
-              lore: [ "&f&oClick to escape." ]
+              lore:
+                - "&f&oClick to escape."
             previous:
               name: '&cBack'
               slot: 18
               locked: true
               type: enderpearl
-              lore: [ "&f&oClick to go back a page." ]
-      # A sub menu for this menu that lets the user attempt to rival a specified clan. (/c relations enemies add)
-      # Clan provided placeholders work here:
-      # :member_list:  "Get all members of this clan in string form."
-      # :member_count:  "Get the count of members for this clan"
-      # :clan_name:  "Get the name of the clan."
-      # :clan_color: "Get the starting color for this clan"
-      # :clan_logo:  "Get the clan logo (use for lore)"
-      # :clan_name_colored:  "Get the name of the clan colored"
-      # :clan_nick_name:  "Get the nick name of the clan"
-      # :clan_nick_name_colored:  "Get the nick name of the clan colored"
+              lore:
+                - "&f&oClick to go back a page."
+      #A sub menu for this menu that lets the user attempt to rival a specified clan. (/c relations enemies add)
+      #Clan provided placeholders work here:
+      #:member_list:  "Get all members of this clan in string form."
+      #:member_count:  "Get the count of members for this clan"
+      #:clan_name:  "Get the name of the clan."
+      #:clan_color: "Get the starting color for this clan"
+      #:clan_logo:  "Get the clan logo (use for lore)"
+      #:clan_name_colored:  "Get the name of the clan colored"
+      #:clan_nick_name:  "Get the nick name of the clan"
+      #:clan_nick_name_colored:  "Get the nick name of the clan colored"
       enemy-add:
         title: '&cAdd new enemy'
         rows: THREE
@@ -936,44 +979,50 @@ menu:
           type: glasspane
         pagination:
           name: '&cClan: :clan_color::clan_name:'
-          lore: [ "&f&m,----------", "Click to rival.", "&f&m----------" ]
+          lore:
+            - "&f&m,----------"
+            - "Click to rival."
+            - "&f&m----------"
           type: clan
           locked: true
           open: '/c enemy :clan_name:'
-          # =========================
+          #=========================
           replacements:
             ':clan_money:': getBalanceDouble
-          # =========================
+          #=========================
           navigation:
             next:
               name: '&cNext'
               slot: 26
               locked: true
               type: enderpearl
-              lore: [ "&f&oClick to go to the next page." ]
+              lore:
+                - "&f&oClick to go to the next page."
             exit:
               name: '&cExit'
               slot: 22
               locked: true
               open: '/clan relations'
               type: enderpearl
-              lore: [ "&f&oClick to escape." ]
+              lore:
+                - "&f&oClick to escape."
             previous:
               name: '&cBack'
               slot: 18
               locked: true
               type: enderpearl
-              lore: [ "&f&oClick to go back a page." ]
-      # A sub menu for this menu that lets the user attempt to neutralize a rivalry. (/c relations enemies remove)
-      # Clan provided placeholders work here:
-      # :member_list:  "Get all members of this clan in string form."
-      # :member_count:  "Get the count of members for this clan"
-      # :clan_name:  "Get the name of the clan."
-      # :clan_color: "Get the starting color for this clan"
-      # :clan_logo:  "Get the clan logo (use for lore)"
-      # :clan_name_colored:  "Get the name of the clan colored"
-      # :clan_nick_name:  "Get the nick name of the clan"
-      # :clan_nick_name_colored:  "Get the nick name of the clan colored"
+              lore:
+                - "&f&oClick to go back a page."
+      #A sub menu for this menu that lets the user attempt to neutralize a rivalry. (/c relations enemies remove)
+      #Clan provided placeholders work here:
+      #:member_list:  "Get all members of this clan in string form."
+      #:member_count:  "Get the count of members for this clan"
+      #:clan_name:  "Get the name of the clan."
+      #:clan_color: "Get the starting color for this clan"
+      #:clan_logo:  "Get the clan logo (use for lore)"
+      #:clan_name_colored:  "Get the name of the clan colored"
+      #:clan_nick_name:  "Get the nick name of the clan"
+      #:clan_nick_name_colored:  "Get the nick name of the clan colored"
       enemy-remove:
         title: '&cNeutralize enemy'
         rows: THREE
@@ -988,44 +1037,50 @@ menu:
           type: glasspane
         pagination:
           name: '&eClan: :clan_color::clan_name:'
-          lore: [ "&f&m,----------", "Click to un-rival.", "&f&m----------" ]
+          lore:
+            - "&f&m,----------"
+            - "Click to un-rival."
+            - "&f&m----------"
           type: clan
           locked: true
           open: '/c enemy remove :clan_name:'
-          # =========================
+          #=========================
           replacements:
             ':clan_money:': getBalanceDouble
-          # =========================
+          #=========================
           navigation:
             next:
               name: '&cNext'
               slot: 26
               locked: true
               type: enderpearl
-              lore: [ "&f&oClick to go to the next page." ]
+              lore:
+                - "&f&oClick to go to the next page."
             exit:
               name: '&cExit'
               slot: 22
               locked: true
               open: '/clan relations'
               type: enderpearl
-              lore: [ "&f&oClick to escape." ]
+              lore:
+                - "&f&oClick to escape."
             previous:
               name: '&cBack'
               slot: 18
               locked: true
               type: enderpearl
-              lore: [ "&f&oClick to go back a page." ]
-      # A sub menu for this menu that lists all ally clans a user has. (/c relations allies)
-      # Clan provided placeholders work here:
-      # :member_list:  "Get all members of this clan in string form."
-      # :member_count:  "Get the count of members for this clan"
-      # :clan_name:  "Get the name of the clan."
-      # :clan_color: "Get the starting color for this clan"
-      # :clan_logo:  "Get the clan logo (use for lore)"
-      # :clan_name_colored:  "Get the name of the clan colored"
-      # :clan_nick_name:  "Get the nick name of the clan"
-      # :clan_nick_name_colored:  "Get the nick name of the clan colored"
+              lore:
+                - "&f&oClick to go back a page."
+      #A sub menu for this menu that lists all ally clans a user has. (/c relations allies)
+      #Clan provided placeholders work here:
+      #:member_list:  "Get all members of this clan in string form."
+      #:member_count:  "Get the count of members for this clan"
+      #:clan_name:  "Get the name of the clan."
+      #:clan_color: "Get the starting color for this clan"
+      #:clan_logo:  "Get the clan logo (use for lore)"
+      #:clan_name_colored:  "Get the name of the clan colored"
+      #:clan_nick_name:  "Get the nick name of the clan"
+      #:clan_nick_name_colored:  "Get the nick name of the clan colored"
       ally-list:
         title: '&aAllies'
         rows: THREE
@@ -1040,44 +1095,50 @@ menu:
           type: glasspane
         pagination:
           name: '&aClan: :clan_color::clan_name:'
-          lore: [ "&f&m,----------", "Click for members.", "&f&m----------" ]
+          lore:
+            - "&f&m,----------"
+            - "Click for members."
+            - "&f&m----------"
           type: clan
           locked: true
           open: 'ClansPro::clan_name:-members'
-          # =========================
+          #=========================
           replacements:
             ':clan_money:': getBalanceDouble
-          # =========================
+          #=========================
           navigation:
             next:
               name: '&cNext'
               slot: 26
               locked: true
               type: enderpearl
-              lore: [ "&f&oClick to go to the next page." ]
+              lore:
+                - "&f&oClick to go to the next page."
             exit:
               name: '&cExit'
               slot: 22
               locked: true
               open: '/clan relations'
               type: enderpearl
-              lore: [ "&f&oClick to escape." ]
+              lore:
+                - "&f&oClick to escape."
             previous:
               name: '&cBack'
               slot: 18
               locked: true
               type: enderpearl
-              lore: [ "&f&oClick to go back a page." ]
-      # A sub menu for this menu that lets the user request alliance with a specified clan. (/c relations allies add)
-      # Clan provided placeholders work here:
-      # :member_list:  "Get all members of this clan in string form."
-      # :member_count:  "Get the count of members for this clan"
-      # :clan_name:  "Get the name of the clan."
-      # :clan_color: "Get the starting color for this clan"
-      # :clan_logo:  "Get the clan logo (use for lore)"
-      # :clan_name_colored:  "Get the name of the clan colored"
-      # :clan_nick_name:  "Get the nick name of the clan"
-      # :clan_nick_name_colored:  "Get the nick name of the clan colored"
+              lore:
+                - "&f&oClick to go back a page."
+      #A sub menu for this menu that lets the user request alliance with a specified clan. (/c relations allies add)
+      #Clan provided placeholders work here:
+      #:member_list:  "Get all members of this clan in string form."
+      #:member_count:  "Get the count of members for this clan"
+      #:clan_name:  "Get the name of the clan."
+      #:clan_color: "Get the starting color for this clan"
+      #:clan_logo:  "Get the clan logo (use for lore)"
+      #:clan_name_colored:  "Get the name of the clan colored"
+      #:clan_nick_name:  "Get the nick name of the clan"
+      #:clan_nick_name_colored:  "Get the nick name of the clan colored"
       ally-add:
         title: '&aAdd new ally'
         rows: THREE
@@ -1092,44 +1153,50 @@ menu:
           type: glasspane
         pagination:
           name: '&fClan: :clan_color::clan_name:'
-          lore: [ "&f&m,----------", "Click to ally.", "&f&m----------" ]
+          lore:
+            - "&f&m,----------"
+            - "Click to ally."
+            - "&f&m----------"
           type: clan
           locked: true
           open: '/c ally :clan_name:'
-          # =========================
+          #=========================
           replacements:
             ':clan_money:': getBalanceDouble
-          # =========================
+          #=========================
           navigation:
             next:
               name: '&cNext'
               slot: 26
               locked: true
               type: enderpearl
-              lore: [ "&f&oClick to go to the next page." ]
+              lore:
+                - "&f&oClick to go to the next page."
             exit:
               name: '&cExit'
               slot: 22
               locked: true
               open: '/clan relations'
               type: enderpearl
-              lore: [ "&f&oClick to escape." ]
+              lore:
+                - "&f&oClick to escape."
             previous:
               name: '&cBack'
               slot: 18
               locked: true
               type: enderpearl
-              lore: [ "&f&oClick to go back a page." ]
-      # A sub menu for this menu that lets the user neutralize an alliance with a specified clan. (/c relations allies remove)
-      # Clan provided placeholders work here:
-      # :member_list:  "Get all members of this clan in string form."
-      # :member_count:  "Get the count of members for this clan"
-      # :clan_name:  "Get the name of the clan."
-      # :clan_color: "Get the starting color for this clan"
-      # :clan_logo:  "Get the clan logo (use for lore)"
-      # :clan_name_colored:  "Get the name of the clan colored"
-      # :clan_nick_name:  "Get the nick name of the clan"
-      # :clan_nick_name_colored:  "Get the nick name of the clan colored"
+              lore:
+                - "&f&oClick to go back a page."
+      #A sub menu for this menu that lets the user neutralize an alliance with a specified clan. (/c relations allies remove)
+      #Clan provided placeholders work here:
+      #:member_list:  "Get all members of this clan in string form."
+      #:member_count:  "Get the count of members for this clan"
+      #:clan_name:  "Get the name of the clan."
+      #:clan_color: "Get the starting color for this clan"
+      #:clan_logo:  "Get the clan logo (use for lore)"
+      #:clan_name_colored:  "Get the name of the clan colored"
+      #:clan_nick_name:  "Get the nick name of the clan"
+      #:clan_nick_name_colored:  "Get the nick name of the clan colored"
       ally-remove:
         title: '&aNeutralize ally'
         rows: THREE
@@ -1144,34 +1211,40 @@ menu:
           type: glasspane
         pagination:
           name: '&eClan: :clan_color::clan_name:'
-          lore: [ "&f&m,----------", "Click to remove ally.", "&f&m----------" ]
+          lore:
+            - "&f&m,----------"
+            - "Click to remove ally."
+            - "&f&m----------"
           type: clan
           locked: true
           open: '/c ally remove :clan_name:'
-          # =========================
+          #=========================
           replacements:
             ':clan_money:': getBalanceDouble
-          # =========================
+          #=========================
           navigation:
             next:
               name: '&cNext'
               slot: 26
               locked: true
               type: enderpearl
-              lore: [ "&f&oClick to go to the next page." ]
+              lore:
+                - "&f&oClick to go to the next page."
             exit:
               name: '&cExit'
               slot: 22
               locked: true
               open: '/clan relations'
               type: enderpearl
-              lore: [ "&f&oClick to escape." ]
+              lore:
+                - "&f&oClick to escape."
             previous:
               name: '&cBack'
               slot: 18
               locked: true
               type: enderpearl
-              lore: [ "&f&oClick to go back a page." ]
+              lore:
+                - "&f&oClick to go back a page."
       title: '&d&oRelations'
       rows: THREE
       type: SINGULAR
@@ -1183,7 +1256,8 @@ menu:
           open: '/c relations allies'
           enchantments:
             ARROW_DAMAGE: 2
-          flags: ["HIDE_ENCHANTS"]
+          flags:
+            - "HIDE_ENCHANTS"
         '&aAlly +':
           slot: 11
           locked: true
@@ -1191,7 +1265,8 @@ menu:
           open: '/c relations allies add'
           enchantments:
             ARROW_DAMAGE: 2
-          flags: [ "HIDE_ENCHANTS" ]
+          flags:
+            - "HIDE_ENCHANTS"
         '&cAlly -':
           slot: 12
           locked: true
@@ -1199,7 +1274,8 @@ menu:
           open: '/c relations allies remove'
           enchantments:
             ARROW_DAMAGE: 2
-          flags: [ "HIDE_ENCHANTS" ]
+          flags:
+            - "HIDE_ENCHANTS"
         '&cBack':
           slot: 13
           locked: true
@@ -1212,7 +1288,8 @@ menu:
           open: '/c relations enemies add'
           enchantments:
             ARROW_DAMAGE: 2
-          flags: [ "HIDE_ENCHANTS" ]
+          flags:
+            - "HIDE_ENCHANTS"
         '&eEnemy -':
           slot: 15
           locked: true
@@ -1220,7 +1297,8 @@ menu:
           open: '/c relations enemies remove'
           enchantments:
             ARROW_DAMAGE: 2
-          flags: [ "HIDE_ENCHANTS" ]
+          flags:
+            - "HIDE_ENCHANTS"
         '&cEnemies':
           slot: 17
           locked: true
@@ -1228,7 +1306,8 @@ menu:
           open: '/c relations enemies'
           enchantments:
             ARROW_DAMAGE: 2
-          flags: [ "HIDE_ENCHANTS" ]
+          flags:
+            - "HIDE_ENCHANTS"
     title: 'Hello %player_name%'
     rows: SIX
     type: SINGULAR
@@ -1242,54 +1321,61 @@ menu:
         locked: true
         open: '/c ask'
         type: bone
-        lore: [ "&fAsk a plugin related question." ]
+        lore:
+          - "&fAsk a plugin related question."
       '&6Clan Roster':
         slot: 13
         locked: true
         open: 'ClansPro:Roster:Select'
         type: goldblock
-        lore: [ "&fView the clan roster." ]
+        lore:
+          - "&fView the clan roster."
       '&eCommands':
         slot: 16
         locked: true
         open: '/clan help'
         close: true
         type: commandblock
-        lore: [ "&fView all clan commands." ]
+        lore:
+          - "&fView all clan commands."
       '&eMy Info':
         slot: 20
         locked: true
         open: '/clan info'
         close: true
         type: glasspane
-        lore: [ "&fView your clan info." ]
+        lore:
+          - "&fView your clan info."
       '&6Bank Options':
         slot: 22
         locked: true
         open: '/clan bank gui'
         close: true
         type: goldingot
-        lore: [ "&fView clan bank options." ]
+        lore:
+          - "&fView clan bank options."
       '&9Clan Relations':
         slot: 24
         locked: true
         open: '/clan relations'
         close: true
         type: anvil
-        lore: [ "&fView your clan info." ]
+        lore:
+          - "&fView your clan info."
       '&eClan Vault':
         slot: 31
         locked: true
         open: '/clan vault'
         close: true
         type: chest
-        lore: [ "&fView your clan vault." ]
+        lore:
+          - "&fView your clan vault."
       '&bClan Chat':
         slot: 40
         locked: true
         open: '/clan chat'
         close: true
         type: paper
-        lore: [ "&fChange your clan chat." ]
-
+        lore:
+          - "&fChange your clan chat."
 default-size: SIX
