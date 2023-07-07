@@ -70,7 +70,7 @@ public class CommandInfo extends ClanSubCommand {
 			if (associate != null) {
 				AssociateDisplayInfoEvent ev = ClanVentBus.call(new AssociateDisplayInfoEvent(associate, AssociateDisplayInfoEvent.Type.PERSONAL));
 				if (!ev.isCancelled()) {
-					Clan.ACTION.getClanboard(p, 1);
+					Clan.ACTION.getClanboard(p);
 				}
 			} else {
 				lib.sendMessage(p, lib.notInClan());
@@ -93,7 +93,7 @@ public class CommandInfo extends ClanSubCommand {
 				if (associate != null && args[0].equals(associate.getClan().getName())) {
 					AssociateDisplayInfoEvent ev = ClanVentBus.call(new AssociateDisplayInfoEvent(associate, AssociateDisplayInfoEvent.Type.PERSONAL));
 					if (!ev.isCancelled()) {
-						Clan.ACTION.getClanboard(p, 1);
+						Clan.ACTION.getClanboard(p);
 					}
 					return true;
 				}
@@ -114,7 +114,7 @@ public class CommandInfo extends ClanSubCommand {
 			if (associate != null && target.equals(associate.getId())) {
 				AssociateDisplayInfoEvent ev = ClanVentBus.call(new AssociateDisplayInfoEvent(associate, AssociateDisplayInfoEvent.Type.PERSONAL));
 				if (!ev.isCancelled()) {
-					Clan.ACTION.getClanboard(p, 1);
+					Clan.ACTION.getClanboard(p);
 				}
 				return true;
 			}

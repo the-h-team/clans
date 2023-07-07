@@ -1,7 +1,7 @@
 package com.github.sanctum.clans.commands;
 
 import com.github.sanctum.clans.construct.DataManager;
-import com.github.sanctum.clans.construct.actions.ClanAction;
+import com.github.sanctum.clans.construct.api.ClanActionEngine;
 import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClanSubCommand;
 import com.github.sanctum.clans.construct.api.ClansAPI;
@@ -25,7 +25,7 @@ public class CommandList extends ClanSubCommand {
 				lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("list")));
 				return true;
 			}
-			Clan.ACTION.getLeaderboard(ClanAction.LeaderboardType.NAME, p, 1);
+			Clan.ACTION.getLeaderboard(ClanActionEngine.LeaderboardType.NAME, p, 1);
 			return true;
 		}
 
@@ -38,7 +38,7 @@ public class CommandList extends ClanSubCommand {
 				lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("list")));
 				return true;
 			}
-			Clan.ACTION.getLeaderboard(ClanAction.LeaderboardType.NAME, p, Integer.parseInt(args[0]));
+			Clan.ACTION.getLeaderboard(ClanActionEngine.LeaderboardType.NAME, p, Integer.parseInt(args[0]));
 			return true;
 		}
 

@@ -1,7 +1,6 @@
 package com.github.sanctum.clans.construct.api;
 
 import com.github.sanctum.clans.construct.ClanManager;
-import com.github.sanctum.clans.construct.actions.ClanAction;
 import com.github.sanctum.clans.construct.extra.BukkitColor;
 import com.github.sanctum.clans.construct.extra.ClanError;
 import com.github.sanctum.clans.construct.impl.DefaultClan;
@@ -54,7 +53,7 @@ import org.jetbrains.annotations.Nullable;
 @DelegateDeserialization(DefaultClan.class)
 public interface Clan extends ClanBank, ConfigurationSerializable, EntityHolder, InvasiveEntity, JsonAdapter<Clan>, Relatable<Clan> {
 
-	ClanAction ACTION = new ClanAction();
+	ClanActionEngine ACTION = new ClanActionEngine();
 
 	/**
 	 * Get the id of the clan stored within the object
@@ -988,4 +987,14 @@ public interface Clan extends ClanBank, ConfigurationSerializable, EntityHolder,
 		return clan;
 	}
 
+	interface Action<O> extends Runnable {
+
+		O deploy();
+
+		@Override
+		default void run() {
+			deploy();
+		}
+
+	}
 }

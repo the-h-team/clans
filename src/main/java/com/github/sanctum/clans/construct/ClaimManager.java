@@ -15,12 +15,14 @@ import com.github.sanctum.clans.event.claim.ClaimResidentEvent;
 import com.github.sanctum.clans.event.claim.ClaimsLoadingProcedureEvent;
 import com.github.sanctum.clans.event.claim.WildernessInhabitantEvent;
 import com.github.sanctum.labyrinth.LabyrinthProvider;
+import com.github.sanctum.labyrinth.data.DataTable;
 import com.github.sanctum.labyrinth.data.FileManager;
 import com.github.sanctum.labyrinth.data.YamlExtension;
 import com.github.sanctum.panther.event.Vent;
 import com.github.sanctum.panther.file.Configurable;
 import com.github.sanctum.panther.file.Node;
 import com.github.sanctum.panther.util.HUID;
+import java.io.IOException;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -46,23 +48,13 @@ public final class ClaimManager {
 
 	public ClaimManager() {
 		this.flagManager = new FlagManager(this);
+		fixRegionsFile();
 		if (JavaPlugin.getPlugin(ClansJavaPlugin.class).TYPE == YamlExtension.INSTANCE) {
-			this.regions = ClansAPI.getInstance().getFileList().get("Regions", "Configuration", YamlExtension.INSTANCE);
+			this.regions = ClansAPI.getInstance().getFileList().get("regions", "Configuration/Data", YamlExtension.INSTANCE);
 		} else {
-			this.regions = ClansAPI.getInstance().getFileList().get("regions", "Configuration", Configurable.Type.JSON);
+			this.regions = ClansAPI.getInstance().getFileList().get("regions", "Configuration/Data", Configurable.Type.JSON);
 		}
-		if (regions.getRoot().exists()) {
-			this.regions = regions.toMoved("Configuration/Data");
-		} else {
-			if (JavaPlugin.getPlugin(ClansJavaPlugin.class).TYPE == YamlExtension.INSTANCE) {
-				this.regions = ClansAPI.getInstance().getFileList().get("Regions", "Configuration/Data", YamlExtension.INSTANCE);
-			} else {
-				this.regions = ClansAPI.getInstance().getFileList().get("regions", "Configuration/Data", Configurable.Type.JSON);
-			}
-		}
-
 		regions.getRoot().reload();
-
 		ClanVentBus.subscribe(TimerEvent.class, Vent.Priority.HIGH, (e, subscription) -> {
 			if (e.isAsynchronous()) return;
 			Player p = e.getPlayer();
@@ -133,6 +125,23 @@ public final class ClaimManager {
 				}
 			}
 		});
+	}
+
+	// this will only need to be in for a couple updates. TODO: take it out around 3.0.2
+	void fixRegionsFile() {
+		FileManager test = ClansAPI.getInstance().getFileList().get("Regions", "Configuration/Data", YamlExtension.INSTANCE);
+		if (test.getRoot().exists()) {
+			final DataTable table = test.copy();
+			FileManager ne = ClansAPI.getInstance().getFileList().get("regions", "Configuration/Data", YamlExtension.INSTANCE);
+			try {
+				ne.getRoot().create();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			test.getRoot().delete();
+			ne.write(table);
+			ne.getRoot().reload();
+		}
 	}
 
 	public boolean isInClaim(Location location) {

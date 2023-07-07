@@ -43,8 +43,12 @@ import com.github.sanctum.panther.file.Configurable;
 import com.github.sanctum.panther.file.Node;
 import com.github.sanctum.panther.paste.PasteManager;
 import com.github.sanctum.panther.paste.type.Hastebin;
+import com.github.sanctum.panther.paste.type.Pastebin;
 import com.github.sanctum.panther.util.OrdinalProcedure;
+import com.github.sanctum.panther.util.PantherLogger;
 import com.github.sanctum.panther.util.Task;
+import com.github.sanctum.skulls.CustomHead;
+import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Locale;
@@ -87,11 +91,16 @@ public class ClansJavaPlugin extends JavaPlugin implements ClansAPI, Vent.Host {
 	private LogoGallery gallery;
 	public DataManager dataManager;
 	private Hastebin hastebin;
+	private Pastebin pastebin;
 	private KeyedServiceManager<ClanAddon> serviceManager;
 
 	public String USER_ID = "%%__USER__%%";
 	public String NONCE = "%%__NONCE__%%";
 	private UUID sessionId;
+
+	public void onLoad() {
+		fixDataFolder();
+	}
 
 	public void onEnable() {
 		initialize();
@@ -113,6 +122,15 @@ public class ClansJavaPlugin extends JavaPlugin implements ClansAPI, Vent.Host {
 		gallery.load(reserved3.getId(), reserved3.get());
 		ReservedLogoCarrier reserved4 = ReservedLogoCarrier.BIG_LANDSCAPE;
 		gallery.load(reserved4.getId(), reserved4.get());
+	}
+
+	void fixDataFolder() {
+		final File pluginsDir = new File(FileManager.class.getProtectionDomain().getCodeSource().getLocation().getPath().replaceAll("%20", " "));
+		File clansDir = new File(pluginsDir.getParentFile().getPath(), "ClansPro");
+		File newDir = new File(pluginsDir.getParentFile().getPath(), getDescription().getName());
+		if (clansDir.renameTo(newDir)) {
+			getLogger().info("Renamed the old 'ClansPro' folder to 'Tether' for you.");
+		}
 	}
 
 	private boolean isValid() {
@@ -213,6 +231,15 @@ public class ClansJavaPlugin extends JavaPlugin implements ClansAPI, Vent.Host {
 				System.setProperty("RELOAD", "TRUE");
 			}
 		});
+
+		FileManager heads = getFileList().get("heads", "Configuration/Data");
+		CustomHead.Manager.getHeads().stream().filter(h -> h.category().equals("ClansPro")).forEach(h -> {
+			heads.write(t -> {
+				t.set(h.name() + ".name", h.name());
+				t.set(h.name() + ".custom", true);
+				t.set(h.name() + ".category", h.category());
+			});
+		});
 	}
 
 	public void setPrefix(MessagePrefix prefix) {
@@ -285,6 +312,11 @@ public class ClansJavaPlugin extends JavaPlugin implements ClansAPI, Vent.Host {
 	}
 
 	@Override
+	public @NotNull Pastebin getPastebin() {
+		return pastebin;
+	}
+
+	@Override
 	public boolean isUpdated() {
 		ClansUpdate update = new ClansUpdate(getPlugin());
 		return CompletableFuture.supplyAsync(() -> {
@@ -305,7 +337,7 @@ public class ClansJavaPlugin extends JavaPlugin implements ClansAPI, Vent.Host {
 
 	@Override
 	public boolean isTrial() {
-		return true;
+		return false;
 	}
 
 	@Override
@@ -336,6 +368,7 @@ public class ClansJavaPlugin extends JavaPlugin implements ClansAPI, Vent.Host {
 	void initialize() {
 		origin = FileList.search(PRO = this);
 		hastebin = getPasteManager().newHaste();
+		pastebin = getPasteManager().newPaste("a5tsxh3c37_rmPTCN9gy9kjhd5vepz34");
 		STATE = new NamespacedKey(this, "online-state");
 		sessionId = UUID.randomUUID();
 		Bukkit.getServicesManager().register(ClansAPI.class, this, this, ServicePriority.Normal);

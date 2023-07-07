@@ -1,4 +1,4 @@
-package com.github.sanctum.clans.construct.actions;
+package com.github.sanctum.clans.construct.api;
 
 import com.github.sanctum.clans.bridge.ClanAddon;
 import com.github.sanctum.clans.bridge.ClanVentBus;
@@ -6,7 +6,6 @@ import com.github.sanctum.clans.bridge.internal.StashesAddon;
 import com.github.sanctum.clans.bridge.internal.VaultsAddon;
 import com.github.sanctum.clans.construct.DataManager;
 import com.github.sanctum.clans.construct.api.AbstractGameRule;
-import com.github.sanctum.clans.construct.api.Action;
 import com.github.sanctum.clans.construct.api.Claim;
 import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClansAPI;
@@ -60,12 +59,13 @@ import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class ClanAction extends StringLibrary {
+public class ClanActionEngine extends StringLibrary {
 
 	private final ClansAPI API = ClansAPI.getInstance();
+	private final List<String> info_board = ClansAPI.getDataInstance().getMessages().getRoot().getStringList("info-simple");
 
-	public Action<Clan> create(@NotNull UUID owner, @NotNull String name, @Nullable String password, boolean silent) {
-		return new Action<Clan>() {
+	public Clan.Action<Clan> create(@NotNull UUID owner, @NotNull String name, @Nullable String password, boolean silent) {
+		return new Clan.Action<Clan>() {
 
 			List<String> getAllClanIDs() {
 				DataManager dm = ClansAPI.getDataInstance();
@@ -156,7 +156,7 @@ public class ClanAction extends StringLibrary {
 		};
 	}
 
-	public Action<Clan> remove(@NotNull UUID target, boolean silent) {
+	public Clan.Action<Clan> remove(@NotNull UUID target, boolean silent) {
 		return () -> {
 			Clan.Associate associate = API.getAssociate(target).orElse(null);
 			if (associate != null) {
@@ -217,7 +217,7 @@ public class ClanAction extends StringLibrary {
 		};
 	}
 
-	public Action<Clan> kick(@NotNull UUID target) {
+	public Clan.Action<Clan> kick(@NotNull UUID target) {
 		return () -> {
 			Clan.Associate associate = API.getAssociate(target).orElse(null);
 			if (associate != null) {
@@ -246,7 +246,7 @@ public class ClanAction extends StringLibrary {
 		};
 	}
 
-	public Action<Clan> join(@NotNull UUID target, @NotNull String clanName, @Nullable String password, boolean silent) {
+	public Clan.Action<Clan> join(@NotNull UUID target, @NotNull String clanName, @Nullable String password, boolean silent) {
 		return () -> {
 			Clan.Associate associate = API.getAssociate(target).orElse(null);
 			Player p = Bukkit.getPlayer(target);
@@ -326,7 +326,7 @@ public class ClanAction extends StringLibrary {
 		};
 	}
 
-	public Action<Clan> demote(@NotNull UUID target) {
+	public Clan.Action<Clan> demote(@NotNull UUID target) {
 		return () -> {
 			Clan.Associate associate = API.getAssociate(target).orElse(null);
 			if (associate != null) {
@@ -356,7 +356,7 @@ public class ClanAction extends StringLibrary {
 		};
 	}
 
-	public Action<Clan> promote(@NotNull UUID target) {
+	public Clan.Action<Clan> promote(@NotNull UUID target) {
 		return () -> {
 			Clan.Associate associate = API.getAssociate(target).orElse(null);
 			if (associate != null) {
@@ -386,7 +386,7 @@ public class ClanAction extends StringLibrary {
 		};
 	}
 
-	public Action<Boolean> test(@NotNull CommandSender p, @NotNull String permission) {
+	public Clan.Action<Boolean> test(@NotNull CommandSender p, @NotNull String permission) {
 		return () -> {
 			if (p.hasPermission("clans.*")) return true;
 			final StringUtils utils = StringUtils.use(permission);
@@ -409,7 +409,7 @@ public class ClanAction extends StringLibrary {
 		};
 	}
 
-	public Action<Boolean> teleport(@NotNull Player p, @Nullable Location location) {
+	public Clan.Action<Boolean> teleport(@NotNull Player p, @Nullable Location location) {
 		return () -> {
 			Clan clan = API.getClanManager().getClan(p.getUniqueId());
 			if (clan != null) {
@@ -429,8 +429,8 @@ public class ClanAction extends StringLibrary {
 		};
 	}
 
-	public Action<UUID> getId(String playerName) {
-		return new Action<UUID>() {
+	public Clan.Action<UUID> getId(String playerName) {
+		return new Clan.Action<UUID>() {
 			final PlayerSearch user = PlayerSearch.of(playerName);
 			@Override
 			public UUID deploy() {
@@ -634,100 +634,21 @@ public class ClanAction extends StringLibrary {
 		return NumberFormat.getNumberInstance(loc).format(b1.doubleValue());
 	}
 
-	public void getClanboard(Player target, int page) {
+	public void getClanboard(Player target) {
 		Clan.Associate associate = API.getAssociate(target).orElse(null);
-
 		if (associate == null) return;
-
-		Clan clan = associate.getClan();
-
+		Clan clan =  associate.getClan();
 		List<String> array = new ArrayList<>();
-
-		String owner = clan.getOwner().getName();
-		String password = clan.getPassword();
-
-		List<String> members = clan.getMembers().stream().filter(a -> a.getPriority().toLevel() != 3).map(Clan.Associate::getId).map(UUID::toString).collect(Collectors.toList());
-		List<String> mods = clan.getMembers().stream().filter(a -> a.getPriority().toLevel() == 1).map(Nameable::getName).collect(Collectors.toList());
-		List<String> admins = clan.getMembers().stream().filter(a -> a.getPriority().toLevel() == 2).map(Nameable::getName).collect(Collectors.toList());
-		List<String> allies = clan.getRelation().getAlliance().stream().map(Nameable::getName).collect(Collectors.toList());
-		List<String> enemies = clan.getRelation().getRivalry().stream().map(Nameable::getName).collect(Collectors.toList());
-
-		String c = clan.getPalette().toString();
-
-		if (c.equals("&f"))
-			c = "&6";
-		array.add(" ");
-		array.add("&6&lClan&7: &f" + (clan.getPalette().isGradient() ? clan.getPalette().toString(clan.getName()) : clan.getPalette() + clan.getName()));
-		array.add("&f&m---------------------------");
-		array.add("&6Description: &7" + clan.getDescription());
-
-		array.add("&6" + clan.getOwner().getRankFull() + ": &f" + owner);
-		if (password == null)
-			password = "NO PASS";
-		if (clan.getBase() != null)
-			array.add("&6Base: &aSet");
-		if (clan.getBase() == null)
-			array.add("&6Base: &7Not set");
-		if (clan.isPeaceful())
-			array.add("&6Mode: &f&lPEACE");
-		if (!clan.isPeaceful())
-			array.add("&6Mode: &4&lWAR");
-		if (clan.getPalette().isGradient()) {
-			array.add("&6Color: " + (clan.getPalette().toArray()[0] + clan.getPalette().toArray()[1]).replace("&", "").replace("#", "&f»" + c));
-		} else {
-			array.add("&6Color: " + c + c.replace("&", "&f»" + c).replace("#", "&f»" + c));
-		}
-		if (Clearance.MANAGE_PASSWORD.test(associate)) {
-			array.add("&6Password: &f" + password);
-		}
-		array.add("&6&lPower [&e" + Clan.ACTION.format(clan.getPower()) + "&6&l]");
-		if (EconomyProvision.getInstance().isValid()) {
-			array.add("&6&lBank [&e" + Clan.ACTION.format(clan.getBalance().doubleValue()) + "&6&l]");
-		}
-		array.add("&6" + ClansAPI.getDataInstance().getConfig().getRoot().getString("Formatting.Chat.Styles.Full.Admin") + "s [" + c + admins.size() + "&6]");
-		array.add("&6" + ClansAPI.getDataInstance().getConfig().getRoot().getString("Formatting.Chat.Styles.Full.Moderator") + "s [" + c + mods.size() + "&6]");
-		array.add("&6Claims [" + c + clan.getClaims().length + "&f/ " + c + clan.getClaimLimit() + "&6]");
-		array.add("&f&m---------------------------");
-		if (clan.getRelation().getAlliance().getRequests().size() > 0) {
-			array.add("&6Ally Requests [" + c + clan.getRelation().getAlliance().getRequests().size() + "&6]");
-			clan.getRelation().getAlliance().getRequests(Clan.class).forEach(cl -> array.add("&f- &e&o" + cl.getName()));
-		}
-		if (clan.getRelation().getAlliance().getRequests().isEmpty())
-			array.add("&6Ally Requests [" + c + 0 + "&6]");
-		if (allies.size() > 0) {
-			array.add("&6Allies [" + c + allies.size() + "&6]");
-			for (String name : allies) {
-				array.add("&f- &e&o" + name);
+		info_board.forEach(s -> {
+			if (clan instanceof DefaultClan) {
+				array.add(((DefaultClan)clan).replacePlaceholders(s));
 			}
-		}
-		if (allies.isEmpty())
-			array.add("&6Allies [" + c + 0 + "&6]");
-		if (enemies.size() > 0) {
-			array.add("&6Enemies [" + c + enemies.size() + "&6]");
-			for (String name : enemies) {
-				array.add("&f- &c&o" + name);
-			}
-		}
-		if (enemies.isEmpty())
-			array.add("&6Enemies [" + c + 0 + "&6]");
-		array.add("&f&m---------------------------");
+		});
 		ClanInformationAdaptEvent event = ClanVentBus.call(new ClanInformationAdaptEvent(array, clan.getId().toString(), ClanInformationAdaptEvent.Type.PERSONAL));
 		for (String l : event.getInsertions()) {
 			target.sendMessage(color(l));
 		}
-		sendComponent(target, TextLib.getInstance().textRunnable("&fPerms &7(", "&bClick", "&7)", "&b&oClick to view clan permissions.", "clan perms"));
-		StashesAddon stashes = ClanAddon.getAddon(StashesAddon.class);
-		VaultsAddon vaults = ClanAddon.getAddon(VaultsAddon.class);
-		if (stashes != null && stashes.getContext().isActive()) {
-			sendComponent(target, TextLib.getInstance().textRunnable("&eStash &7(", "&bClick", "&7)", "&b&oClick to view the clan stash.", "clan stash"));
-		}
-		if (vaults != null && vaults.getContext().isActive()) {
-			sendComponent(target, TextLib.getInstance().textRunnable("&6Vault &7(", "&bClick", "&7)", "&b&oClick to view the clan vault.", "clan vault"));
-		}
-		target.sendMessage(color("&f&m---------------------------"));
-		target.sendMessage(color("&n" + ClansAPI.getDataInstance().getConfig().getRoot().getString("Formatting.Chat.Styles.Full.Member") + "s&r [" + c + members.size() + "&r]"));
-		getMemberboard(target, members, page);
-		target.sendMessage(" ");
+
 	}
 
 	public void getPlayerboard(Player p, int page) {

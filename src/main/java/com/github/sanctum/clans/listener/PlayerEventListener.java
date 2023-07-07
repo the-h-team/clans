@@ -136,7 +136,14 @@ public class PlayerEventListener implements Listener {
 				if (clanCooldown.isComplete() && !clanCooldown.isMarkedForRemoval()) {
 					clanCooldown.setMarkedForRemoval(true);
 					ClanVentBus.call(new ClanCooldownCompleteEvent(c, clanCooldown));
-					c.broadcast(MessageFormat.format(ClansAPI.getDataInstance().getMessageResponse("cooldown-expired"), clanCooldown.getAction().replace("Clans:", "")));
+					if (clanCooldown.getDescriptor() != null && !clanCooldown.getDescriptor().isEmpty()) {
+						FancyMessage m = new FancyMessage();
+						m.then(MessageFormat.format(ClansAPI.getDataInstance().getMessageResponse("cooldown-expired"), clanCooldown.getAction().replace("Clans:", "")));
+						m.hover("&3&o" + clanCooldown.getDescriptor());
+						c.broadcast(m.build());
+					} else {
+						c.broadcast(MessageFormat.format(ClansAPI.getDataInstance().getMessageResponse("cooldown-expired"), clanCooldown.getAction().replace("Clans:", "")));
+					}
 					ClanCooldown.remove(clanCooldown);
 				}
 			}
@@ -199,7 +206,14 @@ public class PlayerEventListener implements Listener {
 					if (clanCooldown.isComplete()) {
 						ClanVentBus.call(new PlayerCooldownCompleteEvent(p, clanCooldown));
 						TaskScheduler.of(() -> ClanCooldown.remove(clanCooldown)).schedule();
-						Clan.ACTION.sendMessage(p, MessageFormat.format(ClansAPI.getDataInstance().getMessageResponse("cooldown-expired"), clanCooldown.getAction().replace("Clans:", "")));
+						if (clanCooldown.getDescriptor() != null && !clanCooldown.getDescriptor().isEmpty()) {
+							FancyMessage m = new FancyMessage();
+							m.then(MessageFormat.format(ClansAPI.getDataInstance().getMessageResponse("cooldown-expired"), clanCooldown.getAction().replace("Clans:", "")));
+							m.hover("&3&o" + clanCooldown.getDescriptor());
+							m.send(p).queue();
+						} else {
+							Clan.ACTION.sendMessage(p, MessageFormat.format(ClansAPI.getDataInstance().getMessageResponse("cooldown-expired"), clanCooldown.getAction().replace("Clans:", "")));
+						}
 					}
 				}
 			}

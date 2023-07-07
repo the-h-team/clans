@@ -19,13 +19,22 @@ import com.github.sanctum.panther.annotation.Experimental;
 import com.github.sanctum.panther.annotation.Note;
 import com.github.sanctum.panther.container.PantherCollection;
 import com.github.sanctum.panther.container.PantherCollectors;
+import com.github.sanctum.panther.container.PantherList;
+import com.github.sanctum.panther.file.Configurable;
 import com.github.sanctum.panther.paste.PasteManager;
 import com.github.sanctum.panther.paste.operative.PasteResponse;
 import com.github.sanctum.panther.paste.type.Hastebin;
+import com.github.sanctum.panther.paste.type.Pastebin;
 import com.github.sanctum.panther.util.Check;
+import com.github.sanctum.panther.util.PantherLogger;
+import java.io.IOException;
 import java.text.MessageFormat;
+import java.util.Arrays;
 import java.util.Date;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import org.bukkit.Bukkit;
@@ -175,6 +184,14 @@ public interface ClansAPI {
 	 */
 	@NotNull Hastebin getHastebin();
 
+
+	/**
+	 * Get the locally cached pastebin api instance.
+	 *
+	 * @return the local pastebin api instance.
+	 */
+	@NotNull Pastebin getPastebin();
+
 	/**
 	 * Check if pro needs to be updated.
 	 *
@@ -208,10 +225,10 @@ public interface ClansAPI {
 
 	/**
 	 * Debug an invasive entity to check all parameters for stability.
-	 * The option of creating a link will generate a <strong>hastebin</strong> link instead
+	 * The option of saving to file will generate a <strong>JSON</strong> file instead
 	 * of sending all the information in console.
 	 *
-	 * @param createLink whether to create a link.
+	 * @param createLink whether to upload to hastebin or not.
 	 * @param entity     The entity to debug.
 	 */
 	default void debugConsole(InvasiveEntity entity, boolean createLink) {
@@ -225,7 +242,7 @@ public interface ClansAPI {
 				getPlugin().getLogger().warning("|==============================================|");
 				getPlugin().getLogger().warning("- Members = [ size: " + c.getMembers().size() + ", visual: " + c.getMembers().stream().map(InvasiveEntity::getName).collect(Collectors.joining(", ")) + " ]");
 				getPlugin().getLogger().warning(MessageFormat.format("- Id = [{0}]", c.getId()));
-				getPlugin().getLogger().warning(MessageFormat.format("- Type = [{0}]", c.isConsole() ? "SERVER" : "PLAYER"));
+				getPlugin().getLogger().warning(MessageFormat.format("- Type = [{0}]", c.isConsole() ? "SERVER OWNED" : "PLAYER OWNED"));
 				getPlugin().getLogger().warning(MessageFormat.format("- Mode = [{0}]", c.isPeaceful() ? "PEACE" : "WAR"));
 				getPlugin().getLogger().warning(MessageFormat.format("- Password = [{0}]", c.getPassword() != null ? c.getPassword() : "N/A"));
 				getPlugin().getLogger().warning(MessageFormat.format("- Power = [{0}]", c.getPower()));
@@ -256,11 +273,12 @@ public interface ClansAPI {
 				getPlugin().getLogger().warning("|==============================================|");
 			}
 		} else {
-			if (entity.isClan()) {
-				TaskScheduler.of(() -> {
-					Date now = new Date();
-					Hastebin bin = getHastebin();
-					PasteResponse response;
+			Date now = new Date();
+			Hastebin bin = getHastebin();
+			PantherList<String> info = new PantherList<>();
+			TaskScheduler.of(() -> {
+				if (entity.isClan()) {
+					Clan c = entity.getAsClan();
 					boolean isConsole = entity.getAsClan().isConsole();
 					Clan.Implementation implementation = entity.getAsClan().getImplementation();
 					if (entity.isValid()) {
@@ -271,39 +289,150 @@ public interface ClansAPI {
 								break;
 							}
 						}
+						info.add("|==============================================|");
+						info.add("|==============================================|");
+						info.add("|==============================================|");
+						info.add(MessageFormat.format("|           Debug run for clan {0}              ", Check.forNull(c.getName(), "The clan's name is null!")));
+						info.add("|==============================================|");
+						info.add("- Members = [ size: " + c.getMembers().size() + ", visual: " + c.getMembers().stream().map(InvasiveEntity::getName).collect(Collectors.joining(", ")) + " ]");
+						info.add(MessageFormat.format("- Id = [{0}]", c.getId()));
+						info.add(MessageFormat.format("- Type = [{0}]", c.isConsole() ? "SERVER OWNED" : "PLAYER OWNED"));
+						info.add(MessageFormat.format("- Mode = [{0}]", c.isPeaceful() ? "PEACE" : "WAR"));
+						info.add(MessageFormat.format("- Password = [{0}]", c.getPassword() != null ? c.getPassword() : "N/A"));
+						info.add(MessageFormat.format("- Power = [{0}]", c.getPower()));
+						info.add(MessageFormat.format("- Claims = [{0}/{1}]", c.getClaims().length, c.getClaimLimit()));
+						info.add("|==============================================|");
+						info.add("|==============================================|");
+						info.add("|==============================================|");
+						info.add("|==============================================|");
 						if (doubleCheck) {
-							String json = entity.getAsClan().write(entity.getAsClan()).toString();
-							response = bin.write("/**",
-									" * Debugged: " + now.toLocaleString() + "",
-									" * Object: " + json,
-									" * Grade: PASS",
-									" * Server: " + isConsole,
-									" * Implementation: " + implementation,
-									" * Comment: This clan object from members to self is fully valid!",
-									" */");
+							info.add("Debugged: " + now.toLocaleString() + "");
+							info.add("Grade: PASS");
+							info.add("Is-server: " + isConsole);
+							info.add("Implementation: " + implementation);
+							info.add("Comment: This clan object from members to self is fully valid!");
 						} else {
-							response = bin.write("/**",
-									" * Debugged: " + now.toLocaleString() + "",
-									" * Grade: FAIL",
-									" * Server: " + isConsole,
-									" * Implementation: " + implementation,
-									" * Comment: This clan object can't be used, one or more members are invalid.",
-									" */");
+							info.add("Debugged: " + now.toLocaleString() + "");
+							info.add("Grade: FAIL");
+							info.add("Is-server: " + isConsole);
+							info.add("Implementation: " + implementation);
+							info.add("Comment: This clan object can't be used, one or more members are invalid.");
 						}
 					} else {
-						response = bin.write("/**",
-								" * Debugged: " + now.toLocaleString() + "",
-								" * Grade: FAIL",
-								" * Server: " + isConsole,
-								" * Implementation: " + implementation,
-								" * Comment: This clan object can't be used.",
-								" */");
+						info.add("Debugged: " + now.toLocaleString() + "");
+						info.add("Grade: PASS");
+						info.add("Is-server: " + isConsole);
+						info.add("Implementation: " + implementation);
+						info.add("Comment: This clan object can't be used.");
 					}
-					String link = response.get();
-					getPlugin().getLogger().warning(entity.getName() + " debug: " + link);
-				}).scheduleAsync();
-			}
+					info.add("|==============================================|");
+				}
+				if (entity.isAssociate()) {
+					Clan.Associate a = entity.getAsAssociate();
+					info.add("|==============================================|");
+					info.add("|==============================================|");
+					info.add("|==============================================|");
+					info.add(MessageFormat.format("|        Debug run for associate {0}              ", a.getName()));
+					info.add("|==============================================|");
+					info.add(MessageFormat.format("- Id = [{0}]", a.getId().toString()));
+					info.add(MessageFormat.format("- Clan = [{0}]", a.getClan().getName()));
+					info.add(MessageFormat.format("- Bio = [{0}]", a.getBiography()));
+					info.add(MessageFormat.format("- Chat = [{0}]", a.getChannel()));
+					info.add(MessageFormat.format("- Joined = [{0}]", a.getJoinDate().toLocaleString()));
+					info.add(MessageFormat.format("- Nickname = [{0}]", a.getNickname()));
+					info.add(MessageFormat.format("- Rank = [{0}]", a.getPriority()));
+					info.add(MessageFormat.format("- KD = [{0}]", a.getKD()));
+					info.add("|==============================================|");
+					info.add("|==============================================|");
+					info.add("|==============================================|");
+					info.add("|==============================================|");
+				}
+				PasteResponse response = bin.write(info.toArray(new String[0]));
+				getPlugin().getLogger().warning("Debug information saved to link: " + response.get());
+			}).schedule();
 		}
+	}
+
+	default void debugConsole(InvasiveEntity... entities) {
+		Date now = new Date();
+		Hastebin bin = getHastebin();
+		PantherList<String> info = new PantherList<>();
+		TaskScheduler.of(() -> {
+			for (InvasiveEntity entity : entities) {
+				if (entity.isClan()) {
+					Clan c = entity.getAsClan();
+					boolean isConsole = entity.getAsClan().isConsole();
+					Clan.Implementation implementation = entity.getAsClan().getImplementation();
+					if (entity.isValid()) {
+						boolean doubleCheck = true;
+						for (InvasiveEntity e : entity.getAsClan()) {
+							if (!e.isValid()) {
+								doubleCheck = false;
+								break;
+							}
+						}
+						info.add("|==============================================|");
+						info.add("|==============================================|");
+						info.add("|==============================================|");
+						info.add(MessageFormat.format("|           Debug run for clan {0}              ", Check.forNull(c.getName(), "The clan's name is null!")));
+						info.add("|==============================================|");
+						info.add("- Members = [ size: " + c.getMembers().size() + ", visual: " + c.getMembers().stream().map(InvasiveEntity::getName).collect(Collectors.joining(", ")) + " ]");
+						info.add(MessageFormat.format("- Id = [{0}]", c.getId()));
+						info.add(MessageFormat.format("- Type = [{0}]", c.isConsole() ? "SERVER OWNED" : "PLAYER OWNED"));
+						info.add(MessageFormat.format("- Mode = [{0}]", c.isPeaceful() ? "PEACE" : "WAR"));
+						info.add(MessageFormat.format("- Password = [{0}]", c.getPassword() != null ? c.getPassword() : "N/A"));
+						info.add(MessageFormat.format("- Power = [{0}]", c.getPower()));
+						info.add(MessageFormat.format("- Claims = [{0}/{1}]", c.getClaims().length, c.getClaimLimit()));
+						info.add("|==============================================|");
+						info.add("|==============================================|");
+						info.add("|==============================================|");
+						info.add("|==============================================|");
+						if (doubleCheck) {
+							info.add("Debugged: " + now.toLocaleString() + "");
+							info.add("Grade: PASS");
+							info.add("Is-server: " + isConsole);
+							info.add("Implementation: " + implementation);
+							info.add("Comment: This clan object from members to self is fully valid!");
+						} else {
+							info.add("Debugged: " + now.toLocaleString() + "");
+							info.add("Grade: FAIL");
+							info.add("Is-server: " + isConsole);
+							info.add("Implementation: " + implementation);
+							info.add("Comment: This clan object can't be used, one or more members are invalid.");
+						}
+					} else {
+						info.add("Debugged: " + now.toLocaleString() + "");
+						info.add("Grade: PASS");
+						info.add("Is-server: " + isConsole);
+						info.add("Implementation: " + implementation);
+						info.add("Comment: This clan object can't be used.");
+					}
+					info.add("|==============================================|");
+				}
+				if (entity.isAssociate()) {
+					Clan.Associate a = entity.getAsAssociate();
+					info.add("|==============================================|");
+					info.add("|==============================================|");
+					info.add("|==============================================|");
+					info.add(MessageFormat.format("|        Debug run for associate {0}              ", a.getName()));
+					info.add("|==============================================|");
+					info.add(MessageFormat.format("- Id = [{0}]", a.getId().toString()));
+					info.add(MessageFormat.format("- Clan = [{0}]", a.getClan().getName()));
+					info.add(MessageFormat.format("- Bio = [{0}]", a.getBiography()));
+					info.add(MessageFormat.format("- Chat = [{0}]", a.getChannel()));
+					info.add(MessageFormat.format("- Joined = [{0}]", a.getJoinDate().toLocaleString()));
+					info.add(MessageFormat.format("- Nickname = [{0}]", a.getNickname()));
+					info.add(MessageFormat.format("- Rank = [{0}]", a.getPriority()));
+					info.add(MessageFormat.format("- KD = [{0}]", a.getKD()));
+					info.add("|==============================================|");
+					info.add("|==============================================|");
+					info.add("|==============================================|");
+					info.add("|==============================================|");
+				}
+			}
+			PasteResponse response = bin.write(info.toArray(new String[0]));
+			getPlugin().getLogger().warning("Debug information saved to link: " + response.get());
+		}).schedule();
 	}
 
 	default Optional<Clan.Associate> getAssociate(LabyrinthUser user) {

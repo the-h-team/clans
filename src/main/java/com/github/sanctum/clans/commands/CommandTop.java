@@ -1,7 +1,7 @@
 package com.github.sanctum.clans.commands;
 
 import com.github.sanctum.clans.construct.DataManager;
-import com.github.sanctum.clans.construct.actions.ClanAction;
+import com.github.sanctum.clans.construct.api.ClanActionEngine;
 import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClanSubCommand;
 import com.github.sanctum.clans.construct.api.ClansAPI;
@@ -27,7 +27,7 @@ public class CommandTop extends ClanSubCommand {
 				lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("top")));
 				return true;
 			}
-			Clan.ACTION.getLeaderboard(ClanAction.LeaderboardType.POWER, p, 1);
+			Clan.ACTION.getLeaderboard(ClanActionEngine.LeaderboardType.POWER, p, 1);
 			return true;
 		}
 
@@ -38,16 +38,16 @@ public class CommandTop extends ClanSubCommand {
 			}
 			switch (args[0].toLowerCase()) {
 				case "money":
-					Clan.ACTION.getLeaderboard(ClanAction.LeaderboardType.MONEY, p, 1);
+					Clan.ACTION.getLeaderboard(ClanActionEngine.LeaderboardType.MONEY, p, 1);
 					break;
 				case "power":
-					Clan.ACTION.getLeaderboard(ClanAction.LeaderboardType.POWER, p, 1);
+					Clan.ACTION.getLeaderboard(ClanActionEngine.LeaderboardType.POWER, p, 1);
 					break;
 				case "wins":
-					Clan.ACTION.getLeaderboard(ClanAction.LeaderboardType.WINS, p, 1);
+					Clan.ACTION.getLeaderboard(ClanActionEngine.LeaderboardType.WINS, p, 1);
 					break;
 				case "kd":
-					Clan.ACTION.getLeaderboard(ClanAction.LeaderboardType.KILLS, p, 1);
+					Clan.ACTION.getLeaderboard(ClanActionEngine.LeaderboardType.KILLS, p, 1);
 					break;
 				default:
 					lib.sendMessage(p, lib.pageUnknown());
@@ -64,16 +64,16 @@ public class CommandTop extends ClanSubCommand {
 			try {
 				switch (args[0].toLowerCase()) {
 					case "money":
-						Clan.ACTION.getLeaderboard(ClanAction.LeaderboardType.MONEY, p, Integer.parseInt(args[1]));
+						Clan.ACTION.getLeaderboard(ClanActionEngine.LeaderboardType.MONEY, p, Integer.parseInt(args[1]));
 						break;
 					case "power":
-						Clan.ACTION.getLeaderboard(ClanAction.LeaderboardType.POWER, p, Integer.parseInt(args[1]));
+						Clan.ACTION.getLeaderboard(ClanActionEngine.LeaderboardType.POWER, p, Integer.parseInt(args[1]));
 						break;
 					case "wins":
-						Clan.ACTION.getLeaderboard(ClanAction.LeaderboardType.WINS, p, Integer.parseInt(args[1]));
+						Clan.ACTION.getLeaderboard(ClanActionEngine.LeaderboardType.WINS, p, Integer.parseInt(args[1]));
 						break;
 					case "kd":
-						Clan.ACTION.getLeaderboard(ClanAction.LeaderboardType.KILLS, p, Integer.parseInt(args[1]));
+						Clan.ACTION.getLeaderboard(ClanActionEngine.LeaderboardType.KILLS, p, Integer.parseInt(args[1]));
 						break;
 					default:
 						lib.sendMessage(p, lib.pageUnknown());

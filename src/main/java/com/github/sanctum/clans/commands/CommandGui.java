@@ -18,7 +18,6 @@ public class CommandGui extends ClanSubCommand {
 	@Override
 	public boolean player(Player p, String label, String[] args) {
 		StringLibrary lib = Clan.ACTION;
-
 		if (args.length == 1) {
 			PlayerSearch search = PlayerSearch.of(args[0]);
 			if (search != null) {

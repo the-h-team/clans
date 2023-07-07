@@ -2,7 +2,7 @@ package com.github.sanctum.clans.listener;
 
 import com.github.sanctum.clans.bridge.ClanVentBus;
 import com.github.sanctum.clans.bridge.ClanVentCall;
-import com.github.sanctum.clans.construct.actions.ClanAction;
+import com.github.sanctum.clans.construct.api.ClanActionEngine;
 import com.github.sanctum.clans.construct.api.Claim;
 import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClansAPI;
@@ -183,7 +183,7 @@ public class BlockEventListener implements Listener {
 	@Subscribe(priority = Vent.Priority.READ_ONLY)
 	public void onShield(RaidShieldEvent e) {
 		final ClansAPI api = e.getApi();
-		final ClanAction action = Clan.ACTION;
+		final ClanActionEngine action = Clan.ACTION;
 		final World world = Optional.ofNullable(Bukkit.getWorld(ClansAPI.getDataInstance().getConfig().getRoot().getString("Clans.raid-shield.main-world"))).orElse(Bukkit.getWorlds().get(0));
 		if (action.isNight(world, e.getStartTime(), e.getStopTime())) {
 			if (api.getShieldManager().isEnabled()) {

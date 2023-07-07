@@ -32,8 +32,10 @@ import com.github.sanctum.labyrinth.data.DataTable;
 import com.github.sanctum.labyrinth.data.EconomyProvision;
 import com.github.sanctum.labyrinth.data.FileManager;
 import com.github.sanctum.labyrinth.data.LabyrinthUser;
+import com.github.sanctum.labyrinth.data.service.PlayerSearch;
 import com.github.sanctum.labyrinth.formatting.Message;
 import com.github.sanctum.labyrinth.formatting.UniformedComponents;
+import com.github.sanctum.labyrinth.formatting.string.FormattedString;
 import com.github.sanctum.labyrinth.formatting.string.RandomHex;
 import com.github.sanctum.labyrinth.gui.unity.simple.MemoryDocket;
 import com.github.sanctum.labyrinth.library.Entities;
@@ -43,8 +45,11 @@ import com.github.sanctum.labyrinth.task.TaskScheduler;
 import com.github.sanctum.panther.annotation.Ordinal;
 import com.github.sanctum.panther.file.MemorySpace;
 import com.github.sanctum.panther.file.Node;
+import com.github.sanctum.panther.placeholder.Placeholder;
+import com.github.sanctum.panther.placeholder.PlaceholderRegistration;
 import com.github.sanctum.panther.util.HUID;
 import com.github.sanctum.panther.util.OrdinalProcedure;
+import com.github.sanctum.panther.util.PantherLogger;
 import com.github.sanctum.panther.util.RandomID;
 import java.math.BigDecimal;
 import java.text.MessageFormat;
@@ -68,6 +73,7 @@ import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.chat.BaseComponent;
 import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
@@ -99,6 +105,7 @@ public final class DefaultClan implements Clan, PersistentEntity {
 	private final List<String> allies = new ArrayList<>();
 	private final List<String> enemies = new ArrayList<>();
 	private final List<String> requests = new ArrayList<>();
+	private final List<String> info_board;
 	private final UniformedComponents<Clan> allyList;
 	private final UniformedComponents<Clan> enemyList;
 	private final Color palette;
@@ -116,10 +123,12 @@ public final class DefaultClan implements Clan, PersistentEntity {
 		this.palette = null;
 		this.tag = null;
 		this.dock = null;
+		this.info_board = null;
 	}
 
 	public DefaultClan(String clanID, boolean server) {
 		this.clanID = clanID;
+		this.info_board = ClansAPI.getDataInstance().getMessages().getRoot().getStringList("info-simple-other");
 		this.dock = new Relation() {
 
 			private final Alliance alliance;
@@ -465,7 +474,12 @@ public final class DefaultClan implements Clan, PersistentEntity {
 
 					Rank priority = Rank.valueOf(rank);
 					for (String mem : c.read(f -> f.getStringList("members." + rank))) {
-						associates.add(new DefaultAssociate(UUID.fromString(mem), priority, this));
+						UUID id = UUID.fromString(mem);
+						if (Optional.ofNullable(Bukkit.getOfflinePlayer(id).getName()).isPresent()) {
+							associates.add(new DefaultAssociate(id, priority, this));
+						} else {
+							ClansAPI.getInstance().getPlugin().getLogger().warning("An un-linked user was found in clan " + name + " under id '" + mem + "'");
+						}
 					}
 				}
 			}
@@ -961,56 +975,48 @@ public final class DefaultClan implements Clan, PersistentEntity {
 		return getNode("wars-lost").toPrimitive().getInt();
 	}
 
-	@Override
-	public synchronized String[] getClanInfo() {
-		List<String> array = new ArrayList<>();
-		String password = this.password;
+	public String replacePlaceholders(String s) {
+		double totalKD = 0;
+		for (InvasiveEntity e : this) {
+			if (e.isAssociate()) {
+				Associate a = e.getAsAssociate();
+				totalKD += a.getKD();
+			}
+		}
+		totalKD = totalKD / getMembers().size();
+		String status = "LOCKED";
+		if (password == null)
+			status = "OPEN";
+		String base, mode;
+		if (getBase() != null) {
+			base = "&aSet";
+		} else {
+			base = "&7Not set";
+		}
+		if (isPeaceful()) {
+			mode = "&f&lPEACE";
+		} else {
+			mode = "&4&lWAR";
+		}
+		String color = getPalette().toString();
+		if (getPalette().isGradient()) {
+			color = (getPalette().toArray()[0] + getPalette().toArray()[1]).replace("&", "").replace("#", "&f»" + color);
+		} else {
+			color = color + color.replace("&", "&f»" + color).replace("#", "&f»" + color);
+		}
 		List<String> members = getMembers().stream().filter(m -> m.getPriority().toLevel() == 0).map(Associate::getName).collect(Collectors.toList());
 		List<String> mods = getMembers().stream().filter(m -> m.getPriority().toLevel() == 1).map(Associate::getName).collect(Collectors.toList());
 		List<String> admins = getMembers().stream().filter(m -> m.getPriority().toLevel() == 2).map(Associate::getName).collect(Collectors.toList());
 		List<String> allies = getAllies().map(Clan::getId).map(HUID::toString).collect(Collectors.toList());
 		List<String> enemies = getEnemies().map(Clan::getId).map(HUID::toString).collect(Collectors.toList());
-		String status = "LOCKED";
-		if (password == null)
-			status = "OPEN";
-		array.add(" ");
-		array.add("&2&lClan&7: " + getPalette().toString() + ClansAPI.getInstance().getClanManager().getClanName(HUID.fromString(clanID)));
-		array.add("&f&m---------------------------");
-		array.add("&2Description: &7" + getDescription());
-		array.add("&2" + getOwner().getRankFull() + ": &f" + getOwner().getName());
-		array.add("&2Status: &f" + status);
-		array.add("&2&lPower [&e" + Clan.ACTION.format(getPower()) + "&2&l]");
-		if (getBase() != null)
-			array.add("&2Base: &aSet");
-		if (getBase() == null)
-			array.add("&2Base: &7Not set");
-		if (isPeaceful())
-			array.add("&2Mode: &f&lPEACE");
-		if (!isPeaceful())
-			array.add("&2Mode: &4&lWAR");
-		array.add("&2" + ClansAPI.getDataInstance().getConfig().getRoot().getString("Formatting.Chat.Styles.Full.Admin") + "s [&b" + admins.size() + "&2]");
-		array.add("&2" + ClansAPI.getDataInstance().getConfig().getRoot().getString("Formatting.Chat.Styles.Full.Moderator") + "s [&e" + mods.size() + "&2]");
-		array.add("&2Claims [&e" + getClaims().length + "&2]");
-		array.add("&f&m---------------------------");
-		if (allies.isEmpty())
-			array.add("&2Allies [&b" + "0" + "&2]");
-		if (allies.size() > 0) {
-			array.add("&2Allies [&b" + allies.size() + "&2]");
-			for (String clanId : allies) {
-				array.add("&f- &e&o" + ClansAPI.getInstance().getClanManager().getClanName(HUID.fromString(clanId)));
-			}
-		}
-		if (enemies.isEmpty())
-			array.add("&2Enemies [&b" + "0" + "&2]");
-		if (enemies.size() > 0) {
-			array.add("&2Enemies [&b" + enemies.size() + "&2]");
-			for (String clanId : enemies) {
-				array.add("&f- &c&o" + ClansAPI.getInstance().getClanManager().getClanName(HUID.fromString(clanId)));
-			}
-		}
-		array.add("&f&m---------------------------");
-		array.add("&n" + ClansAPI.getDataInstance().getConfig().getRoot().getString("Formatting.Chat.Styles.Full.Member") + "s&r [&7" + members.size() + "&r] - " + members);
-		array.add(" ");
+		return MessageFormat.format(s, getName(), getDescription(), ACTION.format(getPower()), getPalette().toString(getName()), getClaims().length, getClaimLimit(), getAllies().collect().stream().map(Clan::getName).collect(Collectors.joining(", ")), getEnemies().collect().stream().map(Clan::getName).collect(Collectors.joining(", ")), getRelation().getAlliance().getRequests().stream().map(InvasiveEntity::getName).collect(Collectors.joining(", "))
+				, getPalette().toString(), ACTION.format(totalKD), getOwner().getName(), status, base, mode, members.size(), mods.size(), admins.size(), allies.size(), enemies.size(), members.stream().collect(Collectors.joining(", ")), color);
+	}
+
+	@Override
+	public synchronized String[] getClanInfo() {
+		List<String> array = new ArrayList<>();
+		info_board.forEach(s -> array.add(replacePlaceholders(s)));
 		ClanInformationAdaptEvent event = new ClanVentCall<>(new ClanInformationAdaptEvent(array, clanID, ClanInformationAdaptEvent.Type.OTHER)).run();
 		return event.getInsertions().toArray(new String[0]);
 	}
@@ -1021,18 +1027,14 @@ public final class DefaultClan implements Clan, PersistentEntity {
 	 * @return an object containing cooldown information.
 	 */
 	public ClanCooldown getModeCooldown() {
-		ClanCooldown target = null;
 		for (ClanCooldown c : getCooldowns()) {
 			if (c.getAction().equals("Clans:mode-switch")) {
-				target = c;
+				return c;
 			}
 		}
-		if (target == null) {
-			CooldownMode mode = new CooldownMode(clanID);
-			mode.save();
-			target = mode;
-		}
-		return target;
+		CooldownMode mode = new CooldownMode(clanID);
+		mode.save();
+		return mode;
 	}
 
 	/**
@@ -1041,18 +1043,14 @@ public final class DefaultClan implements Clan, PersistentEntity {
 	 * @return an object containing cooldown information.
 	 */
 	public ClanCooldown getFriendlyCooldown() {
-		ClanCooldown target = null;
 		for (ClanCooldown c : getCooldowns()) {
 			if (c.getAction().equals("Clans:ff-switch")) {
-				target = c;
+				return c;
 			}
 		}
-		if (target == null) {
-			CooldownFriendlyFire mode = new CooldownFriendlyFire(clanID);
-			mode.save();
-			target = mode;
-		}
-		return target;
+		CooldownFriendlyFire mode = new CooldownFriendlyFire(clanID);
+		mode.save();
+		return mode;
 	}
 
 	@Override

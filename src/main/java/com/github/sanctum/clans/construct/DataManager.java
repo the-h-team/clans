@@ -16,6 +16,7 @@ import com.github.sanctum.labyrinth.library.Items;
 import com.github.sanctum.labyrinth.library.StringUtils;
 import com.github.sanctum.labyrinth.task.TaskScheduler;
 import com.github.sanctum.panther.file.Configurable;
+import com.github.sanctum.panther.util.PantherLogger;
 import com.github.sanctum.skulls.CustomHead;
 import com.github.sanctum.skulls.CustomHeadLoader;
 import java.io.File;

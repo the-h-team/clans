@@ -13,6 +13,10 @@ public abstract class ClanCooldown {
 
 	public abstract String getAction();
 
+	public String getDescriptor() {
+		return "";
+	}
+
 	public abstract void setCooldown();
 
 	public abstract long getCooldown();

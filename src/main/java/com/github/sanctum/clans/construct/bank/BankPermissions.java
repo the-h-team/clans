@@ -14,7 +14,7 @@ public enum BankPermissions {
     BANKS_DEPOSIT("bank-deposit"),
     BANKS_WITHDRAW("bank-withdraw"),
     BANKS_USE_STAR(use -> use.getNode() + ".*", BANKS_USE),
-    BANKS_STAR(null, "clanspro.banks.*");
+    BANKS_STAR(null, "clans.banks.*");
 
     private final String messagesFileNode;
     final String hardcoded;
@@ -40,7 +40,7 @@ public enum BankPermissions {
     }
 
     public boolean not(CommandSender sender) {
-        return !Clan.ACTION.test(sender, getNode()).deploy();
+        return !Clan.ACTION.test(sender, "clans." + getNode()).deploy();
     }
 }
 

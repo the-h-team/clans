@@ -1,13 +1,9 @@
-package com.github.sanctum.clans.construct.actions;
+package com.github.sanctum.clans.construct.api;
 
 import com.github.sanctum.clans.bridge.ClanVentBus;
 import com.github.sanctum.clans.construct.DataManager;
-import com.github.sanctum.clans.construct.api.Claim;
-import com.github.sanctum.clans.construct.api.Clan;
-import com.github.sanctum.clans.construct.api.ClanCooldown;
-import com.github.sanctum.clans.construct.api.ClansAPI;
 import com.github.sanctum.clans.construct.extra.StringLibrary;
-import com.github.sanctum.clans.construct.impl.CooldownClaim;
+import com.github.sanctum.clans.construct.impl.CooldownUnClaim;
 import com.github.sanctum.clans.construct.impl.DefaultClaim;
 import com.github.sanctum.clans.event.associate.AssociateClaimEvent;
 import com.github.sanctum.clans.event.associate.AssociateLoseLandEvent;
@@ -40,7 +36,7 @@ import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Player;
 
-public class ClaimAction extends StringLibrary {
+public class ClaimActionEngine extends StringLibrary {
 
 	public boolean claim(Player p) {
 		return claim(p, p.getLocation().getChunk());
@@ -484,19 +480,16 @@ public class ClaimAction extends StringLibrary {
 	}
 
 	public ClanCooldown unClaimCooldown(Clan clan) {
-		ClanCooldown target = null;
 		for (ClanCooldown c : clan.getCooldowns()) {
 			if (c.getAction().equals("Clans:unclaim-limit")) {
-				target = c;
+				return c;
 			}
 		}
-		if (target == null) {
-			target = new CooldownClaim(clan.getId().toString());
-			if (!ClansAPI.getDataInstance().getCooldowns().contains(target)) {
-				target.save();
-			}
+		ClanCooldown clanCooldown = new CooldownUnClaim(clan.getId().toString());
+		if (!ClansAPI.getDataInstance().getCooldowns().contains(clanCooldown)) {
+			clanCooldown.save();
 		}
-		return target;
+		return clanCooldown;
 	}
 
 	public boolean hasSurface(Location location) {
