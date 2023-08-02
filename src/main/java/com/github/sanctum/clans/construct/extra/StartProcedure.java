@@ -93,6 +93,7 @@ public final class StartProcedure {
 
 	String replaceDevKey(String key, int id) {
 		if (key.startsWith("%%__USER")) {
+			if (instance.isTrial()) return "DEMO";
 			return "UN-VERIFIED";
 		}
 		if (key.startsWith("%%__NONCE")) {
