@@ -117,6 +117,11 @@ public enum GUI {
 	 */
 	HOLOGRAM_LIST,
 	/**
+	 * List all known heads on the server
+	 */
+	HEAD_LIBRARY,
+	HEAD_MAIN_MENU,
+	/**
 	 * The public logo market
 	 */
 	LOGO_LIST,
@@ -203,6 +208,13 @@ public enum GUI {
 	public Menu get(Player p) {
 		if (this == GUI.MAIN_MENU) {
 			MemoryDocket<UnknownGeneric> docket = new MemoryDocket<>(ClansAPI.getDataInstance().getMessages().getRoot().getNode("menu.home"));
+			docket.setNamePlaceholder("%player_name%");
+			docket.setUniqueDataConverter(p, (s, player) -> new FormattedString(s).translate(player).get());
+			docket.load();
+			return docket.toMenu();
+		}
+		if (this == GUI.HEAD_MAIN_MENU) {
+			MemoryDocket<UnknownGeneric> docket = new MemoryDocket<>(ClansAPI.getDataInstance().getMessages().getRoot().getNode("menu.head-home"));
 			docket.setNamePlaceholder("%player_name%");
 			docket.setUniqueDataConverter(p, (s, player) -> new FormattedString(s).translate(player).get());
 			docket.load();
@@ -297,7 +309,10 @@ public enum GUI {
 							}));
 						})
 						.join();
-
+			case HEAD_LIBRARY:
+				String id = ClansAPI.getDataInstance().getMessageString("menu.head-library.id");
+				MemoryDocket<?> docket = DocketUtils.get(id);
+				if (docket != null) return docket.toMenu();
 			case LOGO_LIST:
 				return MenuType.PAGINATED.build()
 						.setHost(api.getPlugin())
@@ -377,9 +392,9 @@ public enum GUI {
 							i.addItem(list);
 						}).orGet(m -> m instanceof PaginatedMenu && m.getKey().map(("ClansPro:logo-list")::equals).orElse(false));
 			case CLAN_ROSTER:
-				String id = ClansAPI.getDataInstance().getMessageString("menu.roster.id");
-				MemoryDocket<?> docket = DocketUtils.get(id);
-				if (docket != null) return docket.toMenu();
+				String rosterId = ClansAPI.getDataInstance().getMessageString("menu.roster.id");
+				MemoryDocket<?> rosterDocket = DocketUtils.get(rosterId);
+				if (rosterDocket != null) return rosterDocket.toMenu();
 			case SETTINGS_CLAN_ROSTER:
 				return MenuType.PAGINATED.build().setHost(api.getPlugin())
 						.setProperty(Menu.Property.CACHEABLE, Menu.Property.RECURSIVE)

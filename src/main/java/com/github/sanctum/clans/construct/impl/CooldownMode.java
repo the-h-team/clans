@@ -25,6 +25,11 @@ public class CooldownMode extends ClanCooldown {
 	}
 
 	@Override
+	public String getDescriptor() {
+		return "A period of time where one cannot toggle their clans pvp mode.";
+	}
+
+	@Override
 	public void setCooldown() {
 		ParsedTimeFormat timeFormat = ParsedTimeFormat.of(ClansAPI.getDataInstance().getConfigString("Clans.mode-change.timer.cooldown"));
 		if (timeFormat != null) {

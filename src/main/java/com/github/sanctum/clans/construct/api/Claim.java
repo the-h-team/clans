@@ -1,6 +1,5 @@
 package com.github.sanctum.clans.construct.api;
 
-import com.github.sanctum.clans.construct.actions.ClaimAction;
 import com.github.sanctum.clans.construct.impl.DefaultClaim;
 import com.github.sanctum.clans.construct.impl.Resident;
 import com.github.sanctum.labyrinth.library.LabyrinthEncoded;
@@ -29,7 +28,7 @@ import org.jetbrains.annotations.NotNull;
 public interface Claim extends Savable, Iterable<Block>, ConfigurationSerializable, JsonAdapter<Claim> {
 
 
-	ClaimAction ACTION = new ClaimAction();
+	ClaimActionEngine ACTION = new ClaimActionEngine();
 
 
 	/**

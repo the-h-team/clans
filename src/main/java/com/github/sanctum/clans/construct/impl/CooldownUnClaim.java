@@ -5,11 +5,11 @@ import com.github.sanctum.clans.construct.api.ClanCooldown;
 import com.github.sanctum.clans.construct.api.ClansAPI;
 import com.github.sanctum.panther.util.HUID;
 
-public class CooldownClaim extends ClanCooldown {
+public class CooldownUnClaim extends ClanCooldown {
 
 	private final String clanId;
 
-	public CooldownClaim(String clanId) {
+	public CooldownUnClaim(String clanId) {
 		this.clanId = clanId;
 	}
 
@@ -21,6 +21,11 @@ public class CooldownClaim extends ClanCooldown {
 	@Override
 	public String getAction() {
 		return "Clans:unclaim-limit";
+	}
+
+	@Override
+	public String getDescriptor() {
+		return "A time period in which you cannot claim land.";
 	}
 
 	@Override

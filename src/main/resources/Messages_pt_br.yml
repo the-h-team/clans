@@ -175,6 +175,7 @@ Response:
   member-join: '&a&oJogador "{0}" juntou-se ao clã.'
   member-leave: '&c&oJogador "{0}" deixou o clã.'
   clan-status: '&aStatus: {0}'
+  cached-head: '&aSuccessfully logged head into cache.'
   password-change: '&b&o&nA senha do clã foi alterada. ({0})'
   promotion: '&a&oJogador "{0}" foi promovido.'
   demotion: '&d&oJogador "{0}" foi rebaixado.'
@@ -198,6 +199,7 @@ Response:
       text: '&8[&4DENY&8]'
       hover: '&6Click to &cdeny &6the request from &2{0}'
   member-bio: '&b&oA biografia do clã foi atualizada para: &f{0}'
+  purchased-head: '&aYou purchased this head for {0}'
   peace-mode: '&f&oVocê está agora em modo de paz.'
   pass-owner: '&d&lVocê passou a propriedade para o usuário {0}'
   now-owner: '&aJogador {0} passou a propriedade do clã para você.'
@@ -242,6 +244,7 @@ Response:
   no-claims: 'Seu clã não tem terras para cancelar. Considere obter algum?'
   no-clearance: '&cVocê não tem autorização do clã.'
   no-permission: '&cVocê não tem permissão &4{0}'
+  not-enough-head: '&cYou don''t have enough money you need {0} more dollars'
   blocked: '&c{0} has you blocked, unable to send invite.'
   no-removal: '&c&oEste clã iniciou você como um &4inimigo. &cIncapaz de perdoar.'
   friendly-fire: '&cVocê não pode machucar aliados!'
@@ -306,7 +309,8 @@ Response:
   kick: '&7|&e) &fUso inválido : /clan kick <playerName>'
   tag: '&7|&e) &fUso inválido : /clan tag <newTag>'
   mode: '&7|&e) &fUso inválido : /clan mode <modeType>'
-  invite: '&7|&e) &fInvalid usage : /clan invite <playerName>'
+  invite: '&7|&e) &fUso inválido : /clan invite <playerName>'
+  input-head: '&7|&e) &fUso inválido : /clan head input <headName> <headID>'
   passowner: '&7|&e) &fUso inválido : /clan passowner <playerName>'
   nick: '&7|&e) &fUso inválido : /clan nickname <newNickname>'
   permit: '&7|&e) &fUso inválido : /clan permit <permission> <level>'
@@ -435,7 +439,42 @@ info-other:
     command: 'clan members {0}'
   line-4:
     text: ' '
-
+# Customize the /clan info display when pretty info is disabled.
+# 0 = clan tag, 1 = clan description, 2 = clan power level, 3 = full clan color code, 4 = current owned clan claims, 5 = current clan max claims, 6 = clan allies,
+# 7 = clan enemies, 8 = clan alliance requests, 9 = clan color isolated, 10 = clan total KD, 11 = owner name, 12 = locked status, 13 = base status, 14 = clan pvp mode status,
+# 15 = members size, 16 = mods size, 17 = admins size, 18 = allies size, 19 = enemies size, 20 = clan members, 21 = color code only in full
+#==================================#
+info-simple:
+  - '&6&lClan&7: {3}'
+  - '&f&m---------------------------'
+  - '&6Description: &7{1}'
+  - '&6Owner: &f{11}'
+  - '&6Status: &f{12}'
+  - '&6Color: {21}'
+  - '&6&lPower [&e{2}&6&l]'
+  - '&6Base: {13}'
+  - '&6Mode: {14}'
+  - '&6Admins: &6[&f{17}&6]'
+  - '&6Mods: &5[&f{18}&5]'
+  - '&6Claims: &2[&a{4}&f/&a{5}&2]'
+  - '&6Allies ({18}): &f[{6}]'
+  - '&6Enemies ({19}): &f[{7}]'
+  - '&f&m---------------------------'
+  - '&6Members ({15}): &f[{20}]'
+  - ' '
+info-simple-other:
+  - '&2&lClan&7: {3}'
+  - '&f&m---------------------------'
+  - '&2Description: &7{1}'
+  - '&2Owner: &f{11}'
+  - '&2Status: &f{12}'
+  - '&2Color: {21}'
+  - '&2&lPower [&e{2}&2&l]'
+  - '&2Base: {13}'
+  - '&2Mode: {14}'
+  - '&f&m---------------------------'
+  - '&2Members ({15}): &f[{20}]'
+  - ' '
 #==================================#
 #   ██████╗ ██╗   ██╗██╗
 #  ██╔════╝ ██║   ██║██║
@@ -446,6 +485,7 @@ info-other:
 #==================================#
 # Welcome to the brand new gui configuration section! The top section for the members screen
 # shows documentation on usages. Use it to fully customize 100% of the gui to your liking!! Newly improved!
+help-book: ["&lYou may have a few questions so we'll answer them here.", "", "&6&lQ.) &0&nHow do i make a clan?", "&2&lA.] &8To make a clan simply type '/clan create <nameHere>', if you have permission that is.", "&6&lQ.) &0&nHow do i get power?", "&2&lA.] &8You can gain power by increasing the overall size of your clan (more members), having more money in the clan bank (optional through server), owning more clan claims & killing enemy clan associates as well a clans reservoir.", "&6&lQ.) &0&nHow do i raid?", "&2&lA.] &8Raiding can be achieved by simply overpowering a target clan's land, un-claiming an individual chunk allows you to access the containers within as well as build/break.", "", "&6&lQ.) &0&nHow do i print my logo?", "&2&lA.] &8You need to have a logo workspace setup, to do that simply type '/clan logo redraw'. Once done use '/clan logo print' to give yourself a globally usable logo print.", "", "&6&lQ.) &0&nHow do i use a logo print?", "&2&lA.] &8When holding a valid clans logo print in your hand, use command '/clan logo upload' to apply it as your clans logo, from there you can choose to share it globally for others to print with '/clan logo share'.", "", "&6&lQ.) &0&nHow do clan wars work?", "&2&lA.] &8Clan wars are essentially Team Death Match, but the losing team loses power while visa versa for the winning team."]
 menu:
   # Allow the plugin to forward use of GUI?
   enabled: true
@@ -785,6 +825,69 @@ menu:
         type: book
         open: '/c prompt :member_name:'
         lore: [ "&c&oClick to message me." ]
+  head-home:
+    title: 'Heads Menu'
+    rows: ONE
+    type: SINGULAR
+    filler:
+      name: ' '
+      locked: true
+      type: glasspane
+    items:
+      '&a+1':
+        slot: 3
+        lore: [ "&fInput a head (cost's money)" ]
+        locked: true
+        type: paper
+        message: 'Use the command /c head input [Name] [ID] get ids from the website https://minecraft-heads.com/'
+      '&7[&aBrowse&7]':
+        slot: 8
+        lore: [ "&fView all the heads on display" ]
+        locked: true
+        close: true
+        type: goldingot
+        open: head-library
+  head-library:
+    title: 'Browse {0}/{1}'
+    rows: THREE
+    id: 'ClansPro:head-library'
+    type: PAGINATED
+    filler:
+      name: ' '
+      locked: true
+      type: stone
+    border:
+      name: ' '
+      locked: true
+      type: glasspane
+    pagination:
+      name: '&6Head: :value:'
+      lore: [ "&f&m,----------", "Click to purchase.", "&f&m----------" ]
+      type: clan
+      locked: true
+      open: '/c head buy :value:'
+      replacements:
+        ':value:': toString
+      navigation:
+        next:
+          name: '&cNext'
+          slot: 26
+          locked: true
+          type: enderpearl
+          lore: [ "&f&oClick to go to the next page." ]
+        exit:
+          name: '&cExit'
+          slot: 22
+          locked: true
+          open: '/c head'
+          type: enderpearl
+          lore: [ "&f&oClick to escape." ]
+        previous:
+          name: '&cBack'
+          slot: 18
+          locked: true
+          type: enderpearl
+          lore: [ "&f&oClick to go back a page." ]
   # This is the home menu for all the gui. Typing just /clan with no arguments in game leads you here.
   # Normal placeholders work here.
   home:

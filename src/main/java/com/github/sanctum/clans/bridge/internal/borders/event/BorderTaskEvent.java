@@ -5,8 +5,8 @@ import com.github.sanctum.clans.bridge.internal.borders.BorderRegion;
 import com.github.sanctum.clans.construct.api.Claim;
 import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClansAPI;
-import com.github.sanctum.labyrinth.data.Region;
-import com.github.sanctum.labyrinth.library.Cuboid;
+import com.github.sanctum.labyrinth.data.container.Cuboid;
+import com.github.sanctum.labyrinth.data.container.Region;
 import com.github.sanctum.panther.util.HUID;
 import org.bukkit.Location;
 import org.bukkit.Particle;
@@ -60,14 +60,14 @@ public class BorderTaskEvent extends Event implements Cancellable {
 			int cx2 = claim.getChunk().getX() * 16 + 16;
 			int cz2 = claim.getChunk().getZ() * 16 + 16;
 			Region r = new BorderRegion(cx1, cx2, cy2, cy1, cz1, cz2, claim.getChunk().getWorld(), HUID.randomID());
-			Cuboid.Boundary boundary = r.getBoundary(p);
+			Cuboid.VisualBoundary boundary = r.getBoundary(p);
 			if (associate != null) {
 
 				if (claim.getOwner().getTag().getId().equals(associate.getClan().getId().toString())) {
 					int i = 0;
 					i++;
 					p.getWorld().spawnParticle(Particle.HEART, p.getLocation().getX(), p.getEyeLocation().getY() + 0.5, p.getLocation().getZ(), 1);
-					boundary.deploy(Cuboid.Boundary.Particle.GREEN);
+					boundary.deploy(Cuboid.VisualBoundary.Particle.GREEN);
 					boundary.deploy(action -> action.getPlayer().spawnParticle(Particle.HEART, action.getX(), action.getY(), action.getZ(), 1));
 					double add = p.getHealth() + i;
 					int addF = p.getFoodLevel() + i;
@@ -82,17 +82,17 @@ public class BorderTaskEvent extends Event implements Cancellable {
 					return;
 				}
 				if (((Clan)claim.getHolder()).getRelation().isNeutral(associate.getClan())) {
-					boundary.deploy(Cuboid.Boundary.Particle.WHITE);
+					boundary.deploy(Cuboid.VisualBoundary.Particle.WHITE);
 				} else {
 					if (((Clan)claim.getHolder()).getRelation().getAlliance().has(associate.getClan())) {
-						boundary.deploy(Cuboid.Boundary.Particle.GREEN);
+						boundary.deploy(Cuboid.VisualBoundary.Particle.GREEN);
 					}
 					if (((Clan)claim.getHolder()).getRelation().getRivalry().has(associate.getClan())) {
-						boundary.deploy(Cuboid.Boundary.Particle.RED);
+						boundary.deploy(Cuboid.VisualBoundary.Particle.RED);
 					}
 				}
 			} else {
-				boundary.deploy(Cuboid.Boundary.Particle.WHITE);
+				boundary.deploy(Cuboid.VisualBoundary.Particle.WHITE);
 			}
 		} else {
 			int cy1 = p.getLocation().getBlockY() + 5;
@@ -102,9 +102,9 @@ public class BorderTaskEvent extends Event implements Cancellable {
 			int cx2 = p.getLocation().getChunk().getX() * 16 + 16;
 			int cz2 = p.getLocation().getChunk().getZ() * 16 + 16;
 			Region r = new BorderRegion(cx1, cx2, cy2, cy1, cz1, cz2, p.getWorld(), HUID.randomID());
-			Cuboid.Boundary boundary = r.getBoundary(p);
-			boundary.target(p);
-			boundary.deploy(Cuboid.Boundary.Particle.YELLOW);
+			Cuboid.VisualBoundary boundary = r.getBoundary(p);
+			boundary.setViewer(p);
+			boundary.deploy(Cuboid.VisualBoundary.Particle.YELLOW);
 			if (associate != null) {
 				Clan clan = associate.getClan();
 				Location base = clan.getBase();

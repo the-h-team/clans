@@ -26,6 +26,11 @@ public class CooldownCreate extends ClanCooldown {
 	}
 
 	@Override
+	public String getDescriptor() {
+		return "A period of time that does not allow group formation.";
+	}
+
+	@Override
 	public void setCooldown() {
 		FileManager config = ClansAPI.getInstance().getFileList().get("cooldowns", "Configuration/Data", Configurable.Type.JSON);
 		config.write(t -> t.set("Data." + Id.toString() + "." + getAction().replace("Clans:", "") + ".Time-allotted", System.currentTimeMillis() + (ClansAPI.getDataInstance().getConfigInt("Clans.creation.cooldown.time") * 1000)));

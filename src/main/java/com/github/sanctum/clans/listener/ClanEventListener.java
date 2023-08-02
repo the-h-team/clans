@@ -187,7 +187,7 @@ public class ClanEventListener implements Listener {
 			e.insert(clan);
 		}
 		if (ClansAPI.getDataInstance().isTrue("Formatting.console-debug")) {
-			e.getClans().forEach(clan -> e.getApi().debugConsole(clan, true));
+			e.getClans().forEach(clan -> e.getApi().debugConsole(clan, false));
 		}
 	}
 
@@ -646,18 +646,14 @@ public class ClanEventListener implements Listener {
 
 
 	@NotNull ClanCooldown creationCooldown(UUID id) {
-		ClanCooldown target = null;
 		for (ClanCooldown c : ClansAPI.getDataInstance().getCooldowns()) {
 			if (c.getAction().equals("Clans:create-limit") && c.getId().equals(id.toString())) {
-				target = c;
-				break;
+				return c;
 			}
 		}
-		if (target == null) {
-			target = new CooldownCreate(id);
-			if (!ClansAPI.getDataInstance().getCooldowns().contains(target)) {
-				target.save();
-			}
+		ClanCooldown target = new CooldownCreate(id);
+		if (!ClansAPI.getDataInstance().getCooldowns().contains(target)) {
+			target.save();
 		}
 		return target;
 	}

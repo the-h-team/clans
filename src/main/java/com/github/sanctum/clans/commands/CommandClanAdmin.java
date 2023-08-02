@@ -290,9 +290,16 @@ public class CommandClanAdmin extends Command {
 	public boolean execute(@NotNull CommandSender commandSender, @NotNull String commandLabel, String[] args) {
 		if (!(commandSender instanceof Player)) {
 			if (args.length == 1) {
-				ClansAPI.getInstance().getPlugin().getLogger().info("&7|&e) &fAlternative usage : /" + commandLabel + " reload <fileName>");
-				ReloadUtility.reload();
-				ClansAPI.getInstance().getPlugin().getLogger().info("&aPlugin reloaded!");
+				if (args[0].equalsIgnoreCase("reload")) {
+					ClansAPI.getInstance().getPlugin().getLogger().info("&7|&e) &fAlternative usage : /" + commandLabel + " reload <fileName>");
+					ReloadUtility.reload();
+					ClansAPI.getInstance().getPlugin().getLogger().info("&aPlugin reloaded!");
+					return true;
+				}
+				if (args[0].equalsIgnoreCase("debug")) {
+					ClansAPI.getInstance().debugConsole(ClansAPI.getInstance().getClanManager().getClans().toArray(Clan[]::new));
+					return true;
+				}
 				return true;
 			}
 			if (args.length == 2) {

@@ -24,6 +24,11 @@ public class CooldownFriendlyFire extends ClanCooldown {
 	}
 
 	@Override
+	public String getDescriptor() {
+		return "A time frame where one cannot toggle the friendly fire mode.";
+	}
+
+	@Override
 	public void setCooldown() {
 		abp("ff-switch", ClansAPI.getDataInstance().getConfigInt("Clans.mode-change.timer.cooldown-in-seconds"));
 	}

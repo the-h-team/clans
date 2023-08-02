@@ -1,7 +1,7 @@
 package com.github.sanctum.clans.event.claim;
 
 import com.github.sanctum.clans.construct.DataManager;
-import com.github.sanctum.clans.construct.actions.ClaimAction;
+import com.github.sanctum.clans.construct.api.ClaimActionEngine;
 import com.github.sanctum.clans.construct.api.Claim;
 import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClansAPI;
@@ -107,7 +107,7 @@ public class ClaimResidentEvent extends ClaimEvent {
 		return r;
 	}
 
-	public ClaimAction getClaimUtil() {
+	public ClaimActionEngine getClaimUtil() {
 		return Claim.ACTION;
 	}
 

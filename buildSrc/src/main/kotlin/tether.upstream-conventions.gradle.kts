@@ -8,9 +8,11 @@ repositories {
             includeGroup("com.github.the-h-team.Panther")
         }
     }
+    mavenCentral()
+    maven ("https://maven.enginehub.org/repo/")
 }
 
 // Define versions as extra properties
 val enterpriseVersion by extra("1.5")
-val labyrinthVersion by extra("1.9.0")
-val pantherVersion by extra("1.0.2")
+val labyrinthVersion by extra("1.9.3")
+val pantherVersion by extra("1.0.3")

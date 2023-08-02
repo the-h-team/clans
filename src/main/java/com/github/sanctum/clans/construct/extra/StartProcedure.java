@@ -33,6 +33,7 @@ import com.github.sanctum.labyrinth.data.FileManager;
 import com.github.sanctum.labyrinth.data.Registry;
 import com.github.sanctum.labyrinth.data.service.PlayerSearch;
 import com.github.sanctum.labyrinth.formatting.FancyMessage;
+import com.github.sanctum.labyrinth.formatting.string.FormattedString;
 import com.github.sanctum.labyrinth.gui.unity.simple.Docket;
 import com.github.sanctum.labyrinth.gui.unity.simple.MemoryDocket;
 import com.github.sanctum.labyrinth.interfacing.UnknownGeneric;
@@ -92,6 +93,7 @@ public final class StartProcedure {
 
 	String replaceDevKey(String key, int id) {
 		if (key.startsWith("%%__USER")) {
+			if (instance.isTrial()) return "DEMO";
 			return "UN-VERIFIED";
 		}
 		if (key.startsWith("%%__NONCE")) {
@@ -139,7 +141,7 @@ public final class StartProcedure {
 	@Ordinal(1)
 	void a() {
 		instance.getLogger().info("▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬");
-		instance.getLogger().info("- Clans. Loading plugin information...");
+		instance.getLogger().info("- Tether. Loading plugin information...");
 		instance.getLogger().info("▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬");
 		for (String ch : getLogo()) {
 			instance.getLogger().info("- " + ch);
@@ -178,8 +180,8 @@ public final class StartProcedure {
 			}
 		}
 		sendBorder();
-		instance.getLogger().info("- Loading clans and claims, please be patient...");
-		instance.getLogger().info("- Loaded (" + instance.getClanManager().refresh() + ") clans ");
+		instance.getLogger().info("- Loading groups and claims, please be patient...");
+		instance.getLogger().info("- Loaded (" + instance.getClanManager().refresh() + ") groups ");
 		instance.getLogger().info("- Loaded (" + instance.getClaimManager().refresh() + ") claims");
 	}
 
@@ -437,7 +439,7 @@ public final class StartProcedure {
 
 		QnA.register((player, question) -> {
 			StringUtils utils = StringUtils.use(question);
-			if (utils.containsIgnoreCase("make a clan", "create a clan", "start a clan", "start clan", "make clan", "create clan")) {
+			if (utils.containsIgnoreCase("make a clan", "create a clan", "start a clan", "start clan", "make clan", "create clan", "make a group", "create a group", "start a group", "start group", "make group", "create group")) {
 				player.closeInventory();
 				String message = "To make a clan you require the permission clanspro." + DataManager.Security.getPermission("create") + ", if you have permission this message will be white.";
 				if (!player.hasPermission("clanspro." + DataManager.Security.getPermission("create"))) {
@@ -521,6 +523,12 @@ public final class StartProcedure {
 		rosterDocket.setList(() -> api.getClanManager().getClans().stream().collect(Collectors.toList()));
 		rosterDocket.load();
 		DocketUtils.load(rosterDocket.toMenu().getKey().orElseThrow(RuntimeException::new), rosterDocket);
+		MemoryDocket<String> headDocket = new MemoryDocket<>(ClansAPI.getDataInstance().getMessages().getRoot().getNode("menu.head-library"));
+		headDocket.setDataConverter((s, h) -> new FormattedString(s).replace("%head_name%", h).get());
+		headDocket.setNamePlaceholder(":not_supported:");
+		headDocket.setList(() -> CustomHead.Manager.getHeads().stream().map(CustomHead::name).collect(Collectors.toList()));
+		headDocket.load();
+		DocketUtils.load(headDocket.toMenu().getKey().orElseThrow(RuntimeException::new), headDocket);
 		MemoryDocket<Clan> rosterTopDocket = Docket.newInstance(ClansAPI.getDataInstance().getMessages().getRoot().getNode("menu.roster-top"));
 		rosterTopDocket.setDataConverter(Clan.memoryDocketReplacer());
 		rosterTopDocket.setNamePlaceholder(":not_supported:");
