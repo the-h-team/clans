@@ -3,6 +3,8 @@
  */
 
 rootProject.name = "tether"
+include(":tether-api")
+include(":tether-cli")
 sequenceOf(
     "api",
     "cli"
