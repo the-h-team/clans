@@ -17,10 +17,11 @@ import org.bukkit.entity.Player;
 
 public class DynmapCommand extends ClanSubCommand {
 
-	final DynmapClanMarketSet integration = ClanAddon.getAddon(DynmapAddon.class).getMarketSet();
+	final DynmapClanMarketSet integration;
 
-	public DynmapCommand(String label) {
+	public DynmapCommand(String label, DynmapClanMarketSet marketSet) {
 		super(label);
+		this.integration = marketSet;
 	}
 
 	@Override

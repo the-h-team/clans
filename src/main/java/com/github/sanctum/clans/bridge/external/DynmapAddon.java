@@ -43,7 +43,7 @@ public class DynmapAddon extends ClanAddon {
 	@Override
 	public void onLoad() {
 		integration = new DynmapClanMarketSet().initialize();
-		getContext().stage(new DynmapCommand("globe"));
+		getContext().stage(new DynmapCommand("globe", integration));
 	}
 
 	@Override

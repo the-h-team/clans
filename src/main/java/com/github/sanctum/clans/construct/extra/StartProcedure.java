@@ -271,10 +271,14 @@ public final class StartProcedure {
 		queue.load(instance, "com.github.sanctum.clans.bridge.internal");
 		TaskScheduler.of(() -> {
 			if (Bukkit.getPluginManager().isPluginEnabled("dynmap")) {
-				queue.register(DynmapAddon.class);
+				for (String s : queue.register(DynmapAddon.class).read()) {
+					instance.getLogger().info(s);
+				}
 			}
 			if (EconomyProvision.getInstance().isValid()) {
-				queue.register(BountyAddon.class);
+				for (String s : queue.register(BountyAddon.class).read()) {
+					instance.getLogger().info(s);
+				}
 			}
 		}).scheduleLater(160);
 		instance.getLogger().info("- Found (" + queue.get().size() + ") clan addon(s)");

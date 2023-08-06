@@ -129,7 +129,7 @@ public abstract class ClanAddon {
 			private final List<String> loadAfter = new ArrayList<>();
 			private final Collection<Listener> listeners = new HashSet<>();
 			private final Collection<ClanSubCommand> commands = new HashSet<>();
-			private boolean active = true;
+			private boolean active = false;
 			private int level;
 
 			{
