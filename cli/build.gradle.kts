@@ -1,6 +1,7 @@
 plugins {
     id("tether.java-conventions")
     id("tether.upstream-conventions")
+    id("tether.publish-conventions")
 }
 
 val cloudVersion by extra("1.8.3")

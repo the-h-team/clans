@@ -3,6 +3,7 @@ plugins {
     `java-library`
     id("tether.adventure-conventions")
     id("tether.upstream-conventions")
+    id("tether.publish-conventions")
 }
 
 dependencies {
