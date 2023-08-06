@@ -21,7 +21,7 @@ afterEvaluate {
         val publicationName = name
         publications.create<MavenPublication>(publicationName) {
             pom {
-                name.set("Tether")
+                name.set("ClansPro")
                 description.set(project.description!!)
                 url.set(project.properties["url"] as String)
                 inceptionYear.set(project.properties["inceptionYear"] as String)
