@@ -2,8 +2,8 @@ package com.github.sanctum.clans.construct.api;
 
 import com.github.sanctum.clans.bridge.ClanVentBus;
 import com.github.sanctum.clans.construct.DataManager;
-import com.github.sanctum.clans.construct.extra.StringLibrary;
-import com.github.sanctum.clans.construct.impl.CooldownUnClaim;
+import com.github.sanctum.clans.construct.util.StringLibrary;
+import com.github.sanctum.clans.construct.impl.DefaultUnclaimCooldown;
 import com.github.sanctum.clans.construct.impl.DefaultClaim;
 import com.github.sanctum.clans.event.associate.AssociateClaimEvent;
 import com.github.sanctum.clans.event.associate.AssociateLoseLandEvent;
@@ -30,121 +30,182 @@ import org.bukkit.ChatColor;
 import org.bukkit.Chunk;
 import org.bukkit.Color;
 import org.bukkit.Location;
-import org.bukkit.Material;
 import org.bukkit.World;
-import org.bukkit.block.Block;
-import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Player;
 
 public class ClaimActionEngine extends StringLibrary {
 
-	public boolean claim(Player p) {
+	public Claim.Action<Boolean> claim(Player p) {
 		return claim(p, p.getLocation().getChunk());
 	}
 
-	public boolean claim(Player p, Chunk ch) {
-		Claim claim = ClansAPI.getInstance().getClaimManager().getClaim(ch);
-		Clan.Associate associate = ClansAPI.getInstance().getAssociate(p).orElse(null);
+	public Claim.Action<Boolean> claim(Player p, Chunk ch) {
+		return () -> {
+			Claim claim = ClansAPI.getInstance().getClaimManager().getClaim(ch);
+			Clan.Associate associate = ClansAPI.getInstance().getAssociate(p).orElse(null);
 
-		if (associate == null) {
-			return false;
-		}
-
-		if (!associate.isValid()) {
-			return false;
-		}
-
-		boolean claimEffect = ClansAPI.getDataInstance().isTrue("Clans.land-claiming.claim-influence.allow");
-		if (claim == null) {
-			AssociateClaimEvent event1 = ClanVentBus.call(new AssociateClaimEvent(p));
-			if (event1.isCancelled()) {
+			if (associate == null) {
 				return false;
 			}
-			Clan clan = associate.getClan();
-			if (!claimEffect) {
-				if (clan.getClaims().length == claimHardcap(p)) {
-					sendMessage(p, alreadyMaxClaims());
+
+			if (!associate.isValid()) {
+				return false;
+			}
+
+			boolean claimEffect = ClansAPI.getDataInstance().isTrue("Clans.land-claiming.claim-influence.allow");
+			if (claim == null) {
+				AssociateClaimEvent event1 = ClanVentBus.call(new AssociateClaimEvent(p));
+				if (event1.isCancelled()) {
+					return false;
+				}
+				Clan clan = associate.getClan();
+				if (!claimEffect) {
+					if (clan.getClaims().length == getPlayerHardcap(p)) {
+						sendMessage(p, alreadyMaxClaims());
+						return false;
+					}
+				}
+				if (claimEffect && clan.getClaims().length >= clan.getClaimLimit()) {
+					sendMessage(p, ClansAPI.getDataInstance().getMessageResponse("clan-max-claims"));
+					return false;
+				}
+				if (clan.getClaims().length == getPlayerHardcap(p)) {
+					sendMessage(p, ClansAPI.getDataInstance().getMessageResponse("hard-max-claims"));
+					return false;
+				}
+				int chunkCount = 0;
+				for (Chunk chunk : getSurroundingChunks(ch, -1, 0, 1).deploy().stream().filter(c -> ClansAPI.getInstance().getClaimManager().isInClaim(c.getX(), c.getZ(), c.getWorld().getName())).collect(Collectors.toList())) {
+					if (clan.isOwner(chunk)) {
+						chunkCount++;
+					}
+				}
+				if (ClansAPI.getDataInstance().isTrue("Clans.land-claiming.claim-connections")) {
+					if (clan.getClaims().length >= 1 && chunkCount == 0) {
+						sendMessage(p, ClansAPI.getDataInstance().getMessageResponse("claim-not-connected"));
+						return false;
+					}
+				}
+				String claimID = new RandomID(6, "AKZ0123456789").generate();
+				int x = ch.getX();
+				int z = ch.getZ();
+				String world = ch.getWorld().getName();
+				clan.broadcast(claimed(x, z, world));
+				chunkBorderHint(p);
+				Claim cl = new DefaultClaim(x, z, clan.getId().toString(), claimID, world, true);
+				cl.save();
+				ClansAPI.getInstance().getClaimManager().load(cl);
+				ClanVentBus.call(new AssociateObtainLandEvent(p, cl));
+			} else {
+				if (claim.isActive()) {
+					if (claim.getOwner().equals(associate.getClan())) {
+						sendMessage(p, alreadyOwnClaim());
+					} else {
+						sendMessage(p, notClaimOwner(Clan.ACTION.getRelationColor(associate.getClan().getId().toString(), claim.getOwner().getTag().getId()) + ClansAPI.getInstance().getClanManager().getClanName(HUID.fromString(claim.getOwner().getTag().getId()))));
+
+					}
 					return false;
 				}
 			}
-			if (claimEffect && clan.getClaims().length >= clan.getClaimLimit()) {
-				sendMessage(p, ClansAPI.getDataInstance().getMessageResponse("clan-max-claims"));
-				return false;
-			}
-			if (clan.getClaims().length == claimHardcap(p)) {
-				sendMessage(p, ClansAPI.getDataInstance().getMessageResponse("hard-max-claims"));
-				return false;
-			}
-			int chunkCount = 0;
-			for (Chunk chunk : getChunksAroundChunk(ch, -1, 0, 1).stream().filter(c -> ClansAPI.getInstance().getClaimManager().isInClaim(c.getX(), c.getZ(), c.getWorld().getName())).collect(Collectors.toList())) {
-				if (clan.isOwner(chunk)) {
-					chunkCount++;
-				}
-			}
-			if (ClansAPI.getDataInstance().isTrue("Clans.land-claiming.claim-connections")) {
-				if (clan.getClaims().length >= 1 && chunkCount == 0) {
-					sendMessage(p, ClansAPI.getDataInstance().getMessageResponse("claim-not-connected"));
-					return false;
-				}
-			}
-			String claimID = new RandomID(6, "AKZ0123456789").generate();
-			int x = ch.getX();
-			int z = ch.getZ();
-			String world = ch.getWorld().getName();
-			clan.broadcast(claimed(x, z, world));
-			chunkBorderHint(p);
-			Claim cl = new DefaultClaim(x, z, clan.getId().toString(), claimID, world, true);
-			cl.save();
-			ClansAPI.getInstance().getClaimManager().load(cl);
-			ClanVentBus.call(new AssociateObtainLandEvent(p, cl));
-		} else {
-			if (claim.isActive()) {
-				if (claim.getOwner().equals(associate.getClan())) {
-					sendMessage(p, alreadyOwnClaim());
-				} else {
-					sendMessage(p, notClaimOwner(Clan.ACTION.getRelationColor(associate.getClan().getId().toString(), claim.getOwner().getTag().getId()) + ClansAPI.getInstance().getClanManager().getClanName(HUID.fromString(claim.getOwner().getTag().getId()))));
-
-				}
-				return false;
-			}
-		}
-		return true;
+			return true;
+		};
 	}
 
-	public boolean unclaim(Player p) {
+	public Claim.Action<Boolean> unclaim(Player p) {
 		return unclaim(p, p.getLocation().getChunk());
 	}
 
-	public boolean unclaim(Player p, Chunk ch) {
-		Clan.Associate associate = ClansAPI.getInstance().getAssociate(p).orElse(null);
-		if (associate == null) return false;
-		Clan clan = associate.getClan();
-		if (ClansAPI.getInstance().getClaimManager().isInClaim(p.getLocation())) {
-			Claim claim = ClansAPI.getInstance().getClaimManager().getClaim(ch);
-			assert claim != null;
-			if (!claim.isActive()) {
-				return false;
-			}
-			AssociateUnClaimEvent event = ClanVentBus.call(new AssociateUnClaimEvent(p, claim));
-			if (((Clan) claim.getHolder()).getMembers().stream().anyMatch(a -> p.getName().equals(a.getName()))) {
-				if (!event.isCancelled()) {
-					ClanVentBus.call(new AssociateLoseLandEvent(p, claim.getChunk()));
-					if (associate.getPriority().toLevel() < Clan.ACTION.claimingClearance()) {
-						sendMessage(p, noClearance());
-						return false;
-					}
-					claim.remove();
-					int x = ch.getX();
-					int z = ch.getZ();
-					String world = ch.getWorld().getName();
-					clan.broadcast(unclaimed(x, z, world));
-
-					return true;
+	public Claim.Action<Boolean> unclaim(Player p, Chunk ch) {
+		return () -> {
+			Clan.Associate associate = ClansAPI.getInstance().getAssociate(p).orElse(null);
+			if (associate == null) return false;
+			Clan clan = associate.getClan();
+			if (ClansAPI.getInstance().getClaimManager().isInClaim(p.getLocation())) {
+				Claim claim = ClansAPI.getInstance().getClaimManager().getClaim(ch);
+				assert claim != null;
+				if (!claim.isActive()) {
+					return false;
 				}
-				return false;
-			} else {
-				if (ClansAPI.getInstance().getShieldManager().isEnabled()) {
-					if (Clan.ACTION.isIgnoringShield()) {
+				AssociateUnClaimEvent event = ClanVentBus.call(new AssociateUnClaimEvent(p, claim));
+				if (((Clan) claim.getHolder()).getMembers().stream().anyMatch(a -> p.getName().equals(a.getName()))) {
+					if (!event.isCancelled()) {
+						ClanVentBus.call(new AssociateLoseLandEvent(p, claim.getChunk()));
+						if (!Clearance.MANAGE_LAND.test(associate)) {
+							sendMessage(p, noClearance());
+							return false;
+						}
+						claim.remove();
+						int x = ch.getX();
+						int z = ch.getZ();
+						String world = ch.getWorld().getName();
+						clan.broadcast(unclaimed(x, z, world));
+						return true;
+					}
+					return false;
+				} else {
+					if (ClansAPI.getInstance().getShieldManager().isEnabled()) {
+						if (Clan.ACTION.isIgnoringShield()) {
+							Clan owner = ((Clan) claim.getHolder());
+							if (clan.getPower() > owner.getPower() && !clan.equals(owner)) {
+								if (clan.isPeaceful()) {
+									sendMessage(p, peacefulDeny());
+									return false;
+								}
+								if (owner.isPeaceful()) {
+									sendMessage(p, peacefulDenyOther(owner.getName()));
+									return false;
+								}
+								if (!event.isCancelled()) {
+									if (ClansAPI.getDataInstance().getConfig().getRoot().getBoolean("Clans.raid-shield.claiming-only-enemy")) {
+										if (!clan.getRelation().getRivalry().has(owner)) {
+											sendMessage(p, ClansAPI.getDataInstance().getMessageResponse("clan-neutral"));
+											return false;
+										}
+									}
+									for (Chunk chunk : getSurroundingChunks(owner.getBase(), -1, 0, 1).deploy().stream().filter(c -> ClansAPI.getInstance().getClaimManager().isInClaim(c.getX(), c.getZ(), c.getWorld().getName())).collect(Collectors.toList())) {
+										if (chunk.equals(p.getLocation().getChunk())) {
+											sendMessage(p, MessageFormat.format(ClansAPI.getDataInstance().getMessageResponse("safe-zone"), ((Clan) claim.getHolder()).getName()));
+											return false;
+										}
+									}
+									if (clan.getMemorySpace().isPresent()) {
+										Node op = clan.getMemorySpace().get().getNode("over-powered");
+										if (getUnclaimCooldown(clan).deploy().isComplete()) {
+											int i = op.toPrimitive().getInt();
+
+											if (i <= ClansAPI.getDataInstance().getConfigInt("Clans.land-claiming.over-powering.cooldown.after-uses")) {
+												i += 1;
+												int finalI = i;
+												op.set(finalI);
+												op.save();
+											} else {
+												op.set(0);
+												op.save();
+												getUnclaimCooldown(clan).deploy().save();
+												getUnclaimCooldown(clan).deploy().setCooldown();
+												sendMessage(p, ClansAPI.getDataInstance().getMessageResponse("un-claim-cooldown"));
+											}
+										} else {
+											sendMessage(p, getUnclaimCooldown(clan).deploy().fullTimeLeft());
+											return false;
+										}
+									}
+									claim.remove();
+									int x = p.getLocation().getChunk().getX();
+									int z = p.getLocation().getChunk().getZ();
+									String world = p.getWorld().getName();
+									owner.broadcast(breach(clan.getName()));
+									owner.broadcast(overpowered(x, z, world));
+									return true;
+								}
+							} else {
+								sendMessage(p, tooWeak());
+								return false;
+							}
+						} else {
+							sendMessage(p, shieldDeny());
+							return false;
+						}
+					} else {
 						Clan owner = ((Clan) claim.getHolder());
 						if (clan.getPower() > owner.getPower() && !clan.equals(owner)) {
 							if (clan.isPeaceful()) {
@@ -162,7 +223,12 @@ public class ClaimActionEngine extends StringLibrary {
 										return false;
 									}
 								}
-								for (Chunk chunk : getChunksAroundLocation(owner.getBase(), -1, 0, 1).stream().filter(c -> ClansAPI.getInstance().getClaimManager().isInClaim(c.getX(), c.getZ(), c.getWorld().getName())).collect(Collectors.toList())) {
+								if (ClansAPI.getDataInstance().getConfigString("Clans.raid-shield.mode").equals("TEMPORARY")) {
+									sendMessage(p, "&cLand cannot be overtaken only raided.");
+									return false;
+								}
+
+								for (Chunk chunk : getSurroundingChunks(owner.getBase(), -1, 0, 1).deploy().stream().filter(c -> ClansAPI.getInstance().getClaimManager().isInClaim(c.getX(), c.getZ(), c.getWorld().getName())).collect(Collectors.toList())) {
 									if (chunk.equals(p.getLocation().getChunk())) {
 										sendMessage(p, MessageFormat.format(ClansAPI.getDataInstance().getMessageResponse("safe-zone"), ((Clan) claim.getHolder()).getName()));
 										return false;
@@ -170,7 +236,7 @@ public class ClaimActionEngine extends StringLibrary {
 								}
 								if (clan.getMemorySpace().isPresent()) {
 									Node op = clan.getMemorySpace().get().getNode("over-powered");
-									if (unClaimCooldown(clan).isComplete()) {
+									if (getUnclaimCooldown(clan).deploy().isComplete()) {
 										int i = op.toPrimitive().getInt();
 
 										if (i <= ClansAPI.getDataInstance().getConfigInt("Clans.land-claiming.over-powering.cooldown.after-uses")) {
@@ -181,12 +247,12 @@ public class ClaimActionEngine extends StringLibrary {
 										} else {
 											op.set(0);
 											op.save();
-											unClaimCooldown(clan).save();
-											unClaimCooldown(clan).setCooldown();
+											getUnclaimCooldown(clan).deploy().save();
+											getUnclaimCooldown(clan).deploy().setCooldown();
 											sendMessage(p, ClansAPI.getDataInstance().getMessageResponse("un-claim-cooldown"));
 										}
 									} else {
-										sendMessage(p, unClaimCooldown(clan).fullTimeLeft());
+										sendMessage(p, getUnclaimCooldown(clan).deploy().fullTimeLeft());
 										return false;
 									}
 								}
@@ -194,115 +260,51 @@ public class ClaimActionEngine extends StringLibrary {
 								int x = p.getLocation().getChunk().getX();
 								int z = p.getLocation().getChunk().getZ();
 								String world = p.getWorld().getName();
-								owner.broadcast(breach(clan.getName()));
+								owner.broadcast(higherpower(ClansAPI.getInstance().getClanManager().getClanName(ClansAPI.getInstance().getClanManager().getClanID(p.getUniqueId()))));
 								owner.broadcast(overpowered(x, z, world));
-								return true;
 							}
 						} else {
 							sendMessage(p, tooWeak());
 							return false;
 						}
-					} else {
-						sendMessage(p, shieldDeny());
-						return false;
-					}
-				} else {
-					Clan owner = ((Clan) claim.getHolder());
-					if (clan.getPower() > owner.getPower() && !clan.equals(owner)) {
-						if (clan.isPeaceful()) {
-							sendMessage(p, peacefulDeny());
-							return false;
-						}
-						if (owner.isPeaceful()) {
-							sendMessage(p, peacefulDenyOther(owner.getName()));
-							return false;
-						}
-						if (!event.isCancelled()) {
-							if (ClansAPI.getDataInstance().getConfig().getRoot().getBoolean("Clans.raid-shield.claiming-only-enemy")) {
-								if (!clan.getRelation().getRivalry().has(owner)) {
-									sendMessage(p, ClansAPI.getDataInstance().getMessageResponse("clan-neutral"));
-									return false;
-								}
-							}
-							if (ClansAPI.getDataInstance().getConfigString("Clans.raid-shield.mode").equals("TEMPORARY")) {
-								sendMessage(p, "&cLand cannot be overtaken only raided.");
-								return false;
-							}
-
-							for (Chunk chunk : getChunksAroundLocation(owner.getBase(), -1, 0, 1).stream().filter(c -> ClansAPI.getInstance().getClaimManager().isInClaim(c.getX(), c.getZ(), c.getWorld().getName())).collect(Collectors.toList())) {
-								if (chunk.equals(p.getLocation().getChunk())) {
-									sendMessage(p, MessageFormat.format(ClansAPI.getDataInstance().getMessageResponse("safe-zone"), ((Clan) claim.getHolder()).getName()));
-									return false;
-								}
-							}
-							if (clan.getMemorySpace().isPresent()) {
-								Node op = clan.getMemorySpace().get().getNode("over-powered");
-								if (unClaimCooldown(clan).isComplete()) {
-									int i = op.toPrimitive().getInt();
-
-									if (i <= ClansAPI.getDataInstance().getConfigInt("Clans.land-claiming.over-powering.cooldown.after-uses")) {
-										i += 1;
-										int finalI = i;
-										op.set(finalI);
-										op.save();
-									} else {
-										op.set(0);
-										op.save();
-										unClaimCooldown(clan).save();
-										unClaimCooldown(clan).setCooldown();
-										sendMessage(p, ClansAPI.getDataInstance().getMessageResponse("un-claim-cooldown"));
-									}
-								} else {
-									sendMessage(p, unClaimCooldown(clan).fullTimeLeft());
-									return false;
-								}
-							}
-							claim.remove();
-							int x = p.getLocation().getChunk().getX();
-							int z = p.getLocation().getChunk().getZ();
-							String world = p.getWorld().getName();
-							owner.broadcast(higherpower(ClansAPI.getInstance().getClanManager().getClanName(ClansAPI.getInstance().getClanManager().getClanID(p.getUniqueId()))));
-							owner.broadcast(overpowered(x, z, world));
-						}
-					} else {
-						sendMessage(p, tooWeak());
-						return false;
 					}
 				}
-			}
-		} else {
-			sendMessage(p, alreadyWild());
-			return false;
-		}
-		return true;
-	}
-
-	public boolean unclaimAll(Player p) {
-		FileManager d = ClansAPI.getInstance().getClaimManager().getFile();
-		Clan clan = ClansAPI.getInstance().getClanManager().getClan(p.getUniqueId());
-		if (clan != null) {
-			if (!d.getRoot().isNode(clan.getId().toString())) {
-				sendMessage(p, noClaims());
+			} else {
+				sendMessage(p, alreadyWild());
 				return false;
 			}
-			if (!d.getRoot().getNode(clan.getId().toString()).getKeys(false).isEmpty()) {
-				for (Claim c : clan.getClaims()) {
-					AssociateUnClaimEvent e = ClanVentBus.call(new AssociateUnClaimEvent(p, c));
-					if (!e.isCancelled()) {
-						ClanVentBus.call(new AssociateLoseLandEvent(p, c.getChunk()));
-						c.remove();
-					}
-				}
-				clan.broadcast(unclaimedAll(p.getName()));
-				return true;
-			} else {
-				sendMessage(p, noClaims());
-			}
-		}
-		return false;
+			return true;
+		};
 	}
 
-	static int correctCharLength(char c) {
+	public Claim.Action<Boolean> unclaimAll(Player p) {
+		return () -> {
+			FileManager d = ClansAPI.getInstance().getClaimManager().getFile();
+			Clan clan = ClansAPI.getInstance().getClanManager().getClan(p.getUniqueId());
+			if (clan != null) {
+				if (!d.getRoot().isNode(clan.getId().toString())) {
+					sendMessage(p, noClaims());
+					return false;
+				}
+				if (!d.getRoot().getNode(clan.getId().toString()).getKeys(false).isEmpty()) {
+					for (Claim c : clan.getClaims()) {
+						AssociateUnClaimEvent e = ClanVentBus.call(new AssociateUnClaimEvent(p, c));
+						if (!e.isCancelled()) {
+							ClanVentBus.call(new AssociateLoseLandEvent(p, c.getChunk()));
+							c.remove();
+						}
+					}
+					clan.broadcast(unclaimedAll(p.getName()));
+					return true;
+				} else {
+					sendMessage(p, noClaims());
+				}
+			}
+			return false;
+		};
+	}
+
+	int getFlagCharCorrection(char c) {
 		switch (c) {
 			case ':':
 			case 'i':
@@ -319,191 +321,205 @@ public class ClaimActionEngine extends StringLibrary {
 		return 5;
 	}
 
-	static int getFixedLength(String string) {
-		return string.chars().reduce(0, (p, i) -> p + correctCharLength((char) i) + 1);
+	int getFlagCharFixedLength(String string) {
+		return string.chars().reduce(0, (p, i) -> p + getFlagCharCorrection((char) i) + 1);
 	}
 
-	public AdvancedPagination<Claim.Flag> getFlags(Player p, Claim claim) {
+	public Claim.Action<AdvancedPagination<Claim.Flag>> getFlags(Player p, Claim claim) {
+		return new Claim.Action<AdvancedPagination<Claim.Flag>>() {
 
-		Set<Claim.Flag> n = ClansAPI.getInstance().getClaimManager().getFlagManager().getFlags().stream().sorted((o1, o2) -> String.CASE_INSENSITIVE_ORDER.compare(o1.getId(), o2.getId())).sorted(Claim.Flag::compareTo).sorted(Comparator.reverseOrder()).collect(Collectors.toCollection(LinkedHashSet::new));
-		AdvancedPagination<Claim.Flag> pag = new AdvancedPagination<>(p, n);
-		pag.limit(5);
-		pag.setHeader((player, message) -> {
-			message.then("&e&lChunk: &aGlobal &r(&2All&r)");
-			message.then("\n");
-			message.then("--------------------------------------").color(Color.AQUA).style(ChatColor.STRIKETHROUGH);
-			message.then("\n");
-			message.then("⬛").color(Color.ORANGE).hover("&aClick me to toggle flag control to individual.").action(() -> {
-				Set<Claim.Flag> set = Arrays.stream(claim.getFlags().clone()).sorted((o1, o2) -> String.CASE_INSENSITIVE_ORDER.compare(o1.getId(), o2.getId())).sorted(Claim.Flag::compareTo).sorted(Comparator.reverseOrder()).collect(Collectors.toCollection(LinkedHashSet::new));
-				getFlags(p, claim, set).send(1);
-			});
-			message.then("\n");
-			message.then("&m------------------------------------'");
-		});
-		pag.setFormat((f, placement, message) -> {
-			if (f.isValid()) {
+			final Set<Claim.Flag> n;
+			final AdvancedPagination<Claim.Flag> pag;
+			{
+				n = ClansAPI.getInstance().getClaimManager().getFlagManager().getFlags().stream().sorted((o1, o2) -> String.CASE_INSENSITIVE_ORDER.compare(o1.getId(), o2.getId())).sorted(Claim.Flag::compareTo).sorted(Comparator.reverseOrder()).collect(Collectors.toCollection(LinkedHashSet::new));
+				pag = new AdvancedPagination<>(p, n);
+			}
 
-				Claim.Flag match = claim.getFlag(f.getId());
+			@Override
+			public AdvancedPagination<Claim.Flag> deploy() {
+				pag.limit(5);
+				pag.setHeader((player, message) -> {
+					message.then("&e&lChunk: &aGlobal &r(&2All&r)");
+					message.then("\n");
+					message.then("--------------------------------------").color(Color.AQUA).style(ChatColor.STRIKETHROUGH);
+					message.then("\n");
+					message.then("⬛").color(Color.ORANGE).hover("&aClick me to toggle flag control to individual.").action(() -> {
+						Set<Claim.Flag> set = Arrays.stream(claim.getFlags().clone()).sorted((o1, o2) -> String.CASE_INSENSITIVE_ORDER.compare(o1.getId(), o2.getId())).sorted(Claim.Flag::compareTo).sorted(Comparator.reverseOrder()).collect(Collectors.toCollection(LinkedHashSet::new));
+						getFlags(p, claim, set).deploy().send(1);
+					});
+					message.then("\n");
+					message.then("&m------------------------------------'");
+				});
+				pag.setFormat((f, placement, message) -> {
+					if (f.isValid()) {
 
-				message.then(f.getId() + ";").color(Color.OLIVE).then("Enable").color(match.isEnabled() ? Color.YELLOW : Color.AQUA).hover("Click to enable this flag.").action(() -> {
-					Arrays.stream(((Clan) claim.getHolder()).getClaims()).forEach(claim1 -> {
-						if (claim1.getFlag(f.getId()) == null) {
-							claim1.register(f);
-							claim1.getFlag(f.getId()).setEnabled(true);
-						}
-						Arrays.stream(claim1.getFlags()).forEach(flag -> {
-							if (flag.getId().equals(f.getId())) {
-								flag.setEnabled(true);
-							}
+						Claim.Flag match = claim.getFlag(f.getId());
+
+						message.then(f.getId() + ";").color(Color.OLIVE).then("Enable").color(match.isEnabled() ? Color.YELLOW : Color.AQUA).hover("Click to enable this flag.").action(() -> {
+							Arrays.stream(((Clan) claim.getHolder()).getClaims()).forEach(claim1 -> {
+								if (claim1.getFlag(f.getId()) == null) {
+									claim1.register(f);
+									claim1.getFlag(f.getId()).setEnabled(true);
+								}
+								Arrays.stream(claim1.getFlags()).forEach(flag -> {
+									if (flag.getId().equals(f.getId())) {
+										flag.setEnabled(true);
+									}
+								});
+							});
+							TaskScheduler.of(() -> getFlags(p, claim).deploy().send(placement.getKey())).scheduleLater(1);
+						}).then(" ").then("Disable").color(!match.isEnabled() ? Color.YELLOW : Color.AQUA).hover("Click to disallow this flag.").action(() -> {
+							Arrays.stream(((Clan) claim.getHolder()).getClaims()).forEach(claim1 -> {
+								if (claim1.getFlag(f.getId()) == null) {
+									claim1.register(f);
+									claim1.getFlag(f.getId()).setEnabled(false);
+								}
+								Arrays.stream(claim1.getFlags()).forEach(flag -> {
+									if (flag.getId().equals(f.getId())) {
+										flag.setEnabled(false);
+									}
+								});
+							});
+							TaskScheduler.of(() -> getFlags(p, claim).deploy().send(placement.getKey())).scheduleLater(1);
 						});
-					});
-					TaskScheduler.of(() -> getFlags(p, claim).send(placement.getKey())).scheduleLater(1);
-				}).then(" ").then("Disable").color(!match.isEnabled() ? Color.YELLOW : Color.AQUA).hover("Click to disallow this flag.").action(() -> {
-					Arrays.stream(((Clan) claim.getHolder()).getClaims()).forEach(claim1 -> {
-						if (claim1.getFlag(f.getId()) == null) {
-							claim1.register(f);
-							claim1.getFlag(f.getId()).setEnabled(false);
-						}
-						Arrays.stream(claim1.getFlags()).forEach(flag -> {
-							if (flag.getId().equals(f.getId())) {
-								flag.setEnabled(false);
+						for (Message.Chunk c : message) {
+							String text = c.getText();
+							if (text.contains(";")) {
+								c.replace(";", " &8" + Strings.repeat(".", ((180 - getFlagCharFixedLength(text.replace(";", ""))) / 2)) + " ");
 							}
+						}
+					} else {
+						message.then("&c&m" + f.getId()).hover("Click to remove me i no longer work. (#").action(() -> {
+							Arrays.stream(((Clan) claim.getHolder()).getClaims()).forEach(claim1 -> claim1.remove(f));
+							TaskScheduler.of(() -> getFlags(p, claim).deploy().send(placement.getKey())).scheduleLater(1);
 						});
-					});
-					TaskScheduler.of(() -> getFlags(p, claim).send(placement.getKey())).scheduleLater(1);
-				});
-				for (Message.Chunk c : message) {
-					String text = c.getText();
-					if (text.contains(";")) {
-						c.replace(";", " &8" + Strings.repeat(".", ((180 - getFixedLength(text.replace(";", ""))) / 2)) + " ");
 					}
-				}
-			} else {
-				message.then("&c&m" + f.getId()).hover("Click to remove me i no longer work. (#").action(() -> {
-					Arrays.stream(((Clan) claim.getHolder()).getClaims()).forEach(claim1 -> claim1.remove(f));
-					TaskScheduler.of(() -> getFlags(p, claim).send(placement.getKey())).scheduleLater(1);
 				});
-			}
-		});
 
-		pag.setFooter((player, message) -> message.then("&b&m--------------------------------------"));
-		return pag;
+				pag.setFooter((player, message) -> message.then("&b&m--------------------------------------"));
+				return pag;
+			}
+		};
 	}
 
-	public AdvancedPagination<Claim.Flag> getFlags(Player p, Claim claim, Set<Claim.Flag> set) {
+	public Claim.Action<AdvancedPagination<Claim.Flag>> getFlags(Player p, Claim claim, Set<Claim.Flag> set) {
+		return new Claim.Action<AdvancedPagination<Claim.Flag>>() {
 
-		AdvancedPagination<Claim.Flag> pag = new AdvancedPagination<>(p, set);
-		pag.limit(5);
-		pag.setHeader((player, message) -> {
-			message.then("&e&lChunk: &bX:&f" + claim.getChunk().getX() + " &bZ:&f" + claim.getChunk().getZ());
-			message.then("\n");
-			message.then("--------------------------------------").color(org.bukkit.Color.AQUA).style(org.bukkit.ChatColor.STRIKETHROUGH);
-			message.then("\n");
-			message.then("⬛").color(org.bukkit.Color.AQUA).hover("&aClick me to toggle flag control to global.").action(() -> getFlags(p, claim).send(1))
-					.then("\n")
-					.then("&m------------------------------------'");
-		});
-		pag.setFormat((f, placement, message) -> {
-			if (f.isValid()) {
-				if (f.isEnabled()) {
-					message.then(f.getId() + ";").color(org.bukkit.Color.GREEN).then("Enable").color(org.bukkit.Color.YELLOW).then(" ").then("Disable").color(org.bukkit.Color.GRAY).hover("Click to disallow this flag.").action(() -> {
-						f.setEnabled(false);
-						TaskScheduler.of(() -> getFlags(p, claim, set).send(placement.getKey())).scheduleLater(1);
-					});
-					for (Message.Chunk c : message) {
-						String text = c.getText();
-						if (text.contains(";")) {
-							c.replace(";", " &8" + Strings.repeat(".", ((180 - getFixedLength(text.replace(";", ""))) / 2)) + " ");
+			final AdvancedPagination<Claim.Flag> pag;
+			{
+				pag = new AdvancedPagination<>(p, set);
+			}
+
+			@Override
+			public AdvancedPagination<Claim.Flag> deploy() {
+				pag.limit(5);
+				pag.setHeader((player, message) -> {
+					message.then("&e&lChunk: &bX:&f" + claim.getChunk().getX() + " &bZ:&f" + claim.getChunk().getZ());
+					message.then("\n");
+					message.then("--------------------------------------").color(org.bukkit.Color.AQUA).style(org.bukkit.ChatColor.STRIKETHROUGH);
+					message.then("\n");
+					message.then("⬛").color(org.bukkit.Color.AQUA).hover("&aClick me to toggle flag control to global.").action(() -> getFlags(p, claim).deploy().send(1))
+							.then("\n")
+							.then("&m------------------------------------'");
+				});
+				pag.setFormat((f, placement, message) -> {
+					if (f.isValid()) {
+						if (f.isEnabled()) {
+							message.then(f.getId() + ";").color(org.bukkit.Color.GREEN).then("Enable").color(org.bukkit.Color.YELLOW).then(" ").then("Disable").color(org.bukkit.Color.GRAY).hover("Click to disallow this flag.").action(() -> {
+								f.setEnabled(false);
+								TaskScheduler.of(() -> getFlags(p, claim, set).deploy().send(placement.getKey())).scheduleLater(1);
+							});
+							for (Message.Chunk c : message) {
+								String text = c.getText();
+								if (text.contains(";")) {
+									c.replace(";", " &8" + Strings.repeat(".", ((180 - getFlagCharFixedLength(text.replace(";", ""))) / 2)) + " ");
+								}
+							}
+						} else {
+							message.then(f.getId() + ";").color(org.bukkit.Color.GREEN).then("Enable").color(org.bukkit.Color.GRAY).hover("Click to allow this flag.").action(() -> {
+								f.setEnabled(true);
+								TaskScheduler.of(() -> getFlags(p, claim, set).deploy().send(placement.getKey())).scheduleLater(1);
+							}).then(" ").then("Disable").color(org.bukkit.Color.YELLOW);
+							for (Message.Chunk c : message) {
+								String text = c.getText();
+								if (text.contains(";")) {
+									c.replace(";", " &8" + Strings.repeat(".", ((180 - getFlagCharFixedLength(text.replace(";", ""))) / 2)) + " ");
+								}
+							}
 						}
+					} else {
+						message.then("&c&m" + f.getId()).hover("Click to remove me i no longer work.").action(() -> {
+							claim.remove(f);
+							Set<Claim.Flag> s = Arrays.stream(claim.getFlags()).sorted((o1, o2) -> String.CASE_INSENSITIVE_ORDER.compare(o1.getId(), o2.getId())).sorted(Claim.Flag::compareTo).sorted(Comparator.reverseOrder()).collect(Collectors.toCollection(LinkedHashSet::new));
+							TaskScheduler.of(() -> getFlags(p, claim, s).deploy().send(placement.getKey())).scheduleLater(1);
+						});
 					}
-				} else {
-					message.then(f.getId() + ";").color(org.bukkit.Color.GREEN).then("Enable").color(org.bukkit.Color.GRAY).hover("Click to allow this flag.").action(() -> {
-						f.setEnabled(true);
-						TaskScheduler.of(() -> getFlags(p, claim, set).send(placement.getKey())).scheduleLater(1);
-					}).then(" ").then("Disable").color(org.bukkit.Color.YELLOW);
-					for (Message.Chunk c : message) {
-						String text = c.getText();
-						if (text.contains(";")) {
-							c.replace(";", " &8" + Strings.repeat(".", ((180 - getFixedLength(text.replace(";", ""))) / 2)) + " ");
-						}
-					}
-				}
-			} else {
-				message.then("&c&m" + f.getId()).hover("Click to remove me i no longer work.").action(() -> {
-					claim.remove(f);
-					Set<Claim.Flag> s = Arrays.stream(claim.getFlags()).sorted((o1, o2) -> String.CASE_INSENSITIVE_ORDER.compare(o1.getId(), o2.getId())).sorted(Claim.Flag::compareTo).sorted(Comparator.reverseOrder()).collect(Collectors.toCollection(LinkedHashSet::new));
-					TaskScheduler.of(() -> getFlags(p, claim, s).send(placement.getKey())).scheduleLater(1);
 				});
-			}
-		});
 
-		pag.setFooter((player, message) -> message.then("&b&m--------------------------------------"));
-		return pag;
+				pag.setFooter((player, message) -> message.then("&b&m--------------------------------------"));
+				return pag;
+			}
+		};
 	}
 
-	public synchronized Collection<Chunk> getChunksAroundLocation(Location location, int xoff, int yoff, int zoff) {
-		int[] offset = {xoff, yoff, zoff};
+	public synchronized Claim.Action<Collection<Chunk>> getSurroundingChunks(Location location, int xoff, int yoff, int zoff) {
+		return () -> {
+			int[] offset = {xoff, yoff, zoff};
 
-		World world = location.getWorld();
-		if (world == null) return Collections.emptyList();
-		int baseX = location.getChunk().getX();
-		int baseZ = location.getChunk().getZ();
+			World world = location.getWorld();
+			if (world == null) return Collections.emptyList();
+			int baseX = location.getChunk().getX();
+			int baseZ = location.getChunk().getZ();
 
-		Collection<Chunk> chunksAroundPlayer = new HashSet<>();
-		for (int x : offset) {
-			for (int z : offset) {
-				Chunk chunk = world.getChunkAt(baseX + x, baseZ + z);
-				if (!chunk.isLoaded()) {
-					chunk.load();
+			Collection<Chunk> chunksAroundPlayer = new HashSet<>();
+			for (int x : offset) {
+				for (int z : offset) {
+					Chunk chunk = world.getChunkAt(baseX + x, baseZ + z);
+					if (!chunk.isLoaded()) {
+						chunk.load();
+					}
+					chunksAroundPlayer.add(chunk);
 				}
-				chunksAroundPlayer.add(chunk);
 			}
-		}
-		return chunksAroundPlayer;
+			return chunksAroundPlayer;
+		};
 	}
 
-	public Collection<Chunk> getChunksAroundChunk(Chunk chunk, int xoff, int yoff, int zoff) {
-		int[] offset = {xoff, yoff, zoff};
+	public synchronized Claim.Action<Collection<Chunk>> getSurroundingChunks(Chunk chunk, int xoff, int yoff, int zoff) {
+		return () -> {
+			int[] offset = {xoff, yoff, zoff};
 
-		World world = chunk.getWorld();
-		int baseX = chunk.getX();
-		int baseZ = chunk.getZ();
+			World world = chunk.getWorld();
+			int baseX = chunk.getX();
+			int baseZ = chunk.getZ();
 
-		Collection<Chunk> chunksAroundPlayer = new HashSet<>();
-		for (int x : offset) {
-			for (int z : offset) {
-				Chunk c = world.getChunkAt(baseX + x, baseZ + z);
-				chunksAroundPlayer.add(c);
+			Collection<Chunk> chunksAroundPlayer = new HashSet<>();
+			for (int x : offset) {
+				for (int z : offset) {
+					Chunk c = world.getChunkAt(baseX + x, baseZ + z);
+					chunksAroundPlayer.add(c);
+				}
 			}
-		}
-		return chunksAroundPlayer;
+			return chunksAroundPlayer;
+		};
 	}
 
-	public ClanCooldown unClaimCooldown(Clan clan) {
-		for (ClanCooldown c : clan.getCooldowns()) {
-			if (c.getAction().equals("Clans:unclaim-limit")) {
-				return c;
+	public Claim.Action<ClanCooldown> getUnclaimCooldown(Clan clan) {
+		return () -> {
+			for (ClanCooldown c : clan.getCooldowns()) {
+				if (c.getAction().equals("Clans:unclaim-limit")) {
+					return c;
+				}
 			}
-		}
-		ClanCooldown clanCooldown = new CooldownUnClaim(clan.getId().toString());
-		if (!ClansAPI.getDataInstance().getCooldowns().contains(clanCooldown)) {
-			clanCooldown.save();
-		}
-		return clanCooldown;
+			ClanCooldown clanCooldown = new DefaultUnclaimCooldown(clan.getId().toString());
+			if (!ClansAPI.getDataInstance().getCooldowns().contains(clanCooldown)) {
+				clanCooldown.save();
+			}
+			return clanCooldown;
+		};
 	}
 
-	public boolean hasSurface(Location location) {
-		Block feet = location.getBlock();
-		if (!feet.getType().equals(Material.AIR) && !feet.getLocation().add(0.0D, 1.0D, 0.0D).getBlock().getType().equals(Material.AIR))
-			return false;
-		Block head = feet.getRelative(BlockFace.UP);
-		if (!head.getType().equals(Material.AIR))
-			return false;
-		Block ground = feet.getRelative(BlockFace.DOWN);
-		return ground.getType().isSolid();
-	}
-
-	public int claimHardcap(Player player) {
+	public int getPlayerHardcap(Player player) {
 		int result = 0;
 		if (player == null)
 			return 0;
@@ -523,16 +539,19 @@ public class ClaimActionEngine extends StringLibrary {
 		return result;
 	}
 
-	public String getClaimID(Location loc) {
-		if (ClansAPI.getInstance().getClaimManager().isInClaim(loc)) {
-			return ClansAPI.getInstance().getClaimManager().getId(loc);
-		}
-		return null;
-	}
+	public Claim.Action<Boolean> isAllowed() {
+		return new Claim.Action<Boolean>() {
+			final FileManager main;
 
-	public boolean isEnabled() {
-		FileManager main = ClansAPI.getDataInstance().getConfig();
-		return main.getRoot().getBoolean("Clans.land-claiming.allow");
+			{
+				main = ClansAPI.getDataInstance().getConfig();
+			}
+
+			@Override
+			public Boolean deploy() {
+				return main.getRoot().getBoolean("Clans.land-claiming.allow");
+			}
+		};
 	}
 
 

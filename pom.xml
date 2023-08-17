@@ -5,7 +5,7 @@
 
     <groupId>com.github.sanctum</groupId>
     <artifactId>ClansPro</artifactId>
-    <version>1.5.1-SNAPSHOT</version>
+    <version>1.5.1</version>
     <modules>
         <module>tether-api</module>
         <module>tether-cli</module>
@@ -24,7 +24,7 @@
         <java.version>1.8</java.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <labyrinth.version>1.9.3</labyrinth.version>
-        <panther.version>1.0.3</panther.version>
+        <panther.version>1.0.4-SNAPSHOT</panther.version>
     </properties>
 
     <distributionManagement>

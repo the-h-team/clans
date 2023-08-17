@@ -5,9 +5,9 @@ import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClanSubCommand;
 import com.github.sanctum.clans.construct.api.ClansAPI;
 import com.github.sanctum.clans.construct.api.Clearance;
-import com.github.sanctum.clans.construct.extra.BukkitColor;
-import com.github.sanctum.clans.construct.extra.ClanDisplayName;
-import com.github.sanctum.clans.construct.extra.StringLibrary;
+import com.github.sanctum.clans.construct.util.BukkitColor;
+import com.github.sanctum.clans.construct.util.AboveHeadDisplayName;
+import com.github.sanctum.clans.construct.util.StringLibrary;
 import com.github.sanctum.labyrinth.LabyrinthProvider;
 import com.github.sanctum.labyrinth.api.Service;
 import com.github.sanctum.labyrinth.formatting.completion.SimpleTabCompletion;
@@ -63,9 +63,9 @@ public class CommandColor extends ClanSubCommand {
 								if (ClansAPI.getDataInstance().isDisplayTagsAllowed()) {
 									if (clan.getPalette().isGradient()) {
 										Clan c = a.getClan();
-										ClanDisplayName.update(p, ClansAPI.getDataInstance().formatDisplayTag("", c.getPalette().toGradient().context(c.getName()).translate()));
+										AboveHeadDisplayName.update(p, ClansAPI.getDataInstance().formatDisplayTag("", c.getPalette().toGradient().context(c.getName()).translate()));
 									} else {
-										ClanDisplayName.update(p, ClansAPI.getDataInstance().formatDisplayTag(ClansAPI.getInstance().getClanManager().getClan(op.getUniqueId()).getPalette().toString(), ClansAPI.getInstance().getClanManager().getClan(op.getUniqueId()).getName()));
+										AboveHeadDisplayName.update(p, ClansAPI.getDataInstance().formatDisplayTag(ClansAPI.getInstance().getClanManager().getClan(op.getUniqueId()).getPalette().toString(), ClansAPI.getInstance().getClanManager().getClan(op.getUniqueId()).getName()));
 
 									}
 								}
@@ -86,9 +86,9 @@ public class CommandColor extends ClanSubCommand {
 							if (op.isOnline()) {
 								if (ClansAPI.getDataInstance().isDisplayTagsAllowed()) {
 									if (clan.getPalette().isGradient()) {
-										ClanDisplayName.set(op.getPlayer(), ClansAPI.getDataInstance().formatDisplayTag("", associate.getClan().getPalette().toGradient().context(associate.getClan().getName()).translate()));
+										AboveHeadDisplayName.set(op.getPlayer(), ClansAPI.getDataInstance().formatDisplayTag("", associate.getClan().getPalette().toGradient().context(associate.getClan().getName()).translate()));
 									} else {
-										ClanDisplayName.set(op.getPlayer(), ClansAPI.getDataInstance().formatDisplayTag(ClansAPI.getInstance().getClanManager().getClan(op.getUniqueId()).getPalette().toString(), ClansAPI.getInstance().getClanManager().getClan(op.getUniqueId()).getName()));
+										AboveHeadDisplayName.set(op.getPlayer(), ClansAPI.getDataInstance().formatDisplayTag(ClansAPI.getInstance().getClanManager().getClan(op.getUniqueId()).getPalette().toString(), ClansAPI.getInstance().getClanManager().getClan(op.getUniqueId()).getName()));
 
 									}
 								}
@@ -121,9 +121,9 @@ public class CommandColor extends ClanSubCommand {
 							if (op.isOnline()) {
 								if (ClansAPI.getDataInstance().isDisplayTagsAllowed()) {
 									if (clan.getPalette().isGradient()) {
-										ClanDisplayName.set(op.getPlayer(), ClansAPI.getDataInstance().formatDisplayTag("", associate.getClan().getPalette().toGradient().context(associate.getClan().getName()).translate()));
+										AboveHeadDisplayName.set(op.getPlayer(), ClansAPI.getDataInstance().formatDisplayTag("", associate.getClan().getPalette().toGradient().context(associate.getClan().getName()).translate()));
 									} else {
-										ClanDisplayName.set(op.getPlayer(), ClansAPI.getDataInstance().formatDisplayTag(ClansAPI.getInstance().getClanManager().getClan(op.getUniqueId()).getPalette().toString(), ClansAPI.getInstance().getClanManager().getClan(op.getUniqueId()).getName()));
+										AboveHeadDisplayName.set(op.getPlayer(), ClansAPI.getDataInstance().formatDisplayTag(ClansAPI.getInstance().getClanManager().getClan(op.getUniqueId()).getPalette().toString(), ClansAPI.getInstance().getClanManager().getClan(op.getUniqueId()).getName()));
 
 									}
 								}
@@ -174,9 +174,9 @@ public class CommandColor extends ClanSubCommand {
 								if (ClansAPI.getDataInstance().isDisplayTagsAllowed()) {
 									if (clan.getPalette().isGradient()) {
 										Clan c = a.getClan();
-										ClanDisplayName.update(p, ClansAPI.getDataInstance().formatDisplayTag("", c.getPalette().toGradient().context(c.getName()).translate()));
+										AboveHeadDisplayName.update(p, ClansAPI.getDataInstance().formatDisplayTag("", c.getPalette().toGradient().context(c.getName()).translate()));
 									} else {
-										ClanDisplayName.update(p, ClansAPI.getDataInstance().formatDisplayTag(ClansAPI.getInstance().getClanManager().getClan(op.getUniqueId()).getPalette().toString(), ClansAPI.getInstance().getClanManager().getClan(op.getUniqueId()).getName()));
+										AboveHeadDisplayName.update(p, ClansAPI.getDataInstance().formatDisplayTag(ClansAPI.getInstance().getClanManager().getClan(op.getUniqueId()).getPalette().toString(), ClansAPI.getInstance().getClanManager().getClan(op.getUniqueId()).getName()));
 
 									}
 								}
@@ -198,9 +198,9 @@ public class CommandColor extends ClanSubCommand {
 								if (ClansAPI.getDataInstance().isDisplayTagsAllowed()) {
 									if (clan.getPalette().isGradient()) {
 										Clan c = a.getClan();
-										ClanDisplayName.update(p, ClansAPI.getDataInstance().formatDisplayTag("", c.getPalette().toGradient().context(c.getName()).translate()));
+										AboveHeadDisplayName.update(p, ClansAPI.getDataInstance().formatDisplayTag("", c.getPalette().toGradient().context(c.getName()).translate()));
 									} else {
-										ClanDisplayName.update(p, ClansAPI.getDataInstance().formatDisplayTag(ClansAPI.getInstance().getClanManager().getClan(op.getUniqueId()).getPalette().toString(), ClansAPI.getInstance().getClanManager().getClan(op.getUniqueId()).getName()));
+										AboveHeadDisplayName.update(p, ClansAPI.getDataInstance().formatDisplayTag(ClansAPI.getInstance().getClanManager().getClan(op.getUniqueId()).getPalette().toString(), ClansAPI.getInstance().getClanManager().getClan(op.getUniqueId()).getName()));
 
 									}
 								}
@@ -239,9 +239,9 @@ public class CommandColor extends ClanSubCommand {
 							if (ClansAPI.getDataInstance().isDisplayTagsAllowed()) {
 								if (clan.getPalette().isGradient()) {
 									Clan c = a.getClan();
-									ClanDisplayName.update(p, ClansAPI.getDataInstance().formatDisplayTag("", c.getPalette().toGradient().context(c.getName()).translate()));
+									AboveHeadDisplayName.update(p, ClansAPI.getDataInstance().formatDisplayTag("", c.getPalette().toGradient().context(c.getName()).translate()));
 								} else {
-									ClanDisplayName.update(p, ClansAPI.getDataInstance().formatDisplayTag(ClansAPI.getInstance().getClanManager().getClan(op.getUniqueId()).getPalette().toString(), ClansAPI.getInstance().getClanManager().getClan(op.getUniqueId()).getName()));
+									AboveHeadDisplayName.update(p, ClansAPI.getDataInstance().formatDisplayTag(ClansAPI.getInstance().getClanManager().getClan(op.getUniqueId()).getPalette().toString(), ClansAPI.getInstance().getClanManager().getClan(op.getUniqueId()).getName()));
 
 								}
 							}

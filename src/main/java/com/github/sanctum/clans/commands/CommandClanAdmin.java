@@ -10,8 +10,8 @@ import com.github.sanctum.clans.construct.api.ClanBlueprint;
 import com.github.sanctum.clans.construct.api.ClansAPI;
 import com.github.sanctum.clans.construct.api.GUI;
 import com.github.sanctum.clans.construct.api.War;
-import com.github.sanctum.clans.construct.extra.ReloadUtility;
-import com.github.sanctum.clans.construct.extra.StringLibrary;
+import com.github.sanctum.clans.construct.util.ReloadUtility;
+import com.github.sanctum.clans.construct.util.StringLibrary;
 import com.github.sanctum.labyrinth.data.FileManager;
 import com.github.sanctum.labyrinth.formatting.pagination.EasyPagination;
 import com.github.sanctum.labyrinth.library.StringUtils;
@@ -486,7 +486,7 @@ public class CommandClanAdmin extends Command {
 				if (ClansAPI.getInstance().getClanManager().getClanID(args1) != null) {
 					Clan target = ClansAPI.getInstance().getClanManager().getClan(ClansAPI.getInstance().getClanManager().getClanID(args1));
 					for (Clan.Associate id : target.getMembers()) {
-						if (id.getPriority().toLevel() == 3) {
+						if (id.getRank().getLevel() >= 3) {
 							target.broadcast("&8(&e!&8) &4&oOur clan has been forcibly closed by a staff member.");
 							Clan.ACTION.remove(id.getId(), false).deploy();
 							break;
@@ -657,7 +657,7 @@ public class CommandClanAdmin extends Command {
 				if (args1.equalsIgnoreCase("remove")) {
 					if (args2.equalsIgnoreCase("surrounding")) {
 						final Clan[] owner = {null};
-						Claim.ACTION.getChunksAroundChunk(p.getLocation().getChunk(), -1, 0, 1).forEach(chunk -> {
+						Claim.ACTION.getSurroundingChunks(p.getLocation().getChunk(), -1, 0, 1).deploy().forEach(chunk -> {
 							Claim test = ClansAPI.getInstance().getClaimManager().getClaim(chunk);
 							if (test != null) {
 								if (owner[0] == null) {
@@ -689,7 +689,7 @@ public class CommandClanAdmin extends Command {
 					HUID test = manager.getClanID(args2);
 					if (test != null) {
 						Clan clan = manager.getClan(test);
-						Claim.ACTION.getChunksAroundChunk(p.getLocation().getChunk(), -1, 0, 1).forEach(clan::newClaim);
+						Claim.ACTION.getSurroundingChunks(p.getLocation().getChunk(), -1, 0, 1).deploy().forEach(clan::newClaim);
 						lib.sendMessage(p, "&aYou claimed this land for clan &r" + clan.getName());
 					} else {
 						lib.sendMessage(p, lib.clanUnknown(args2));

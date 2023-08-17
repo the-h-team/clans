@@ -6,9 +6,10 @@ import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.InvasiveEntity;
 import com.github.sanctum.clans.construct.api.Relation;
 import com.github.sanctum.clans.construct.api.Teleport;
-import com.github.sanctum.clans.construct.impl.Resident;
+import com.github.sanctum.clans.construct.impl.entity.DefaultClaimResident;
 import com.github.sanctum.clans.event.associate.AssociateEvent;
 import com.github.sanctum.labyrinth.library.Mailer;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
@@ -305,7 +306,7 @@ public abstract class ClaimEvent extends AssociateEvent {
 		}
 
 		@Override
-		public Optional<Resident> toResident() {
+		public Optional<Claim.Resident> toResident() {
 			return Optional.empty();
 		}
 
@@ -325,7 +326,7 @@ public abstract class ClaimEvent extends AssociateEvent {
 		}
 
 		@Override
-		public Clan.Rank getPriority() {
+		public Clan.@NotNull Rank getRank() {
 			return null;
 		}
 
@@ -335,7 +336,7 @@ public abstract class ClaimEvent extends AssociateEvent {
 		}
 
 		@Override
-		public String getNickname() {
+		public @NotNull String getNickname() {
 			return null;
 		}
 
@@ -345,7 +346,7 @@ public abstract class ClaimEvent extends AssociateEvent {
 		}
 
 		@Override
-		public Date getJoinDate() {
+		public @NotNull Date getJoinDate() {
 			return null;
 		}
 
@@ -360,7 +361,7 @@ public abstract class ClaimEvent extends AssociateEvent {
 		}
 
 		@Override
-		public void setPriority(Clan.Rank priority) {
+		public void setRank(Clan.Rank priority) {
 
 		}
 
@@ -415,4 +416,25 @@ public abstract class ClaimEvent extends AssociateEvent {
 	public Claim getClaim() {
 		return claim;
 	}
+
+	/**
+	 * Get a list of chunks within radius of this events given claim.
+	 *
+	 * @param radius the radius to go out from center
+	 * @return a list of chunks within radius
+	 */
+	public List<Chunk> getSurrounding(int radius) {
+		List<Chunk> chunks = new ArrayList<>();
+		if (getClaim() != null) {
+			Chunk centerChunk = getClaim().getChunk();
+			for (int x = centerChunk.getX() - radius; x < centerChunk.getX() + radius; x++) {
+				for (int z = centerChunk.getZ() - radius; z < centerChunk.getZ() + radius; z++) {
+					Chunk chunk = centerChunk.getWorld().getChunkAt(x, z);
+					chunks.add(chunk);
+				}
+			}
+		}
+		return chunks;
+	}
+
 }

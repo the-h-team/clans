@@ -6,7 +6,7 @@ import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClanSubCommand;
 import com.github.sanctum.clans.construct.api.ClansAPI;
 import com.github.sanctum.clans.construct.api.Clearance;
-import com.github.sanctum.clans.construct.extra.StringLibrary;
+import com.github.sanctum.clans.construct.util.StringLibrary;
 import com.github.sanctum.clans.event.associate.AssociateKickAssociateEvent;
 import java.text.MessageFormat;
 import java.util.UUID;
@@ -53,7 +53,7 @@ public class CommandKick extends ClanSubCommand {
 						lib.sendMessage(p, lib.playerUnknown(args[0]));
 						return true;
 					}
-					if (member.getPriority().toLevel() > associate.getPriority().toLevel()) {
+					if (member.getRank().getLevel() > associate.getRank().getLevel()) {
 						lib.sendMessage(p, lib.noClearance());
 						return true;
 					}

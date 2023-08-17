@@ -1,7 +1,7 @@
 package com.github.sanctum.clans.bridge;
 
 import com.github.sanctum.clans.ClansJavaPlugin;
-import com.github.sanctum.clans.construct.extra.ClanError;
+import com.github.sanctum.clans.construct.util.ClanError;
 import com.github.sanctum.labyrinth.data.FileList;
 import com.github.sanctum.labyrinth.task.Procedure;
 import java.io.File;

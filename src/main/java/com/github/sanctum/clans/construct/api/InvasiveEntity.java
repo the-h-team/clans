@@ -1,6 +1,6 @@
 package com.github.sanctum.clans.construct.api;
 
-import com.github.sanctum.clans.construct.impl.entity.AnimalAssociate;
+import com.github.sanctum.clans.construct.impl.entity.EntityAssociate;
 import com.github.sanctum.clans.construct.impl.entity.ServerAssociate;
 import com.github.sanctum.labyrinth.data.EconomyProvision;
 import com.github.sanctum.labyrinth.interfacing.Nameable;
@@ -823,7 +823,7 @@ public interface InvasiveEntity extends Nameable, LogoHolder, Comparable<Invasiv
 		}
 		if (this instanceof Clan.Associate) {
 			if (o instanceof Clan.Associate) {
-				if (((Clan.Associate) this).getPriority().toLevel() > ((Clan.Associate) o).getPriority().toLevel() || EconomyProvision.getInstance().isValid() && (EconomyProvision.getInstance().balance(((Clan.Associate) this).getTag().getPlayer()).get() > EconomyProvision.getInstance().balance(((Clan.Associate) o).getTag().getPlayer()).get())) {
+				if (((Clan.Associate) this).getRank().getLevel() > ((Clan.Associate) o).getRank().getLevel() || EconomyProvision.getInstance().isValid() && (EconomyProvision.getInstance().balance(this.getTag().getPlayer()).get() > EconomyProvision.getInstance().balance(o.getTag().getPlayer()).get())) {
 					return 1;
 				}
 			}
@@ -927,7 +927,7 @@ public interface InvasiveEntity extends Nameable, LogoHolder, Comparable<Invasiv
 	 * @return true if this entity is a tamable entity and <strong>ONLY</strong> a tamable entity.
 	 */
 	default boolean isTamable() {
-		return isEntity() && getAsEntity() instanceof Tameable || this instanceof AnimalAssociate;
+		return isEntity() && getAsEntity() instanceof Tameable || this instanceof EntityAssociate;
 	}
 
 	/**
@@ -966,7 +966,7 @@ public interface InvasiveEntity extends Nameable, LogoHolder, Comparable<Invasiv
 			} catch (Exception e) {
 				return false;
 			}
-			return getPlayer() != null && getPlayer().getName() != null;
+			return getPlayer() != null;
 		}
 
 		/**
@@ -996,7 +996,9 @@ public interface InvasiveEntity extends Nameable, LogoHolder, Comparable<Invasiv
 		 * @return the player this id belongs to or null.
 		 */
 		default OfflinePlayer getPlayer() {
-			return Bukkit.getOfflinePlayer(UUID.fromString(getId()));
+			OfflinePlayer result = Bukkit.getOfflinePlayer(UUID.fromString(getId()));
+			if (result.getName() != null) return result;
+			return null;
 		}
 
 		/**

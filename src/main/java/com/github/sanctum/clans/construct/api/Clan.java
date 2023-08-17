@@ -1,20 +1,19 @@
 package com.github.sanctum.clans.construct.api;
 
 import com.github.sanctum.clans.construct.ClanManager;
-import com.github.sanctum.clans.construct.extra.BukkitColor;
-import com.github.sanctum.clans.construct.extra.ClanError;
+import com.github.sanctum.clans.construct.util.BukkitColor;
+import com.github.sanctum.clans.construct.util.ClanError;
 import com.github.sanctum.clans.construct.impl.DefaultClan;
-import com.github.sanctum.clans.construct.impl.Resident;
 import com.github.sanctum.clans.construct.impl.entity.ServerAssociate;
 import com.github.sanctum.labyrinth.LabyrinthProvider;
 import com.github.sanctum.labyrinth.data.EconomyProvision;
-import com.github.sanctum.labyrinth.data.FileManager;
 import com.github.sanctum.labyrinth.data.LabyrinthUser;
 import com.github.sanctum.labyrinth.formatting.Message;
 import com.github.sanctum.labyrinth.formatting.string.CustomColor;
 import com.github.sanctum.labyrinth.formatting.string.FormattedString;
 import com.github.sanctum.labyrinth.formatting.string.GradientColor;
 import com.github.sanctum.labyrinth.formatting.string.RandomHex;
+import com.github.sanctum.labyrinth.interfacing.Nameable;
 import com.github.sanctum.labyrinth.library.Mailer;
 import com.github.sanctum.panther.file.JsonAdapter;
 import com.github.sanctum.panther.file.Node;
@@ -112,13 +111,14 @@ public interface Clan extends ClanBank, ConfigurationSerializable, EntityHolder,
 	@Nullable Location getBase();
 
 	/**
-	 * Get all known clearances for the clan.
-	 *
-	 * @return The clan clearance log.
+	 * @return
 	 */
-	@NotNull default ClearanceLog getPermissions() {
-		return getValue(ClearanceLog.class, "clearance");
-	}
+	@NotNull ClearanceOverride getPermissiveHandle();
+
+	/**
+	 *
+	 */
+	void resetPermissions();
 
 	/**
 	 * Get the amount of power the clan has
@@ -488,35 +488,28 @@ public interface Clan extends ClanBank, ConfigurationSerializable, EntityHolder,
 		DEFAULT, CUSTOM, UNKNOWN
 	}
 
-	enum Rank {
+	interface Rank extends Nameable {
 
-		/**
-		 * Rank = Member
-		 */
-		NORMAL(0),
-		/**
-		 * Rank = Moderator
-		 */
-		HIGH(1),
-		/**
-		 * Rank = Admin
-		 */
-		HIGHER(2),
-		/**
-		 * Rank = Owner
-		 */
-		HIGHEST(3);
+		@NotNull String getSymbol();
 
-		private final int priNum;
+		boolean isInheritable();
 
-		Rank(int priNum) {
-			this.priNum = priNum;
+		int getLevel();
+
+		@NotNull Clearance[] getDefaultPermissions();
+
+		@NotNull Rank[] getInheritance();
+
+		@Nullable Clan.Rank getPromotion();
+
+		@Nullable Clan.Rank getDemotion();
+
+		default boolean isHighest() {
+			return RankRegistry.getInstance().getHighest().equals(this);
 		}
 
-		public int toLevel() {
-			int result;
-			result = this.priNum;
-			return result;
+		default boolean isLowest() {
+			return RankRegistry.getInstance().getLowest().equals(this);
 		}
 
 	}
@@ -577,7 +570,7 @@ public interface Clan extends ClanBank, ConfigurationSerializable, EntityHolder,
 		/**
 		 * @return Gets the associates possible claim information. If the user is not in a claim this will return empty.
 		 */
-		Optional<Resident> toResident();
+		Optional<Claim.Resident> toResident();
 
 		/**
 		 * @return true if the backing clan id for this user is linked with an actual clan and the backing user data is also valid.
@@ -587,7 +580,7 @@ public interface Clan extends ClanBank, ConfigurationSerializable, EntityHolder,
 		/**
 		 * @return Gets the user rank priority.
 		 */
-		Clan.Rank getPriority();
+		@NotNull Clan.Rank getRank();
 
 		/**
 		 * Gets the total amount of player kills within x amount of time of the specified
@@ -602,17 +595,17 @@ public interface Clan extends ClanBank, ConfigurationSerializable, EntityHolder,
 		/**
 		 * @return Gets the users clan nick-name, if one is not present their full user-name will be returned.
 		 */
-		String getNickname();
+		@NotNull String getNickname();
 
 		/**
 		 * @return Gets the users clan biography.
 		 */
-		String getBiography();
+		@Nullable String getBiography();
 
 		/**
 		 * @return Gets the users clan join date.
 		 */
-		Date getJoinDate();
+		@NotNull Date getJoinDate();
 
 		/**
 		 * @return Gets the users kill/death ratio.
@@ -631,7 +624,7 @@ public interface Clan extends ClanBank, ConfigurationSerializable, EntityHolder,
 		 *
 		 * @param priority The rank priority to update the associate with.
 		 */
-		void setPriority(Clan.Rank priority);
+		void setRank(Rank priority);
 
 		/**
 		 * Update the users clan biography.
@@ -703,55 +696,15 @@ public interface Clan extends ClanBank, ConfigurationSerializable, EntityHolder,
 		/**
 		 * @return Gets the associates configured rank tag.
 		 */
-		default String getRankFull() {
-			String result = "";
-			FileManager main = ClansAPI.getDataInstance().getConfig();
-			String member = main.getRoot().getString("Formatting.Chat.Styles.Full.Member");
-			String mod = main.getRoot().getString("Formatting.Chat.Styles.Full.Moderator");
-			String admin = main.getRoot().getString("Formatting.Chat.Styles.Full.Admin");
-			String owner = main.getRoot().getString("Formatting.Chat.Styles.Full.Owner");
-			switch (getPriority()) {
-				case NORMAL:
-					result = member;
-					break;
-				case HIGH:
-					result = mod;
-					break;
-				case HIGHER:
-					result = admin;
-					break;
-				case HIGHEST:
-					result = owner;
-					break;
-			}
-			return result;
+		default @Deprecated String getRankFull() {
+			return getRank().getName();
 		}
 
 		/**
 		 * @return Gets the associates configured wordless rank tag.
 		 */
-		default String getRankWordless() {
-			String result = "";
-			FileManager main = ClansAPI.getDataInstance().getConfig();
-			String member = main.getRoot().getString("Formatting.Chat.Styles.Wordless.Member");
-			String mod = main.getRoot().getString("Formatting.Chat.Styles.Wordless.Moderator");
-			String admin = main.getRoot().getString("Formatting.Chat.Styles.Wordless.Admin");
-			String owner = main.getRoot().getString("Formatting.Chat.Styles.Wordless.Owner");
-			switch (getPriority()) {
-				case NORMAL:
-					result = member;
-					break;
-				case HIGH:
-					result = mod;
-					break;
-				case HIGHER:
-					result = admin;
-					break;
-				case HIGHEST:
-					result = owner;
-					break;
-			}
-			return result;
+		default @Deprecated String getRankWordless() {
+			return getRank().getSymbol();
 		}
 
 		/**
@@ -902,7 +855,7 @@ public interface Clan extends ClanBank, ConfigurationSerializable, EntityHolder,
 		color.addProperty("end", clan.getPalette().toString());
 		o.add("color", color);
 		JsonObject members = new JsonObject();
-		clan.getMembers().forEach(a -> members.addProperty(a.getId().toString(), a.getPriority().name()));
+		clan.getMembers().forEach(a -> members.addProperty(a.getId().toString(), a.getRank().getName()));
 		o.add("members", members);
 		return o;
 	}
@@ -920,7 +873,7 @@ public interface Clan extends ClanBank, ConfigurationSerializable, EntityHolder,
 		String description = (String) o.get("description");
 		Map<String, String> members = (Map<String, String>) o.get("members");
 		Map<String, String> color = (Map<String, String>) o.get("color");
-		DefaultClan clan = new DefaultClan(id);
+		DefaultClan clan = new DefaultClan(RankRegistry.getInstance(), id);
 		clan.setName(name);
 		clan.getPalette().setStart(color.get("start")).setEnd(color.get("end"));
 		clan.setPassword(password);
@@ -931,7 +884,7 @@ public interface Clan extends ClanBank, ConfigurationSerializable, EntityHolder,
 			Clan.Associate associate = clan.newAssociate(user);
 			if (associate != null) {
 				clan.add(associate);
-				associate.setPriority(Rank.valueOf(entry.getValue()));
+				associate.setRank(RankRegistry.getInstance().getRank(entry.getValue()));
 				associate.save();
 			}
 		}
@@ -951,7 +904,7 @@ public interface Clan extends ClanBank, ConfigurationSerializable, EntityHolder,
 		o.put("color", color);
 		Map<String, String> members = new HashMap<>();
 		for (Associate a : getMembers()) {
-			members.put(a.getId().toString(), a.getPriority().name());
+			members.put(a.getId().toString(), a.getRank().getName());
 		}
 		o.put("members", members);
 		return o;
@@ -969,7 +922,7 @@ public interface Clan extends ClanBank, ConfigurationSerializable, EntityHolder,
 		String description = (String) o.get("description");
 		Map<String, String> members = (Map<String, String>) o.get("members");
 		Map<String, String> color = (Map<String, String>) o.get("color");
-		DefaultClan clan = new DefaultClan(id);
+		DefaultClan clan = new DefaultClan(RankRegistry.getInstance(), id);
 		clan.setName(name);
 		clan.getPalette().setStart(color.get("start")).setEnd(color.get("end"));
 		clan.setPassword(password);
@@ -980,7 +933,7 @@ public interface Clan extends ClanBank, ConfigurationSerializable, EntityHolder,
 			Clan.Associate associate = clan.newAssociate(user);
 			if (associate != null) {
 				clan.add(associate);
-				associate.setPriority(Rank.valueOf(entry.getValue()));
+				associate.setRank(RankRegistry.getInstance().getRank(entry.getValue()));
 				associate.save();
 			}
 		}

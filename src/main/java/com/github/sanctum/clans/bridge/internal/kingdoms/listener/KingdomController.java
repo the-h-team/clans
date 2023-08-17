@@ -7,25 +7,25 @@ import com.github.sanctum.clans.bridge.internal.kingdoms.Reward;
 import com.github.sanctum.clans.bridge.internal.kingdoms.command.KingdomCommand;
 import com.github.sanctum.clans.bridge.internal.kingdoms.event.KingdomCreationEvent;
 import com.github.sanctum.clans.bridge.internal.kingdoms.event.KingdomQuestCompletionEvent;
-import com.github.sanctum.clans.bridge.internal.kingdoms.event.RoundTableQuestCompletionEvent;
 import com.github.sanctum.clans.construct.api.Claim;
 import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClansAPI;
-import com.github.sanctum.clans.construct.extra.PrivateContainer;
+import com.github.sanctum.clans.construct.api.Clearance;
+import com.github.sanctum.clans.construct.util.HiddenMetadata;
 import com.github.sanctum.clans.event.associate.AssociateQuitEvent;
 import com.github.sanctum.clans.event.claim.ClaimInteractEvent;
-import com.github.sanctum.clans.event.claim.ClaimResidentEvent;
-import com.github.sanctum.clans.event.clan.ClanOverpowerClaimEvent;
+import com.github.sanctum.clans.event.claim.ClaimNotificationFormatEvent;
+import com.github.sanctum.clans.event.claim.ClaimResidencyEvent;
+import com.github.sanctum.clans.event.clan.ClanOverpowerClanEvent;
 import com.github.sanctum.clans.event.player.PlayerKillPlayerEvent;
 import com.github.sanctum.clans.event.player.PlayerPunchPlayerEvent;
 import com.github.sanctum.clans.event.player.PlayerShootPlayerEvent;
 import com.github.sanctum.labyrinth.event.DefaultEvent;
-import com.github.sanctum.labyrinth.formatting.ComponentChunk;
-import com.github.sanctum.labyrinth.formatting.FancyMessage;
 import com.github.sanctum.labyrinth.library.StringUtils;
 import com.github.sanctum.panther.event.Subscribe;
 import com.github.sanctum.panther.event.Vent;
 import com.github.sanctum.panther.util.OrdinalProcedure;
+import java.util.Arrays;
 import java.util.stream.Stream;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -71,10 +71,27 @@ public class KingdomController implements Listener {
 	}
 
 	@Subscribe(priority = Vent.Priority.HIGH)
-	public void onClaim(ClaimResidentEvent e) {
-		Kingdom k = Kingdom.getKingdom(((Clan)e.getClaim().getHolder()));
+	public void onClaim(ClaimNotificationFormatEvent e) {
+		Kingdom k = Kingdom.getKingdom(((Clan) e.getClaim().getHolder()));
 		if (k != null) {
-			e.setClaimTitle("&6Kingdom&7: &r" + k.getName(), e.getClaimSubTitle());
+			e.addMessage("&bThis land is apart of the kingdom &r" + k.getName());
+		}
+	}
+
+	@Subscribe(priority = Vent.Priority.HIGHEST)
+	public void onClaim(ClaimInteractEvent e) {
+		Player interacting = e.getPlayer();
+		Clan.Associate associate = e.getAssociate();
+		if (associate != null) {
+			Claim c = e.getClaim();
+			Clan owner = c.getOwner().getAsClan();
+			Kingdom k = Kingdom.getKingdom(owner);
+			if (!owner.has(associate) && k != null && k.getMembers().containsAll(Arrays.asList(owner, associate.getClan()))) {
+				Claim.Flag flag = c.getFlag("kingdoms-share-land");
+				if (flag != null && flag.isValid()) {
+					if (flag.isEnabled()) e.setCancelled(false); //un-cancel event
+				}
+			}
 		}
 	}
 
@@ -107,7 +124,7 @@ public class KingdomController implements Listener {
 	}
 
 	@Subscribe
-	public void onClaim(ClanOverpowerClaimEvent e) {
+	public void onClaim(ClanOverpowerClanEvent e) {
 		Clan c = e.getClan();
 		Kingdom test = Kingdom.getKingdom(c);
 		if (test != null) {
@@ -378,7 +395,7 @@ public class KingdomController implements Listener {
 						Quest farmer = test.getQuest("The Farmer");
 						if (farmer == null) return;
 						if (farmer.activated(e.getPlayer())) {
-							PrivateContainer container = OrdinalProcedure.select(a, 1, 420).select(32).cast(() -> PrivateContainer.class);
+							HiddenMetadata container = OrdinalProcedure.select(a, 1, 420).select(32).cast(() -> HiddenMetadata.class);
 							if (container.get(Boolean.class, "quests.farmer." + e.getBlock().getType().name()) == null) {
 								farmer.progress(1.0);
 								a.getClan().getMembers().forEach(ass -> {
@@ -389,7 +406,7 @@ public class KingdomController implements Listener {
 								});
 								if (farmer.isComplete()) {
 									a.getClan().getMembers().forEach(ass -> {
-										OrdinalProcedure.select(a, 1, 420).select(32).cast(() -> PrivateContainer.class).set("quests.farmer", null);
+										OrdinalProcedure.select(a, 1, 420).select(32).cast(() -> HiddenMetadata.class).set("quests.farmer", null);
 										Player n = ass.getTag().getPlayer().getPlayer();
 										if (n != null) {
 											farmer.deactivate(n);
@@ -661,21 +678,6 @@ public class KingdomController implements Listener {
 		}
 	}
 
-	@Subscribe(priority = Vent.Priority.READ_ONLY, processCancelled = true)
-	public void onJobComplete(RoundTableQuestCompletionEvent e) {
-		Reward<?> reward = e.getQuest().getReward();
-		if (reward != null) {
-			e.getTable().forEach(a -> {
-				Player online = a.getTag().getPlayer().getPlayer();
-				if (online != null) {
-					reward.give(a);
-					new FancyMessage(ClansAPI.getInstance().getPrefix().toString() + " &bQuest &e" + e.getQuest().getTitle() + " &bcomplete.").send(online).deploy();
-					new FancyMessage(ClansAPI.getInstance().getPrefix().toString()).then(" ").append(new ComponentChunk(reward.getMessage())).send(online).deploy();
-				}
-			});
-		}
-	}
-
 	@EventHandler
 	public void onBarter(InventoryClickEvent e) {
 		if (e.getInventory().getType() == InventoryType.MERCHANT) {
@@ -847,7 +849,7 @@ public class KingdomController implements Listener {
 
 	@Subscribe
 	public void onClanLeave(AssociateQuitEvent e) {
-		if (e.getAssociate().getPriority() == Clan.Rank.HIGHEST) {
+		if (Clearance.LEAVE_KINGDOM.test(e.getAssociate())) {
 
 			Clan c = e.getAssociate().getClan();
 

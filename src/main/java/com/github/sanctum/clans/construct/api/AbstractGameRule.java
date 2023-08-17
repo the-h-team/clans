@@ -24,8 +24,8 @@ public abstract class AbstractGameRule {
 	public static final String MAX_CLANS = "max_clans";
 	public static final String MAX_POWER = "max_power";
 	public static final String DEFAULT_WAR_MODE = "mode_default";
-	public static final String CLAN_ROSTER_TITLE = "clan_roster_title";
-	public static final String CLAN_ROSTER_TOP_TITLE = "clan_roster_top_title";
+	public static final String CLAN_INFO_SIMPLE = "clan_info_simple";
+	public static final String CLAN_INFO_SIMPLE_OTHER = "clan_info_simple_other";
 
 	private final FingerPrint print;
 

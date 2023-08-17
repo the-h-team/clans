@@ -9,47 +9,56 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import java.io.Serializable;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Collectors;
+import org.bukkit.Bukkit;
 import org.jetbrains.annotations.NotNull;
 
+
+// all fields here are persistently cached and available like a normal enum.
 public final class Clearance implements Nameable, Comparable<Clearance>, JsonIntermediate, Serializable {
 	private static final long serialVersionUID = -8205377987907270525L;
 
-	public static final Clearance INVITE_PLAYERS = new Clearance(Clan.ACTION.invitationClearance(), "INVITE_PLAYERS");
-	public static final Clearance KICK_MEMBERS = new Clearance(Clan.ACTION.kickClearance(), "KICK_MEMBERS");
-	public static final Clearance LAND_USE = new Clearance(0, "LAND_USE");
-	public static final Clearance LAND_USE_INTRACTABLE = new Clearance(0, "LAND_USE_INTRACTABLE");
-	public static final Clearance LOGO_APPLY = new Clearance(ClansAPI.getDataInstance().getConfigInt("Clans.logo-apply-clearance"), "LOGO_APPLY");
-	public static final Clearance LOGO_COLOR = new Clearance(ClansAPI.getDataInstance().getConfigInt("Clans.logo-color-clearance"), "LOGO_COLOR");
-	public static final Clearance LOGO_EDIT = new Clearance(ClansAPI.getDataInstance().getConfigInt("Clans.logo-edit-clearance"), "LOGO_EDIT");
-	public static final Clearance LOGO_PRINT = new Clearance(ClansAPI.getDataInstance().getConfigInt("Clans.logo-print-clearance"), "LOGO_PRINT");
-	public static final Clearance LOGO_DISPLAY = new Clearance(2, "LOGO_DISPLAY");
-	public static final Clearance LOGO_SHARE = new Clearance(0, "LOGO_SHARE");
-	public static final Clearance LOGO_UPLOAD = new Clearance(ClansAPI.getDataInstance().getConfigInt("Clans.logo-upload-clearance"), "LOGO_UPLOAD");
-	public static final Clearance MANAGE_ALL_LAND = new Clearance(Clan.ACTION.unclaimAllClearance(), "MANAGE_ALL_LAND");
-	public static final Clearance MANAGE_BASE = new Clearance(Clan.ACTION.baseClearance(), "MANAGE_BASE");
-	public static final Clearance MANAGE_COLOR = new Clearance(Clan.ACTION.colorChangeClearance(), "MANAGE_COLOR");
-	public static final Clearance MANAGE_DESCRIPTION = new Clearance(Clan.ACTION.descriptionChangeClearance(), "MANAGE_DESCRIPTION");
-	public static final Clearance MANAGE_FRIENDLY_FIRE = new Clearance(Clan.ACTION.friendlyFireClearance(), "MANAGE_FRIENDLY_FIRE");
-	public static final Clearance MANAGE_GIFTING = new Clearance(ClansAPI.getDataInstance().getConfigInt("Addon.Mail.gift.clearance"), "MANAGE_GIFTING");
-	public static final Clearance MANAGE_LAND = new Clearance(Clan.ACTION.claimingClearance(), "MANAGE_LAND");
-	public static final Clearance MANAGE_MAILING = new Clearance(ClansAPI.getDataInstance().getConfigInt("Addon.Mail.mail.clearance"), "MANAGE_MAILING");
-	public static final Clearance MANAGE_MODE = new Clearance(Clan.ACTION.modeChangeClearance(), "MANAGE_MODE");
-	public static final Clearance MANAGE_NAME = new Clearance(Clan.ACTION.tagChangeClearance(), "MANAGE_NAME");
-	public static final Clearance MANAGE_NICK_NAME = new Clearance(2, "MANAGE_NICK_NAME");
-	public static final Clearance MANAGE_NICKNAMES = new Clearance(2, "MANAGE_NICKNAMES");
-	public static final Clearance MANAGE_PASSWORD = new Clearance(Clan.ACTION.passwordClearance(), "MANAGE_PASSWORD");
-	public static final Clearance MANAGE_PERMS = new Clearance(3, "MANAGE_PERMS");
-	public static final Clearance MANAGE_POSITIONS = new Clearance(Clan.ACTION.positionClearance(), "MANAGE_POSITIONS");
-	public static final Clearance MANAGE_RELATIONS = new Clearance(2, "MANAGE_RELATIONS");
-	public static final Clearance MANAGE_STASH = new Clearance(ClansAPI.getDataInstance().getConfigInt("Addon.Stashes.clearance"), "MANAGE_STASH");
-	public static final Clearance MANAGE_VAULT = new Clearance(ClansAPI.getDataInstance().getConfigInt("Addon.Vaults.clearance"), "MANAGE_VAULT");
+	public static final Clearance INVITE_PLAYERS = new Clearance("INVITE_PLAYERS");
+	public static final Clearance KICK_MEMBERS = new Clearance("KICK_MEMBERS");
+	public static final Clearance CREATE_KINGDOM = new Clearance("CREATE_KINGDOM");
+	public static final Clearance LEAVE_KINGDOM = new Clearance("LEAVE_KINGDOM");
+	public static final Clearance JOIN_KINGDOM = new Clearance("JOIN_KINGDOM");
+	public static final Clearance RENAME_KINGDOM = new Clearance("RENAME_KINGDOM");
+	public static final Clearance RESEAT_KINGDOM = new Clearance("RESEAT_KINGDOM");
+	public static final Clearance LAND_USE = new Clearance("LAND_USE");
+	public static final Clearance LAND_USE_INTERACTABLE = new Clearance("LAND_USE_INTERACTABLE");
+	public static final Clearance LOGO_APPLY = new Clearance("LOGO_APPLY");
+	public static final Clearance LOGO_COLOR = new Clearance("LOGO_COLOR");
+	public static final Clearance LOGO_EDIT = new Clearance("LOGO_EDIT");
+	public static final Clearance LOGO_PRINT = new Clearance("LOGO_PRINT");
+	public static final Clearance LOGO_DISPLAY = new Clearance("LOGO_DISPLAY");
+	public static final Clearance LOGO_SHARE = new Clearance("LOGO_SHARE");
+	public static final Clearance LOGO_UPLOAD = new Clearance("LOGO_UPLOAD");
+	public static final Clearance MANAGE_ALL_LAND = new Clearance("MANAGE_ALL_LAND");
+	public static final Clearance MANAGE_BASE = new Clearance("MANAGE_BASE");
+	public static final Clearance MANAGE_COLOR = new Clearance("MANAGE_COLOR");
+	public static final Clearance MANAGE_DESCRIPTION = new Clearance("MANAGE_DESCRIPTION");
+	public static final Clearance MANAGE_FRIENDLY_FIRE = new Clearance("MANAGE_FRIENDLY_FIRE");
+	public static final Clearance MANAGE_GIFTING = new Clearance("MANAGE_GIFTING");
+	public static final Clearance MANAGE_LAND = new Clearance("MANAGE_LAND");
+	public static final Clearance MANAGE_MAILING = new Clearance("MANAGE_MAILING");
+	public static final Clearance MANAGE_MODE = new Clearance("MANAGE_MODE");
+	public static final Clearance MANAGE_NAME = new Clearance("MANAGE_NAME");
+	public static final Clearance MANAGE_NICK_NAME = new Clearance("MANAGE_NICK_NAME");
+	public static final Clearance MANAGE_NICKNAMES = new Clearance("MANAGE_NICKNAMES");
+	public static final Clearance MANAGE_PASSWORD = new Clearance("MANAGE_PASSWORD");
+	public static final Clearance MANAGE_PERMS = new Clearance("MANAGE_PERMS");
+	public static final Clearance MANAGE_POSITIONS = new Clearance("MANAGE_POSITIONS");
+	public static final Clearance MANAGE_RELATIONS = new Clearance("MANAGE_RELATIONS");
+	public static final Clearance MANAGE_STASH = new Clearance("MANAGE_STASH");
+	public static final Clearance MANAGE_VAULT = new Clearance("MANAGE_VAULT");
 
-	private int def;
 	private final String name;
 
-	public Clearance(int defaultLevel, String name) {
-		this.def = defaultLevel;
+	public Clearance(String name) {
 		this.name = name;
 	}
 
@@ -59,101 +68,62 @@ public final class Clearance implements Nameable, Comparable<Clearance>, JsonInt
 		return this.name;
 	}
 
-	@Json(key = "default")
 	public int getDefault() {
-		return def;
+		// get first known group with permission, goes in ordinal order so should work!
+		return RankRegistry.getInstance().getRanks().stream().filter(p -> Arrays.asList(p.getDefaultPermissions()).contains(this)).map(Clan.Rank::getLevel).findFirst().orElse(0);
 	}
 
 	public boolean test(InvasiveEntity entity) {
 		if (entity == null) return false;
 		if (!entity.isAssociate()) return false;
-		ClearanceLog log = entity.getAsAssociate().getClan().getPermissions();
-		return entity.getAsAssociate().getPriority().toLevel() >= log.get(this);
+		ClearanceOverride override = entity.getAsAssociate().getClan().getPermissiveHandle();
+		return override.get(entity.getAsAssociate().getRank()).contains(this);
 	}
 
-	public boolean test(Clan.Rank priority) {
+	public boolean testDefault(Clan.Rank priority) {
 		if (priority == null) return false;
-		return priority.toLevel() >= getDefault();
-	}
-
-	public void update() {
-		if (INVITE_PLAYERS.equals(this)) {
-			this.def = Clan.ACTION.invitationClearance();
-		} else if (KICK_MEMBERS.equals(this)) {
-			this.def = Clan.ACTION.kickClearance();
-		} else if (LAND_USE.equals(this) || LAND_USE_INTRACTABLE.equals(this)) {
-			this.def = 0;
-		} else if (LOGO_APPLY.equals(this)) {
-			this.def = ClansAPI.getDataInstance().getConfigInt("Clans.logo-apply-clearance");
-		} else if (LOGO_COLOR.equals(this)) {
-			this.def = ClansAPI.getDataInstance().getConfigInt("Clans.logo-color-clearance");
-		} else if (LOGO_EDIT.equals(this)) {
-			this.def = ClansAPI.getDataInstance().getConfigInt("Clans.logo-edit-clearance");
-		} else if (LOGO_PRINT.equals(this)) {
-			this.def = ClansAPI.getDataInstance().getConfigInt("Clans.logo-print-clearance");
-		} else if (LOGO_UPLOAD.equals(this)) {
-			this.def = ClansAPI.getDataInstance().getConfigInt("Clans.logo-upload-clearance");
-		} else if (MANAGE_ALL_LAND.equals(this)) {
-			this.def = Clan.ACTION.unclaimAllClearance();
-		} else if (MANAGE_BASE.equals(this)) {
-			this.def = Clan.ACTION.baseClearance();
-		} else if (MANAGE_COLOR.equals(this)) {
-			this.def = Clan.ACTION.colorChangeClearance();
-		} else if (MANAGE_DESCRIPTION.equals(this)) {
-			this.def = Clan.ACTION.descriptionChangeClearance();
-		} else if (MANAGE_FRIENDLY_FIRE.equals(this)) {
-			this.def = Clan.ACTION.friendlyFireClearance();
-		} else if (MANAGE_GIFTING.equals(this)) {
-			this.def = ClansAPI.getDataInstance().getConfigInt("Addon.Mail.gift.clearance");
-		} else if (MANAGE_LAND.equals(this)) {
-			this.def = Clan.ACTION.claimingClearance();
-		} else if (MANAGE_MAILING.equals(this)) {
-			this.def = ClansAPI.getDataInstance().getConfigInt("Addon.Mail.mail.clearance");
-		} else if (MANAGE_MODE.equals(this)) {
-			this.def = Clan.ACTION.modeChangeClearance();
-		} else if (MANAGE_NAME.equals(this)) {
-			this.def = Clan.ACTION.tagChangeClearance();
-		} else if (MANAGE_NICKNAMES.equals(this) || MANAGE_RELATIONS.equals(this)) {
-			this.def = 2;
-		} else if (MANAGE_PASSWORD.equals(this)) {
-			this.def = Clan.ACTION.passwordClearance();
-		} else if (MANAGE_PERMS.equals(this)) {
-			this.def = 3;
-		} else if (MANAGE_POSITIONS.equals(this)) {
-			this.def = Clan.ACTION.positionClearance();
-		} else if (MANAGE_STASH.equals(this)) {
-			this.def = ClansAPI.getDataInstance().getConfigInt("Addon.Stashes.clearance");
-		} else if (MANAGE_VAULT.equals(this)) {
-			this.def = ClansAPI.getDataInstance().getConfigInt("Addon.Vaults.clearance");
+		for (Clearance c : priority.getDefaultPermissions()) {
+			if (c.equals(this)) return true;
 		}
-	}
-
-	public static void updateAll() {
-		Arrays.stream(values()).forEach(Clearance::update);
+		if (priority.isInheritable()) {
+			for (Clan.Rank position : priority.getInheritance()) {
+				for (Clearance c : position.getDefaultPermissions()) {
+					if (c.equals(this)) return true;
+				}
+			}
+		}
+		return false;
 	}
 
 	public static Clearance[] values() {
-		return Constant.values(Clearance.class, Clearance.class).toArray(new Clearance[0]);
+		List<Clearance> list = Constant.values(Clearance.class, Clearance.class);
+		RankRegistry.getInstance().getClearances().forEach(list::add);
+		return list.toArray(new Clearance[0]);
 	}
 
 	/**
 	 * @param name The name of the clearance or the clearance object itself as json.
 	 * @return A valid clearance object.
 	 * @apiNote Can be used like the normal {@link Enum#valueOf(Class, String)} method but ALSO accepts Json.
+	 * @throws IllegalArgumentException if the provided string is irrelevant to  any registered clearance.
 	 */
 	public static Clearance valueOf(@Json String name) {
 		if (Check.isJson(name)) {
-			JsonObject object = new JsonParser().parse(name).getAsJsonObject();
+			JsonObject object = JsonParser.parseString(name).getAsJsonObject();
 			if (object.get(Clearance.class.getName()) != null) {
 				JsonObject o = object.get(Clearance.class.getName()).getAsJsonObject();
 				Map<String, Object> map = JsonIntermediate.convertToMap(o);
 				String n = (String) map.get("name");
-				int def = (int) map.get("default");
-				return Constant.values(Clearance.class).stream().filter(c -> c.getName().equals(n)).findFirst().map(Constant::getValue).orElse(new Clearance(def, n));
+				return Constant.values(Clearance.class).stream().filter(c -> c.getName().equals(n)).findFirst().map(Constant::getValue).orElse(new Clearance(n));
 			}
-			throw new IllegalArgumentException("Object not related to progress bar.");
+			throw new IllegalArgumentException("No clearance by the name of " + name + " found");
 		}
-		return Constant.values(Clearance.class).stream().filter(c -> c.getName().equals(name)).findFirst().map(Constant::getValue).orElse(null);
+		for (Clearance c : RankRegistry.getInstance().getClearances()) {
+			if (c.name.equals(name)) return c;
+		}
+		Clearance cl = Constant.values(Clearance.class).stream().filter(c -> c.getName().equals(name)).findFirst().map(Constant::getValue).orElse(null);
+		if (cl == null) throw new IllegalStateException("There is no known clearance by the name of " + '"' + name + '"');
+		return cl;
 	}
 
 	@Override
@@ -165,7 +135,7 @@ public final class Clearance implements Nameable, Comparable<Clearance>, JsonInt
 	public boolean equals(Object obj) {
 		if (!(obj instanceof Clearance)) return false;
 		Clearance ob = (Clearance) obj;
-		return getName().equals(ob.getName()) && getDefault() == ob.getDefault();
+		return getName().equals(ob.getName());
 	}
 
 	@Override
@@ -177,10 +147,6 @@ public final class Clearance implements Nameable, Comparable<Clearance>, JsonInt
 
 	public static class Level {
 		public static final int EMPTY = -1;
-		public static final int MEMBER = 0;
-		public static final int MODERATOR = 1;
-		public static final int ADMIN = 2;
-		public static final int OWNER = 3;
 
 		public static Integer[] values() {
 			return Constant.values(Level.class, Integer.class).toArray(new Integer[0]);

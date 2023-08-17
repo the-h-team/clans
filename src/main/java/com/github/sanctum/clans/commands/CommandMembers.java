@@ -4,7 +4,7 @@ import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClanSubCommand;
 import com.github.sanctum.clans.construct.api.ClansAPI;
 import com.github.sanctum.clans.construct.api.GUI;
-import com.github.sanctum.clans.construct.extra.StringLibrary;
+import com.github.sanctum.clans.construct.util.StringLibrary;
 import com.github.sanctum.labyrinth.formatting.FancyMessage;
 import com.github.sanctum.labyrinth.formatting.pagination.EasyPagination;
 import com.github.sanctum.panther.util.HUID;

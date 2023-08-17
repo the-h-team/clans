@@ -1,20 +1,20 @@
 package com.github.sanctum.clans.event.associate;
 
-import com.github.sanctum.clans.construct.extra.EnderCrystalData;
+import com.github.sanctum.clans.construct.util.ReservoirMetadata;
 
 /**
  * Called when a clan associate attempts to build a clan reservoir.
  */
 public class AssociateBuildReservoirEvent extends AssociateEvent {
 
-	final EnderCrystalData data;
+	final ReservoirMetadata data;
 
-	public AssociateBuildReservoirEvent(EnderCrystalData data) {
-		super(data.getAssociate(), false);
+	public AssociateBuildReservoirEvent(ReservoirMetadata data) {
+		super(data.getAssociateWhoSpawned(), false);
 		this.data = data;
 	}
 
-	public EnderCrystalData getData() {
+	public ReservoirMetadata getData() {
 		return data;
 	}
 }

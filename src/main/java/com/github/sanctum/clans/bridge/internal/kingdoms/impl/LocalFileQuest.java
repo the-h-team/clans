@@ -7,9 +7,7 @@ import com.github.sanctum.clans.bridge.internal.kingdoms.Kingdom;
 import com.github.sanctum.clans.bridge.internal.kingdoms.Progressive;
 import com.github.sanctum.clans.bridge.internal.kingdoms.Quest;
 import com.github.sanctum.clans.bridge.internal.kingdoms.Reward;
-import com.github.sanctum.clans.bridge.internal.kingdoms.RoundTable;
 import com.github.sanctum.clans.bridge.internal.kingdoms.event.KingdomQuestCompletionEvent;
-import com.github.sanctum.clans.bridge.internal.kingdoms.event.RoundTableQuestCompletionEvent;
 import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.labyrinth.data.EconomyProvision;
 import com.github.sanctum.labyrinth.data.FileManager;
@@ -192,9 +190,6 @@ public final class LocalFileQuest implements Quest, Message.Factory {
 					if (Kingdom.class.isAssignableFrom(this.parent.getClass())) {
 						ClanVentBus.call(new KingdomQuestCompletionEvent((Kingdom) this.parent, this));
 					}
-					if (RoundTable.class.isAssignableFrom(this.parent.getClass())) {
-						ClanVentBus.call(new RoundTableQuestCompletionEvent((RoundTable) this.parent, this));
-					}
 				}
 
 				this.complete = true;
@@ -207,7 +202,7 @@ public final class LocalFileQuest implements Quest, Message.Factory {
 	@Override
 	public void setReward(Reward<?> type, Object reward) {
 		if (type.get().getClass().isAssignableFrom(reward.getClass())) {
-			Reward.assertReward(type);
+			Reward.validate(type);
 			if (Double.class.isAssignableFrom(reward.getClass())) {
 				this.reward = new Reward<Double>() {
 					@Override
@@ -348,4 +343,12 @@ public final class LocalFileQuest implements Quest, Message.Factory {
 	public Map<String, Object> getValues(boolean deep) {
 		return getNode(getPath()).getValues(deep);
 	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (!(o instanceof Quest)) return false;
+		Quest q = (Quest) o;
+		return q.getTitle().equals(this.title) && q.getDescription().equals(this.description) && q.getPercentage() == getPercentage() && q.getProgression() == getProgression() && q.getRequirement() == getRequirement();
+	}
+
 }

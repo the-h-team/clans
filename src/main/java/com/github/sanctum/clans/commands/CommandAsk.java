@@ -2,7 +2,7 @@ package com.github.sanctum.clans.commands;
 
 import com.github.sanctum.clans.construct.api.ClanSubCommand;
 import com.github.sanctum.clans.construct.api.ClansAPI;
-import com.github.sanctum.clans.construct.extra.Book;
+import com.github.sanctum.clans.construct.util.Book;
 import com.github.sanctum.labyrinth.data.FileManager;
 import java.util.List;
 import org.bukkit.entity.Player;

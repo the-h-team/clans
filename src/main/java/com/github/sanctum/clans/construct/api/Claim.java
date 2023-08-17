@@ -1,7 +1,11 @@
 package com.github.sanctum.clans.construct.api;
 
+import com.github.sanctum.clans.construct.impl.DefaultBlockMeta;
+import com.github.sanctum.clans.construct.impl.DefaultBrokenBlock;
 import com.github.sanctum.clans.construct.impl.DefaultClaim;
-import com.github.sanctum.clans.construct.impl.Resident;
+import com.github.sanctum.clans.construct.impl.DefaultPlacedBlock;
+import com.github.sanctum.clans.construct.impl.entity.DefaultClaimResident;
+import com.github.sanctum.labyrinth.interfacing.Nameable;
 import com.github.sanctum.labyrinth.library.LabyrinthEncoded;
 import com.github.sanctum.panther.file.JsonAdapter;
 import com.github.sanctum.panther.file.Node;
@@ -12,13 +16,17 @@ import java.io.Serializable;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 import org.bukkit.Chunk;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.configuration.serialization.ConfigurationSerializable;
 import org.bukkit.configuration.serialization.DelegateDeserialization;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * Encapsulated data for a clan owned <strong>chunk</strong> of land.
@@ -40,7 +48,7 @@ public interface Claim extends Savable, Iterable<Block>, ConfigurationSerializab
 	 * @return A resident object or null
 	 */
 	static Resident getResident(Player p) {
-		return ClansAPI.getDataInstance().getResident(p);
+		return ClansAPI.getInstance().getClaimManager().getResidentManager().getResident(p);
 	}
 
 	/**
@@ -285,6 +293,23 @@ public interface Claim extends Savable, Iterable<Block>, ConfigurationSerializab
 		return claim;
 	}
 
+	/**
+	 * A wrapping interface for an online player that is currently within a clan claim. Retaining information like time spent, joined, blocks manipulated and more.
+	 */
+	interface Resident {
+
+		/**
+		 * @return The player or resident within a clan land.
+		 */
+		@NotNull Player getPlayer();
+
+		/**
+		 * @return This resident's information regarding time stayed and more.
+		 */
+		@NotNull ResidencyInfo getInfo();
+
+	}
+
 	abstract class Flag implements Comparable<Flag>, Cloneable, Serializable {
 
 		private static final long serialVersionUID = 904348302141876668L;
@@ -327,8 +352,9 @@ public interface Claim extends Savable, Iterable<Block>, ConfigurationSerializab
 			this.allowed = allowed;
 		}
 
-		public void updateCustom() {
+		public final Flag updateCustom() {
 			this.loading = false;
+			return this;
 		}
 
 		public final @NotNull String serialize() {
@@ -357,6 +383,17 @@ public interface Claim extends Savable, Iterable<Block>, ConfigurationSerializab
 			}
 			return 0;
 		}
+	}
+
+	interface Action<O> extends Runnable {
+
+		O deploy();
+
+		@Override
+		default void run() {
+			deploy();
+		}
+
 	}
 
 }

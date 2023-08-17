@@ -9,7 +9,8 @@ import com.github.sanctum.clans.construct.ClanManager;
 import com.github.sanctum.clans.construct.CommandManager;
 import com.github.sanctum.clans.construct.DataManager;
 import com.github.sanctum.clans.construct.ShieldManager;
-import com.github.sanctum.clans.construct.extra.MessagePrefix;
+import com.github.sanctum.clans.construct.util.InitializationAPIException;
+import com.github.sanctum.clans.construct.util.MessagePrefix;
 import com.github.sanctum.labyrinth.data.FileList;
 import com.github.sanctum.labyrinth.data.LabyrinthUser;
 import com.github.sanctum.labyrinth.data.container.KeyedServiceManager;
@@ -20,21 +21,14 @@ import com.github.sanctum.panther.annotation.Note;
 import com.github.sanctum.panther.container.PantherCollection;
 import com.github.sanctum.panther.container.PantherCollectors;
 import com.github.sanctum.panther.container.PantherList;
-import com.github.sanctum.panther.file.Configurable;
 import com.github.sanctum.panther.paste.PasteManager;
 import com.github.sanctum.panther.paste.operative.PasteResponse;
 import com.github.sanctum.panther.paste.type.Hastebin;
 import com.github.sanctum.panther.paste.type.Pastebin;
 import com.github.sanctum.panther.util.Check;
-import com.github.sanctum.panther.util.PantherLogger;
-import java.io.IOException;
 import java.text.MessageFormat;
-import java.util.Arrays;
 import java.util.Date;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import org.bukkit.Bukkit;
@@ -58,7 +52,9 @@ import org.jetbrains.annotations.Nullable;
 public interface ClansAPI {
 
 	static ClansAPI getInstance() {
-		return Bukkit.getServicesManager().load(ClansAPI.class);
+		ClansAPI instance = Bukkit.getServicesManager().load(ClansAPI.class);
+		if (instance != null) return instance;
+		throw new InitializationAPIException("The clans api is not registered! Perhaps the plugin is disabled?");
 	}
 
 	static BanksAPI getBankInstance() {
@@ -265,7 +261,7 @@ public interface ClansAPI {
 				getPlugin().getLogger().warning(MessageFormat.format("- Chat = [{0}]", a.getChannel()));
 				getPlugin().getLogger().warning(MessageFormat.format("- Joined = [{0}]", a.getJoinDate().toLocaleString()));
 				getPlugin().getLogger().warning(MessageFormat.format("- Nickname = [{0}]", a.getNickname()));
-				getPlugin().getLogger().warning(MessageFormat.format("- Rank = [{0}]", a.getPriority()));
+				getPlugin().getLogger().warning(MessageFormat.format("- Rank = [{0}]", a.getRank().getName()));
 				getPlugin().getLogger().warning(MessageFormat.format("- KD = [{0}]", a.getKD()));
 				getPlugin().getLogger().warning("|==============================================|");
 				getPlugin().getLogger().warning("|==============================================|");
@@ -340,7 +336,7 @@ public interface ClansAPI {
 					info.add(MessageFormat.format("- Chat = [{0}]", a.getChannel()));
 					info.add(MessageFormat.format("- Joined = [{0}]", a.getJoinDate().toLocaleString()));
 					info.add(MessageFormat.format("- Nickname = [{0}]", a.getNickname()));
-					info.add(MessageFormat.format("- Rank = [{0}]", a.getPriority()));
+					info.add(MessageFormat.format("- Rank = [{0}]", a.getRank().getName()));
 					info.add(MessageFormat.format("- KD = [{0}]", a.getKD()));
 					info.add("|==============================================|");
 					info.add("|==============================================|");
@@ -422,7 +418,7 @@ public interface ClansAPI {
 					info.add(MessageFormat.format("- Chat = [{0}]", a.getChannel()));
 					info.add(MessageFormat.format("- Joined = [{0}]", a.getJoinDate().toLocaleString()));
 					info.add(MessageFormat.format("- Nickname = [{0}]", a.getNickname()));
-					info.add(MessageFormat.format("- Rank = [{0}]", a.getPriority()));
+					info.add(MessageFormat.format("- Rank = [{0}]", a.getRank().getName()));
 					info.add(MessageFormat.format("- KD = [{0}]", a.getKD()));
 					info.add("|==============================================|");
 					info.add("|==============================================|");

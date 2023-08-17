@@ -4,7 +4,7 @@ import com.github.sanctum.clans.bridge.ClanVentBus;
 import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClansAPI;
 import com.github.sanctum.clans.construct.api.War;
-import com.github.sanctum.clans.construct.impl.SimpleEntry;
+import com.github.sanctum.clans.construct.impl.DefaultMapEntry;
 import com.github.sanctum.clans.event.war.WarStartEvent;
 import com.github.sanctum.clans.event.war.WarWonEvent;
 import com.github.sanctum.labyrinth.LabyrinthProvider;
@@ -263,7 +263,7 @@ public final class ArenaManager implements Iterable<War> {
 					c.takeWins(1);
 				}
 			}
-			WarWonEvent e = ClanVentBus.call(new WarWonEvent(war, new SimpleEntry<>(w, points), map));
+			WarWonEvent e = ClanVentBus.call(new WarWonEvent(war, new DefaultMapEntry<>(w, points), map));
 			if (!e.isCancelled()) {
 				Mailer msg = LabyrinthProvider.getService(Service.MESSENGER).getEmptyMailer().prefix().start(ClansAPI.getInstance().getPrefix().toString()).finish();
 				Bukkit.broadcastMessage(" ");

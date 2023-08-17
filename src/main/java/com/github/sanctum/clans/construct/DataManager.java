@@ -2,11 +2,13 @@ package com.github.sanctum.clans.construct;
 
 
 import com.github.sanctum.clans.ClansJavaPlugin;
+import com.github.sanctum.clans.construct.api.Claim;
 import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClanCooldown;
 import com.github.sanctum.clans.construct.api.ClansAPI;
-import com.github.sanctum.clans.construct.extra.FancyLogoAppendage;
-import com.github.sanctum.clans.construct.impl.Resident;
+import com.github.sanctum.clans.construct.util.FancyLogoAppendage;
+import com.github.sanctum.clans.construct.impl.entity.DefaultClaimResident;
+import com.github.sanctum.clans.construct.util.FileTypeCalculator;
 import com.github.sanctum.labyrinth.data.DataTable;
 import com.github.sanctum.labyrinth.data.FileList;
 import com.github.sanctum.labyrinth.data.FileManager;
@@ -16,7 +18,6 @@ import com.github.sanctum.labyrinth.library.Items;
 import com.github.sanctum.labyrinth.library.StringUtils;
 import com.github.sanctum.labyrinth.task.TaskScheduler;
 import com.github.sanctum.panther.file.Configurable;
-import com.github.sanctum.panther.util.PantherLogger;
 import com.github.sanctum.skulls.CustomHead;
 import com.github.sanctum.skulls.CustomHeadLoader;
 import java.io.File;
@@ -43,8 +44,6 @@ public class DataManager {
 
 	public final Map<Player, String> ID_MODE = new HashMap<>();
 	private final Set<Player> CHAT_SPY = new HashSet<>();
-	private final Set<Resident> RESIDENTS = new HashSet<>();
-	private final Set<Player> INHABITANTS = new HashSet<>();
 	private final List<ClanCooldown> COOLDOWNS = new LinkedList<>();
 	private final DataTable resetTable = new LabyrinthDataTable();
 
@@ -55,7 +54,7 @@ public class DataManager {
 
 	void create(FileManager manager) {
 		if (!manager.getRoot().exists()) {
-			InputStream is = ClansAPI.getInstance().getPlugin().getResource(manager.getRoot().getName() + manager.getRoot().getType().get());
+			InputStream is = ClansAPI.getInstance().getPlugin().getResource("config/" + manager.getRoot().getName() + manager.getRoot().getType().get());
 			if (is == null) throw new IllegalStateException("Unable to load Config.yml from the jar!");
 			FileList.copy(is, manager.getRoot().getParent());
 			manager.getRoot().reload();
@@ -86,34 +85,6 @@ public class DataManager {
 		return Collections.unmodifiableList(COOLDOWNS);
 	}
 
-	public Set<Resident> getResidents() {
-		return Collections.unmodifiableSet(RESIDENTS);
-	}
-
-	public Resident getResident(Player p) {
-		return RESIDENTS.stream().filter(r -> r.getPlayer().getName().equals(p.getName())).findFirst().orElse(null);
-	}
-
-	public boolean isInWild(Player player) {
-		return INHABITANTS.contains(player);
-	}
-
-	public boolean removeWildernessInhabitant(Player player) {
-		return INHABITANTS.remove(player);
-	}
-
-	public boolean addWildernessInhabitant(Player player) {
-		return INHABITANTS.add(player);
-	}
-
-	public boolean addClaimResident(Resident resident) {
-		return RESIDENTS.add(resident);
-	}
-
-	public boolean removeClaimResident(Resident resident) {
-		return RESIDENTS.remove(resident);
-	}
-
 	public @NotNull FileManager getConfig() {
 		FileManager main = ClansAPI.getInstance().getFileList().get("Config", "Configuration");
 		create(main);
@@ -136,19 +107,6 @@ public class DataManager {
 
 	public boolean isTrue(String path) {
 		return getConfig().getRoot().getBoolean(path);
-	}
-
-	private ItemStack improvise(String value) {
-		Material mat = Items.findMaterial(value);
-		if (mat != null) {
-			return new ItemStack(mat);
-		} else {
-			if (value.length() < 26) {
-				return CustomHead.Manager.getHeads().stream().filter(h -> StringUtils.use(h.name()).containsIgnoreCase(value)).map(CustomHead::get).findFirst().orElse(null);
-			} else {
-				return CustomHeadLoader.provide(value);
-			}
-		}
 	}
 
 	public String getMessageString(String path) {
@@ -210,6 +168,7 @@ public class DataManager {
 		FileList list = api.getFileList();
 		FileManager main = list.get("Config", "Configuration");
 		FileManager messages = list.get("Messages", "Configuration");
+		FileTypeCalculator calculator = new FileTypeCalculator(this);
 		if (!ClansAPI.getInstance().getPlugin().getDescription().getVersion().equals(getConfig().getRoot().getString("Version"))) {
 			FileManager mainOld = list.get("config_old", "Configuration", Configurable.Type.JSON);
 			FileManager messOld = list.get("messages_old", "Configuration", Configurable.Type.JSON);
@@ -219,7 +178,6 @@ public class DataManager {
 			if (messOld.getRoot().exists()) {
 				messOld.getRoot().delete();
 			}
-			final String type = main.read(c -> c.getNode("Formatting").getNode("file-type").toPrimitive().getString());
 			main.toJSON("config_old", "Configuration");
 			messages.toJSON("messages_old", "Configuration");
 
@@ -228,40 +186,16 @@ public class DataManager {
 				InputStream msgGrab;
 				switch (main.read(c -> c.getString("Language")).toLowerCase(Locale.ROOT)) {
 					case "pt-br":
-						msgGrab = api.getPlugin().getResource("Messages_pt_br.yml");
-						if (type != null) {
-							if (type.equals("JSON")) {
-								mainGrab = api.getPlugin().getResource("Config_pt_br_json.yml");
-							} else {
-								mainGrab = api.getPlugin().getResource("Config_pt_br.yml");
-							}
-						} else {
-							mainGrab = api.getPlugin().getResource("Config_pt_br.yml");
-						}
+						msgGrab = api.getPlugin().getResource("config/Messages_pt_br.yml");
+						mainGrab = api.getPlugin().getResource("config/Config_pt_br.yml");
 						break;
 					case "es-es":
-						msgGrab = api.getPlugin().getResource("Messages_es.yml");
-						if (type != null) {
-							if (type.equals("JSON")) {
-								mainGrab = api.getPlugin().getResource("Config_es_json.yml");
-							} else {
-								mainGrab = api.getPlugin().getResource("Config_es.yml");
-							}
-						} else {
-							mainGrab = api.getPlugin().getResource("Config_es.yml");
-						}
+						msgGrab = api.getPlugin().getResource("config/Messages_es.yml");
+						mainGrab = api.getPlugin().getResource("config/Config_es.yml");
 						break;
 					default:
-						msgGrab = api.getPlugin().getResource("Messages.yml");
-						if (type != null) {
-							if (type.equals("JSON")) {
-								mainGrab = api.getPlugin().getResource("Config_json.yml");
-							} else {
-								mainGrab = api.getPlugin().getResource("Config.yml");
-							}
-						} else {
-							mainGrab = api.getPlugin().getResource("Config.yml");
-						}
+						msgGrab = api.getPlugin().getResource("config/Messages.yml");
+						mainGrab = api.getPlugin().getResource("config/Config.yml");
 						break;
 				}
 				if (mainGrab == null) throw new IllegalStateException("Unable to load Config.yml from the jar!");
@@ -280,12 +214,12 @@ public class DataManager {
 		FileManager main = ClansAPI.getInstance().getFileList().get("Config", "Configuration");
 		FileManager msg = ClansAPI.getInstance().getFileList().get("Messages", "Configuration");
 		if (!main.getRoot().exists()) {
-			InputStream mainGrab = ClansAPI.getInstance().getPlugin().getResource("Config.yml");
+			InputStream mainGrab = ClansAPI.getInstance().getPlugin().getResource("config/Config.yml");
 			if (mainGrab == null) throw new IllegalStateException("Unable to load Config.yml from the jar!");
 			FileList.copy(mainGrab, main.getRoot().getParent());
 		}
 		if (!msg.getRoot().exists()) {
-			InputStream mainGrab = ClansAPI.getInstance().getPlugin().getResource("Messages.yml");
+			InputStream mainGrab = ClansAPI.getInstance().getPlugin().getResource("config/Messages.yml");
 			if (mainGrab == null) throw new IllegalStateException("Unable to load Messages.yml from the jar!");
 			FileList.copy(mainGrab, msg.getRoot().getParent());
 		}

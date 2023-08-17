@@ -5,6 +5,7 @@ import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClansAPI;
 import com.github.sanctum.clans.construct.api.EntityHolder;
 import com.github.sanctum.clans.construct.api.InvasiveEntity;
+import com.github.sanctum.clans.construct.impl.entity.DefaultClaimResident;
 import com.github.sanctum.labyrinth.LabyrinthProvider;
 import com.github.sanctum.labyrinth.data.FileManager;
 import com.github.sanctum.labyrinth.task.TaskScheduler;
@@ -23,7 +24,9 @@ import java.util.stream.Collectors;
 import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.block.Block;
+import org.bukkit.block.BlockFace;
 import org.bukkit.configuration.serialization.SerializableAs;
 import org.jetbrains.annotations.NotNull;
 
@@ -52,7 +55,8 @@ public final class DefaultClaim implements Claim {
 
 	@Override
 	public EntityHolder getHolder() {
-		return ClansAPI.getInstance().getClanManager().getClan(HUID.fromString(getOwner().getTag().getId()));
+		if (getOwner() == null) return null;
+		return getOwner().getAsClan();
 	}
 
 	/**
@@ -150,7 +154,7 @@ public final class DefaultClaim implements Claim {
 	public void register(Flag... flags) {
 		for (Flag f : flags) {
 			try {
-				this.flags.put(f.getId(), f.clone());
+				this.flags.put(f.getId(), f.clone().updateCustom());
 			} catch (CloneNotSupportedException e) {
 				e.printStackTrace();
 			}
@@ -167,6 +171,17 @@ public final class DefaultClaim implements Claim {
 		}
 	}
 
+	boolean hasSurface(Location location) {
+		Block feet = location.getBlock();
+		if (!feet.getType().equals(Material.AIR) && !feet.getLocation().add(0.0D, 1.0D, 0.0D).getBlock().getType().equals(Material.AIR))
+			return false;
+		Block head = feet.getRelative(BlockFace.UP);
+		if (!head.getType().equals(Material.AIR))
+			return false;
+		Block ground = feet.getRelative(BlockFace.DOWN);
+		return ground.getType().isSolid();
+	}
+
 	/**
 	 * Get the chunk centered location for this claim.
 	 *
@@ -181,7 +196,7 @@ public final class DefaultClaim implements Claim {
 		Location teleportLocation = (new Location(Bukkit.getWorld(world), (x << 4), y, (z << 4))).add(7.0D, 0.0D, 7.0D);
 		if (LabyrinthProvider.getInstance().isLegacy())
 			return teleportLocation;
-		if (!ACTION.hasSurface(teleportLocation))
+		if (!hasSurface(teleportLocation))
 			teleportLocation = (new Location(Bukkit.getWorld(world), (x << 4), y, (z << 4))).add(7.0D, 10.0D, 7.0D);
 		return teleportLocation;
 	}
@@ -193,7 +208,7 @@ public final class DefaultClaim implements Claim {
 	 */
 	@Override
 	public List<Resident> getResidents() {
-		return ClansAPI.getDataInstance().getResidents().stream().filter(r -> r.getCurrent().getId().equals(getId())).collect(Collectors.toList());
+		return ClansAPI.getInstance().getClaimManager().getResidentManager().getResidents().stream().filter(r -> r.getInfo().getCurrent().getId().equals(getId())).collect(Collectors.toList());
 	}
 
 	/**
@@ -204,7 +219,7 @@ public final class DefaultClaim implements Claim {
 	 */
 	@Override
 	public Resident getResident(String name) {
-		return ClansAPI.getDataInstance().getResidents().stream().filter(r -> r.getCurrent().getId().equals(getId()) && r.getPlayer().getName().equals(name)).findFirst().orElse(null);
+		return ClansAPI.getInstance().getClaimManager().getResidentManager().getResidents().stream().filter(r -> r.getInfo().getCurrent().getId().equals(getId()) && r.getPlayer().getName().equals(name)).findFirst().orElse(null);
 	}
 
 	/**

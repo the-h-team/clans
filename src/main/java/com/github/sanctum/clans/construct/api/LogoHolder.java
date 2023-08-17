@@ -1,6 +1,6 @@
 package com.github.sanctum.clans.construct.api;
 
-import com.github.sanctum.clans.construct.extra.SpecialCarrierAdapter;
+import com.github.sanctum.clans.construct.util.SpecialCarrierAdapter;
 import com.github.sanctum.panther.annotation.Note;
 import com.github.sanctum.panther.util.Deployable;
 import com.github.sanctum.panther.util.HUID;

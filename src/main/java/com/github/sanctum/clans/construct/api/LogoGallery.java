@@ -1,6 +1,6 @@
 package com.github.sanctum.clans.construct.api;
 
-import com.github.sanctum.clans.construct.extra.SimpleLogoCarrier;
+import com.github.sanctum.clans.construct.util.SimpleLogoCarrier;
 import com.github.sanctum.labyrinth.LabyrinthProvider;
 import com.github.sanctum.labyrinth.data.container.PersistentContainer;
 import com.github.sanctum.labyrinth.library.NamespacedKey;

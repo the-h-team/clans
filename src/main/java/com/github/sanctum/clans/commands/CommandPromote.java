@@ -6,7 +6,8 @@ import com.github.sanctum.clans.construct.api.ClanSubCommand;
 import com.github.sanctum.clans.construct.api.ClansAPI;
 import com.github.sanctum.clans.construct.api.Clearance;
 import com.github.sanctum.clans.construct.api.InvasiveEntity;
-import com.github.sanctum.clans.construct.extra.StringLibrary;
+import com.github.sanctum.clans.construct.api.RankRegistry;
+import com.github.sanctum.clans.construct.util.StringLibrary;
 import com.github.sanctum.labyrinth.data.FileManager;
 import com.github.sanctum.labyrinth.formatting.completion.SimpleTabCompletion;
 import com.github.sanctum.labyrinth.formatting.completion.TabCompletionIndex;
@@ -42,8 +43,6 @@ public class CommandPromote extends ClanSubCommand {
 				return true;
 			}
 			FileManager main = ClansAPI.getDataInstance().getConfig();
-			String adminRank = main.getRoot().getString("Formatting.Chat.Styles.Full.Admin");
-			String ownerRank = main.getRoot().getString("Formatting.Chat.Styles.Full.Owner");
 			if (associate != null) {
 				if (Clearance.MANAGE_POSITIONS.test(associate)) {
 					UUID tid = Clan.ACTION.getId(args[0]).deploy();
@@ -53,8 +52,9 @@ public class CommandPromote extends ClanSubCommand {
 					}
 					Clan.Associate member = associate.getClan().getMember(m -> m.getId().equals(tid));
 					if (member == null) return true;
-					if (member.getPriority().toLevel() >= 2) {
-						lib.sendMessage(p, lib.alreadyMax(adminRank, ownerRank));
+					Clan.Rank promotion = member.getRank().getPromotion();
+					if (promotion == null || promotion.getPromotion() == null) { // -1 from highest rank, cant go any higher (owner)
+						lib.sendMessage(p, lib.alreadyMax(member.getRank().getName(), RankRegistry.getInstance().getHighest().getName()));
 						return true;
 					}
 					Clan.ACTION.promote(tid).deploy();

@@ -1,0 +1,82 @@
+# # # # # # # # # # # # # # #
+# default=permissions:      #
+#  - LAND_USE               #
+#  - LAND_USE_INTERACTABLE  #
+#  - LOGO_SHARE             #
+#  - MANAGE_COLOR           #
+#  - LOGO_EDIT              #
+#  - LOGO_COLOR             #
+#  - LOGO_PRINT             #
+#  - MANAGE_BASE            #
+#  - INVITE_PLAYERS         #
+#  - MANAGE_VAULT           #
+#  - MANAGE_LAND            #
+#  - MANAGE_ALL_LAND        #
+#  - KICK_MEMBERS           #
+#  - MANAGE_POSITIONS       #
+#  - MANAGE_PASSWORD        #
+#  - MANAGE_MODE            #
+#  - MANAGE_NICKNAMES       #
+#  - LOGO_APPLY             #
+#  - LOGO_UPLOAD            #
+#  - LOGO_DISPLAY           #
+#  - MANAGE_RELATIONS       #
+#  - MANAGE_STASH           #
+#  - MANAGE_FRIENDLY_FIRE   #
+#  - MANAGE_NAME            #
+#  - MANAGE_NICKNAMES       #
+#  - MANAGE_DESCRIPTION     #
+#  - MANAGE_PERMS           #
+# # # # # # # # # # # # # # #
+NORMAL:
+  name: 'Member'
+  symbol: '•'
+  inheritance: []
+  permissions:
+    - LAND_USE
+    - LAND_USE_INTERACTABLE
+    - LOGO_SHARE
+HIGH:
+  name: 'Moderator'
+  symbol: '••'
+  inheritance:
+    - 'Member'
+  permissions:
+    - MANAGE_COLOR
+    - LOGO_EDIT
+    - LOGO_COLOR
+    - LOGO_PRINT
+    - MANAGE_BASE
+    - INVITE_PLAYERS
+    - MANAGE_VAULT
+HIGHER:
+  name: 'Admin'
+  symbol: '•••'
+  inheritance:
+    - 'Member'
+    - 'Moderator'
+  permissions:
+    - MANAGE_LAND
+    - MANAGE_ALL_LAND
+    - KICK_MEMBERS
+    - MANAGE_POSITIONS
+    - MANAGE_PASSWORD
+    - MANAGE_MODE
+    - MANAGE_NICKNAMES
+    - LOGO_APPLY
+    - LOGO_UPLOAD
+    - LOGO_DISPLAY
+    - MANAGE_RELATIONS
+    - MANAGE_STASH
+HIGHEST:
+  name: 'Owner'
+  symbol: '&4•❂•'
+  inheritance:
+    - 'Member'
+    - 'Moderator'
+    - 'Admin'
+  permissions:
+    - MANAGE_FRIENDLY_FIRE
+    - MANAGE_NAME
+    - MANAGE_DESCRIPTION
+    - MANAGE_PERMS

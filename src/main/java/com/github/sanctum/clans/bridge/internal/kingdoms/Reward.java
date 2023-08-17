@@ -100,7 +100,7 @@ public interface Reward<T> {
 
 	void give(Clan.Associate associate);
 
-	static void assertReward(Reward<?> reward) {
+	static void validate(Reward<?> reward) {
 		if (!ItemStack[].class.isAssignableFrom(reward.get().getClass()) && !ItemStack.class.isAssignableFrom(reward.get().getClass()) && !Double.class.isAssignableFrom(reward.get().getClass())) {
 			throw new IllegalStateException("Reward: An invalid achievement reward was provided.");
 		}

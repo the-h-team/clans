@@ -4,12 +4,13 @@ import com.github.sanctum.clans.bridge.ClanVentBus;
 import com.github.sanctum.clans.construct.api.Channel;
 import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClansAPI;
-import com.github.sanctum.clans.construct.extra.StringLibrary;
+import com.github.sanctum.clans.construct.util.StringLibrary;
 import com.github.sanctum.clans.event.associate.AssociateChatEvent;
 import com.github.sanctum.clans.event.associate.AssociateMessageReceiveEvent;
 import com.github.sanctum.labyrinth.library.Mailer;
 import com.github.sanctum.labyrinth.library.StringUtils;
 import com.github.sanctum.labyrinth.library.TextLib;
+import com.github.sanctum.labyrinth.task.TaskScheduler;
 import com.github.sanctum.panther.event.Subscribe;
 import com.github.sanctum.panther.event.Vent;
 import java.text.MessageFormat;
@@ -70,7 +71,7 @@ public class ChatEventListener implements Listener {
 					}
 					switch (lib.getRankStyle().toUpperCase()) {
 						case "WORDLESS":
-							rank = associate.getRankWordless();
+							rank = associate.getRank().getSymbol();
 							if (ClansAPI.getDataInstance().isTrue("Formatting.Chat.standalone")) {
 								event.setFormat(lib.color(MessageFormat.format(StringUtils.use(lib.getChatFormat()).translate(p), rank, clanName, event.getMessage())));
 							} else {
@@ -78,7 +79,7 @@ public class ChatEventListener implements Listener {
 							}
 							break;
 						case "FULL":
-							rank = associate.getRankFull();
+							rank = associate.getRank().getName();
 							if (ClansAPI.getDataInstance().isTrue("Formatting.Chat.standalone")) {
 								event.setFormat(lib.color(MessageFormat.format(StringUtils.use(lib.getChatFormat()).translate(p), rank, clanName, event.getMessage())));
 							} else {

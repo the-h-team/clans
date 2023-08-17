@@ -1,6 +1,6 @@
 package com.github.sanctum.clans.construct.api;
 
-import com.github.sanctum.clans.construct.extra.SpecialCarrierAdapter;
+import com.github.sanctum.clans.construct.util.SpecialCarrierAdapter;
 import com.github.sanctum.labyrinth.data.reload.FingerPrint;
 import com.github.sanctum.panther.container.PantherCollection;
 import com.github.sanctum.panther.container.PantherEntryMap;

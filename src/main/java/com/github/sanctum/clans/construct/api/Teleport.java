@@ -1,7 +1,7 @@
 package com.github.sanctum.clans.construct.api;
 
 import com.github.sanctum.clans.bridge.ClanVentBus;
-import com.github.sanctum.clans.construct.extra.TeleportationTarget;
+import com.github.sanctum.clans.construct.util.TeleportationTarget;
 import com.github.sanctum.clans.event.associate.AssociateTeleportEvent;
 import com.github.sanctum.clans.event.player.PlayerTeleportEvent;
 import com.github.sanctum.labyrinth.library.TimeWatch;

@@ -5,16 +5,14 @@ import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClanSubCommand;
 import com.github.sanctum.clans.construct.api.ClansAPI;
 import com.github.sanctum.clans.construct.api.Clearance;
-import com.github.sanctum.clans.construct.api.ClearanceLog;
-import com.github.sanctum.clans.construct.extra.StringLibrary;
-import com.github.sanctum.labyrinth.data.FileManager;
+import com.github.sanctum.clans.construct.api.ClearanceOverride;
+import com.github.sanctum.clans.construct.api.RankRegistry;
+import com.github.sanctum.clans.construct.util.StringLibrary;
+import com.github.sanctum.labyrinth.formatting.FancyMessage;
 import com.github.sanctum.labyrinth.library.Mailer;
-import com.github.sanctum.labyrinth.library.TextLib;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 import org.bukkit.entity.Player;
 
 public class CommandPermissions extends ClanSubCommand {
@@ -51,22 +49,51 @@ public class CommandPermissions extends ClanSubCommand {
 				lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("permissions")));
 				return true;
 			}
-			ClearanceLog log = associate.getClan().getPermissions();
 			lib.sendMessage(p, "&eOur clan permission list:");
 			Mailer m = Mailer.empty(p);
 			m.chat("&f&l▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬").deploy();
-			for (Map.Entry<Clearance, Integer> e : log.stream().sorted(Map.Entry.comparingByKey()).collect(Collectors.toList())) {
-				Clearance perm = e.getKey();
-				int required = e.getValue();
-				m.chat(TextLib.getInstance().textSuggestable("&e" + String.join(" ", clean(perm.getName().split("_"))), " &f= {&a" + required + "&f}", "&eClick to edit this permission.", "c permit " + perm.getName() + " ")).deploy();
+			ClearanceOverride override = associate.getClan().getPermissiveHandle();
+			RankRegistry registry = RankRegistry.getInstance();
+			for (Clan.Rank r : registry.getRanks()) {
+				List<Clearance> list = override.getRaw(r);
+				List<Clan.Rank> inheritance = override.getInheritance(r);
+				FancyMessage clearances = new FancyMessage();
+				int i = 0;
+				for (Clearance c : list) {
+					clearances.then("&f- ").then("&a" + c.getName()).hover("&fClick to modify.").action(() -> {
+						FancyMessage modify = new FancyMessage();
+						modify.then("Modifying permission " + c.getName() + ":").then("\n");
+						modify.then("&7[&aAdd&7]").hover("Click to add this permission to another rank").suggest("/c permit " + c.getName() + " ").then(" &f: ").then("&7[&cRemove&7]").hover("Click to remove this permission from another rank").suggest("/c revoke " + c.getName() + " ");
+						modify.send(p).deploy();
+					});
+					if (i < list.size() - 1) {
+						clearances.then("\n");
+					}
+					i++;
+				}
+				FancyMessage inher = new FancyMessage();
+				inher.then("&7Inheritance: &6[&f&o");
+				int index = 0;
+				for (Clan.Rank rank : inheritance) {
+					inher.then(rank.getName()).hover("Click to remove").suggest("/c forget " + rank.getName() + " " + r.getName());
+					if (index < inheritance.size() - 1) {
+						inher.then(", ");
+					}
+					index++;
+				}
+				inher.then("&6]");
+				FancyMessage ra = new FancyMessage();
+				ra.then("&7Rank &3" + r.getName() + "&f:");
+				ra.send(p).deploy();
+				inher.send(p).deploy();
+				clearances.send(p).deploy();
 			}
 			m.chat("&f&l▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬").deploy();
-			FileManager main = ClansAPI.getDataInstance().getConfig();
-			String member = main.getRoot().getString("Formatting.Chat.Styles.Full.Member");
-			String mod = main.getRoot().getString("Formatting.Chat.Styles.Full.Moderator");
-			String admin = main.getRoot().getString("Formatting.Chat.Styles.Full.Admin");
-			String owner = main.getRoot().getString("Formatting.Chat.Styles.Full.Owner");
-			m.chat("&e0 &f= &2" + member + "&b, &e1 &f= &2" + mod + "&b, &e2 &f= &2" + admin + "&b, &e3 &f= &2" + owner).deploy();
+			FancyMessage msg = new FancyMessage();
+			for (Clan.Rank r : registry.getRanks()) {
+				msg.then("&e" + r.getLevel() + " &f= &2" + r.getName() + " ");
+			}
+			m.chat(msg.build()).deploy();
 			return true;
 		}
 

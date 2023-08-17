@@ -5,8 +5,8 @@ import com.github.sanctum.clans.construct.api.Claim;
 import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClansAPI;
 import com.github.sanctum.clans.construct.api.InvasiveEntity;
-import com.github.sanctum.clans.construct.extra.EnderCrystalData;
-import com.github.sanctum.clans.construct.extra.Reservoir;
+import com.github.sanctum.clans.construct.util.ReservoirMetadata;
+import com.github.sanctum.clans.construct.util.Reservoir;
 import com.github.sanctum.clans.event.associate.AssociateBuildReservoirEvent;
 import com.github.sanctum.clans.event.associate.AssociateHitReservoirEvent;
 import com.github.sanctum.labyrinth.LabyrinthProvider;
@@ -34,21 +34,21 @@ import org.bukkit.persistence.PersistentDataType;
 
 public class EntityEventListener implements Listener {
 
-	static final PantherMap<Location, EnderCrystalData> map = new PantherEntryMap<>();
+	static final PantherMap<Location, ReservoirMetadata> map = new PantherEntryMap<>();
 
 	@EventHandler
 	public void onSpawn(EntitySpawnEvent e) {
 		if (!LabyrinthProvider.getInstance().isNew()) return;
 		if (e.getEntity() instanceof EnderCrystal) {
-			EnderCrystalData data = map.get(e.getLocation());
+			ReservoirMetadata data = map.get(e.getLocation());
 			if (data != null) {
 				data.setCrystal((EnderCrystal) e.getEntity());
 				AssociateBuildReservoirEvent event = ClanVentBus.call(new AssociateBuildReservoirEvent(data));
 				if (!event.isCancelled()) {
-					PersistentDataContainer container = data.getCrystal().getPersistentDataContainer();
-					container.set(new NamespacedKey(ClansAPI.getInstance().getPlugin(), "clanspro_reservoir"), PersistentDataType.STRING, data.getAssociate().getClan().getId().toString());
-					Reservoir r = Reservoir.of(data.getCrystal());
-					r.adapt(data.getAssociate().getClan());
+					PersistentDataContainer container = data.getEnderCrystal().getPersistentDataContainer();
+					container.set(new NamespacedKey(ClansAPI.getInstance().getPlugin(), "clanspro_reservoir"), PersistentDataType.STRING, data.getAssociateWhoSpawned().getClan().getId().toString());
+					Reservoir r = Reservoir.of(data.getEnderCrystal());
+					r.adapt(data.getAssociateWhoSpawned().getClan());
 				} else {
 					e.getEntity().remove();
 				}

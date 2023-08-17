@@ -6,24 +6,22 @@ import com.github.sanctum.clans.construct.api.Claim;
 import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClansAPI;
 import com.github.sanctum.clans.construct.api.InvasiveEntity;
+import com.github.sanctum.clans.construct.api.ResidencyInfo;
 import com.github.sanctum.clans.construct.impl.DefaultClaim;
 import com.github.sanctum.clans.construct.impl.DefaultClan;
-import com.github.sanctum.clans.construct.impl.Resident;
 import com.github.sanctum.clans.construct.impl.entity.DefaultAssociate;
 import com.github.sanctum.clans.event.TimerEvent;
-import com.github.sanctum.clans.event.claim.ClaimResidentEvent;
+import com.github.sanctum.clans.event.claim.ClaimResidencyEvent;
 import com.github.sanctum.clans.event.claim.ClaimsLoadingProcedureEvent;
-import com.github.sanctum.clans.event.claim.WildernessInhabitantEvent;
-import com.github.sanctum.labyrinth.LabyrinthProvider;
+import com.github.sanctum.clans.event.claim.WildernessResidencyEvent;
 import com.github.sanctum.labyrinth.data.DataTable;
 import com.github.sanctum.labyrinth.data.FileManager;
-import com.github.sanctum.labyrinth.data.YamlExtension;
 import com.github.sanctum.panther.event.Vent;
 import com.github.sanctum.panther.file.Configurable;
 import com.github.sanctum.panther.file.Node;
 import com.github.sanctum.panther.util.HUID;
+import com.github.sanctum.panther.util.OrdinalProcedure;
 import java.io.IOException;
-import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -43,81 +41,66 @@ import org.jetbrains.annotations.NotNull;
 
 public final class ClaimManager {
 
-	private FileManager regions;
+	private final FileManager regions;
 	private final FlagManager flagManager;
+	private final ResidentManager residentManager;
 
 	public ClaimManager() {
+		this.residentManager = new ResidentManager(this);
 		this.flagManager = new FlagManager(this);
 		fixRegionsFile();
-		if (JavaPlugin.getPlugin(ClansJavaPlugin.class).TYPE == YamlExtension.INSTANCE) {
-			this.regions = ClansAPI.getInstance().getFileList().get("regions", "Configuration/Data", YamlExtension.INSTANCE);
-		} else {
-			this.regions = ClansAPI.getInstance().getFileList().get("regions", "Configuration/Data", Configurable.Type.JSON);
-		}
+		this.regions = ClansAPI.getInstance().getFileList().get("regions", "Configuration/Data", JavaPlugin.getPlugin(ClansJavaPlugin.class).TYPE);
 		regions.getRoot().reload();
 		ClanVentBus.subscribe(TimerEvent.class, Vent.Priority.HIGH, (e, subscription) -> {
 			if (e.isAsynchronous()) return;
 			Player p = e.getPlayer();
 			ClansAPI API = ClansAPI.getInstance();
 
-			if (Claim.ACTION.isEnabled()) {
+			if (Claim.ACTION.isAllowed().deploy()) {
 
 				if (!API.getClaimManager().isInClaim(p.getLocation())) {
-
-					WildernessInhabitantEvent wild = ClanVentBus.call(new WildernessInhabitantEvent(p));
-					if (!wild.isCancelled()) {
-
-
-						if (ClansAPI.getDataInstance().getResident(wild.getPlayer()) != null) {
-							Resident res = ClansAPI.getDataInstance().getResident(p);
-							// receive now leaving message
-							if (!ClansAPI.getDataInstance().isInWild(p)) {
-								if (wild.isTitlesAllowed()) {
-									if (!LabyrinthProvider.getInstance().isLegacy()) {
-										wild.getPlayer().sendTitle(wild.getClaimUtil().color(wild.getWildernessTitle()), wild.getClaimUtil().color(wild.getWildernessSubTitle()), 10, 25, 10);
-									} else {
-										wild.getPlayer().sendTitle(wild.getClaimUtil().color(wild.getWildernessTitle()), wild.getClaimUtil().color(wild.getWildernessSubTitle()));
-									}
-								}
-								if (ClansAPI.getDataInstance().isTrue("Clans.land-claiming.send-messages")) {
-									wild.getClaimUtil().sendMessage(p, MessageFormat.format(ClansAPI.getDataInstance().getConfig().getRoot().getString("Clans.land-claiming.wilderness.message"), ((Clan) res.getLastKnown().getHolder()).getName()));
-								}
-								ClansAPI.getDataInstance().addWildernessInhabitant(p);
+					Claim.Resident res = API.getClaimManager().getResidentManager().getResident(p);
+					if (res != null) {
+						if (!res.getInfo().hasProperty(ResidencyInfo.Trigger.LEAVING)) {
+							res.getInfo().setProperty(ResidencyInfo.Trigger.LEAVING, true);
+							WildernessResidencyEvent wild = ClanVentBus.call(new WildernessResidencyEvent(res));
+							if (!wild.isCancelled()) {
+								OrdinalProcedure.of(wild).run(0);
+								// receive now leaving message
 							}
-							ClansAPI.getDataInstance().removeClaimResident(res);
 						}
-
+						API.getClaimManager().getResidentManager().remove(res);
 					}
 
 				} else {
-					ClaimResidentEvent event = ClanVentBus.call(new ClaimResidentEvent(p));
+					ClaimResidencyEvent event = ClanVentBus.call(new ClaimResidencyEvent(API.getClaimManager(), p));
 					if (!event.isCancelled()) {
-						ClansAPI.getDataInstance().removeWildernessInhabitant(event.getResident().getPlayer());
-						Resident r = event.getResident();
+						Claim.Resident r = event.getResident();
+						r.getInfo().setProperty(ResidencyInfo.Trigger.LEAVING, false); // ensure we're still in a claim, probably not needed but done anyways.
 						Claim current = event.getClaim();
 						if (current.isActive()) {
-							if (ClansAPI.getInstance().getClanManager().getClanName(HUID.fromString(current.getOwner().getTag().getId())) == null) {
+							if (ClansAPI.getInstance().getClanManager().getClanName(HUID.parseID(current.getOwner().getTag().getId()).toID()) == null) {
 								current.remove();
 								return;
 							}
-							Claim lastKnown = r.getLastKnown();
+							Claim lastKnown = r.getInfo().getLastKnown();
 							if (!current.getId().equals(lastKnown.getId())) {
-								if (r.hasProperty(Resident.Property.NOTIFIED)) {
-									if (!lastKnown.getOwner().getTag().getId().equals(r.getCurrent().getOwner().getTag().getId())) {
-										r.setProperty(Resident.Property.TRAVERSED, true);
-										r.setLastKnownClaim(event.getClaim());
-										r.setTimeEntered(System.currentTimeMillis());
+								if (r.getInfo().hasProperty(ResidencyInfo.Trigger.NOTIFIED)) {
+									if (!lastKnown.getOwner().getTag().getId().equals(r.getInfo().getCurrent().getOwner().getTag().getId())) {
+										r.getInfo().setProperty(ResidencyInfo.Trigger.TRAVERSED, true);
+										r.getInfo().setLastKnown(event.getClaim());
+										r.getInfo().setTimeEntered(System.currentTimeMillis());
 									}
 								}
 							}
-							if (!r.hasProperty(Resident.Property.NOTIFIED)) {
-								event.sendNotification();
-								r.setProperty(Resident.Property.NOTIFIED, true);
+							if (!r.getInfo().hasProperty(ResidencyInfo.Trigger.NOTIFIED)) {
+								OrdinalProcedure.of(event).run(0);
+								r.getInfo().setProperty(ResidencyInfo.Trigger.NOTIFIED, true);
 							} else {
-								if (r.hasProperty(Resident.Property.TRAVERSED)) {
-									r.setProperty(Resident.Property.TRAVERSED, false);
-									r.setTimeEntered(System.currentTimeMillis());
-									event.sendNotification();
+								if (r.getInfo().hasProperty(ResidencyInfo.Trigger.TRAVERSED)) {
+									r.getInfo().setProperty(ResidencyInfo.Trigger.TRAVERSED, false);
+									r.getInfo().setTimeEntered(System.currentTimeMillis());
+									OrdinalProcedure.of(event).run(0);
 								}
 							}
 						}
@@ -129,10 +112,10 @@ public final class ClaimManager {
 
 	// this will only need to be in for a couple updates. TODO: take it out around 3.0.2
 	void fixRegionsFile() {
-		FileManager test = ClansAPI.getInstance().getFileList().get("Regions", "Configuration/Data", YamlExtension.INSTANCE);
+		FileManager test = ClansAPI.getInstance().getFileList().get("Regions", "Configuration/Data", Configurable.Type.YAML);
 		if (test.getRoot().exists()) {
 			final DataTable table = test.copy();
-			FileManager ne = ClansAPI.getInstance().getFileList().get("regions", "Configuration/Data", YamlExtension.INSTANCE);
+			FileManager ne = ClansAPI.getInstance().getFileList().get("regions", "Configuration/Data", Configurable.Type.YAML);
 			try {
 				ne.getRoot().create();
 			} catch (IOException e) {
@@ -224,7 +207,7 @@ public final class ClaimManager {
 		return null;
 	}
 
-	public boolean canClaim(Player player, Block block) {
+	public boolean testBlockBuildPermission(Player player, Block block) {
 		BlockBreakEvent blockBreakEvent = new BlockBreakEvent(block, player);
 		Bukkit.getPluginManager().callEvent(blockBreakEvent);
 		return !blockBreakEvent.isCancelled();
@@ -236,6 +219,10 @@ public final class ClaimManager {
 
 	public FlagManager getFlagManager() {
 		return flagManager;
+	}
+
+	public ResidentManager getResidentManager() {
+		return this.residentManager;
 	}
 
 	public Set<Claim> getClaims() {

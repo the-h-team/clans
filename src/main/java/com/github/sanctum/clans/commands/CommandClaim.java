@@ -7,7 +7,7 @@ import com.github.sanctum.clans.construct.api.ClanSubCommand;
 import com.github.sanctum.clans.construct.api.ClansAPI;
 import com.github.sanctum.clans.construct.api.Clearance;
 import com.github.sanctum.clans.construct.api.GUI;
-import com.github.sanctum.clans.construct.extra.StringLibrary;
+import com.github.sanctum.clans.construct.util.StringLibrary;
 import com.github.sanctum.labyrinth.formatting.completion.SimpleTabCompletion;
 import com.github.sanctum.labyrinth.formatting.completion.TabCompletionIndex;
 import java.text.MessageFormat;
@@ -35,10 +35,10 @@ public class CommandClaim extends ClanSubCommand {
 				lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("claim")));
 				return true;
 			}
-			if (Claim.ACTION.isEnabled()) {
+			if (Claim.ACTION.isAllowed().deploy()) {
 				if (associate != null) {
 					if (Clearance.MANAGE_LAND.test(associate)) {
-						if (!ClansAPI.getInstance().getClaimManager().canClaim(p, p.getLocation().getBlock())) {
+						if (!ClansAPI.getInstance().getClaimManager().testBlockBuildPermission(p, p.getLocation().getBlock())) {
 							lib.sendMessage(p, MessageFormat.format(lib.notClaimOwner("Third Party"), "Third Party"));
 							return true;
 						}
@@ -48,7 +48,7 @@ public class CommandClaim extends ClanSubCommand {
 								return true;
 							}
 						}
-						Claim.ACTION.claim(p);
+						Claim.ACTION.claim(p).run();
 					} else {
 						lib.sendMessage(p, lib.noClearance());
 						return true;
@@ -151,7 +151,7 @@ public class CommandClaim extends ClanSubCommand {
 			}
 			if (args[0].equalsIgnoreCase("flags")) {
 
-				if (Claim.ACTION.isEnabled()) {
+				if (Claim.ACTION.isAllowed().deploy()) {
 					if (associate != null) {
 						if (!Clearance.MANAGE_LAND.test(associate)) {
 							lib.sendMessage(p, lib.noClearance());
@@ -160,7 +160,7 @@ public class CommandClaim extends ClanSubCommand {
 						Claim test = ClansAPI.getInstance().getClaimManager().getClaim(p.getLocation());
 						if (test != null) {
 							Set<Claim.Flag> set = Arrays.stream(test.getFlags().clone()).sorted((o1, o2) -> String.CASE_INSENSITIVE_ORDER.compare(o1.getId(), o2.getId())).sorted(Claim.Flag::compareTo).sorted(Comparator.reverseOrder()).collect(Collectors.toCollection(LinkedHashSet::new));
-							Claim.ACTION.getFlags(p, test, set).send(1);
+							Claim.ACTION.getFlags(p, test, set).deploy().send(1);
 						} else {
 							lib.sendMessage(p, lib.alreadyWild());
 						}
@@ -280,7 +280,6 @@ public class CommandClaim extends ClanSubCommand {
 		StringBuilder rsn = new StringBuilder();
 		for (int i = 1; i < args.length; i++)
 			rsn.append(args[i]).append(" ");
-		int stop = rsn.length() - 1;
 		if (!Clan.ACTION.test(p, this.getPermission() + "." + DataManager.Security.getPermission("claim")).deploy()) {
 			lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("claim")));
 			return true;
@@ -288,7 +287,7 @@ public class CommandClaim extends ClanSubCommand {
 		if (args[0].equalsIgnoreCase("enter-title")) {
 			if (associate != null) {
 				if (Clearance.MANAGE_ALL_LAND.test(associate)) {
-					String result = rsn.substring(12, stop).trim();
+					String result = rsn.toString().trim();
 					if (result.length() >= 34) {
 						lib.sendMessage(p, "&cYour title message is too long!");
 						return true;
@@ -306,7 +305,7 @@ public class CommandClaim extends ClanSubCommand {
 		if (args[0].equalsIgnoreCase("enter-sub-title")) {
 			if (associate != null) {
 				if (Clearance.MANAGE_ALL_LAND.test(associate)) {
-					String result = rsn.substring(15, stop).trim();
+					String result = rsn.toString().trim();
 					if (result.length() >= 34) {
 						lib.sendMessage(p, "&cYour title message is too long!");
 						return true;
@@ -324,7 +323,7 @@ public class CommandClaim extends ClanSubCommand {
 		if (args[0].equalsIgnoreCase("leave-title")) {
 			if (associate != null) {
 				if (Clearance.MANAGE_ALL_LAND.test(associate)) {
-					String result = rsn.substring(12, stop).trim();
+					String result = rsn.toString().trim();
 					if (result.length() >= 34) {
 						lib.sendMessage(p, "&cYour title message is too long!");
 						return true;
@@ -342,7 +341,7 @@ public class CommandClaim extends ClanSubCommand {
 		if (args[0].equalsIgnoreCase("leave-sub-title")) {
 			if (associate != null) {
 				if (Clearance.MANAGE_ALL_LAND.test(associate)) {
-					String result = rsn.substring(15, stop).trim();
+					String result = rsn.toString().trim();
 					if (result.length() >= 34) {
 						lib.sendMessage(p, "&cYour title message is too long!");
 						return true;

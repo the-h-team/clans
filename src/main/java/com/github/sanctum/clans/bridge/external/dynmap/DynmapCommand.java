@@ -1,13 +1,11 @@
 package com.github.sanctum.clans.bridge.external.dynmap;
 
-import com.github.sanctum.clans.bridge.ClanAddon;
-import com.github.sanctum.clans.bridge.external.DynmapAddon;
 import com.github.sanctum.clans.construct.api.Claim;
 import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClanSubCommand;
 import com.github.sanctum.clans.construct.api.ClansAPI;
 import com.github.sanctum.clans.construct.api.Clearance;
-import com.github.sanctum.clans.construct.extra.StringLibrary;
+import com.github.sanctum.clans.construct.util.StringLibrary;
 import com.github.sanctum.labyrinth.formatting.completion.SimpleTabCompletion;
 import com.github.sanctum.labyrinth.formatting.completion.TabCompletionIndex;
 import java.util.Arrays;
@@ -40,7 +38,7 @@ public class DynmapCommand extends ClanSubCommand {
 						lib.sendMessage(p, "&c&oClaim mapping task failed. No claims to map.");
 						return true;
 					}
-					if (associate.getPriority().toLevel() >= Clearance.MANAGE_ALL_LAND.getDefault()) {
+					if (Clearance.MANAGE_ALL_LAND.test(associate)) {
 						long time = System.currentTimeMillis();
 						Claim c = ClansAPI.getInstance().getClaimManager().getClaim(p.getLocation());
 						if (c != null) {
@@ -59,11 +57,11 @@ public class DynmapCommand extends ClanSubCommand {
 			}
 			if (args[0].equalsIgnoreCase("hide")) {
 				if (associate != null) {
-					if (associate.getPriority().toLevel() >= Clearance.MANAGE_ALL_LAND.getDefault()) {
+					if (Clearance.MANAGE_ALL_LAND.test(associate)) {
 						Clan clan = associate.getClan();
 						Claim claim = ClansAPI.getInstance().getClaimManager().getClaim(p.getLocation());
 						if (claim != null) {
-							if (Arrays.stream(clan.getClaims()).anyMatch(c -> c.getId().equals(Claim.ACTION.getClaimID(p.getLocation())))) {
+							if (Arrays.stream(clan.getClaims()).anyMatch(c -> c.getId().equals(ClansAPI.getInstance().getClaimManager().getId(p.getLocation())))) {
 								integration.remove(claim);
 							} else {
 								if (ClansAPI.getInstance().getShieldManager().isEnabled()) {
@@ -97,7 +95,7 @@ public class DynmapCommand extends ClanSubCommand {
 			if (args[0].equalsIgnoreCase("hide")) {
 				if (args[1].equalsIgnoreCase("all")) {
 					if (associate != null) {
-						if (associate.getPriority().toLevel() >= Clearance.MANAGE_ALL_LAND.getDefault()) {
+						if (Clearance.MANAGE_ALL_LAND.test(associate)) {
 							for (Claim c : associate.getClaims()) {
 								integration.remove(c);
 							}
@@ -115,7 +113,7 @@ public class DynmapCommand extends ClanSubCommand {
 							lib.sendMessage(p, "&c&oClaim mapping task failed. No claims to map.");
 							return true;
 						}
-						if (associate.getPriority().toLevel() >= Clearance.MANAGE_ALL_LAND.getDefault()) {
+						if (Clearance.MANAGE_ALL_LAND.test(associate)) {
 							long time = System.currentTimeMillis();
 							String response = integration.addAll(clan.getClaims());
 							long complete = (System.currentTimeMillis() - time) / 1000;

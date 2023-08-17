@@ -4,7 +4,7 @@ import com.github.sanctum.clans.construct.DataManager;
 import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClanSubCommand;
 import com.github.sanctum.clans.construct.api.ClansAPI;
-import com.github.sanctum.clans.construct.extra.StringLibrary;
+import com.github.sanctum.clans.construct.util.StringLibrary;
 import java.util.UUID;
 import org.bukkit.entity.Player;
 
@@ -37,7 +37,7 @@ public class CommandPassowner extends ClanSubCommand {
 				UUID target = Clan.ACTION.getId(args[0]).deploy();
 				if (target != null) {
 
-					if (associate.getPriority().toLevel() == 3) {
+					if (associate.getRank().getLevel() == 3) {
 						if (!associate.getClan().transferOwnership(ClansAPI.getInstance().getAssociate(target).get())) {
 							sendMessage(p, lib.playerUnknown("clan member"));
 						} else {

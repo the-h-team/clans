@@ -10,13 +10,13 @@ import com.github.sanctum.clans.construct.api.InvasiveEntity;
 import com.github.sanctum.clans.construct.api.LogoHolder;
 import com.github.sanctum.clans.construct.api.Teleport;
 import com.github.sanctum.clans.construct.api.War;
-import com.github.sanctum.clans.construct.extra.AsynchronousLoanableTask;
-import com.github.sanctum.clans.construct.extra.ClanDisplayName;
-import com.github.sanctum.clans.construct.extra.ClansUpdate;
-import com.github.sanctum.clans.construct.extra.EnderCrystalData;
-import com.github.sanctum.clans.construct.extra.Reservoir;
-import com.github.sanctum.clans.construct.impl.CooldownRespawn;
-import com.github.sanctum.clans.construct.impl.SimpleEntry;
+import com.github.sanctum.clans.construct.util.AsynchronousLoanableTask;
+import com.github.sanctum.clans.construct.util.AboveHeadDisplayName;
+import com.github.sanctum.clans.construct.util.ClansUpdate;
+import com.github.sanctum.clans.construct.util.ReservoirMetadata;
+import com.github.sanctum.clans.construct.util.Reservoir;
+import com.github.sanctum.clans.construct.impl.DefaultRespawnCooldown;
+import com.github.sanctum.clans.construct.impl.DefaultMapEntry;
 import com.github.sanctum.clans.event.TimerEvent;
 import com.github.sanctum.clans.event.associate.AssociateClaimEvent;
 import com.github.sanctum.clans.event.associate.AssociateHitReservoirEvent;
@@ -124,14 +124,14 @@ public class PlayerEventListener implements Listener {
 
 	@Subscribe(priority = Vent.Priority.LOW)
 	public void onInitial(TimerEvent e) {
-		Player p = e.getPlayer();
-		Clan.Associate associate = ClansAPI.getInstance().getAssociate(p).orElse(null);
-
-		if (associate == null) return;
-
-		Clan c = associate.getClan();
 
 		if (!e.isAsynchronous()) {
+			Player p = e.getPlayer();
+			Clan.Associate associate = ClansAPI.getInstance().getAssociate(p).orElse(null);
+
+			if (associate == null) return;
+
+			Clan c = associate.getClan();
 			for (ClanCooldown clanCooldown : c.getCooldowns()) {
 				if (clanCooldown.isComplete() && !clanCooldown.isMarkedForRemoval()) {
 					clanCooldown.setMarkedForRemoval(true);
@@ -168,7 +168,7 @@ public class PlayerEventListener implements Listener {
 							}
 						}
 						TaskScheduler.of(() -> {
-							WarWonEvent event = ClanVentBus.call(new WarWonEvent(war, new SimpleEntry<>(w, points), map));
+							WarWonEvent event = ClanVentBus.call(new WarWonEvent(war, new DefaultMapEntry<>(w, points), map));
 							if (!event.isCancelled()) {
 								Mailer msg = LabyrinthProvider.getService(Service.MESSENGER).getEmptyMailer().prefix().start(ClansAPI.getInstance().getPrefix().toString()).finish();
 								Bukkit.broadcastMessage(" ");
@@ -328,7 +328,7 @@ public class PlayerEventListener implements Listener {
 					if (claim != null && claim.getHolder().equals(t.getClan())) {
 						if (Reservoir.get(t.getClan()) == null) {
 							if (e.getClickedBlock().getType() != Material.BEDROCK) {
-								EnderCrystalData data = new EnderCrystalData();
+								ReservoirMetadata data = new ReservoirMetadata();
 								data.setAssociate(t);
 								EntityEventListener.map.put(e.getClickedBlock().getLocation(), data);
 								e.getClickedBlock().setType(Material.AIR);
@@ -469,6 +469,7 @@ public class PlayerEventListener implements Listener {
 		EconomyProvision eco = EconomyProvision.getInstance();
 		if (eco.isValid()) {
 			if (ClansAPI.getDataInstance().isTrue("Clans.land-claiming.charge")) {
+				if (e.getClan().getClaims().length + 1 > e.getClan().getClaimLimit()) return;
 				String MODE = Optional.ofNullable(ClansAPI.getDataInstance().getConfigString("Clans.land-claiming.mode")).orElse("STATIC");
 				double cost = ClansAPI.getDataInstance().getConfig().read(f -> f.getDouble("Clans.land-claiming.amount"));
 				String percent = ClansAPI.getDataInstance().getConfig().read(co -> co.getNode("Clans.land-claiming.percent").toPrimitive().getString());
@@ -754,8 +755,10 @@ public class PlayerEventListener implements Listener {
 		}
 		Player killer = e.getPlayer();
 		if (killer != null) {
-			ItemStack rew = Items.edit().setType(Material.IRON_NUGGET).setTitle("&3[&6Token&3]").setAmount(1).build();
-			LabyrinthProvider.getInstance().getItemComposter().add(rew, killer);
+			if (ClansAPI.getDataInstance().isTrue("Clans.reservoir.players-drop-tokens")) {
+				ItemStack rew = Items.edit().setType(Material.IRON_NUGGET).setTitle("&3[&6Token&3]").setAmount(1).build();
+				LabyrinthProvider.getInstance().getItemComposter().add(rew, killer);
+			}
 			ClansAPI.getInstance().getAssociate(killer).ifPresent(a -> {
 				a.getClan().givePower(0.11);
 				OrdinalProcedure.process(a, 50);
@@ -819,17 +822,17 @@ public class PlayerEventListener implements Listener {
 					if (ClansAPI.getDataInstance().isDisplayTagsAllowed()) {
 						if (associate.getClan().getPalette().isGradient()) {
 							Clan c = associate.getClan();
-							ClanDisplayName.set(associate, ClansAPI.getDataInstance().formatDisplayTag("", c.getPalette().toGradient().context(c.getName()).translate()));
+							AboveHeadDisplayName.set(associate, ClansAPI.getDataInstance().formatDisplayTag("", c.getPalette().toGradient().context(c.getName()).translate()));
 						} else {
-							ClanDisplayName.set(associate, ClansAPI.getDataInstance().formatDisplayTag(associate.getClan().getPalette().toString(), associate.getClan().getName()));
+							AboveHeadDisplayName.set(associate, ClansAPI.getDataInstance().formatDisplayTag(associate.getClan().getPalette().toString(), associate.getClan().getName()));
 
 						}
 					} else {
-						ClanDisplayName.remove(associate);
+						AboveHeadDisplayName.remove(associate);
 					}
 				}
 			} else {
-				ClanDisplayName.remove(p);
+				AboveHeadDisplayName.remove(p);
 			}
 		}
 		if (Clan.ACTION.test(p, "clans.admin").deploy()) {
@@ -862,7 +865,7 @@ public class PlayerEventListener implements Listener {
 		Clan.Associate associate = ClansAPI.getInstance().getAssociate(p).orElse(null);
 		if (associate != null) {
 			if (ClansAPI.getDataInstance().isDisplayTagsAllowed()) {
-				ClanDisplayName.remove(p);
+				AboveHeadDisplayName.remove(p);
 			}
 			War current = ClansAPI.getInstance().getArenaManager().get(associate);
 			if (current != null) {
@@ -924,8 +927,7 @@ public class PlayerEventListener implements Listener {
 				}
 			}
 		}
-		Optional.ofNullable(ClansAPI.getDataInstance().getResident(p)).ifPresent(r -> ClansAPI.getDataInstance().removeClaimResident(r));
-		ClansAPI.getDataInstance().removeWildernessInhabitant(p);
+		Optional.ofNullable(ClansAPI.getInstance().getClaimManager().getResidentManager().getResident(p)).ifPresent(r -> ClansAPI.getInstance().getClaimManager().getResidentManager().remove(r));
 	}
 
 	@EventHandler
@@ -948,7 +950,7 @@ public class PlayerEventListener implements Listener {
 					if (test != null) {
 						LabyrinthProvider.getInstance().remove(test);
 					}
-					new CooldownRespawn(p.getUniqueId()).save();
+					new DefaultRespawnCooldown(p.getUniqueId()).save();
 					e.setRespawnLocation(t.getSpawn());
 					for (Entity s : p.getNearbyEntities(20, 20, 20)) {
 						if (s instanceof Player) {

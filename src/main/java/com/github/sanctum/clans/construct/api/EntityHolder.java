@@ -1,6 +1,6 @@
 package com.github.sanctum.clans.construct.api;
 
-import com.github.sanctum.clans.construct.extra.TeleportationTarget;
+import com.github.sanctum.clans.construct.util.TeleportationTarget;
 import com.github.sanctum.panther.util.Check;
 import java.util.Arrays;
 import java.util.Collection;

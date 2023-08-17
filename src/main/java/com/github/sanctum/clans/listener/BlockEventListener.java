@@ -8,7 +8,7 @@ import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClansAPI;
 import com.github.sanctum.clans.construct.api.Clearance;
 import com.github.sanctum.clans.construct.api.LogoHolder;
-import com.github.sanctum.clans.construct.extra.ShieldTamper;
+import com.github.sanctum.clans.construct.util.ShieldTamper;
 import com.github.sanctum.clans.event.claim.ClaimInteractEvent;
 import com.github.sanctum.clans.event.claim.RaidShieldEvent;
 import com.github.sanctum.labyrinth.data.EconomyProvision;
@@ -46,9 +46,6 @@ public class BlockEventListener implements Listener {
 		if (event.getAction() == Action.RIGHT_CLICK_BLOCK) {
 			if (ClansAPI.getInstance()
 					.getClaimManager().getClaim(event.getBlock().get().getLocation()) != null) {
-				if (event.getItem() != null) {
-					if (StringUtils.use(event.getItem().getType().name()).containsIgnoreCase("bucket")) return;
-				}
 				ClaimInteractEvent e = ClanVentBus.call(new ClaimInteractEvent(event.getPlayer(), event.getBlock().get().getLocation(), ClaimInteractEvent.Type.USE));
 				if (e.isCancelled()) {
 					event.setCancelled(true);
@@ -69,7 +66,7 @@ public class BlockEventListener implements Listener {
 				if (Claim.getResident(event.getPlayer()) != null) {
 					final Material type = b.getState().getType();
 					final Byte data = b.getState().getRawData();
-					Claim.getResident(event.getPlayer()).addBroken(b, type, data);
+					Claim.getResident(event.getPlayer()).getInfo().addBroken(b, type, data);
 				}
 			}
 		}
@@ -99,7 +96,7 @@ public class BlockEventListener implements Listener {
 				event.setCancelled(e.isCancelled());
 			} else {
 				if (Claim.getResident(event.getPlayer()) != null) {
-					Claim.getResident(event.getPlayer()).addPlaced(event.getBlock());
+					Claim.getResident(event.getPlayer()).getInfo().addPlaced(event.getBlock());
 				}
 			}
 		}
@@ -239,7 +236,7 @@ public class BlockEventListener implements Listener {
 								}
 							}
 						} else {
-							if (!Clearance.LAND_USE_INTRACTABLE.test(associate)) {
+							if (!Clearance.LAND_USE_INTERACTABLE.test(associate)) {
 								Clan.ACTION.sendMessage(e.getPlayer(), Clan.ACTION.noClearance());
 								e.setCancelled(true);
 							}
@@ -254,7 +251,7 @@ public class BlockEventListener implements Listener {
 								}
 							}
 						} else {
-							if (!Clearance.LAND_USE_INTRACTABLE.test(associate)) {
+							if (!Clearance.LAND_USE_INTERACTABLE.test(associate)) {
 								Clan.ACTION.sendMessage(e.getPlayer(), Clan.ACTION.noClearance());
 								e.setCancelled(true);
 							}

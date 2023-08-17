@@ -1,7 +1,7 @@
 package com.github.sanctum.clans.construct.api;
 
 import com.github.sanctum.clans.bridge.ClanVentBus;
-import com.github.sanctum.clans.construct.extra.InsigniaError;
+import com.github.sanctum.clans.construct.util.InsigniaError;
 import com.github.sanctum.clans.event.associate.AssociateChangeBrushColorEvent;
 import com.github.sanctum.labyrinth.LabyrinthProvider;
 import com.github.sanctum.labyrinth.library.StringUtils;

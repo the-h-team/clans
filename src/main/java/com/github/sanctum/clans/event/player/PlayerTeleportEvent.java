@@ -1,6 +1,6 @@
 package com.github.sanctum.clans.event.player;
 
-import com.github.sanctum.clans.construct.extra.TeleportationTarget;
+import com.github.sanctum.clans.construct.util.TeleportationTarget;
 import org.bukkit.entity.Player;
 
 /**

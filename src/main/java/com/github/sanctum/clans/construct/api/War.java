@@ -1,6 +1,6 @@
 package com.github.sanctum.clans.construct.api;
 
-import com.github.sanctum.clans.construct.extra.ClanDisplayName;
+import com.github.sanctum.clans.construct.util.AboveHeadDisplayName;
 import com.github.sanctum.labyrinth.data.FileManager;
 import com.github.sanctum.labyrinth.library.Cooldown;
 import com.github.sanctum.labyrinth.task.TaskScheduler;
@@ -233,12 +233,12 @@ public interface War extends Iterable<Clan.Associate> {
 				if (ClansAPI.getDataInstance().isDisplayTagsAllowed()) {
 					if (associate.getClan().getPalette().isGradient()) {
 						Clan c = associate.getClan();
-						ClanDisplayName.update(p, ClansAPI.getDataInstance().formatDisplayTag("", c.getPalette().toString((c.getName()))));
+						AboveHeadDisplayName.update(p, ClansAPI.getDataInstance().formatDisplayTag("", c.getPalette().toString((c.getName()))));
 					} else {
-						ClanDisplayName.update(p, ClansAPI.getDataInstance().formatDisplayTag(associate.getClan().getPalette().toString(), associate.getClan().getName()));
+						AboveHeadDisplayName.update(p, ClansAPI.getDataInstance().formatDisplayTag(associate.getClan().getPalette().toString(), associate.getClan().getName()));
 					}
 				} else {
-					ClanDisplayName.remove(associate);
+					AboveHeadDisplayName.remove(associate);
 				}
 				ClansAPI.getInstance().getArenaManager().show(associate);
 				Clan.ACTION.sendMessage(p, "&aGoing back to previous location...");

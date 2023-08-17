@@ -12,12 +12,12 @@ public class AssociateRankManagementEvent extends AssociateEvent {
 
 	public AssociateRankManagementEvent(Clan.Associate associate, Clan.Rank goal) {
 		super(associate, false);
-		this.from = associate.getPriority();
+		this.from = associate.getRank();
 		this.to = goal;
 	}
 
 	public boolean isPromotion() {
-		return from.toLevel() < to.toLevel();
+		return from.getLevel() < to.getLevel();
 	}
 
 	public void setTo(Clan.Rank to) {

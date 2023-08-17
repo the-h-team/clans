@@ -5,12 +5,14 @@ import com.github.sanctum.clans.construct.DataManager;
 import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClanSubCommand;
 import com.github.sanctum.clans.construct.api.ClansAPI;
+import com.github.sanctum.clans.construct.api.Clearance;
 import com.github.sanctum.clans.construct.api.GUI;
-import com.github.sanctum.clans.construct.extra.StringLibrary;
+import com.github.sanctum.clans.construct.util.StringLibrary;
 import com.github.sanctum.clans.event.associate.AssociateDisplayInfoEvent;
 import com.github.sanctum.labyrinth.data.service.PlayerSearch;
 import com.github.sanctum.labyrinth.formatting.completion.SimpleTabCompletion;
 import com.github.sanctum.labyrinth.formatting.completion.TabCompletionIndex;
+import com.github.sanctum.panther.util.PantherString;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -85,11 +87,13 @@ public class CommandInfo extends ClanSubCommand {
 				return true;
 			}
 			UUID target = Clan.ACTION.getId(args[0]).deploy();
+			// check if its a player, if not stop and operate.
 			if (target == null) {
 				if (!Clan.ACTION.getAllClanNames().contains(args[0])) {
 					lib.sendMessage(p, lib.clanUnknown(args[0]));
 					return true;
 				}
+				// theyre in a clan and the info they wanna see is their own clans
 				if (associate != null && args[0].equals(associate.getClan().getName())) {
 					AssociateDisplayInfoEvent ev = ClanVentBus.call(new AssociateDisplayInfoEvent(associate, AssociateDisplayInfoEvent.Type.PERSONAL));
 					if (!ev.isCancelled()) {
@@ -103,7 +107,11 @@ public class CommandInfo extends ClanSubCommand {
 					for (String info : clan.getClanInfo()) {
 
 						if (associate != null) {
-							lib.sendMessage(p, info.replace(associate.getClan().getName(), "&6&lUS"));
+							if (associate.getClan().getPassword() != null && new PantherString(info).contains(associate.getClan().getPassword()) && !Clearance.MANAGE_PASSWORD.test(associate)) {
+								lib.sendMessage(p, info.replace(associate.getClan().getName(), "&6&lUS").replace(associate.getClan().getPassword(), "{REDACTED}"));
+							} else {
+								lib.sendMessage(p, info.replace(associate.getClan().getName(), "&6&lUS"));
+							}
 						} else {
 							lib.sendMessage(p, info);
 						}
@@ -111,6 +119,7 @@ public class CommandInfo extends ClanSubCommand {
 				}
 				return true;
 			}
+			// we now know here that the target is a player, but they are still us so send personal info.
 			if (associate != null && target.equals(associate.getId())) {
 				AssociateDisplayInfoEvent ev = ClanVentBus.call(new AssociateDisplayInfoEvent(associate, AssociateDisplayInfoEvent.Type.PERSONAL));
 				if (!ev.isCancelled()) {

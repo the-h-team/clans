@@ -5,8 +5,9 @@ import com.github.sanctum.clans.construct.DataManager;
 import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClanSubCommand;
 import com.github.sanctum.clans.construct.api.ClansAPI;
-import com.github.sanctum.clans.construct.extra.ClanDisplayName;
-import com.github.sanctum.clans.construct.extra.StringLibrary;
+import com.github.sanctum.clans.construct.api.Clearance;
+import com.github.sanctum.clans.construct.util.AboveHeadDisplayName;
+import com.github.sanctum.clans.construct.util.StringLibrary;
 import com.github.sanctum.clans.event.associate.AssociateRenameClanEvent;
 import com.github.sanctum.labyrinth.LabyrinthProvider;
 import java.util.regex.Pattern;
@@ -41,7 +42,7 @@ public class CommandTag extends ClanSubCommand {
 			}
 			if (associate != null) {
 				Clan clan = associate.getClan();
-				if (associate.getPriority().toLevel() >= Clan.ACTION.tagChangeClearance()) {
+				if (Clearance.MANAGE_NAME.test(associate)) {
 					if (!isAlphaNumeric(args[0])) {
 						lib.sendMessage(p, lib.nameInvalid(args[0]));
 						return true;
@@ -75,9 +76,9 @@ public class CommandTag extends ClanSubCommand {
 								if (ClansAPI.getDataInstance().isDisplayTagsAllowed()) {
 									if (clan.getPalette().isGradient()) {
 										Clan c = a.getClan();
-										ClanDisplayName.set(op.getPlayer(), ClansAPI.getDataInstance().formatDisplayTag("", c.getPalette().toGradient().context(c.getName()).translate()));
+										AboveHeadDisplayName.set(op.getPlayer(), ClansAPI.getDataInstance().formatDisplayTag("", c.getPalette().toGradient().context(c.getName()).translate()));
 									} else {
-										ClanDisplayName.set(op.getPlayer(), ClansAPI.getDataInstance().formatDisplayTag(ClansAPI.getInstance().getClanManager().getClan(op.getUniqueId()).getPalette().toString(), ClansAPI.getInstance().getClanManager().getClan(op.getUniqueId()).getName()));
+										AboveHeadDisplayName.set(op.getPlayer(), ClansAPI.getDataInstance().formatDisplayTag(ClansAPI.getInstance().getClanManager().getClan(op.getUniqueId()).getPalette().toString(), ClansAPI.getInstance().getClanManager().getClan(op.getUniqueId()).getName()));
 
 									}
 								}

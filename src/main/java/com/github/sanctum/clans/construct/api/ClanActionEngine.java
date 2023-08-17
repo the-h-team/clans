@@ -1,25 +1,16 @@
 package com.github.sanctum.clans.construct.api;
 
-import com.github.sanctum.clans.bridge.ClanAddon;
 import com.github.sanctum.clans.bridge.ClanVentBus;
-import com.github.sanctum.clans.bridge.internal.StashesAddon;
-import com.github.sanctum.clans.bridge.internal.VaultsAddon;
 import com.github.sanctum.clans.construct.DataManager;
-import com.github.sanctum.clans.construct.api.AbstractGameRule;
-import com.github.sanctum.clans.construct.api.Claim;
-import com.github.sanctum.clans.construct.api.Clan;
-import com.github.sanctum.clans.construct.api.ClansAPI;
-import com.github.sanctum.clans.construct.api.Clearance;
-import com.github.sanctum.clans.construct.api.Teleport;
 import com.github.sanctum.clans.construct.bank.BankPermissions;
-import com.github.sanctum.clans.construct.extra.ClanDisplayName;
-import com.github.sanctum.clans.construct.extra.ClansComparators;
-import com.github.sanctum.clans.construct.extra.StringLibrary;
+import com.github.sanctum.clans.construct.util.AboveHeadDisplayName;
+import com.github.sanctum.clans.construct.util.ClansComparators;
+import com.github.sanctum.clans.construct.util.StringLibrary;
 import com.github.sanctum.clans.construct.impl.DefaultClan;
 import com.github.sanctum.clans.construct.impl.entity.DefaultAssociate;
 import com.github.sanctum.clans.event.associate.AssociateQuitEvent;
 import com.github.sanctum.clans.event.associate.AssociateRankManagementEvent;
-import com.github.sanctum.clans.event.clan.ClanFreshlyFormedEvent;
+import com.github.sanctum.clans.event.clan.ClanCreatedEvent;
 import com.github.sanctum.clans.event.clan.ClanKickAssociateEvent;
 import com.github.sanctum.clans.event.command.ClanInformationAdaptEvent;
 import com.github.sanctum.clans.event.player.PlayerCreateClanEvent;
@@ -29,9 +20,7 @@ import com.github.sanctum.labyrinth.data.EconomyProvision;
 import com.github.sanctum.labyrinth.data.FileManager;
 import com.github.sanctum.labyrinth.data.service.PlayerSearch;
 import com.github.sanctum.labyrinth.formatting.pagination.EasyPagination;
-import com.github.sanctum.labyrinth.interfacing.Nameable;
 import com.github.sanctum.labyrinth.library.StringUtils;
-import com.github.sanctum.labyrinth.library.TextLib;
 import com.github.sanctum.labyrinth.task.TaskScheduler;
 import com.github.sanctum.panther.container.PantherCollection;
 import com.github.sanctum.panther.container.PantherList;
@@ -62,11 +51,10 @@ import org.jetbrains.annotations.Nullable;
 public class ClanActionEngine extends StringLibrary {
 
 	private final ClansAPI API = ClansAPI.getInstance();
-	private final List<String> info_board = ClansAPI.getDataInstance().getMessages().getRoot().getStringList("info-simple");
 
 	public Clan.Action<Clan> create(@NotNull UUID owner, @NotNull String name, @Nullable String password, boolean silent) {
 		return new Clan.Action<Clan>() {
-
+			final RankRegistry positionRegistry = RankRegistry.getInstance();
 			List<String> getAllClanIDs() {
 				DataManager dm = ClansAPI.getDataInstance();
 				List<String> array = new ArrayList<>();
@@ -107,7 +95,7 @@ public class ClanActionEngine extends StringLibrary {
 					if (!e.isCancelled()) {
 						if (!silent) {
 							String status = "OPEN";
-							if (password == null) {
+							if (e.getPassword() == null) {
 								String format = MessageFormat.format(ClansAPI.getDataInstance().getMessageResponse("creation"), p.getName(), status, name);
 								Bukkit.broadcastMessage(lib.color(lib.getPrefix() + " " + format));
 							} else {
@@ -117,30 +105,30 @@ public class ClanActionEngine extends StringLibrary {
 							}
 						}
 						String newID = generateCleanClanCode();
-						DefaultClan instance = new DefaultClan(newID);
+						DefaultClan instance = new DefaultClan(positionRegistry, newID);
 						instance.setName(name);
 						boolean war = LabyrinthProvider.getInstance().getLocalPrintManager()
 								.getPrint(ClansAPI.getInstance().getLocalPrintKey())
 								.getString(AbstractGameRule.DEFAULT_WAR_MODE)
 								.equalsIgnoreCase("peace");
 						instance.setPeaceful(war);
-						if (password != null) {
-							instance.setPassword(password);
+						if (e.getPassword() != null) {
+							instance.setPassword(e.getPassword());
 						}
 						TaskScheduler.of(() -> {
-							instance.add(new DefaultAssociate(owner, Clan.Rank.HIGHEST, instance));
+							instance.add(new DefaultAssociate(owner, RankRegistry.getInstance().getHighest(), instance));
 							instance.save();
 							API.getClanManager().load(instance);
 							if (!LabyrinthProvider.getInstance().isLegacy()) {
 								if (ClansAPI.getDataInstance().isDisplayTagsAllowed()) {
 									if (instance.getPalette().isGradient()) {
-										ClanDisplayName.set(p, ClansAPI.getDataInstance().formatDisplayTag("", instance.getPalette().toGradient().context(instance.getName()).translate()));
+										AboveHeadDisplayName.set(p, ClansAPI.getDataInstance().formatDisplayTag("", instance.getPalette().toGradient().context(instance.getName()).translate()));
 									} else {
-										ClanDisplayName.set(p, ClansAPI.getDataInstance().formatDisplayTag(instance.getPalette().toString(), instance.getName()));
+										AboveHeadDisplayName.set(p, ClansAPI.getDataInstance().formatDisplayTag(instance.getPalette().toString(), instance.getName()));
 									}
 								}
 							}
-							ClanVentBus.call(new ClanFreshlyFormedEvent(owner, name));
+							ClanVentBus.call(new ClanCreatedEvent(owner, name));
 						}).schedule();
 						return instance;
 					}
@@ -171,41 +159,36 @@ public class ClanActionEngine extends StringLibrary {
 				if (associate.getTag().isPlayer() && associate.getTag().getPlayer().isOnline()) {
 					if (!LabyrinthProvider.getInstance().isLegacy()) {
 						if (ClansAPI.getDataInstance().isDisplayTagsAllowed()) {
-							ClanDisplayName.remove(associate.getTag().getPlayer().getPlayer());
+							AboveHeadDisplayName.remove(associate.getTag().getPlayer().getPlayer());
 						}
 					}
 				}
-				switch (associate.getPriority()) {
-					case HIGHEST:
-						for (Claim c : associate.getClan().getClaims()) {
-							c.remove();
+				if (associate.getRank().isHighest()) {
+					for (Claim c : associate.getClan().getClaims()) {
+						c.remove();
+					}
+					clanIndex.getRelation().getAlliance().get(Clan.class).forEach(a -> a.getRelation().getAlliance().remove(clanIndex));
+					clanIndex.getRelation().getRivalry().get(Clan.class).forEach(a -> a.getRelation().getRivalry().remove(clanIndex));
+					FileManager regions = API.getClaimManager().getFile();
+					regions.write(t -> t.set(associate.getClan().getId().toString(), null));
+					TaskScheduler.of(() -> {
+						String clanName = clan.getRoot().getString("name");
+						for (String s : associate.getClan().getKeys()) {
+							associate.getClan().removeValue(s);
 						}
-						clanIndex.getRelation().getAlliance().get(Clan.class).forEach(a -> a.getRelation().getAlliance().remove(clanIndex));
-						clanIndex.getRelation().getRivalry().get(Clan.class).forEach(a -> a.getRelation().getRivalry().remove(clanIndex));
-						FileManager regions = API.getClaimManager().getFile();
-						regions.write(t -> t.set(associate.getClan().getId().toString(), null));
-						TaskScheduler.of(() -> {
-							String clanName = clan.getRoot().getString("name");
-							for (String s : associate.getClan().getKeys()) {
-								associate.getClan().removeValue(s);
-							}
-							API.getClanManager().delete(clanIndex);
-							if (!silent) {
-								String format = MessageFormat.format(ClansAPI.getDataInstance().getMessageResponse("deletion"), clanName);
-								Bukkit.broadcastMessage(color(getPrefix() + " " + format));
-							}
-							API.getClaimManager().refresh();
-						}).scheduleLater("ClansPro-deletion;" + target, 1);
-						break;
-					case HIGHER:
-					case NORMAL:
-					case HIGH:
+						API.getClanManager().delete(clanIndex);
 						if (!silent) {
-							clanIndex.broadcast(MessageFormat.format(ClansAPI.getDataInstance().getMessageResponse("member-leave"), Bukkit.getOfflinePlayer(target).getName()));
+							String format = MessageFormat.format(ClansAPI.getDataInstance().getMessageResponse("deletion"), clanName);
+							Bukkit.broadcastMessage(color(getPrefix() + " " + format));
 						}
-						clan.write(t -> t.set("user-data." + target, null));
-						TaskScheduler.of(associate::remove).schedule();
-						break;
+						API.getClaimManager().refresh();
+					}).scheduleLater("ClansPro-deletion;" + target, 1);
+				} else {
+					if (!silent) {
+						clanIndex.broadcast(MessageFormat.format(ClansAPI.getDataInstance().getMessageResponse("member-leave"), Bukkit.getOfflinePlayer(target).getName()));
+					}
+					clan.write(t -> t.set("user-data." + target, null));
+					TaskScheduler.of(associate::remove).schedule();
 				}
 				return clanIndex;
 			} else {
@@ -230,7 +213,7 @@ public class ClanActionEngine extends StringLibrary {
 					if (!event.isCancelled()) {
 						if (ClansAPI.getDataInstance().isDisplayTagsAllowed()) {
 							if (Bukkit.getPlayer(target) != null) {
-								ClanDisplayName.remove(Bukkit.getPlayer(target));
+								AboveHeadDisplayName.remove(Bukkit.getPlayer(target));
 							}
 						}
 						FileManager clan = ClansAPI.getDataInstance().getClanFile(associate.getClan());
@@ -262,33 +245,34 @@ public class ClanActionEngine extends StringLibrary {
 							sendMessage(p, clanUnknown(clanName));
 							return c;
 						}
+						Clan.Rank normal = RankRegistry.getInstance().getLowest();
 						if (c.getPassword() == null) {
-							c.add(new DefaultAssociate(target, Clan.Rank.NORMAL, c));
+							c.add(new DefaultAssociate(target, normal, c));
 							if (!silent) {
 								c.broadcast(MessageFormat.format(ClansAPI.getDataInstance().getMessageResponse("member-join"), p.getName()));
 							}
 							if (!LabyrinthProvider.getInstance().isLegacy()) {
 								if (ClansAPI.getDataInstance().isDisplayTagsAllowed()) {
 									if (c.getPalette().isGradient()) {
-										ClanDisplayName.set(p, ClansAPI.getDataInstance().formatDisplayTag("", c.getPalette().toGradient().context(c.getName()).translate()));
+										AboveHeadDisplayName.set(p, ClansAPI.getDataInstance().formatDisplayTag("", c.getPalette().toGradient().context(c.getName()).translate()));
 									} else {
-										ClanDisplayName.set(p, ClansAPI.getDataInstance().formatDisplayTag(c.getPalette().toString(), c.getName()));
+										AboveHeadDisplayName.set(p, ClansAPI.getDataInstance().formatDisplayTag(c.getPalette().toString(), c.getName()));
 									}
 								}
 							}
 							return c;
 						}
 						if (c.getPassword().equals(password)) {
-							c.add(new DefaultAssociate(target, Clan.Rank.NORMAL, c));
+							c.add(new DefaultAssociate(target, normal, c));
 							if (!silent) {
 								c.broadcast(MessageFormat.format(ClansAPI.getDataInstance().getMessageResponse("member-join"), p.getName()));
 							}
 							if (!LabyrinthProvider.getInstance().isLegacy()) {
 								if (ClansAPI.getDataInstance().isDisplayTagsAllowed()) {
 									if (c.getPalette().isGradient()) {
-										ClanDisplayName.set(p, ClansAPI.getDataInstance().formatDisplayTag("", c.getPalette().toGradient().context(c.getName()).translate()));
+										AboveHeadDisplayName.set(p, ClansAPI.getDataInstance().formatDisplayTag("", c.getPalette().toGradient().context(c.getName()).translate()));
 									} else {
-										ClanDisplayName.set(p, ClansAPI.getDataInstance().formatDisplayTag(c.getPalette().toString(), c.getName()));
+										AboveHeadDisplayName.set(p, ClansAPI.getDataInstance().formatDisplayTag(c.getPalette().toString(), c.getName()));
 									}
 								}
 							}
@@ -299,18 +283,19 @@ public class ClanActionEngine extends StringLibrary {
 						}
 					}
 				} else {
+					Clan.Rank normal = RankRegistry.getInstance().getLowest();
 					if (!getAllClanNames().contains(clanName)) {
 						return c;
 					}
 					if (c.getPassword() == null) {
-						Clan.Associate a = new DefaultAssociate(target, Clan.Rank.NORMAL, c);
+						Clan.Associate a = new DefaultAssociate(target, normal, c);
 						c.add(a);
 						a.save();
 						c.broadcast(MessageFormat.format(ClansAPI.getDataInstance().getMessageResponse("member-join"), a.getName()));
 						return c;
 					}
 					if (c.getPassword().equals(password)) {
-						Clan.Associate a = new DefaultAssociate(target, Clan.Rank.NORMAL, c);
+						Clan.Associate a = new DefaultAssociate(target, normal, c);
 						c.add(a);
 						a.save();
 						c.broadcast(MessageFormat.format(ClansAPI.getDataInstance().getMessageResponse("member-join"), a.getName()));
@@ -330,21 +315,11 @@ public class ClanActionEngine extends StringLibrary {
 		return () -> {
 			Clan.Associate associate = API.getAssociate(target).orElse(null);
 			if (associate != null) {
-				Clan.Rank priority = null;
-				if (associate.getPriority().toLevel() < 3) {
-					switch (associate.getPriority().toLevel()) {
-						case 2:
-							priority = Clan.Rank.HIGH;
-							break;
-						case 1:
-							priority = Clan.Rank.NORMAL;
-							break;
-					}
-				}
+				Clan.Rank priority = associate.getRank().getDemotion();
 				if (priority != null) {
 					AssociateRankManagementEvent event = ClanVentBus.call(new AssociateRankManagementEvent(associate, priority));
 					if (!event.isCancelled()) {
-						associate.setPriority(event.getTo());
+						associate.setRank(event.getTo());
 						Clan clanIndex = associate.getClan();
 						String format = MessageFormat.format(ClansAPI.getDataInstance().getMessageResponse("demotion"), associate.getName(), associate.getRankFull());
 						clanIndex.broadcast(format);
@@ -360,21 +335,11 @@ public class ClanActionEngine extends StringLibrary {
 		return () -> {
 			Clan.Associate associate = API.getAssociate(target).orElse(null);
 			if (associate != null) {
-				Clan.Rank priority = null;
-				if (associate.getPriority().toLevel() < 2) {
-					switch (associate.getPriority().toLevel()) {
-						case 0:
-							priority = Clan.Rank.HIGH;
-							break;
-						case 1:
-							priority = Clan.Rank.HIGHER;
-							break;
-					}
-				}
+				Clan.Rank priority = associate.getRank().getPromotion();
 				if (priority != null) {
 					AssociateRankManagementEvent event = ClanVentBus.call(new AssociateRankManagementEvent(associate, priority));
 					if (!event.isCancelled()) {
-						associate.setPriority(event.getTo());
+						associate.setRank(event.getTo());
 						Clan clanIndex = API.getClanManager().getClan(API.getClanManager().getClanID(target));
 						String format = MessageFormat.format(ClansAPI.getDataInstance().getMessageResponse("promotion"), associate.getName(), associate.getRankFull());
 						clanIndex.broadcast(format);
@@ -639,6 +604,7 @@ public class ClanActionEngine extends StringLibrary {
 		if (associate == null) return;
 		Clan clan =  associate.getClan();
 		List<String> array = new ArrayList<>();
+		List<String> info_board = (List<String>) AbstractGameRule.of(LabyrinthProvider.getInstance().getLocalPrintManager().getPrint(API.getLocalPrintKey())).get(AbstractGameRule.CLAN_INFO_SIMPLE);
 		info_board.forEach(s -> {
 			if (clan instanceof DefaultClan) {
 				array.add(((DefaultClan)clan).replacePlaceholders(s));

@@ -9,7 +9,7 @@ import com.github.sanctum.clans.construct.api.ClansAPI;
 import com.github.sanctum.clans.construct.bank.BankAction;
 import com.github.sanctum.clans.construct.bank.BankLog;
 import com.github.sanctum.clans.construct.bank.BankPermissions;
-import com.github.sanctum.clans.construct.extra.StringLibrary;
+import com.github.sanctum.clans.construct.util.StringLibrary;
 import com.github.sanctum.clans.construct.impl.DefaultClan;
 import com.github.sanctum.clans.event.bank.messaging.Messages;
 import com.github.sanctum.labyrinth.data.EconomyProvision;
@@ -102,7 +102,7 @@ public class CommandBank extends ClanSubCommand implements Message.Factory {
 						"clan bank viewlog"
 				));
 			}
-			if (associate.getPriority().toLevel() == 3) {
+			if (associate.getRank().getLevel() >= 3) {
 				p.spigot().sendMessage(TextLib.getInstance().textSuggestable(
 						Messages.BANK_HELP_PREFIX + " ",
 						"&7setperm", "Set access to functions",
@@ -207,7 +207,7 @@ public class CommandBank extends ClanSubCommand implements Message.Factory {
 					sendMessage(p, Messages.BANK_HELP_PREFIX + " &asend &f<clanName> &6<amount>");
 					return true;
 				case "setperm":
-					if (associate.getPriority().toLevel() != 3) {
+					if (associate.getRank().getLevel() < 3) {
 						sendMessage(p, Messages.PERM_NOT_PLAYER_COMMAND.toString());
 						return true;
 					}
@@ -240,7 +240,7 @@ public class CommandBank extends ClanSubCommand implements Message.Factory {
 					p.sendMessage(BankLog.getForClan(clan).getTransactions().stream().map(Object::toString).toArray(String[]::new));
 					return true;
 				case "viewperms":
-					if (associate.getPriority().toLevel() != 3) {
+					if (associate.getRank().getLevel() < 3) {
 						sendMessage(p, Messages.PERM_NOT_PLAYER_COMMAND.toString());
 						return true;
 					}
@@ -466,7 +466,7 @@ public class CommandBank extends ClanSubCommand implements Message.Factory {
 							if (BankAction.VIEW_LOG.testForPlayer(clan, p)) {
 								result.add("viewlog");
 							}
-							if (associate.get().getPriority().toLevel() == 3) {
+							if (associate.get().getRank().isHighest()) {
 								result.add("setperm");
 								result.add("viewperms");
 							}
@@ -481,7 +481,7 @@ public class CommandBank extends ClanSubCommand implements Message.Factory {
 					}
 					if (EconomyProvision.getInstance().isValid()) {
 						ClansAPI.getInstance().getAssociate(p).ifPresent(a -> {
-							if (a.getPriority().toLevel() == 3) {
+							if (a.getRank().isHighest()) {
 								result.add("balance");
 								result.add("deposit");
 								result.add("withdraw");

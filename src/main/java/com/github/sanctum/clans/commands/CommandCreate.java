@@ -4,7 +4,7 @@ import com.github.sanctum.clans.construct.DataManager;
 import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClanSubCommand;
 import com.github.sanctum.clans.construct.api.ClansAPI;
-import com.github.sanctum.clans.construct.extra.StringLibrary;
+import com.github.sanctum.clans.construct.util.StringLibrary;
 import java.util.Collections;
 import java.util.regex.Pattern;
 import org.bukkit.Bukkit;

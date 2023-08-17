@@ -6,7 +6,7 @@ import com.github.sanctum.clans.construct.api.ClanSubCommand;
 import com.github.sanctum.clans.construct.api.ClansAPI;
 import com.github.sanctum.clans.construct.api.GUI;
 import com.github.sanctum.clans.construct.api.War;
-import com.github.sanctum.clans.construct.extra.StringLibrary;
+import com.github.sanctum.clans.construct.util.StringLibrary;
 import org.bukkit.entity.Player;
 
 public class CommandTruce extends ClanSubCommand {

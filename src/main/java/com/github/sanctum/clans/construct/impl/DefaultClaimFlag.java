@@ -22,6 +22,18 @@ public final class DefaultClaimFlag {
 		private static final long serialVersionUID = -5626158771460431576L;
 	};
 
+	public static final Claim.Flag KINGDOMS_SHARE_LAND = new Claim.Flag("kingdoms-share-land", false) {
+		private static final long serialVersionUID = -8658083812290181666L;
+	};
+
+	public static final Claim.Flag INVINCIBLE_ANIMALS = new Claim.Flag("invincible-animals", false) {
+		private static final long serialVersionUID = 9969335338435123L;
+	};
+
+	public static final Claim.Flag ALLIES_SHARE_LAND = new Claim.Flag("allies-share-land", false) {
+		private static final long serialVersionUID = -1800964142672483143L;
+	};
+
 	public static Claim.Flag[] values() {
 		return AccessibleConstants.of(DefaultClaimFlag.class).get(Claim.Flag.class).deploy().submit().join().stream().map(Constant::getValue).toArray(Claim.Flag[]::new);
 	}

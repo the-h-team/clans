@@ -38,17 +38,18 @@ public final class ClanBuilder {
 			Clan.ACTION.remove(leader, true).deploy();
 		}
 		HUID newID = HUID.randomID();
-		DefaultClan test = new DefaultClan(newID.toString());
+		DefaultClan test = new DefaultClan(RankRegistry.getInstance(), newID.toString());
 		test.setName(clanName);
 		if (!password.equals("none")) {
 			test.setPassword(password);
 		}
 		boolean war = ClansAPI.getDataInstance().getConfig().read(c -> c.getString("Clans.mode-change.default").equalsIgnoreCase("peace"));
 		test.setPeaceful(war);
+		Clan.Rank highest = RankRegistry.getInstance().getHighest();
 		if (leader.equals(ClansAPI.getInstance().getSessionId())) {
-			test.add(new ServerAssociate(InvasiveEntity.wrapNonAssociated(Bukkit.getConsoleSender()), Clan.Rank.HIGHEST, test));
+			test.add(new ServerAssociate(InvasiveEntity.wrapNonAssociated(Bukkit.getConsoleSender()), highest, test));
 		} else {
-			test.add(new DefaultAssociate(leader, Clan.Rank.HIGHEST, test));
+			test.add(new DefaultAssociate(leader, highest, test));
 		}
 		for (Map.Entry<UUID, Clan.Rank> entry : memberList.entrySet()) {
 			if (ClansAPI.getInstance().getAssociate(entry.getKey()).isPresent()) {

@@ -7,7 +7,7 @@ import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClanSubCommand;
 import com.github.sanctum.clans.construct.api.ClansAPI;
 import com.github.sanctum.clans.construct.api.Clearance;
-import com.github.sanctum.clans.construct.impl.Resident;
+import com.github.sanctum.clans.construct.impl.entity.DefaultClaimResident;
 import com.github.sanctum.labyrinth.gui.unity.construct.Menu;
 import java.util.List;
 import org.bukkit.command.CommandSender;
@@ -27,12 +27,12 @@ public class StashCommand extends ClanSubCommand {
 				Clan.Associate associate = ClansAPI.getInstance().getAssociate(p).get();
 				Clan clan = associate.getClan();
 				if (ClansAPI.getInstance().getClaimManager().isInClaim(p.getLocation())) {
-					Resident r = Claim.getResident(p);
+					Claim.Resident r = Claim.getResident(p);
 					if (!Clearance.MANAGE_STASH.test(associate)) {
 						Clan.ACTION.sendMessage(p, Clan.ACTION.noClearance());
 						return true;
 					}
-					if (!((Clan) r.getCurrent().getHolder()).getId().toString().equals(clan.getId().toString())) {
+					if (!((Clan) r.getInfo().getCurrent().getHolder()).getId().toString().equals(clan.getId().toString())) {
 						Clan.ACTION.sendMessage(p, "&c&oYou can only view the stash @ the clan base.");
 						return true;
 					}
@@ -40,7 +40,7 @@ public class StashCommand extends ClanSubCommand {
 						Clan.ACTION.sendMessage(p, "&c&oYou need to set a clan base. You will then gain access to the stash.");
 						return true;
 					}
-					if (!r.getCurrent().getChunk().equals(clan.getBase().getChunk())) {
+					if (!r.getInfo().getCurrent().getChunk().equals(clan.getBase().getChunk())) {
 						Clan.ACTION.sendMessage(p, "&c&oYou can only view the stash @ the clan base.");
 						return true;
 					}

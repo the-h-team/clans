@@ -6,7 +6,9 @@ import com.github.sanctum.clans.construct.api.ClanSubCommand;
 import com.github.sanctum.clans.construct.api.ClansAPI;
 import com.github.sanctum.clans.construct.api.Clearance;
 import com.github.sanctum.clans.construct.api.InvasiveEntity;
-import com.github.sanctum.clans.construct.extra.StringLibrary;
+import com.github.sanctum.clans.construct.api.RankRegistry;
+import com.github.sanctum.clans.construct.util.StringLibrary;
+import com.github.sanctum.labyrinth.formatting.FancyMessage;
 import com.github.sanctum.labyrinth.formatting.completion.SimpleTabCompletion;
 import com.github.sanctum.labyrinth.formatting.completion.TabCompletionIndex;
 import java.util.ArrayList;
@@ -49,8 +51,19 @@ public class CommandDemote extends ClanSubCommand {
 					}
 					Clan.Associate member = associate.getClan().getMember(m -> m.getId().equals(tid));
 					if (member == null) return true;
-					if (member.getPriority().toLevel() >= associate.getPriority().toLevel()) {
+					if (member.equals(associate) && associate.getRank().isHighest()) {
+						FancyMessage msg = new FancyMessage(ClansAPI.getInstance().getPrefix().toString());
+						msg.then(" ").then("&cYou own this clan, do you want to leave it? ").then("&f[").then("&aYes").hover("&aClick to disband this clan.").command("c leave").then("&f]");
+						msg.send(p).queue();
+						return true;
+					}
+					if (member.getRank().getLevel() >= associate.getRank().getLevel()) {
 						lib.sendMessage(p, lib.noClearance());
+						return true;
+					}
+					Clan.Rank demotion = member.getRank().getDemotion();
+					if (demotion == null) { // lowest rank, cant go any lower (member)
+						lib.sendMessage(p, lib.alreadyMin(member.getRank().getName(), RankRegistry.getInstance().getLowest().getName()));
 						return true;
 					}
 					Clan.ACTION.demote(tid).deploy();

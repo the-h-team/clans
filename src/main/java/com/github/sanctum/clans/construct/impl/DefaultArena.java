@@ -4,7 +4,7 @@ import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClansAPI;
 import com.github.sanctum.clans.construct.api.Vote;
 import com.github.sanctum.clans.construct.api.War;
-import com.github.sanctum.clans.construct.extra.ClanDisplayName;
+import com.github.sanctum.clans.construct.util.AboveHeadDisplayName;
 import com.github.sanctum.labyrinth.LabyrinthProvider;
 import com.github.sanctum.labyrinth.library.Cooldown;
 import com.github.sanctum.labyrinth.task.TaskScheduler;
@@ -61,7 +61,7 @@ public final class DefaultArena implements War {
 					Player p = a.getTag().getPlayer().getPlayer();
 					if (p != null) {
 						getQueue().updateReturnLocation(a);
-						ClanDisplayName.set(a, "&7[&a" + t.name() + "&7]");
+						AboveHeadDisplayName.set(a, "&7[&a" + t.name() + "&7]");
 						Clan.ACTION.sendMessage(p, "&3BEGIN!");
 						assert t.getSpawn() != null;
 						p.teleport(t.getSpawn());

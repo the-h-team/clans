@@ -12,18 +12,20 @@ import com.github.sanctum.clans.construct.api.ClansAPI;
 import com.github.sanctum.clans.construct.api.Consultant;
 import com.github.sanctum.clans.construct.api.Ticket;
 import com.github.sanctum.clans.construct.api.War;
-import com.github.sanctum.clans.construct.extra.AnimalConsultantListener;
-import com.github.sanctum.clans.construct.extra.InfoSection;
-import com.github.sanctum.clans.construct.impl.CooldownCreate;
-import com.github.sanctum.clans.construct.impl.SimpleEntry;
+import com.github.sanctum.clans.construct.util.AnimalConsultantListener;
+import com.github.sanctum.clans.construct.impl.DefaultFancyInfoSection;
+import com.github.sanctum.clans.construct.impl.DefaultCreationCooldown;
+import com.github.sanctum.clans.construct.impl.DefaultMapEntry;
 import com.github.sanctum.clans.event.associate.AssociateDisplayInfoEvent;
 import com.github.sanctum.clans.event.associate.AssociateFromAnimalEvent;
 import com.github.sanctum.clans.event.associate.AssociateMessageReceiveEvent;
 import com.github.sanctum.clans.event.associate.AssociateObtainLandEvent;
 import com.github.sanctum.clans.event.claim.ClaimInteractEvent;
-import com.github.sanctum.clans.event.claim.ClaimResidentEvent;
-import com.github.sanctum.clans.event.claim.WildernessInhabitantEvent;
-import com.github.sanctum.clans.event.clan.ClanFreshlyFormedEvent;
+import com.github.sanctum.clans.event.claim.ClaimNotificationFormatEvent;
+import com.github.sanctum.clans.event.claim.ClaimResidencyEvent;
+import com.github.sanctum.clans.event.claim.WildernessNotificationFormatEvent;
+import com.github.sanctum.clans.event.claim.WildernessResidencyEvent;
+import com.github.sanctum.clans.event.clan.ClanCreatedEvent;
 import com.github.sanctum.clans.event.clan.ClansLoadingProcedureEvent;
 import com.github.sanctum.clans.event.player.PlayerCreateClanEvent;
 import com.github.sanctum.clans.event.war.WarActiveEvent;
@@ -44,6 +46,7 @@ import com.github.sanctum.labyrinth.task.TaskScheduler;
 import com.github.sanctum.panther.event.Subscribe;
 import com.github.sanctum.panther.event.Vent;
 import com.github.sanctum.panther.file.Configurable;
+import com.github.sanctum.panther.util.RandomID;
 import java.math.BigDecimal;
 import java.util.Random;
 import java.util.UUID;
@@ -77,7 +80,7 @@ public class ClanEventListener implements Listener {
 				Claim.Flag f = e.getClaim().getFlag("owner-only");
 				if (f.isValid()) {
 					if (f.isEnabled()) {
-						if (e.getAssociate().getPriority().toLevel() != 3) {
+						if (!e.getAssociate().getRank().isHighest()) {
 							Clan.ACTION.sendMessage(e.getPlayer(), "&cThis is a clan owner only chunk! You can't do this here.");
 							e.setCancelled(true);
 						}
@@ -104,9 +107,9 @@ public class ClanEventListener implements Listener {
 	}
 
 	@Subscribe(priority = Vent.Priority.LOW)
-	public void onFix(ClaimResidentEvent e) {
+	public void onFix(ClaimResidencyEvent e) {
 		Claim c = e.getClaim();
-		for (Claim.Flag loading : e.getApi().getClaimManager().getFlagManager().getFlags()) {
+		for (Claim.Flag loading : e.getApi().getClaimManager().getFlagManager().getFlags()) { // add unregistered flags to claims only while active.
 			if (c.getFlag(loading.getId()) == null) {
 				c.register(loading);
 			}
@@ -114,7 +117,7 @@ public class ClanEventListener implements Listener {
 	}
 
 	@Subscribe(priority = Vent.Priority.LOW)
-	public void onFix(WildernessInhabitantEvent e) {
+	public void onFix(WildernessResidencyEvent e) {
 		if (e.getPreviousClaim() == null) return;
 		Claim c = e.getPreviousClaim();
 		for (Claim.Flag loading : e.getApi().getClaimManager().getFlagManager().getFlags()) {
@@ -125,29 +128,32 @@ public class ClanEventListener implements Listener {
 	}
 
 	@Subscribe(priority = Vent.Priority.HIGHEST)
-	public void onTitle(ClaimResidentEvent e) {
+	public void onTitle(ClaimNotificationFormatEvent e) {
 		Clan owner = ((Clan) e.getClaim().getHolder());
 		if (e.getClaim().getFlag("custom-titles").isEnabled()) {
 			if (owner.getValue(String.class, "claim_title") != null) {
 				if (owner.getValue(String.class, "claim_sub_title") != null) {
-					e.setClaimTitle(owner.getValue(String.class, "claim_title").replace("{*}", owner.getName()), owner.getValue(String.class, "claim_sub_title").replace("{*}", owner.getName()));
+					e.setTitle(owner.getValue(String.class, "claim_title").replace("{*}", owner.getName()));
+					e.setSubTitle(owner.getValue(String.class, "claim_sub_title").replace("{*}", owner.getName()));
 				} else {
-					e.setClaimTitle(owner.getValue(String.class, "claim_title").replace("{*}", owner.getName()), e.getClaimSubTitle());
+					e.setTitle(owner.getValue(String.class, "claim_title").replace("{*}", owner.getName()));
 				}
 			}
 		}
 	}
 
 	@Subscribe(priority = Vent.Priority.HIGHEST)
-	public void onTitle(WildernessInhabitantEvent e) {
-		if (e.getPreviousClaim() == null) return;
+	public void onTitle(WildernessNotificationFormatEvent e) {
+		if (e.getClaim() == null) return;
 		Clan owner = e.getClan();
-		if (e.getPreviousClaim().getFlag("custom-titles").isEnabled()) {
+		if (owner == null) return;
+		if (e.getClaim().getFlag("custom-titles").isEnabled()) {
 			if (owner.getValue(String.class, "leave_claim_title") != null) {
 				if (owner.getValue(String.class, "leave_claim_sub_title") != null) {
-					e.setWildernessTitle(owner.getValue(String.class, "leave_claim_title").replace("{*}", owner.getName()), owner.getValue(String.class, "leave_claim_sub_title").replace("{*}", owner.getName()));
+					e.setTitle(owner.getValue(String.class, "leave_claim_title").replace("{*}", owner.getName()));
+					e.setSubTitle(owner.getValue(String.class, "leave_claim_sub_title").replace("{*}", owner.getName()));
 				} else {
-					e.setWildernessTitle(owner.getValue(String.class, "leave_claim_title").replace("{*}", owner.getName()), e.getWildernessSubTitle());
+					e.setTitle(owner.getValue(String.class, "leave_claim_title").replace("{*}", owner.getName()));
 				}
 			}
 		}
@@ -197,7 +203,7 @@ public class ClanEventListener implements Listener {
 			Consultant[] server = e.getAssociate().getConsultants();
 			if (server != null) { // Our server associate isn't null
 				for (Consultant c : server) {
-					c.sendMessage(() -> new SimpleEntry<>(e.getMessage(), new SimpleEntry<>(e.getChannel(), e.getSender()))); // Send them the message & ticket a response from the server.
+					c.sendMessage(() -> new DefaultMapEntry<>(e.getMessage(), new DefaultMapEntry<>(e.getChannel(), e.getSender()))); // Send them the message & ticket a response from the server.
 				}
 			}
 		}).schedule();
@@ -208,11 +214,11 @@ public class ClanEventListener implements Listener {
 		Consultant associate = (Consultant) e.getAssociate();
 		associate.registerIncomingListener(() -> "BOOP", object -> {
 			Ticket ticket = new Ticket();
-			if (object instanceof SimpleEntry) {
-				SimpleEntry<String, SimpleEntry<Channel, Clan.Associate>> entry = (SimpleEntry<String, SimpleEntry<Channel, Clan.Associate>>) object;
+			if (object instanceof DefaultMapEntry) {
+				DefaultMapEntry<String, DefaultMapEntry<Channel, Clan.Associate>> entry = (DefaultMapEntry<String, DefaultMapEntry<Channel, Clan.Associate>>) object;
 				if (entry.getKey().equalsIgnoreCase("hello")) {
 					ticket.setType(Ticket.Field.STRING, "I don't know");
-					ticket.setType(Ticket.Field.CUSTOM, new SimpleEntry<>(entry.getValue().getKey(), entry.getValue().getValue()));
+					ticket.setType(Ticket.Field.CUSTOM, new DefaultMapEntry<>(entry.getValue().getKey(), entry.getValue().getValue()));
 				}
 			}
 			return ticket;
@@ -244,7 +250,7 @@ public class ClanEventListener implements Listener {
 			switch (e.getType()) {
 				case OTHER:
 					color = "&2";
-					InfoSection section_1 = new InfoSection(configurable.getNode("info-other.line-1"));
+					DefaultFancyInfoSection section_1 = new DefaultFancyInfoSection(configurable.getNode("info-other.line-1"));
 					FancyMessage section_1_msg = new FancyMessage();
 					if (section_1.getPrefix() != null) section_1_msg.then(section_1.getPrefix());
 					if (section_1.getText() != null) {
@@ -274,9 +280,9 @@ public class ClanEventListener implements Listener {
 						}
 					}
 					if (section_1.getSuffix() != null) section_1_msg.then(section_1.getSuffix());
-					InfoSection section_2 = new InfoSection(configurable.getNode("info-other.line-2"));
-					InfoSection section_3 = new InfoSection(configurable.getNode("info-other.line-3"));
-					InfoSection section_4 = new InfoSection(configurable.getNode("info-other.line-4"));
+					DefaultFancyInfoSection section_2 = new DefaultFancyInfoSection(configurable.getNode("info-other.line-2"));
+					DefaultFancyInfoSection section_3 = new DefaultFancyInfoSection(configurable.getNode("info-other.line-3"));
+					DefaultFancyInfoSection section_4 = new DefaultFancyInfoSection(configurable.getNode("info-other.line-4"));
 					FancyMessage section_3_msg = new FancyMessage();
 					if (section_3.getPrefix() != null) section_3_msg.then(section_3.getPrefix());
 					if (section_3.getText() != null) {
@@ -381,7 +387,7 @@ public class ClanEventListener implements Listener {
 					String finalAllies = allies;
 					String finalEnemies = enemies;
 					String finalAlliesR = alliesR;
-					InfoSection line_1 = new InfoSection(configurable.getNode("info.line-1"));
+					DefaultFancyInfoSection line_1 = new DefaultFancyInfoSection(configurable.getNode("info.line-1"));
 					FancyMessage line_1_msg = new FancyMessage();
 					if (line_1.getPrefix() != null) line_1_msg.then(line_1.getPrefix());
 					if (line_1.getText() != null) {
@@ -414,14 +420,14 @@ public class ClanEventListener implements Listener {
 						}
 					}
 					if (line_1.getSuffix() != null) line_1_msg.then(line_1.getSuffix());
-					InfoSection line_2 = new InfoSection(configurable.getNode("info.line-2"));
-					InfoSection line_3 = new InfoSection(configurable.getNode("info.line-3"));
-					InfoSection line_4 = new InfoSection(configurable.getNode("info.line-4"));
-					InfoSection line_5 = new InfoSection(configurable.getNode("info.line-5"));
-					InfoSection line_6 = new InfoSection(configurable.getNode("info.line-6"));
-					InfoSection line_7 = new InfoSection(configurable.getNode("info.line-7"));
-					InfoSection line_8 = new InfoSection(configurable.getNode("info.line-8"));
-					InfoSection line_9 = new InfoSection(configurable.getNode("info.line-9"));
+					DefaultFancyInfoSection line_2 = new DefaultFancyInfoSection(configurable.getNode("info.line-2"));
+					DefaultFancyInfoSection line_3 = new DefaultFancyInfoSection(configurable.getNode("info.line-3"));
+					DefaultFancyInfoSection line_4 = new DefaultFancyInfoSection(configurable.getNode("info.line-4"));
+					DefaultFancyInfoSection line_5 = new DefaultFancyInfoSection(configurable.getNode("info.line-5"));
+					DefaultFancyInfoSection line_6 = new DefaultFancyInfoSection(configurable.getNode("info.line-6"));
+					DefaultFancyInfoSection line_7 = new DefaultFancyInfoSection(configurable.getNode("info.line-7"));
+					DefaultFancyInfoSection line_8 = new DefaultFancyInfoSection(configurable.getNode("info.line-8"));
+					DefaultFancyInfoSection line_9 = new DefaultFancyInfoSection(configurable.getNode("info.line-9"));
 					chain = new FancyMessageChain()
 							.append(top -> {
 								top.then(" ")
@@ -578,7 +584,7 @@ public class ClanEventListener implements Listener {
 	}
 
 	@Subscribe
-	public void onResidency(ClaimResidentEvent e) {
+	public void onResidency(ClaimResidencyEvent e) {
 		Clan owner = e.getClan();
 		if (owner.getMember(m -> m.getName().equals(e.getResident().getPlayer().getName())) == null) {
 			if (!e.getResident().getPlayer().hasPermission("clanspro.claim.bypass")) {
@@ -602,7 +608,7 @@ public class ClanEventListener implements Listener {
 	}
 
 	@Subscribe
-	public void onWilderness(WildernessInhabitantEvent e) {
+	public void onWilderness(WildernessResidencyEvent e) {
 		if (e.getPlayer() == null) return;
 		if (e.getPlayer().hasPotionEffect(PotionEffectType.SLOW_DIGGING)) {
 			e.getPlayer().removePotionEffect(PotionEffectType.SLOW_DIGGING);
@@ -635,7 +641,7 @@ public class ClanEventListener implements Listener {
 	}
 
 	@Subscribe
-	public void onClanCreated(ClanFreshlyFormedEvent e) {
+	public void onClanCreated(ClanCreatedEvent e) {
 		Clan c = e.getClan();
 		if (ClansAPI.getDataInstance().isTrue("Clans.land-claiming.claim-influence.allow")) {
 			if (ClansAPI.getDataInstance().getConfigString("Clans.land-claiming.claim-influence.dependence").equalsIgnoreCase("LOW")) {
@@ -651,7 +657,7 @@ public class ClanEventListener implements Listener {
 				return c;
 			}
 		}
-		ClanCooldown target = new CooldownCreate(id);
+		ClanCooldown target = new DefaultCreationCooldown(id);
 		if (!ClansAPI.getDataInstance().getCooldowns().contains(target)) {
 			target.save();
 		}
@@ -675,6 +681,9 @@ public class ClanEventListener implements Listener {
 				}
 				event.setCancelled(true);
 				return;
+			}
+			if (ClansAPI.getDataInstance().isTrue("Clans.creation.force-lock")) {
+				event.setPassword(new RandomID(7).generate());
 			}
 			if (ClansAPI.getDataInstance().isTrue("Clans.creation.charge")) {
 				double amount = ClansAPI.getDataInstance().getConfig().getRoot().getDouble("Clans.creation.amount");

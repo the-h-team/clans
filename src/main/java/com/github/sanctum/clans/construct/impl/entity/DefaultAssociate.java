@@ -8,19 +8,21 @@ import com.github.sanctum.clans.construct.api.InvasiveEntity;
 import com.github.sanctum.clans.construct.api.PersistentEntity;
 import com.github.sanctum.clans.construct.api.Relation;
 import com.github.sanctum.clans.construct.api.Teleport;
-import com.github.sanctum.clans.construct.extra.PrivateContainer;
-import com.github.sanctum.clans.construct.impl.Resident;
+import com.github.sanctum.clans.construct.util.HiddenMetadata;
+import com.github.sanctum.clans.construct.util.InvalidAssociateTypeException;
 import com.github.sanctum.labyrinth.data.Atlas;
 import com.github.sanctum.labyrinth.data.AtlasMap;
 import com.github.sanctum.labyrinth.data.service.PlayerSearch;
 import com.github.sanctum.labyrinth.library.Items;
 import com.github.sanctum.labyrinth.library.Mailer;
 import com.github.sanctum.labyrinth.library.TimeWatch;
+import com.github.sanctum.labyrinth.task.TaskScheduler;
 import com.github.sanctum.panther.annotation.Ordinal;
 import com.github.sanctum.panther.file.MemorySpace;
 import com.github.sanctum.panther.file.Node;
 import com.github.sanctum.panther.file.Primitive;
 import com.github.sanctum.skulls.CustomHead;
+import com.github.sanctum.skulls.SkullType;
 import java.text.MessageFormat;
 import java.util.Arrays;
 import java.util.Date;
@@ -28,6 +30,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -52,25 +55,45 @@ public final class DefaultAssociate implements Clan.Associate, PersistentEntity 
 	private final Clan clanObject;
 	private Clan.Rank rank;
 	private Channel chat;
-	private final ItemStack head;
+	private ItemStack head = SkullType.PLAYER.get();
 	private final Object data;
 	private final Tag tag;
 	private final Map<Long, Long> killMap;
 
-	public DefaultAssociate(UUID uuid, Clan.Rank priority, Clan clan) {
+	public DefaultAssociate(UUID uuid, Clan.Rank priority, Clan clan) throws InvalidAssociateTypeException {
 		this.clanObject = clan;
-		this.name = Optional.ofNullable(Bukkit.getOfflinePlayer(uuid).getName()).orElseGet(() -> {
+		this.id = uuid;
+		this.tag = new Tag() {
+
+			private static final long serialVersionUID = -2455699726164889680L;
+			private OfflinePlayer player;
+
+			@Override
+			public @NotNull String getId() {
+				return uuid.toString();
+			}
+
+			@Override
+			public OfflinePlayer getPlayer() {
+				if (player == null) {
+					OfflinePlayer result = Bukkit.getOfflinePlayer(uuid);
+					if (result.getName() != null) return (player = result);
+				}
+				return player;
+			}
+		};
+		this.name = Optional.ofNullable(tag.getPlayer() != null ? tag.getPlayer().getName() : null).orElseGet(() -> {
 			Entity test = Bukkit.getEntity(uuid);
 			return test != null ? test.getName() : null;
 		});
+		if (tag.getPlayer() == null)
+			throw new InvalidAssociateTypeException("No valid playerdata found under id " + '"' + tag + '"');
 		this.search = PlayerSearch.of(name);
-		this.id = uuid;
-		this.tag = uuid::toString;
 		this.data = new Object() {
-			final PrivateContainer container;
+			final HiddenMetadata container;
 
 			{
-				container = new PrivateContainer() {
+				container = new HiddenMetadata() {
 
 					final Atlas map = new AtlasMap();
 
@@ -92,13 +115,15 @@ public final class DefaultAssociate implements Clan.Associate, PersistentEntity 
 			}
 
 			@Ordinal(32)
-			protected PrivateContainer getContainer() {
+			protected HiddenMetadata getContainer() {
 				return container;
 			}
 		};
 		this.rank = priority;
 		this.chat = Channel.GLOBAL;
-		this.head = CustomHead.Manager.get(name);
+		TaskScheduler.of(() -> {
+			this.head = CustomHead.Manager.get(name);
+		}).scheduleLaterAsync(2L);
 		this.killMap = new HashMap<>();
 	}
 
@@ -148,7 +173,7 @@ public final class DefaultAssociate implements Clan.Associate, PersistentEntity 
 	/**
 	 * @return Gets the associates possible claim information. If the player is not in a claim this will return empty.
 	 */
-	public Optional<Resident> toResident() {
+	public Optional<Claim.Resident> toResident() {
 		return isValid() ? !getTag().getPlayer().isOnline() ? Optional.empty() : Optional.ofNullable(Claim.getResident(getTag().getPlayer().getPlayer())) : Optional.empty();
 	}
 
@@ -162,19 +187,17 @@ public final class DefaultAssociate implements Clan.Associate, PersistentEntity 
 		return getClan() != null;
 	}
 
+	@Override
+	public @NotNull Clan.Rank getRank() {
+		return this.rank;
+	}
+
 	@Ordinal(1)
 	private Object getData(int key) {
 		if ((((70 * 5) + 84) - 14) == key) {
 			return data;
 		}
 		throw new RuntimeException("You are not permitted to use this object!");
-	}
-
-	/**
-	 * @return Gets the associates rank priority.
-	 */
-	public Clan.Rank getPriority() {
-		return this.rank;
 	}
 
 	/**
@@ -215,19 +238,15 @@ public final class DefaultAssociate implements Clan.Associate, PersistentEntity 
 		}
 	}
 
-	/**
-	 * Update the associates rank priority.
-	 *
-	 * @param priority The rank priority to update the associate with.
-	 */
-	public void setPriority(Clan.Rank priority) {
+	@Override
+	public void setRank(Clan.Rank priority) {
 		this.rank = priority;
 	}
 
 	/**
 	 * @return Gets the associates clan nick-name, if one is not present their full user-name will be returned.
 	 */
-	public synchronized String getNickname() {
+	public synchronized @NotNull String getNickname() {
 		Optional<MemorySpace> memorySpace = getClan().getMemorySpace();
 		if (memorySpace.isPresent()) {
 			Node user_data = memorySpace.get().getNode("user-data");
@@ -257,7 +276,7 @@ public final class DefaultAssociate implements Clan.Associate, PersistentEntity 
 	/**
 	 * @return Gets the associates clan join date.
 	 */
-	public synchronized Date getJoinDate() {
+	public synchronized @NotNull Date getJoinDate() {
 		Optional<MemorySpace> memorySpace = getClan().getMemorySpace();
 		if (memorySpace.isPresent()) {
 			Node user_data = memorySpace.get().getNode("user-data");
@@ -361,7 +380,7 @@ public final class DefaultAssociate implements Clan.Associate, PersistentEntity 
 
 	@Override
 	public int getClaimLimit() {
-		return search != null && search.getPlayer().isOnline() ? Claim.ACTION.claimHardcap(getTag().getPlayer().getPlayer()) : getClan().getClaimLimit();
+		return search != null && search.getPlayer().isOnline() ? Claim.ACTION.getPlayerHardcap(getTag().getPlayer().getPlayer()) : getClan().getClaimLimit();
 	}
 
 	@Override
@@ -461,5 +480,18 @@ public final class DefaultAssociate implements Clan.Associate, PersistentEntity 
 	@Override
 	public @NotNull Optional<MemorySpace> getMemorySpace() {
 		return Optional.of(this);
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (!(o instanceof DefaultAssociate)) return false;
+		DefaultAssociate that = (DefaultAssociate) o;
+		return getName().equals(that.getName()) && getId().equals(that.getId()) && getRank().equals(that.getRank());
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(getName(), getId(), getRank());
 	}
 }

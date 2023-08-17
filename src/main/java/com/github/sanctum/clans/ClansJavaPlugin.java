@@ -14,15 +14,16 @@ import com.github.sanctum.clans.construct.api.ClansAPI;
 import com.github.sanctum.clans.construct.api.LogoGallery;
 import com.github.sanctum.clans.construct.bank.BankMeta;
 import com.github.sanctum.clans.construct.bank.backend.ClanFileBankBackend;
-import com.github.sanctum.clans.construct.extra.AsynchronousLoanableTask;
-import com.github.sanctum.clans.construct.extra.ClansUpdate;
-import com.github.sanctum.clans.construct.extra.MessagePrefix;
-import com.github.sanctum.clans.construct.extra.ReservedLogoCarrier;
-import com.github.sanctum.clans.construct.extra.Reservoir;
-import com.github.sanctum.clans.construct.extra.StartProcedure;
+import com.github.sanctum.clans.construct.util.AsynchronousLoanableTask;
+import com.github.sanctum.clans.construct.util.ClansUpdate;
+import com.github.sanctum.clans.construct.util.FileTypeCalculator;
+import com.github.sanctum.clans.construct.util.MessagePrefix;
+import com.github.sanctum.clans.construct.util.ReservedLogoCarrier;
+import com.github.sanctum.clans.construct.util.Reservoir;
+import com.github.sanctum.clans.construct.util.StartProcedure;
 import com.github.sanctum.clans.construct.impl.DefaultArena;
 import com.github.sanctum.clans.construct.impl.DefaultClaimFlag;
-import com.github.sanctum.clans.construct.impl.entity.AnimalAssociate;
+import com.github.sanctum.clans.construct.impl.entity.EntityAssociate;
 import com.github.sanctum.clans.listener.PlayerEventListener;
 import com.github.sanctum.labyrinth.LabyrinthProvider;
 import com.github.sanctum.labyrinth.api.Service;
@@ -45,7 +46,6 @@ import com.github.sanctum.panther.paste.PasteManager;
 import com.github.sanctum.panther.paste.type.Hastebin;
 import com.github.sanctum.panther.paste.type.Pastebin;
 import com.github.sanctum.panther.util.OrdinalProcedure;
-import com.github.sanctum.panther.util.PantherLogger;
 import com.github.sanctum.panther.util.Task;
 import com.github.sanctum.skulls.CustomHead;
 import java.io.File;
@@ -100,6 +100,8 @@ public class ClansJavaPlugin extends JavaPlugin implements ClansAPI, Vent.Host {
 
 	public void onLoad() {
 		fixDataFolder();
+		// register api on load, a change from before.
+		Bukkit.getServicesManager().register(ClansAPI.class, this, this, ServicePriority.Normal);
 	}
 
 	public void onEnable() {
@@ -206,7 +208,7 @@ public class ClansJavaPlugin extends JavaPlugin implements ClansAPI, Vent.Host {
 			c.save(); // save the clan
 			ClanFileBankBackend.saveOldFormat(c);
 			for (Clan.Associate a : c.getMembers()) {
-				if (!(a instanceof AnimalAssociate)) {
+				if (!(a instanceof EntityAssociate)) {
 					a.save(); // save associate data.
 				} else a.remove();
 			}
@@ -232,7 +234,7 @@ public class ClansJavaPlugin extends JavaPlugin implements ClansAPI, Vent.Host {
 			}
 		});
 
-		FileManager heads = getFileList().get("heads", "Configuration/Data");
+		FileManager heads = getFileList().get("heads", "Configuration/Data", Configurable.Type.JSON);
 		CustomHead.Manager.getHeads().stream().filter(h -> h.category().equals("ClansPro")).forEach(h -> {
 			heads.write(t -> {
 				t.set(h.name() + ".name", h.name());
@@ -371,31 +373,24 @@ public class ClansJavaPlugin extends JavaPlugin implements ClansAPI, Vent.Host {
 		pastebin = getPasteManager().newPaste("a5tsxh3c37_rmPTCN9gy9kjhd5vepz34");
 		STATE = new NamespacedKey(this, "online-state");
 		sessionId = UUID.randomUUID();
-		Bukkit.getServicesManager().register(ClansAPI.class, this, this, ServicePriority.Normal);
 		dataManager = new DataManager();
 		gallery = new LogoGallery();
-		FileManager main = dataManager.getConfig();
-		String s = main.read(c -> c.getNode("Formatting").getNode("file-type").toPrimitive().getString());
-		switch (s.toLowerCase(Locale.ROOT)) {
-			case "json":
-				TYPE = Configurable.Type.JSON;
-				break;
-			case "yaml":
-				TYPE = YamlExtension.INSTANCE;
-				break;
-		}
+		TYPE = new FileTypeCalculator(dataManager).getType();
 		clanManager = new ClanManager();
 		claimManager = new ClaimManager();
 		shieldManager = new ShieldManager();
 		commandManager = new CommandManager();
 		serviceManager = new KeyedServiceManager<>();
 		arenaManager = new ArenaManager();
+
 		// load configured arenas, each new arena allows for another war to be held.
-		int arenas = dataManager.getConfigInt("Clans.war.max-wars");
+		FileManager config = dataManager.getConfig();
+		Node clans = config.getRoot().getNode("Clans");
+		int arenas = clans.getNode("war").getNode("max-wars").toPrimitive().getInt();
 		for (int i = 0; i < arenas; i++) {
 			arenaManager.load(new DefaultArena("PRO-" + (i + 1)));
 		}
-		Node formatting = main.read(c -> c.getNode("Formatting"));
+		Node formatting = config.read(c -> c.getNode("Formatting"));
 		Node prefix = formatting.getNode("prefix");
 		this.prefix = new MessagePrefix(prefix.getNode("prefix").toPrimitive().getString(),
 				prefix.getNode("text").toPrimitive().getString(),

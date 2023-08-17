@@ -3,9 +3,9 @@ package com.github.sanctum.clans.construct.api;
 import com.github.sanctum.clans.bridge.ClanAddon;
 import com.github.sanctum.clans.bridge.ClanAddonQueue;
 import com.github.sanctum.clans.bridge.LoadResult;
-import com.github.sanctum.clans.construct.extra.DocketUtils;
-import com.github.sanctum.clans.construct.extra.ReloadUtility;
-import com.github.sanctum.clans.construct.extra.SimpleLogoCarrier;
+import com.github.sanctum.clans.construct.impl.DefaultDocketRegistry;
+import com.github.sanctum.clans.construct.util.ReloadUtility;
+import com.github.sanctum.clans.construct.util.SimpleLogoCarrier;
 import com.github.sanctum.labyrinth.LabyrinthProvider;
 import com.github.sanctum.labyrinth.api.Service;
 import com.github.sanctum.labyrinth.data.EconomyProvision;
@@ -311,7 +311,7 @@ public enum GUI {
 						.join();
 			case HEAD_LIBRARY:
 				String id = ClansAPI.getDataInstance().getMessageString("menu.head-library.id");
-				MemoryDocket<?> docket = DocketUtils.get(id);
+				MemoryDocket<?> docket = DefaultDocketRegistry.get(id);
 				if (docket != null) return docket.toMenu();
 			case LOGO_LIST:
 				return MenuType.PAGINATED.build()
@@ -393,7 +393,7 @@ public enum GUI {
 						}).orGet(m -> m instanceof PaginatedMenu && m.getKey().map(("ClansPro:logo-list")::equals).orElse(false));
 			case CLAN_ROSTER:
 				String rosterId = ClansAPI.getDataInstance().getMessageString("menu.roster.id");
-				MemoryDocket<?> rosterDocket = DocketUtils.get(rosterId);
+				MemoryDocket<?> rosterDocket = DefaultDocketRegistry.get(rosterId);
 				if (rosterDocket != null) return rosterDocket.toMenu();
 			case SETTINGS_CLAN_ROSTER:
 				return MenuType.PAGINATED.build().setHost(api.getPlugin())
@@ -484,11 +484,11 @@ public enum GUI {
 						}).orGet(m -> m instanceof PaginatedMenu && m.getKey().isPresent() && m.getKey().get().equals("ClansPro:Roster_edit"));
 			case CLAN_ROSTER_TOP:
 				String rosterTopId = ClansAPI.getDataInstance().getMessageString("menu.roster-top.id");
-				MemoryDocket<?> docket2 = DocketUtils.get(rosterTopId);
+				MemoryDocket<?> docket2 = DefaultDocketRegistry.get(rosterTopId);
 				if (docket2 != null) return docket2.toMenu();
 			case CLAN_ROSTER_SELECTION:
 				String selectID = ClansAPI.getDataInstance().getMessageString("menu.roster-select.id");
-				MemoryDocket<?> docket3 = DocketUtils.get(selectID);
+				MemoryDocket<?> docket3 = DefaultDocketRegistry.get(selectID);
 				if (docket3 != null) return docket3.toMenu();
 			case SETTINGS_SELECT:
 				return MenuType.SINGULAR.build()
@@ -2105,7 +2105,7 @@ public enum GUI {
 						}).orGet(m -> m instanceof PaginatedMenu && m.getKey().map(("ClansPro:" + clan.getName() + "-members-edit")::equals).orElse(false));
 			case MEMBER_LIST:
 				Node h = ClansAPI.getDataInstance().getMessages().getRoot().getNode("menu.members");
-				MemoryDocket<Clan.Associate> dm = DocketUtils.get(Clan.memoryDocketReplacer().apply(h.getNode("id").toPrimitive().getString(), clan));
+				MemoryDocket<Clan.Associate> dm = DefaultDocketRegistry.get(Clan.memoryDocketReplacer().apply(h.getNode("id").toPrimitive().getString(), clan));
 				if (dm != null) {
 					return dm.toMenu();
 				}

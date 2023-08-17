@@ -11,8 +11,7 @@ import com.github.sanctum.clans.construct.api.OutgoingConsultationListener;
 import com.github.sanctum.clans.construct.api.Relation;
 import com.github.sanctum.clans.construct.api.Teleport;
 import com.github.sanctum.clans.construct.api.Ticket;
-import com.github.sanctum.clans.construct.extra.PrivateContainer;
-import com.github.sanctum.clans.construct.impl.Resident;
+import com.github.sanctum.clans.construct.util.HiddenMetadata;
 import com.github.sanctum.labyrinth.data.Atlas;
 import com.github.sanctum.labyrinth.data.AtlasMap;
 import com.github.sanctum.labyrinth.library.Mailer;
@@ -58,10 +57,10 @@ public class ServerAssociate implements Clan.Associate, Consultant {
 		this.join = new Date();
 		this.tag = parent.getTag();
 		this.data = new Object() {
-			final PrivateContainer container;
+			final HiddenMetadata container;
 
 			{
-				container = new PrivateContainer() {
+				container = new HiddenMetadata() {
 
 					final Atlas map = new AtlasMap();
 
@@ -83,7 +82,7 @@ public class ServerAssociate implements Clan.Associate, Consultant {
 			}
 
 			@Ordinal(32)
-			private PrivateContainer getContainer() {
+			private HiddenMetadata getContainer() {
 				return container;
 			}
 		};
@@ -138,7 +137,7 @@ public class ServerAssociate implements Clan.Associate, Consultant {
 	/**
 	 * @return Gets the associates possible claim information. If the player is not in a claim this will return empty.
 	 */
-	public Optional<Resident> toResident() {
+	public Optional<Claim.Resident> toResident() {
 		return Optional.empty();
 	}
 
@@ -157,11 +156,15 @@ public class ServerAssociate implements Clan.Associate, Consultant {
 		throw new RuntimeException("You are not permitted to use this object!");
 	}
 
-	/**
-	 * @return Gets the associates rank priority.
-	 */
-	public Clan.Rank getPriority() {
+	@NotNull
+	@Override
+	public Clan.Rank getRank() {
 		return this.rank;
+	}
+
+	@Override
+	public void setRank(Clan.Rank priority) {
+		this.rank = priority;
 	}
 
 	/**
@@ -203,18 +206,9 @@ public class ServerAssociate implements Clan.Associate, Consultant {
 	}
 
 	/**
-	 * Update the associates rank priority.
-	 *
-	 * @param priority The rank priority to update the associate with.
-	 */
-	public void setPriority(Clan.Rank priority) {
-		this.rank = priority;
-	}
-
-	/**
 	 * @return Gets the associates clan nick-name, if one is not present their full user-name will be returned.
 	 */
-	public synchronized String getNickname() {
+	public synchronized @NotNull String getNickname() {
 		return nick != null ? nick : getName();
 	}
 
@@ -228,7 +222,7 @@ public class ServerAssociate implements Clan.Associate, Consultant {
 	/**
 	 * @return Gets the associates clan join date.
 	 */
-	public synchronized Date getJoinDate() {
+	public synchronized @NotNull Date getJoinDate() {
 		return join;
 	}
 

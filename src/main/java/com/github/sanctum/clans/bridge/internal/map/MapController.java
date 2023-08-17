@@ -372,7 +372,7 @@ public class MapController implements Listener {
 									p.setRepresentation('⬜');
 									try {
 										Location location = (new Location(e.getPlayer().getWorld(), (p.chunkPosition.x << 4), 110, (p.chunkPosition.z << 4))).add(7.0D, 0.0D, 7.0D);
-										if (Claim.ACTION.getChunksAroundLocation(location, -1, 0, 1).stream().anyMatch(c -> ClansAPI.getInstance().getClaimManager().isInClaim(c))) {
+										if (Claim.ACTION.getSurroundingChunks(location, -1, 0, 1).deploy().stream().anyMatch(c -> ClansAPI.getInstance().getClaimManager().isInClaim(c))) {
 											p.setAppliance(() -> {
 												Clan c = ClansAPI.getInstance().getClanManager().getClan(e.getPlayer().getUniqueId());
 												if (c != null) {

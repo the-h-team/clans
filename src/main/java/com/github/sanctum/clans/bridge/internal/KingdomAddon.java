@@ -3,7 +3,6 @@ package com.github.sanctum.clans.bridge.internal;
 import com.github.sanctum.clans.bridge.ClanAddon;
 import com.github.sanctum.clans.bridge.internal.kingdoms.Kingdom;
 import com.github.sanctum.clans.bridge.internal.kingdoms.Progressive;
-import com.github.sanctum.clans.bridge.internal.kingdoms.RoundTable;
 import com.github.sanctum.clans.bridge.internal.kingdoms.command.KingdomCommand;
 import com.github.sanctum.clans.bridge.internal.kingdoms.listener.KingdomController;
 import com.github.sanctum.clans.construct.api.ClansAPI;
@@ -46,14 +45,8 @@ public class KingdomAddon extends ClanAddon {
 		getContext().stage(new KingdomController(this));
 	}
 
-	public static RoundTable getRoundTable() {
-		return Progressive.getProgressives().stream().filter(p -> p instanceof RoundTable).map(p -> (RoundTable) p).findFirst().orElse(null);
-	}
-
 	@Override
 	public void onEnable() {
-
-		Progressive.capture(new RoundTable(this));
 
 		FileManager kingdoms = getFile(Configurable.Type.JSON, "kingdoms", "data");
 		FileManager data = getFile(Configurable.Type.JSON, "achievements", "data");
@@ -63,7 +56,7 @@ public class KingdomAddon extends ClanAddon {
 
 			if (!kingdoms.getRoot().getKeys(false).isEmpty()) {
 				for (String name : kingdoms.getRoot().getKeys(false)) {
-					Progressive.capture(new Kingdom(name, this));
+					Progressive.register(new Kingdom(name, this));
 				}
 			}
 

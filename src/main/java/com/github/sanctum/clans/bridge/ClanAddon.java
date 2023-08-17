@@ -5,7 +5,6 @@ import com.github.sanctum.clans.construct.api.ClansAPI;
 import com.github.sanctum.labyrinth.LabyrinthProvider;
 import com.github.sanctum.labyrinth.data.FileList;
 import com.github.sanctum.labyrinth.data.FileManager;
-import com.github.sanctum.labyrinth.data.YamlExtension;
 import com.github.sanctum.labyrinth.data.container.KeyedServiceManager;
 import com.github.sanctum.labyrinth.library.Mailer;
 import com.github.sanctum.labyrinth.task.TaskScheduler;
@@ -390,9 +389,9 @@ public abstract class ClanAddon {
 	 */
 	public final @NotNull FileManager getFile(String name, String... directory) {
 		if (directory == null) {
-			return getFile(YamlExtension.INSTANCE, name);
+			return getFile(Configurable.Type.YAML, name);
 		} else {
-			return getFile(YamlExtension.INSTANCE, name, directory);
+			return getFile(Configurable.Type.YAML, name, directory);
 		}
 	}
 
@@ -400,7 +399,7 @@ public abstract class ClanAddon {
 	 * Locate and modify an existing file or create a new one.
 	 *
 	 * @param name      The name of the file.
-	 * @param extension The file extension to use. Ex. [{@linkplain com.github.sanctum.panther.file.Configurable.Type#JSON}, {@linkplain YamlExtension#INSTANCE}]
+	 * @param extension The file extension to use. Ex. [{@linkplain com.github.sanctum.panther.file.Configurable.Type#JSON}, {@linkplain com.github.sanctum.panther.file.Configurable.Type#YAML}]
 	 * @param directory The directory the file lies within.
 	 * @return A cached file manager.
 	 */

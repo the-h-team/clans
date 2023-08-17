@@ -53,22 +53,11 @@ public class VaultMenu extends Menu {
 					click.setCancelled(true);
 				}
 			};
-			if (oldExists(c.getId())) {
-				for (ItemStack it : getInventoryContentsOld(Check.forNull(c.getId(), "Clan '" + clanName + "' not found!"))) {
-					if (Objects.equals(it, null)) {
-						getInventory().getElement().addItem(new ItemStack(Material.AIR));
-					} else {
-						getInventory().getElement().addItem(it);
-					}
-				}
-				c.removeValue("vault");
-			} else {
-				for (ItemStack it : getInventoryContentNew(Check.forNull(c.getId(), "Clan '" + clanName + "' not found!"))) {
-					if (Objects.equals(it, null)) {
-						getInventory().getElement().addItem(new ItemStack(Material.AIR));
-					} else {
-						getInventory().getElement().addItem(it);
-					}
+			for (ItemStack it : getInventoryContents(Check.forNull(c.getId(), "Clan '" + clanName + "' not found!"))) {
+				if (Objects.equals(it, null)) {
+					getInventory().getElement().addItem(new ItemStack(Material.AIR));
+				} else {
+					getInventory().getElement().addItem(it);
 				}
 			}
 			try {
@@ -78,22 +67,7 @@ public class VaultMenu extends Menu {
 		}
 	}
 
-	boolean oldExists(HUID id) {
-		Clan c = ClansAPI.getInstance().getClanManager().getClan(id);
-		return c.getValue(ItemStack[].class, "vault") != null;
-	}
-
-	ItemStack[] getInventoryContentsOld(HUID clanID) {
-		Clan c = ClansAPI.getInstance().getClanManager().getClan(clanID);
-		ItemStack[] content = new ItemStack[54];
-		ItemStack[] copy = c.getValue(ItemStack[].class, "vault");
-		if (copy != null) {
-			System.arraycopy(copy, 0, content, 0, 54);
-		}
-		return content;
-	}
-
-	ItemStack[] getInventoryContentNew(HUID id) {
+	ItemStack[] getInventoryContents(HUID id) {
 		List<ItemStack> list = new ArrayList<>(54);
 		ClanAddon vaults = ClanAddon.getAddon(VaultsAddon.class);
 		if (vaults != null) {

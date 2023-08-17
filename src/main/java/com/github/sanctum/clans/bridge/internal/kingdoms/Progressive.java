@@ -28,7 +28,7 @@ public abstract class Progressive implements MemorySpace {
 		return Collections.unmodifiableList(PROGRESSIVES);
 	}
 
-	public static void capture(Progressive progressive) {
+	public static void register(Progressive progressive) {
 		PROGRESSIVES.add(progressive);
 	}
 
@@ -36,16 +36,8 @@ public abstract class Progressive implements MemorySpace {
 		return (Kingdom) this;
 	}
 
-	public final RoundTable getAsRoundTable() {
-		return (RoundTable) this;
-	}
-
 	public final boolean isKingdom() {
 		return this instanceof Kingdom;
-	}
-
-	public final boolean isRoundtable() {
-		return this instanceof RoundTable;
 	}
 
 }

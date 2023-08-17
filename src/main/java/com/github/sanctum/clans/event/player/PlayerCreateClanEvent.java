@@ -12,7 +12,7 @@ public class PlayerCreateClanEvent extends PlayerEvent {
 
 	private final String name;
 
-	private final String password;
+	private String password;
 
 	public PlayerCreateClanEvent(UUID owner, String name, String password) {
 		super(owner, false);
@@ -34,4 +34,7 @@ public class PlayerCreateClanEvent extends PlayerEvent {
 		return password;
 	}
 
+	public void setPassword(String password) {
+		this.password = password;
+	}
 }

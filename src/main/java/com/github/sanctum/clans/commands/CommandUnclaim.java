@@ -6,7 +6,7 @@ import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClanSubCommand;
 import com.github.sanctum.clans.construct.api.ClansAPI;
 import com.github.sanctum.clans.construct.api.Clearance;
-import com.github.sanctum.clans.construct.extra.StringLibrary;
+import com.github.sanctum.clans.construct.util.StringLibrary;
 import com.github.sanctum.labyrinth.formatting.completion.SimpleTabCompletion;
 import com.github.sanctum.labyrinth.formatting.completion.TabCompletionIndex;
 import java.util.List;
@@ -29,9 +29,9 @@ public class CommandUnclaim extends ClanSubCommand {
 				return true;
 			}
 			if (associate != null) {
-				if (Claim.ACTION.isEnabled()) {
+				if (Claim.ACTION.isAllowed().deploy()) {
 					if (Clearance.MANAGE_LAND.test(associate)) {
-						Claim.ACTION.unclaim(p);
+						Claim.ACTION.unclaim(p).run();
 					} else {
 						lib.sendMessage(p, lib.noClearance());
 					}
@@ -46,7 +46,7 @@ public class CommandUnclaim extends ClanSubCommand {
 		}
 
 		if (args.length == 1) {
-			if (Claim.ACTION.isEnabled()) {
+			if (Claim.ACTION.isAllowed().deploy()) {
 				if (args[0].equalsIgnoreCase("all")) {
 					if (!Clan.ACTION.test(p, this.getPermission() + "." + DataManager.Security.getPermission("unclaimall")).deploy()) {
 						lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("unclaimall")));
@@ -54,7 +54,7 @@ public class CommandUnclaim extends ClanSubCommand {
 					}
 					if (associate != null) {
 						if (Clearance.MANAGE_ALL_LAND.test(associate)) {
-							Claim.ACTION.unclaimAll(p);
+							Claim.ACTION.unclaimAll(p).run();
 						} else {
 							lib.sendMessage(p, lib.noClearance());
 							return true;

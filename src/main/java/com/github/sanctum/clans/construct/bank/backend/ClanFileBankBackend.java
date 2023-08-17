@@ -7,6 +7,7 @@ import com.github.sanctum.clans.construct.bank.BankBackend;
 import com.github.sanctum.clans.construct.bank.BankLog;
 import com.github.sanctum.clans.construct.bank.BankMeta;
 import com.github.sanctum.clans.event.bank.BankTransactionEvent;
+import com.github.sanctum.panther.annotation.Ordinal;
 import com.github.sanctum.panther.file.Configurable;
 import com.github.sanctum.panther.file.Node;
 import com.github.sanctum.panther.file.Primitive;
@@ -28,15 +29,22 @@ import org.jetbrains.annotations.NotNull;
  */
 public class ClanFileBankBackend implements BankBackend {
     final Configurable clanFile;
+    final Clan clanReference;
     final Field mapOnAccessMapField;
 
     public ClanFileBankBackend(@NotNull Clan clan) {
         clanFile = ClansAPI.getDataInstance().getClanFile(clan).getRoot();
+        this.clanReference = clan;
         try {
             mapOnAccessMapField = BankAction.AccessMap.class.getDeclaredField("acl");
         } catch (NoSuchFieldException e) {
             throw new IllegalStateException(e);
         }
+    }
+
+    @Ordinal(2)
+    Clan getClanReference() {
+        return clanReference;
     }
 
     @Override

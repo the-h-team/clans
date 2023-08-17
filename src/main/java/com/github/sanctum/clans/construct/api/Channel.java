@@ -1,6 +1,6 @@
 package com.github.sanctum.clans.construct.api;
 
-import com.github.sanctum.clans.construct.extra.BukkitColor;
+import com.github.sanctum.clans.construct.util.BukkitColor;
 import com.github.sanctum.labyrinth.LabyrinthProvider;
 import com.github.sanctum.labyrinth.data.service.Constant;
 import com.github.sanctum.labyrinth.formatting.FancyMessage;
