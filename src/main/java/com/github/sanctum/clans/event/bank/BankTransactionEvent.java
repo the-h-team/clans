@@ -3,57 +3,45 @@ package com.github.sanctum.clans.event.bank;
 import com.github.sanctum.clans.construct.api.ClanBank;
 import com.github.sanctum.clans.event.bank.messaging.Messages;
 import java.math.BigDecimal;
-import org.bukkit.entity.Player;
 
-public class BankTransactionEvent extends BankActionEvent {
+import com.github.sanctum.labyrinth.interfacing.Nameable;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
+public class BankTransactionEvent extends BankEvent {
 
     public enum Type {
         DEPOSIT, WITHDRAWAL
     }
 
-    protected final Player player;
+    protected final Nameable entity;
     protected final BigDecimal amount;
     protected final boolean success;
     protected final Type type;
 
-    public BankTransactionEvent(Player player, ClanBank clanBank, BigDecimal amount, String clanId, boolean success, Type type) {
-        super(clanBank, clanId);
-        this.player = player;
+    public BankTransactionEvent(@NotNull ClanBank clanBank, @NotNull BigDecimal amount, @Nullable Nameable entity, boolean success, Type type) {
+        super(clanBank, false);
+        this.entity = entity;
         this.amount = amount;
         this.success = success;
         this.type = type;
     }
 
     public BankTransactionEvent(BankTransactionEvent event) {
-        super(event.clanBank, event.clanId);
-        this.player = event.player;
-        this.amount = event.amount;
-        this.success = event.success;
-        this.type = event.type;
+        this(event.getBank(), event.amount, event.entity, event.success, event.type);
     }
 
     /**
-     * Get the player associated with this transaction
+     * Gets the entity associated with this transaction, if any.
      *
-     * @return Player
+     * @return the entity or null if none
      */
-    public Player getPlayer() {
-        return player;
+    public final @Nullable Nameable getEntity() {
+        return entity;
     }
 
     /**
-     * Get the ClanBank associated with this transaction
-     *
-     * @return the ClanBank
-     */
-    @SuppressWarnings("EmptyMethod")
-    @Override
-    public ClanBank getClanBank() {
-        return super.getClanBank();
-    }
-
-    /**
-     * Get the amount involved with this transaction
+     * Gets the amount of this transaction.
      *
      * @return a BigDecimal amount
      */
@@ -62,7 +50,7 @@ public class BankTransactionEvent extends BankActionEvent {
     }
 
     /**
-     * Denotes whether or not the transaction was successful
+     * Indicates whether the transaction was successful.
      *
      * @return true if successful
      */
@@ -71,7 +59,7 @@ public class BankTransactionEvent extends BankActionEvent {
     }
 
     /**
-     * A transaction may constitute a deposit or withdrawal
+     * A transaction may constitute a deposit or withdrawal.
      *
      * @return transaction type
      */
@@ -85,13 +73,13 @@ public class BankTransactionEvent extends BankActionEvent {
             case DEPOSIT:
                 return Messages.TRANSACTION_DEPOSIT.toString()
                         .replace("{0}", this.success ? Messages.TRANSACTION_SUCCESS.toString() : Messages.TRANSACTION_FAILURE.toString())
-                        .replace("{1}", player.getName())
+                        .replace("{1}", entity.getName())
                         .replace("{2}", amount.toString())
                         .replace("{3}", getClan().getName());
             case WITHDRAWAL:
                 return Messages.TRANSACTION_WITHDRAW.toString()
                         .replace("{0}", this.success ? Messages.TRANSACTION_SUCCESS.toString() : Messages.TRANSACTION_FAILURE.toString())
-                        .replace("{1}", player.getName())
+                        .replace("{1}", entity.getName())
                         .replace("{2}", amount.toString())
                         .replace("{3}", getClan().getName());
             default:

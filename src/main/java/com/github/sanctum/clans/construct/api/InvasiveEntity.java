@@ -690,14 +690,23 @@ public interface InvasiveEntity extends Nameable, LogoHolder, Comparable<Invasiv
 		return (o1, o2) -> {
 			if (o1.isClan()) {
 				if (o2.isClan()) {
-					return Double.compare(o2.getAsClan().getBalanceDouble(), o1.getAsClan().getBalanceDouble());
+					return Double.compare(
+							BanksAPI.getInstance().getBank(o2.getAsClan()).getBalanceDouble(),
+							BanksAPI.getInstance().getBank(o1.getAsClan()).getBalanceDouble()
+					);
 				}
-				return Double.compare(o1.getAsClan().getBalanceDouble(), o2.getAsAssociate().getClan().getBalanceDouble());
+				return Double.compare(
+						BanksAPI.getInstance().getBank(o1.getAsClan()).getBalanceDouble(),
+						BanksAPI.getInstance().getBank(o2.getAsAssociate().getClan()).getBalanceDouble()
+				);
 			}
 			if (EconomyProvision.getInstance().isValid()) {
 				return Double.compare(EconomyProvision.getInstance().balance(o1.getAsAssociate().getTag().getPlayer()).orElse(0.0), EconomyProvision.getInstance().balance(o2.getAsAssociate().getTag().getPlayer()).orElse(0.0));
-			} else
-			return Double.compare(o1.getAsAssociate().getClan().getBalanceDouble(), o2.getAsAssociate().getClan().getBalanceDouble());
+			}
+			return Double.compare(
+					BanksAPI.getInstance().getBank(o1.getAsAssociate().getClan()).getBalanceDouble(),
+					BanksAPI.getInstance().getBank(o2.getAsAssociate().getClan()).getBalanceDouble()
+			);
 		};
 	}
 

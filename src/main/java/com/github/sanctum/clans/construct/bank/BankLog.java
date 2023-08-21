@@ -1,7 +1,5 @@
 package com.github.sanctum.clans.construct.bank;
 
-import com.github.sanctum.clans.construct.api.Clan;
-import com.github.sanctum.clans.construct.impl.DefaultClan;
 import com.github.sanctum.clans.event.bank.BankTransactionEvent;
 import java.io.Serializable;
 import java.math.BigDecimal;
@@ -10,6 +8,8 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+
+import com.github.sanctum.labyrinth.interfacing.Nameable;
 import net.md_5.bungee.api.ChatColor;
 
 public class BankLog implements Serializable {
@@ -41,29 +41,31 @@ public class BankLog implements Serializable {
                             (type == BankTransactionEvent.Type.DEPOSIT ? "&adeposited" : "&cwithdrew"),
                             localDateTime.format(DateTimeFormatter.ofPattern("h:mma '&7on&f' MMM dd',' yyyy"))));
         }
+
+        public static Transaction from(BankTransactionEvent e) {
+            return new Transaction(unwrapNameable(e.getEntity()), e.getTransactionType(), e.getAmount());
+        }
     }
 
-    private final List<Transaction> transactions = new ArrayList<>();
+    final List<Transaction> transactions = new ArrayList<>();
 
     public void addTransaction(BankTransactionEvent e) {
-        transactions.add(new Transaction(e.getPlayer().getDisplayName(), e.getTransactionType(), e.getAmount()));
-        saveForClan((DefaultClan) e.getClan());
+        transactions.add(new Transaction(unwrapNameable(e.getEntity()), e.getTransactionType(), e.getAmount()));
     }
 
     public void addTransaction(BankTransactionEvent e, LocalDateTime localDateTime) {
-        transactions.add(new Transaction(e.getPlayer().getDisplayName(), e.getTransactionType(), e.getAmount(), localDateTime));
-        saveForClan((DefaultClan) e.getClan());
+        transactions.add(new Transaction(unwrapNameable(e.getEntity()), e.getTransactionType(), e.getAmount(), localDateTime));
     }
 
     public final List<Transaction> getTransactions() {
         return Collections.unmodifiableList(transactions);
     }
 
-    public void saveForClan(DefaultClan clan) {
-        BankMeta.get(clan).storeBankLog(this);
-    }
-
-    public static BankLog getForClan(Clan clan) {
-        return BankMeta.get(clan).getBankLog().orElseGet(BankLog::new);
+    private static String unwrapNameable(Nameable entity) {
+        if (entity != null) { // Handles associates too
+            return entity.getName();
+        } else {
+            return "";
+        }
     }
 }

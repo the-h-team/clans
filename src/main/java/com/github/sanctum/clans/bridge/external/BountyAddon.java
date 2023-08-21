@@ -6,6 +6,7 @@ import com.github.sanctum.clans.bridge.ClanVentBus;
 import com.github.sanctum.clans.bridge.external.bounty.Bounty;
 import com.github.sanctum.clans.bridge.external.bounty.BountyCommand;
 import com.github.sanctum.clans.bridge.external.bounty.BountyList;
+import com.github.sanctum.clans.construct.api.BanksAPI;
 import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClansAPI;
 import com.github.sanctum.clans.event.command.CommandInformationAdaptEvent;
@@ -80,17 +81,17 @@ public class BountyAddon extends ClanAddon {
 										.replace("{PLAYER}", e.getVictim().getName());
 								Bukkit.broadcastMessage(StringUtils.use(format).translate());
 							}
-							if (t.has(b.getAmount())) {
-								BigDecimal newBal = t.getBalance().subtract(b.getAmount());
-								t.setBalance(newBal);
+							if (BanksAPI.getInstance().getBank(t).has(b.getAmount())) {
+								BigDecimal newBal = BanksAPI.getInstance().getBank(t).getBalance().subtract(b.getAmount());
+								BanksAPI.getInstance().getBank(t).setBalance(newBal);
 								if (ClansAPI.getDataInstance().getConfig().getRoot().getString("Addon.Bounty.settings.deposit-type").equals("PLAYER")) {
 									boolean deposit = EconomyProvision.getInstance().deposit(b.getAmount(), p, p.getWorld().getName()).orElse(false);
 									if (!deposit) {
 										Clan.ACTION.sendMessage(p, "&c&oSomething went wrong with paying you.. This is awkward.");
 									}
 								} else if (ClansAPI.getDataInstance().getConfig().getRoot().getString("Addon.Bounty.settings.deposit-type").equals("CLAN")) {
-									newBal = c.getBalance().add(b.getAmount());
-									c.setBalance(newBal);
+									newBal = BanksAPI.getInstance().getBank(c).getBalance().add(b.getAmount());
+									BanksAPI.getInstance().getBank(c).setBalance(newBal);
 									c.broadcast("&2" + e.getVictim().getName() + "'s &abounty was retrieved and they were killed in the process. We gained &6$" + b.getAmount().doubleValue());
 									// broadcast bounty retrieval?
 								}
@@ -109,8 +110,8 @@ public class BountyAddon extends ClanAddon {
 										Clan.ACTION.sendMessage(p, "&c&oSomething went wrong with paying you.. This is awkward.");
 									}
 								} else if (ClansAPI.getDataInstance().getConfig().getRoot().getString("Addon.Bounty.settings.deposit-type").equals("CLAN")) {
-									BigDecimal newBal = c.getBalance().add(b.getAmount());
-									c.setBalance(newBal);
+									BigDecimal newBal = BanksAPI.getInstance().getBank(c).getBalance().add(b.getAmount());
+									BanksAPI.getInstance().getBank(c).setBalance(newBal);
 									c.broadcast("&2" + e.getVictim().getName() + "'s &abounty was retrieved and they were killed in the process. We gained &6$" + b.getAmount().doubleValue());
 								}
 							}
@@ -136,8 +137,8 @@ public class BountyAddon extends ClanAddon {
 									Clan.ACTION.sendMessage(p, "&c&oSomething went wrong with paying you.. This is awkward.");
 								}
 							} else if (ClansAPI.getDataInstance().getConfig().getRoot().getString("Addon.Bounty.settings.deposit-type").equals("CLAN")) {
-								BigDecimal newBal = c.getBalance().add(b.getAmount());
-								c.setBalance(newBal);
+								BigDecimal newBal = BanksAPI.getInstance().getBank(c).getBalance().add(b.getAmount());
+								BanksAPI.getInstance().getBank(c).setBalance(newBal);
 								c.broadcast("&2" + e.getVictim().getName() + "'s &abounty was retrieved and they were killed in the process. We gained &6$" + b.getAmount().doubleValue());
 								// broadcast bounty retrieval?
 							}
@@ -152,8 +153,8 @@ public class BountyAddon extends ClanAddon {
 								Clan.ACTION.sendMessage(p, "&c&oSomething went wrong with paying you.. This is awkward.");
 							}
 						} else if (ClansAPI.getDataInstance().getConfig().getRoot().getString("Addon.Bounty.settings.deposit-type").equals("CLAN")) {
-							BigDecimal newBal = c.getBalance().add(b.getAmount());
-							c.setBalance(newBal);
+							BigDecimal newBal = BanksAPI.getInstance().getBank(c).getBalance().add(b.getAmount());
+							BanksAPI.getInstance().getBank(c).setBalance(newBal);
 						}
 						if (ClansAPI.getDataInstance().isTrue("Addon.Bounty.settings.announce-defeat")) {
 							String format = ClansAPI.getDataInstance().getConfig().getRoot().getString("Addon.Bounty.settings.defeat-message")

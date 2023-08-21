@@ -3,19 +3,20 @@ package com.github.sanctum.clans.event.bank;
 import com.github.sanctum.clans.construct.api.ClanBank;
 import java.math.BigDecimal;
 import org.bukkit.event.Cancellable;
+import org.jetbrains.annotations.NotNull;
 
-public class BankSetBalanceEvent extends BankActionEvent implements Cancellable {
+public class BankSetBalanceEvent extends BankEvent implements Cancellable {
 
     private final BigDecimal newBalance;
     private boolean cancelled = false;
 
-    public BankSetBalanceEvent(ClanBank clanBank, String clanId, BigDecimal newBalance) {
-        super(clanBank, clanId);
+    public BankSetBalanceEvent(@NotNull ClanBank clanBank, @NotNull BigDecimal newBalance) {
+        super(clanBank, false);
         this.newBalance = newBalance;
     }
 
     /**
-     * Get the potential new balance
+     * Gets the potential new balance.
      *
      * @return the desired balance as a BigDecimal
      */
@@ -24,7 +25,7 @@ public class BankSetBalanceEvent extends BankActionEvent implements Cancellable 
     }
 
     /**
-     * Get the potential new balance
+     * Gets the potential new balance.
      *
      * @return the desired balance as a double
      */

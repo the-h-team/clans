@@ -1423,7 +1423,7 @@ public enum GUI {
 
 							// 9, 17
 
-							i.addItem(builder -> builder.setElement(edit -> edit.setType(Material.BOOK).setTitle("&6Balance: &f" + clan.getBalanceDouble()).setFlags(ItemFlag.HIDE_ENCHANTS).addEnchantment(Enchantment.MENDING, 1).build()).setSlot(9).setType(ItemElement.ControlType.DISPLAY));
+							i.addItem(builder -> builder.setElement(edit -> edit.setType(Material.BOOK).setTitle("&6Balance: &f" + BanksAPI.getInstance().getBank(clan).getBalanceDouble()).setFlags(ItemFlag.HIDE_ENCHANTS).addEnchantment(Enchantment.MENDING, 1).build()).setSlot(9).setType(ItemElement.ControlType.DISPLAY));
 							i.addItem(builder -> builder.setElement(edit -> edit.setType(Material.ANVIL).setTitle("&aDeposit +").build()).setSlot(11).setClick(click -> {
 								click.setCancelled(true);
 								MenuType.PRINTABLE.build()

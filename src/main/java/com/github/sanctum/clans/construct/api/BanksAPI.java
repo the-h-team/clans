@@ -1,6 +1,6 @@
 package com.github.sanctum.clans.construct.api;
 
-import com.github.sanctum.clans.construct.bank.api.DefaultBanksAPIImpl;
+import com.github.sanctum.clans.construct.bank.DefaultBanksAPIImpl;
 import com.github.sanctum.labyrinth.LabyrinthProvider;
 import org.bukkit.plugin.ServicePriority;
 import org.jetbrains.annotations.Nullable;

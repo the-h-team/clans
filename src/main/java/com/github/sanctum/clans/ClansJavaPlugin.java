@@ -12,8 +12,6 @@ import com.github.sanctum.clans.construct.api.Claim;
 import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClansAPI;
 import com.github.sanctum.clans.construct.api.LogoGallery;
-import com.github.sanctum.clans.construct.bank.BankMeta;
-import com.github.sanctum.clans.construct.bank.backend.ClanFileBankBackend;
 import com.github.sanctum.clans.construct.util.AsynchronousLoanableTask;
 import com.github.sanctum.clans.construct.util.ClansUpdate;
 import com.github.sanctum.clans.construct.util.FileTypeCalculator;
@@ -30,7 +28,6 @@ import com.github.sanctum.labyrinth.api.Service;
 import com.github.sanctum.labyrinth.api.TaskService;
 import com.github.sanctum.labyrinth.data.FileList;
 import com.github.sanctum.labyrinth.data.FileManager;
-import com.github.sanctum.labyrinth.data.YamlExtension;
 import com.github.sanctum.labyrinth.data.container.KeyedServiceManager;
 import com.github.sanctum.labyrinth.data.container.PersistentContainer;
 import com.github.sanctum.labyrinth.formatting.FancyMessageChain;
@@ -51,7 +48,6 @@ import com.github.sanctum.skulls.CustomHead;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
-import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
@@ -199,14 +195,12 @@ public class ClansJavaPlugin extends JavaPlugin implements ClansAPI, Vent.Host {
 			});
 		}
 
-		BankMeta.clearManagerCache();
 		dataManager.ID_MODE.clear();
 
 		PlayerEventListener.ARMOR_STAND_REMOVAL.run(this).deploy();
 
 		getClanManager().getClans().forEach(c -> {
 			c.save(); // save the clan
-			ClanFileBankBackend.saveOldFormat(c);
 			for (Clan.Associate a : c.getMembers()) {
 				if (!(a instanceof EntityAssociate)) {
 					a.save(); // save associate data.

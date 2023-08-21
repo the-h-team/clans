@@ -4,10 +4,12 @@ import com.github.sanctum.clans.bridge.ClanAddon;
 import com.github.sanctum.clans.bridge.ClanAddonQueue;
 import com.github.sanctum.clans.bridge.internal.map.MapController;
 import com.github.sanctum.clans.construct.DataManager;
+import com.github.sanctum.clans.construct.api.BanksAPI;
 import com.github.sanctum.clans.construct.api.Claim;
 import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClansAPI;
 import com.github.sanctum.clans.construct.api.War;
+import com.github.sanctum.labyrinth.data.EconomyProvision;
 import org.bukkit.OfflinePlayer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -128,10 +130,10 @@ public final class UnifiedPlaceholders {
 			}
 			if (context.equals("clan_balance")) {
 				String result = "0";
-				if (c.getBalance() == null) {
+				if (!EconomyProvision.getInstance().isValid()) {
 					return result;
 				}
-				result = Clan.ACTION.format(c.getBalance().doubleValue());
+				result = Clan.ACTION.format(BanksAPI.getInstance().getBank(c).getBalance().doubleValue());
 				return result;
 			}
 

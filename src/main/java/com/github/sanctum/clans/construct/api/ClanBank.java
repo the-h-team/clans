@@ -1,130 +1,101 @@
 package com.github.sanctum.clans.construct.api;
 
+import com.github.sanctum.clans.construct.bank.BankLog;
+import com.github.sanctum.labyrinth.interfacing.Nameable;
+import org.jetbrains.annotations.NotNull;
+
 import java.math.BigDecimal;
-import org.bukkit.entity.Player;
 
 public interface ClanBank {
 	/**
-	 * Take an amount from the player and deposit into the bank.
-	 *
-	 * @return true if successful
+	 * Thrown when an action is attempted on a bank that has been disabled.
 	 */
-	boolean deposit(Player player, BigDecimal amount);
+	class DisabledException extends RuntimeException {
+		private static final long serialVersionUID = 4810589456756119379L;
 
-	/**
-	 * Withdraw an amount from the bank and give to the player.
-	 *
-	 * @return true if successful
-	 */
-	boolean withdraw(Player player, BigDecimal amount);
-
-	/**
-	 * Take an amount from the specified bank and deposit into this bank
-	 *
-	 * @return true if successful
-	 */
-	default boolean takeFrom(ClanBank payer, BigDecimal amount) {
-		return payer.sendTo(this, amount);
-	}
-
-	/**
-	 * Send an amount from this bank to another specified bank
-	 *
-	 * @return true if successful
-	 */
-	default boolean sendTo(ClanBank payee, BigDecimal amount) {
-		if (has(amount)) {
-			setBalance(getBalance().subtract(amount));
-			payee.setBalance(payee.getBalance().add(amount));
-			return true;
+		public DisabledException(String clanId) {
+			super("The bank for [" + clanId + "] is disabled.");
 		}
-		return false;
 	}
 
 	/**
-	 * Check if the bank has an amount.
+	 * Deposits an amount into the bank.
+	 *
+	 * @param amount the amount to deposit
+	 * @param source the source of the deposit
+	 * @return true if the deposit was successful
+	 * @throws DisabledException if the bank is disabled
+	 * @throws IllegalArgumentException if {@code amount} is negative
+	 */
+	boolean deposit(@NotNull BigDecimal amount, Nameable source) throws DisabledException, IllegalArgumentException;
+
+	/**
+	 * Withdraws an amount from the bank.
+	 *
+	 * @param amount the amount to withdraw
+	 * @param recipient the recipient of the withdrawal
+	 * @return true if the withdrawal was successful
+	 * @throws DisabledException if the bank is disabled
+	 * @throws IllegalArgumentException if {@code amount} is negative
+	 */
+	boolean withdraw(@NotNull BigDecimal amount, Nameable recipient) throws DisabledException, IllegalArgumentException;
+
+	/**
+	 * Checks if the bank has an amount.
 	 *
 	 * @return true if the bank has at least amount
+	 * @throws IllegalArgumentException if {@code amount} is negative
 	 */
-	boolean has(BigDecimal amount);
+	boolean has(@NotNull BigDecimal amount) throws IllegalArgumentException;
 
 	/**
-	 * Check if the bank has any interest.
+	 * Gets the balance of the bank.
 	 *
-	 * @return false if no interest.
-	 */
-	default boolean hasInterest() {
-		return false;
-	}
-
-	/**
-	 * Get the balance of the bank.
-	 *
-	 * @return balance as double
+	 * @return the balance as a double
 	 */
 	default double getBalanceDouble() {
 		return getBalance().doubleValue();
 	}
 
 	/**
-	 * Get the balance of the bank.
+	 * Gets the balance of the bank.
 	 *
-	 * @return balance as BigDecimal
+	 * @return the balance as a BigDecimal
 	 */
-	BigDecimal getBalance();
+	@NotNull BigDecimal getBalance();
 
 	/**
-	 * Get the interest in the bank.
-	 *
-	 * @return the banks interest as BigDecimal.
-	 */
-	default BigDecimal getInterest() {
-		return BigDecimal.ZERO;
-	}
-
-	/**
-	 * Set the interest percentage for the bank.
-	 *
-	 * @param newInterest the interest percentage.
-	 * @return true if the interest has been updated.
-	 */
-	default boolean setInterest(double newInterest) {
-		return setInterest(BigDecimal.valueOf(newInterest));
-	}
-
-	/**
-	 * Set the interest percentage for the bank.
-	 *
-	 * @param newInterest the interest percentage.
-	 * @return true if the interest has been updated.
-	 */
-	default boolean setInterest(BigDecimal newInterest) {
-		return false;
-	}
-
-	/**
-	 * Set the balance of the bank.
+	 * Sets the balance of the bank.
 	 *
 	 * @param newBalance the desired balance as a double
 	 * @return true if successful
-	 * @throws IllegalArgumentException if desired balance is negative
+	 * @throws DisabledException if the bank is disabled
 	 */
-	@SuppressWarnings("UnusedReturnValue")
-	default boolean setBalanceDouble(double newBalance) {
+	default boolean setBalanceDouble(double newBalance) throws DisabledException {
 		return setBalance(BigDecimal.valueOf(newBalance));
 	}
 
 	/**
-	 * Set the balance of the bank.
+	 * Sets the balance of the bank.
 	 *
-	 * @param newBalance the desired balance as BigDecimal
+	 * @param newBalance the desired balance as a BigDecimal
 	 * @return true if successful
-	 * @throws IllegalArgumentException if desired balance is negative
+	 * @throws DisabledException if the bank is disabled
 	 */
-	@SuppressWarnings("UnusedReturnValue")
-	default boolean setBalance(BigDecimal newBalance) {
-		if (newBalance.compareTo(BigDecimal.ZERO) < 0) throw new IllegalArgumentException();
-		return false;
-	}
+	boolean setBalance(@NotNull BigDecimal newBalance) throws DisabledException;
+
+	/**
+	 * Gets a copy of the log of the bank's transactions.
+	 *
+	 * @return the bank's transaction log
+	 */
+	@NotNull BankLog getLog();
+
+	/**
+	 * Gets the clan this bank belongs to.
+	 *
+	 * @return the bank's clan
+	 */
+	@NotNull Clan getClan();
 
 }

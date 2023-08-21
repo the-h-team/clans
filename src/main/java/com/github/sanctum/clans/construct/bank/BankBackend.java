@@ -1,5 +1,6 @@
 package com.github.sanctum.clans.construct.bank;
 
+import com.github.sanctum.clans.construct.api.Clan;
 import org.jetbrains.annotations.NotNull;
 
 import java.math.BigDecimal;
@@ -16,86 +17,85 @@ import java.util.concurrent.CompletableFuture;
  */
 public interface BankBackend {
     /**
-     * Test if the bank has at least the specified amount.
+     * Tests if the bank has at least the specified amount.
      *
+     * @param clan the clan to test the balance of
      * @param amount an amount to test
      * @return a CompletableFuture expressing balance &gt;= <code>amount</code>
      */
-    default CompletableFuture<Boolean> hasBalance(BigDecimal amount) {
-        return compareBalance(amount).thenApply(i -> i >= 0);
+    default CompletableFuture<Boolean> hasBalance(@NotNull Clan clan, @NotNull BigDecimal amount) {
+        return compareBalance(clan, amount).thenApply(i -> i >= 0);
     }
 
-    // Replacing fields from Bank.class
     /**
-     * Read the bank's balance from the backend.
+     * Reads the bank's balance from the backend.
      *
+     * @param clan the clan to read the balance of
      * @return a CompletableFuture expressing the bank's balance
      */
-    CompletableFuture<BigDecimal> readBalance();
+    CompletableFuture<BigDecimal> readBalance(@NotNull Clan clan);
 
     /**
-     * Update the bank's balance on the backend.
+     * Updates the bank's balance on the backend.
      *
+     * @param clan the clan to update the balance of
      * @param balance a new balance
      * @return a CompletableFuture indicating the update's completion status
      */
-    CompletableFuture<Void> updateBalance(BigDecimal balance);
+    CompletableFuture<Void> updateBalance(@NotNull Clan clan, BigDecimal balance);
 
     /**
-     * Test the bank's balance to be greater than,
+     * Tests the bank's balance to be greater than,
      * equal to or smaller than a given amount.
      *
+     * @param clan the clan to test the bank balance of
      * @param testAmount an amount to test
      * @return a CompletableFuture of integer value the -1, 0 or 1
      * dependent on whether the bank's balance is less than, equal to
      * or greater than <code>testAmount</code>, respectively
      */
-    CompletableFuture<Integer> compareBalance(@NotNull BigDecimal testAmount);
+    CompletableFuture<Integer> compareBalance(@NotNull Clan clan, @NotNull BigDecimal testAmount);
 
     /**
-     * Read if the bank has been disabled from the backend.
+     * Reads if the bank has been disabled from the backend.
      *
+     * @param clan the clan to read the bank disabled state of
      * @return a CompletableFuture expressing if the bank has been disabled
      */
-    CompletableFuture<Boolean> readIsDisabled();
+    CompletableFuture<Boolean> readIsDisabled(@NotNull Clan clan);
 
     /**
-     * Update if the bank is disabled on the backend.
+     * Updates if the bank is disabled on the backend.
      *
+     * @param clan the clan to update the bank disabled state of
      * @param isDisabled whether the bank is enabled
      * @return a CompletableFuture expressing the previous disabled state
      */
-    CompletableFuture<Boolean> updateIsDisabled(boolean isDisabled);
-
-    // Moving from BankMeta
-    /**
-     * Read the bank's access level for a particular action from the backend.
-     *
-     * @return a CompletableFuture expressing the action's access level
-     */
-    CompletableFuture<Integer> readAccess(BankAction action);
+    CompletableFuture<Boolean> updateIsDisabled(@NotNull Clan clan, boolean isDisabled);
 
     /**
-     * Update the bank's access level for a particular action on the backend.
+     * Reads the bank's transaction data from the backend.
      *
-     * @param action an action
-     * @param level a clan access level
-     * @return a CompletableFuture expressing the previous access level
-     */
-    CompletableFuture<Integer> updateAccess(BankAction action, int level);
-
-    /**
-     * Read the bank's transaction data from the backend.
-     *
+     * @param clan the clan to read the bank transaction data of
      * @return a CompletableFuture expressing the bank's transaction data
      */
-    CompletableFuture<List<BankLog.Transaction>> readTransactions();
+    CompletableFuture<List<BankLog.Transaction>> readTransactions(@NotNull Clan clan);
 
     /**
-     * Add a bank transaction on the backend.
+     * Directly update the bank's transaction log on the backend.
      *
+     * @param clan the clan to update the transaction log of
+     * @param log a new transaction log
+     * @return a CompletableFuture expressing the updated transaction log
+     */
+    CompletableFuture<Void> updateTransactionLog(@NotNull Clan clan, @NotNull BankLog log);
+
+    /**
+     * Adds a bank transaction on the backend.
+     *
+     * @param clan the clan to add the transaction to
      * @param transaction a new transaction
      * @return a CompletableFuture indicating the completion status of the add
      */
-    CompletableFuture<Void> addTransaction(BankLog.Transaction transaction);
+    CompletableFuture<Void> addTransaction(@NotNull Clan clan, @NotNull BankLog.Transaction transaction);
 }

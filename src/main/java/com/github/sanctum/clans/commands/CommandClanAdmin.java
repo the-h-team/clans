@@ -4,6 +4,7 @@ import com.github.sanctum.clans.bridge.ClanAddonQueue;
 import com.github.sanctum.clans.bridge.internal.StashesAddon;
 import com.github.sanctum.clans.bridge.internal.VaultsAddon;
 import com.github.sanctum.clans.construct.ClanManager;
+import com.github.sanctum.clans.construct.api.BanksAPI;
 import com.github.sanctum.clans.construct.api.Claim;
 import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClanBlueprint;
@@ -791,7 +792,7 @@ public class CommandClanAdmin extends Command {
 								lib.sendMessage(p, "&c&oNo economy interface found. Bank feature disabled.");
 								return true;
 							}
-							lib.sendMessage(p, "Clan: &5" + target.getName() + " &dhas a bank balance of &6&l" + Clan.ACTION.format(target.getBalanceDouble()));
+							lib.sendMessage(p, "Clan: &5" + target.getName() + " &dhas a bank balance of &6&l" + Clan.ACTION.format(BanksAPI.getInstance().getBank(target).getBalanceDouble()));
 						} else {
 							lib.sendMessage(p, lib.clanUnknown(args1));
 							return true;
@@ -937,8 +938,8 @@ public class CommandClanAdmin extends Command {
 									lib.sendMessage(p, "&c&oNo economy interface found. Bank feature disabled.");
 									return true;
 								}
-								target.setBalanceDouble(amount);
-								target.broadcast("Our clan bank was just adjusted to: &a&o" + target.getBalanceDouble());
+								BanksAPI.getInstance().getBank(target).setBalanceDouble(amount);
+								target.broadcast("Our clan bank was just adjusted to: &a&o" + BanksAPI.getInstance().getBank(target).getBalanceDouble());
 								lib.sendMessage(p, "Clan: &5" + target.getName() + " &dbank adjusted to &5&l" + amount);
 							} else {
 								lib.sendMessage(p, lib.clanUnknown(args1));
@@ -980,10 +981,10 @@ public class CommandClanAdmin extends Command {
 									lib.sendMessage(p, "&c&oNo economy interface found. Bank feature disabled.");
 									return true;
 								}
-								double result = target.getBalanceDouble() + amount;
-								target.setBalanceDouble(result);
+								double result = BanksAPI.getInstance().getBank(target).getBalanceDouble() + amount;
+								BanksAPI.getInstance().getBank(target).setBalanceDouble(result);
 								target.broadcast("Our clan was just payed: &a&o" + amountPre);
-								lib.sendMessage(p, "Clan: &5" + target.getName() + " &dhas been paid &5&l" + amountPre + " &dand now has &6" + Clan.ACTION.format(target.getBalanceDouble()));
+								lib.sendMessage(p, "Clan: &5" + target.getName() + " &dhas been paid &5&l" + amountPre + " &dand now has &6" + Clan.ACTION.format(BanksAPI.getInstance().getBank(target).getBalanceDouble()));
 							} else {
 								lib.sendMessage(p, lib.clanUnknown(args1));
 								return true;
@@ -1058,10 +1059,10 @@ public class CommandClanAdmin extends Command {
 							double amount = Double.parseDouble(amountPre);
 							if (id != null) {
 								Clan target = ClansAPI.getInstance().getClanManager().getClan(id);
-								double result = target.getBalanceDouble() - amount;
-								target.setBalanceDouble(result);
+								double result = BanksAPI.getInstance().getBank(target).getBalanceDouble() - amount;
+								BanksAPI.getInstance().getBank(target).setBalanceDouble(result);
 								target.broadcast("Our clan was just charged: &c&o" + amountPre);
-								lib.sendMessage(p, "Clan: &5" + target.getName() + " &dhas been charged &5&l" + amountPre + " &dand now has &6" + Clan.ACTION.format(target.getBalanceDouble()));
+								lib.sendMessage(p, "Clan: &5" + target.getName() + " &dhas been charged &5&l" + amountPre + " &dand now has &6" + Clan.ACTION.format(BanksAPI.getInstance().getBank(target).getBalanceDouble()));
 							} else {
 								lib.sendMessage(p, lib.clanUnknown(args1));
 								return true;

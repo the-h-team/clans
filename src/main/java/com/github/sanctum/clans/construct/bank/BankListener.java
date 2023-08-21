@@ -1,15 +1,14 @@
 package com.github.sanctum.clans.construct.bank;
 
 import com.github.sanctum.clans.construct.api.BanksAPI;
-import com.github.sanctum.clans.construct.api.ClanBank;
-import com.github.sanctum.clans.construct.api.ClansAPI;
-import com.github.sanctum.clans.event.bank.AsyncNewBankEvent;
+import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.event.bank.BankPreTransactionEvent;
 import com.github.sanctum.clans.event.bank.BankSetBalanceEvent;
 import com.github.sanctum.clans.event.bank.BankTransactionEvent;
 import com.github.sanctum.clans.event.bank.messaging.Messages;
 import com.github.sanctum.labyrinth.data.EconomyProvision;
 import com.github.sanctum.labyrinth.event.LabyrinthVentCall;
+import com.github.sanctum.labyrinth.interfacing.Nameable;
 import com.github.sanctum.panther.event.Subscribe;
 import com.github.sanctum.panther.event.Vent;
 import java.math.BigDecimal;
@@ -20,21 +19,7 @@ import org.bukkit.scheduler.BukkitRunnable;
 
 public class BankListener {
 
-	private final JavaPlugin p = JavaPlugin.getProvidingPlugin(Bank.class);
-
-	@Subscribe(priority = Vent.Priority.HIGHEST)
-	public void onCreate(AsyncNewBankEvent e) {
-		final ClanBank bank = e.getClanBank();
-		if (!(bank instanceof Bank)) return; // Only react on our ClanBank implementation
-		if (ClansAPI.getInstance().getPlugin().isEnabled()) {
-			new BukkitRunnable() {
-				@Override
-				public void run() {
-					BankMeta.get(e.getClan()).storeBank((Bank) bank);
-				}
-			}.runTask(p);
-		}
-	}
+	private final JavaPlugin p = JavaPlugin.getProvidingPlugin(BankImpl.class);
 
 	@Subscribe(priority = Vent.Priority.HIGHEST)
 	public void onPreTransactionMonitor(BankPreTransactionEvent event) {
@@ -47,7 +32,7 @@ public class BankListener {
 			case VERBOSE:
 				p.getLogger().info(event.toString() + " " +
 						Messages.TRANSACTION_VERBOSE_CLAN_ID.toString()
-								.replace("{0}", event.getClanId())
+								.replace("{0}", event.getClan().getId())
 				);
 		}
 	}
@@ -67,12 +52,14 @@ public class BankListener {
 					case VERBOSE:
 						p.getLogger().info(e.toString() + " " +
 								Messages.TRANSACTION_VERBOSE_CLAN_ID.toString()
-										.replace("{0}", e.getClanId())
+										.replace("{0}", e.getClan().getId())
 						);
 				}
-				if (!(e.getClanBank() instanceof Bank)) return; // Only react on our ClanBank implementation
-				BankLog.getForClan(e.getClan()).addTransaction(e); // line moved from onTransactionInGameLog
-				BankMeta.get(e.getClan()).storeBank((Bank) e.getClanBank());
+				if (!(e.getBank() instanceof BankImpl)) return; // Only react on our implementation
+				final BanksAPI instance = BanksAPI.getInstance();
+				if (instance instanceof DefaultBanksAPIImpl) {
+					((DefaultBanksAPIImpl) instance).getBackend().addTransaction(e.getClan(), BankLog.Transaction.from(e)).join();
+				}
 			}
 		}.runTask(p);
 	}
@@ -80,55 +67,63 @@ public class BankListener {
 	@Subscribe(priority = Vent.Priority.HIGHEST)
 	public void onDeposit(BankPreTransactionEvent event) {
 		if (event.getTransactionType() != BankTransactionEvent.Type.DEPOSIT) return;
-		if (!(event.getClanBank() instanceof Bank)) return; // Only react on our ClanBank implementation
+		if (!(event.getBank() instanceof BankImpl)) return; // Only react on our implementation
 		if (!event.isSuccess()) {
 			event.setCancelled(true);
 			return; // The player didn't have enough money or is not allowed, no transaction
 		}
-		final Bank bank = (Bank) event.getClanBank();
+		final BankImpl bank = (BankImpl) event.getBank();
 		final BigDecimal maxBalance = BanksAPI.getInstance().maxBalance();
 		if (maxBalance != null) {
-			if (bank.balance.add(event.getAmount()).compareTo(maxBalance) > 0) {
+			if (bank.getBalance().add(event.getAmount()).compareTo(maxBalance) > 0) {
 				event.setCancelled(true);
 				return;
 			}
 		}
-		final Player player = event.getPlayer();
-		final BigDecimal amount = event.getAmount();
-		final boolean success;
+		final Nameable entity = event.getEntity();
+		if (entity instanceof Clan.Associate && ((Clan.Associate) entity).isPlayer()) {
+			final Player player = ((Clan.Associate) entity).getAsPlayer().getPlayer();
+			final BigDecimal amount = event.getAmount();
+			final boolean success;
 
-		Optional<Boolean> opt = EconomyProvision.getInstance().withdraw(amount, player, player.getWorld().getName());
+			//noinspection DataFlowIssue
+			Optional<Boolean> opt = EconomyProvision.getInstance().withdraw(amount, player, player.getWorld().getName());
 
-		success = opt.orElse(false);
+			success = opt.orElse(false);
 
-		if (success) bank.balance = bank.balance.add(amount);
-		if (!success) event.setSuccess(false);
-		new LabyrinthVentCall<>(new BankTransactionEvent(player, bank, amount, bank.clanId, success, BankTransactionEvent.Type.DEPOSIT)).run();
+			if (success) bank.setBalance(bank.getBalance().add(amount));
+			if (!success) event.setSuccess(false);
+		}
+		new LabyrinthVentCall<>(new BankTransactionEvent(event)).run();
 	}
 
 	@Subscribe(priority = Vent.Priority.HIGHEST)
 	public void onWithdrawal(BankPreTransactionEvent event) {
 		if (event.getTransactionType() != BankTransactionEvent.Type.WITHDRAWAL) return;
-		if (!(event.getClanBank() instanceof Bank)) return; // Only react on our ClanBank implementation
+		if (!(event.getBank() instanceof BankImpl)) return; // Only react on our implementation
 		if (!event.isSuccess()) {
 			event.setCancelled(true);
 			return; // The bank didn't have enough money or is not allowed, no transaction
 		}
-		final Bank bank = (Bank) event.getClanBank();
-		final Player player = event.getPlayer();
-		final BigDecimal amount = event.getAmount();
-		final boolean success;
-		Optional<Boolean> opt = EconomyProvision.getInstance().deposit(amount, player, player.getWorld().getName());
+		final BankImpl bank = (BankImpl) event.getBank();
+		final Nameable entity = event.getEntity();
+		if (entity instanceof Clan.Associate && ((Clan.Associate) entity).isPlayer()) {
+			final Player player = ((Clan.Associate) entity).getAsPlayer().getPlayer();
+			final BigDecimal amount = event.getAmount();
+			final boolean success;
+			//noinspection DataFlowIssue
+			Optional<Boolean> opt = EconomyProvision.getInstance().deposit(amount, player, player.getWorld().getName());
 
-		success = opt.orElse(false);
-		if (success) bank.balance = bank.balance.subtract(amount);
-		if (!success) event.setSuccess(false);
-		new LabyrinthVentCall<>(new BankTransactionEvent(player, bank, amount, bank.clanId, success, BankTransactionEvent.Type.WITHDRAWAL)).run();
+			success = opt.orElse(false);
+			if (success) bank.setBalance(bank.getBalance().subtract(amount));
+			if (!success) event.setSuccess(false);
+		}
+		new LabyrinthVentCall<>(new BankTransactionEvent(event)).run();
 	}
 
 	@Subscribe(priority = Vent.Priority.MEDIUM)
 	public void onSetBalance(BankSetBalanceEvent event) {
-		if (!(event.getClanBank() instanceof Bank)) return; // Only react on our ClanBank implementation
+		if (!(event.getBank() instanceof BankImpl)) return; // Only react on our implementation
 		final BigDecimal maxBalance = BanksAPI.getInstance().maxBalance();
 		if (maxBalance != null && event.getNewBalance().compareTo(maxBalance) > 0) {
 			event.setCancelled(true);
@@ -137,10 +132,9 @@ public class BankListener {
 
 	@Subscribe(priority = Vent.Priority.READ_ONLY)
 	public void onSetBalanceMonitor(BankSetBalanceEvent event) {
-		if (!(event.getClanBank() instanceof Bank)) return; // Only react on our ClanBank implementation
-		final Bank bank = (Bank) event.getClanBank();
-		bank.balance = event.getNewBalance();
-		BankMeta.get(event.getClan()).storeBank(bank);
+		if (!(event.getBank() instanceof BankImpl)) return; // Only react on our implementation
+		final BankImpl bank = (BankImpl) event.getBank();
+		bank.setBalance(event.getNewBalance());
 	}
 
 }

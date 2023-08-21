@@ -55,6 +55,10 @@ public final class Clearance implements Nameable, Comparable<Clearance>, JsonInt
 	public static final Clearance MANAGE_RELATIONS = new Clearance("MANAGE_RELATIONS");
 	public static final Clearance MANAGE_STASH = new Clearance("MANAGE_STASH");
 	public static final Clearance MANAGE_VAULT = new Clearance("MANAGE_VAULT");
+	public static final Clearance VIEW_BANK_LOG = new Clearance("VIEW_BANK_LOG");
+	public static final Clearance BANK_BALANCE = new Clearance("BANK_BALANCE");
+	public static final Clearance BANK_DEPOSIT = new Clearance("BANK_DEPOSIT");
+	public static final Clearance BANK_WITHDRAW = new Clearance("BANK_WITHDRAW");
 
 	private final String name;
 

@@ -7,7 +7,6 @@ import com.github.sanctum.clans.construct.api.AbstractGameRule;
 import com.github.sanctum.clans.construct.api.BanksAPI;
 import com.github.sanctum.clans.construct.api.Claim;
 import com.github.sanctum.clans.construct.api.Clan;
-import com.github.sanctum.clans.construct.api.ClanBank;
 import com.github.sanctum.clans.construct.api.ClanCooldown;
 import com.github.sanctum.clans.construct.api.ClansAPI;
 import com.github.sanctum.clans.construct.api.Clearance;
@@ -931,7 +930,7 @@ public final class DefaultClan implements Clan, PersistentEntity {
 		double bonus = this.powerBonus;
 		if (ClansAPI.getDataInstance().isTrue("Clans.banks.influence")) {
 			if (EconomyProvision.getInstance().isValid()) {
-				double bal = getBalance().doubleValue();
+				double bal = BanksAPI.getInstance().getBank(this).getBalance().doubleValue();
 				if (bal != 0) {
 					bonus += bal / 48.94;
 				}
@@ -974,10 +973,14 @@ public final class DefaultClan implements Clan, PersistentEntity {
 		if (ClansAPI.getDataInstance().getConfigString("Clans.land-claiming.claim-influence.dependence").equalsIgnoreCase("LOW")) {
 			this.claimBonus += 13.33;
 		}
-		if (getBalance() != null) {
-			return (int) ((getMemberIds().length + Math.cbrt(getBalance().doubleValue())) + this.claimBonus);
-		} else
-			return (int) ((getMemberIds().length + Math.cbrt(getPower())) + this.claimBonus);
+		if (EconomyProvision.getInstance().isValid()) {
+			BigDecimal balance = BanksAPI.getInstance().getBank(this).getBalance();
+			if (balance.compareTo(BigDecimal.ZERO) > 0) {
+				return (int) ((getMemberIds().length + Math.cbrt(balance.doubleValue())) + this.claimBonus);
+			}
+		}
+		// common else
+		return (int) ((getMemberIds().length + Math.cbrt(getPower())) + this.claimBonus);
 	}
 
 	public synchronized @NotNull List<String> getAllyList() {
@@ -1278,54 +1281,6 @@ public final class DefaultClan implements Clan, PersistentEntity {
 	public int hashCode() {
 		return Objects.hash(clanID);
 	}
-
-	private ClanBank getBank() {
-		if (!EconomyProvision.getInstance().isValid()) {
-			return null;
-		}
-		return BanksAPI.getInstance().getBank(this);
-	}
-
-	@Override
-	public boolean deposit(Player player, BigDecimal amount) {
-		if (!EconomyProvision.getInstance().isValid()) {
-			return false;
-		}
-		return Objects.requireNonNull(getBank()).deposit(player, amount);
-	}
-
-	@Override
-	public boolean withdraw(Player player, BigDecimal amount) {
-		if (!EconomyProvision.getInstance().isValid()) {
-			return false;
-		}
-		return Objects.requireNonNull(getBank()).withdraw(player, amount);
-	}
-
-	@Override
-	public boolean has(BigDecimal amount) {
-		if (!EconomyProvision.getInstance().isValid()) {
-			return false;
-		}
-		return Objects.requireNonNull(getBank()).has(amount);
-	}
-
-	@Override
-	public BigDecimal getBalance() {
-		if (!EconomyProvision.getInstance().isValid()) {
-			return BigDecimal.ZERO;
-		}
-		return Objects.requireNonNull(getBank()).getBalance();
-	}
-
-	@Override
-	public boolean setBalance(BigDecimal newBalance) {
-		if (!EconomyProvision.getInstance().isValid()) {
-			return false;
-		}
-		return Objects.requireNonNull(getBank()).setBalance(newBalance);
-	}
-
 	@Override
 	public Implementation getImplementation() {
 		return Implementation.DEFAULT;

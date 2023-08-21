@@ -2,12 +2,12 @@ package com.github.sanctum.clans.commands;
 
 import com.github.sanctum.clans.construct.ClanManager;
 import com.github.sanctum.clans.construct.DataManager;
+import com.github.sanctum.clans.construct.api.BanksAPI;
 import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClanBank;
 import com.github.sanctum.clans.construct.api.ClanSubCommand;
 import com.github.sanctum.clans.construct.api.ClansAPI;
-import com.github.sanctum.clans.construct.bank.BankAction;
-import com.github.sanctum.clans.construct.bank.BankLog;
+import com.github.sanctum.clans.construct.api.Clearance;
 import com.github.sanctum.clans.construct.bank.BankPermissions;
 import com.github.sanctum.clans.construct.util.StringLibrary;
 import com.github.sanctum.clans.construct.impl.DefaultClan;
@@ -95,18 +95,11 @@ public class CommandBank extends ClanSubCommand implements Message.Factory {
 			textComponents.add(new ColoredString("&f> <&7" + Messages.AMOUNT + "&f>",
 					ColoredString.ColorType.MC_COMPONENT).toComponent());
 			p.spigot().sendMessage(textComponents.toArray(new BaseComponent[0]));
-			if (BankAction.VIEW_LOG.testForPlayer(clan, p)) {
+			if (Clearance.VIEW_BANK_LOG.test(associate)) {
 				p.spigot().sendMessage(TextLib.getInstance().textSuggestable(
 						Messages.BANK_HELP_PREFIX + " ",
 						"&7viewlog", "View recent transaction history",
 						"clan bank viewlog"
-				));
-			}
-			if (associate.getRank().getLevel() >= 3) {
-				p.spigot().sendMessage(TextLib.getInstance().textSuggestable(
-						Messages.BANK_HELP_PREFIX + " ",
-						"&7setperm", "Set access to functions",
-						"clan bank setperm "
 				));
 			}
 			return true;
@@ -128,12 +121,12 @@ public class CommandBank extends ClanSubCommand implements Message.Factory {
 			DefaultClan clan = (DefaultClan) associate.getClan();
 			switch (args[0].toLowerCase()) {
 				case "balance":
-					if (BankPermissions.BANKS_BALANCE.not(p) || !BankAction.BALANCE.testForPlayer(clan, p)) {
+					if (BankPermissions.BANKS_BALANCE.not(p) || !Clearance.BANK_BALANCE.test(associate)) {
 						sendMessage(p, Messages.PERM_NOT_PLAYER_COMMAND.toString());
 						return true;
 					}
 					sendMessage(p, Messages.BANKS_CURRENT_BALANCE.toString()
-							.replace("{0}", clan.getBalance().toString()));
+							.replace("{0}", BanksAPI.getInstance().getBank(clan).getBalance().toString()));
 					return true;
 				case "gui" :
 					if (ClansAPI.getDataInstance().getMessages().read(c -> c.getNode("deep-edit").toPrimitive().getBoolean())) {
@@ -145,7 +138,7 @@ public class CommandBank extends ClanSubCommand implements Message.Factory {
 					}
 					return true;
 				case "deposit":
-					if (BankPermissions.BANKS_DEPOSIT.not(p) || !BankAction.DEPOSIT.testForPlayer(clan, p)) {
+					if (BankPermissions.BANKS_DEPOSIT.not(p) || !Clearance.BANK_DEPOSIT.test(associate)) {
 						sendMessage(p, Messages.PERM_NOT_PLAYER_COMMAND.toString());
 						return true;
 					}
@@ -172,7 +165,7 @@ public class CommandBank extends ClanSubCommand implements Message.Factory {
 					}
 					return true;
 				case "withdraw":
-					if (BankPermissions.BANKS_WITHDRAW.not(p) || !BankAction.WITHDRAW.testForPlayer(clan, p)) {
+					if (BankPermissions.BANKS_WITHDRAW.not(p) || !Clearance.BANK_WITHDRAW.test(associate)) {
 						sendMessage(p, Messages.PERM_NOT_PLAYER_COMMAND.toString());
 						return true;
 					}
@@ -206,49 +199,12 @@ public class CommandBank extends ClanSubCommand implements Message.Factory {
 					sendMessage(p, "&cInvalid usage.");
 					sendMessage(p, Messages.BANK_HELP_PREFIX + " &asend &f<clanName> &6<amount>");
 					return true;
-				case "setperm":
-					if (associate.getRank().getLevel() < 3) {
-						sendMessage(p, Messages.PERM_NOT_PLAYER_COMMAND.toString());
-						return true;
-					}
-					sendMessage(p, Messages.BANK_USAGE.toString());
-					if (TextLib.getInstance() != null) {
-						p.spigot().sendMessage(TextLib.getInstance().textHoverable(
-								Messages.BANK_HELP_PREFIX + " ",
-								"&7<&cperm&7>",
-								" ",
-								"&7<&clevel&7>",
-								"&6Valid options:&7\n&o*&f balance&7\n&o*&f deposit&7\n&o*&f withdraw&7\n&o*&f viewlog",
-								"Valid levels: 0-3"
-						));
-					} else {
-						p.spigot().sendMessage(new OldComponent().textHoverable(
-								Messages.BANK_HELP_PREFIX + " ",
-								"&7<&cperm&7>",
-								" ",
-								"&7<&clevel&7>",
-								"&6Valid options:&7\n&o*&f balance&7\n&o*&f deposit&7\n&o*&f withdraw&7\n&o*&f viewlog",
-								"Valid levels: 0-3"
-						));
-					}
-					return true;
 				case "viewlog":
-					if (!BankAction.VIEW_LOG.testForPlayer(clan, p)) {
+					if (!Clearance.VIEW_BANK_LOG.test(associate)) {
 						sendMessage(p, Messages.PERM_NOT_PLAYER_COMMAND.toString());
 						return true;
 					}
-					p.sendMessage(BankLog.getForClan(clan).getTransactions().stream().map(Object::toString).toArray(String[]::new));
-					return true;
-				case "viewperms":
-					if (associate.getRank().getLevel() < 3) {
-						sendMessage(p, Messages.PERM_NOT_PLAYER_COMMAND.toString());
-						return true;
-					}
-					sendMessage(p, "&6Bank perm levels:");
-					sendMessage(p, "Balance&e=&7[&f" + BankAction.BALANCE.getValueInClan(clan) + "&7]");
-					sendMessage(p, "Deposit&e=&7[&f" + BankAction.DEPOSIT.getValueInClan(clan) + "&7]");
-					sendMessage(p, "Withdraw&e=&7[&f" + BankAction.WITHDRAW.getValueInClan(clan) + "&7]");
-					sendMessage(p, "ViewLog&e=&7[&f" + BankAction.VIEW_LOG.getValueInClan(clan) + "&7]");
+					p.sendMessage(BanksAPI.getInstance().getBank(clan).getLog().getTransactions().stream().map(Object::toString).toArray(String[]::new));
 					return true;
 			}
 			// msg usage (invalid subcommand)
@@ -283,14 +239,14 @@ public class CommandBank extends ClanSubCommand implements Message.Factory {
 							sendMessage(p, Messages.BANK_INVALID_AMOUNT.toString());
 							return true;
 						}
-						final ClanBank theBank = associate.getClan();
+						final ClanBank theBank = BanksAPI.getInstance().getBank(associate.getClan());
 						switch (arg1) {
 							case "deposit":
 								if (BankPermissions.BANKS_DEPOSIT.not(p)) {
 									sendMessage(p, Messages.PERM_NOT_PLAYER_COMMAND.toString());
 									return true;
 								}
-								if (theBank.deposit(p, amount)) {
+								if (theBank.deposit(amount, associate)) {
 									sendMessage(p, Messages.DEPOSIT_MSG_PLAYER.toString()
 											.replace("{0}", amount.toString()));
 								} else {
@@ -303,7 +259,7 @@ public class CommandBank extends ClanSubCommand implements Message.Factory {
 									sendMessage(p, Messages.PERM_NOT_PLAYER_COMMAND.toString());
 									return true;
 								}
-								if (theBank.withdraw(p, amount)) {
+								if (theBank.withdraw(amount, associate)) {
 									sendMessage(p, Messages.WITHDRAW_MSG_PLAYER.toString()
 											.replace("{0}", amount.toString()));
 								} else {
@@ -314,23 +270,6 @@ public class CommandBank extends ClanSubCommand implements Message.Factory {
 						}
 					} catch (NumberFormatException exception) {
 						sendMessage(p, Messages.BANK_INVALID_AMOUNT.toString());
-					}
-					return true;
-				case "setperm":
-					sendMessage(p, Messages.BANK_USAGE.toString());
-					switch (args[1].toLowerCase()) {
-						case "balance":
-						case "deposit":
-						case "withdraw":
-						case "viewlog":
-							message().append(text(Messages.BANK_HELP_PREFIX + " setperm " + args[1].toLowerCase() + " "))
-									.append(text("&7<&clevel&7>").bind(hover("Valid levels [0-3]"))).send(p).deploy();
-							break;
-						default:
-							message().append(text(Messages.BANK_HELP_PREFIX + " setperm "))
-									.append(text("&7<&cperm&7>").bind(hover("&6Valid options:&7\n&o*&f balance&7\n&o*&f deposit&7\n&o*&f withdraw&7\n&o*&f viewlog")))
-									.append(text(" &7<&flevel&7>"))
-									.send(p).deploy();
 					}
 					return true;
 				default: // receive subcommand usage message
@@ -350,7 +289,7 @@ public class CommandBank extends ClanSubCommand implements Message.Factory {
 			}
 			final Clan clan = associate.getClan();
 			if (args[0].equalsIgnoreCase("send")) {
-				final Clan theBank = associate.getClan();
+				final ClanBank theBank = BanksAPI.getInstance().getBank(clan);
 				final BigDecimal amount = new BigDecimal(args[2]);
 				if (amount.signum() != 1) {
 					sendMessage(p, Messages.BANK_INVALID_AMOUNT.toString());
@@ -362,78 +301,31 @@ public class CommandBank extends ClanSubCommand implements Message.Factory {
 					sendMessage(p, lib.clanUnknown(args[1]));
 					return true;
 				}
-				final Clan theOtherBank = manager.getClan(id);
+				final Clan theOtherClan = manager.getClan(id);
 				if (BankPermissions.BANKS_WITHDRAW.not(p)) {
 					sendMessage(p, Messages.PERM_NOT_PLAYER_COMMAND.toString());
 					return true;
 				}
-				if (theBank.getBalanceDouble() - amount.doubleValue() <= 0) {
+				if (!theBank.has(amount)) {
 					sendMessage(p, Messages.WITHDRAW_ERR_PLAYER.toString()
 							.replace("{0}", amount.toString()));
-					associate.getClan().broadcast("&f&l&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬");
-					associate.getClan().broadcast("&aOur clan sent money in the amount of &6" + amount + " &ato clan " + theOtherBank.getPalette().toString(theOtherBank.getName()));
-					associate.getClan().broadcast("&f&l&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬");
-					theOtherBank.broadcast("&f&l&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬");
-					theOtherBank.broadcast("&6We have received money in the amount of &6" + amount + " &afrom clan " + theBank.getPalette().toString(theBank.getName()));
-					theOtherBank.broadcast("&f&l&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬");
 					return true;
 				}
-				if (theBank.setBalance(theBank.getBalance().subtract(amount)) && theOtherBank.setBalance(theOtherBank.getBalance().add(amount))) {
-					sendMessage(p, Messages.WITHDRAW_MSG_PLAYER.toString()
-							.replace("{0}", amount.toString()));
+
+				if (theBank.withdraw(amount, () -> "Sent to " + theOtherClan.getName())) {
+					if (BanksAPI.getInstance().getBank(theOtherClan).deposit(amount, () -> "Received from " + clan.getName())) {
+						associate.getClan().broadcast("&f&l&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬");
+						associate.getClan().broadcast("&aOur clan sent money in the amount of &6" + amount + " &ato clan " + theOtherClan.getPalette().toString(theOtherClan.getName()));
+						associate.getClan().broadcast("&f&l&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬");
+						theOtherClan.broadcast("&f&l&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬");
+						theOtherClan.broadcast("&6We have received money in the amount of &6" + amount + " &afrom clan " + clan.getPalette().toString(clan.getName()));
+						theOtherClan.broadcast("&f&l&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬");
+					}
 				} else {
 					sendMessage(p, Messages.DEPOSIT_ERR_PLAYER.toString()
 							.replace("{0}", amount.toString()));
 				}
 				return true;
-			}
-			if (args[0].equalsIgnoreCase("setperm")) {
-				int level;
-				try {
-					level = Integer.parseInt(args[2]);
-				} catch (NumberFormatException e) {
-					level = -1;
-				}
-				if (level < 0 || level > 3) {
-					sendMessage(p, "&7Invalid level! Valid levels [0-3]");
-					return true;
-				}
-				switch (args[1].toLowerCase()) {
-					case "balance":
-						sendMessage(p, "&7Setting &6balance &7level to &a" + level);
-						BankAction.BALANCE.setRankForActionInClan(clan, level);
-						return true;
-					case "deposit":
-						sendMessage(p, "&7Setting &6deposit &7level to &a" + level);
-						BankAction.DEPOSIT.setRankForActionInClan(clan, level);
-						return true;
-					case "withdraw":
-						sendMessage(p, "&7Setting &6withdraw &7level to &a" + level);
-						BankAction.WITHDRAW.setRankForActionInClan(clan, level);
-						return true;
-					case "viewlog":
-						sendMessage(p, "&7Setting &6viewlog &7level to &a" + level);
-						BankAction.VIEW_LOG.setRankForActionInClan(clan, level);
-						return true;
-					default:
-						sendMessage(p, Messages.BANK_USAGE.toString());
-						if (TextLib.getInstance() != null) {
-							p.spigot().sendMessage(TextLib.getInstance().textHoverable(
-									Messages.BANK_HELP_PREFIX + " setperm ",
-									"&7<&cperm&7>",
-									" &7<&flevel&7>",
-									"&6Valid options:&7\n&o*&f balance&7\n&o*&f deposit&7\n&o*&f withdraw&7\n&o*&f viewlog"
-							));
-						} else {
-							p.spigot().sendMessage(new OldComponent().textHoverable(
-									Messages.BANK_HELP_PREFIX + " setperm ",
-									"&7<&cperm&7>",
-									" &7<&flevel&7>",
-									"&6Valid options:&7\n&o*&f balance&7\n&o*&f deposit&7\n&o*&f withdraw&7\n&o*&f viewlog"
-							));
-						}
-						return true;
-				}
 			}
 			return true;
 		}
@@ -463,28 +355,7 @@ public class CommandBank extends ClanSubCommand implements Message.Factory {
 						result.add("send");
 						result.add("withdraw");
 						Optional.ofNullable(ClansAPI.getInstance().getClanManager().getClan(p)).ifPresent(clan -> {
-							if (BankAction.VIEW_LOG.testForPlayer(clan, p)) {
-								result.add("viewlog");
-							}
-							if (associate.get().getRank().isHighest()) {
-								result.add("setperm");
-								result.add("viewperms");
-							}
-						});
-						return result;
-					}
-					return result;
-				}).then(TabCompletionIndex.THREE, "setperm", TabCompletionIndex.TWO, () -> {
-					List<String> result = new ArrayList<>();
-					if (!Clan.ACTION.test(p, this.getPermission() + "." + DataManager.Security.getPermission("bank")).deploy()) {
-						return result;
-					}
-					if (EconomyProvision.getInstance().isValid()) {
-						ClansAPI.getInstance().getAssociate(p).ifPresent(a -> {
-							if (a.getRank().isHighest()) {
-								result.add("balance");
-								result.add("deposit");
-								result.add("withdraw");
+							if (Clearance.VIEW_BANK_LOG.test(associate.get())) {
 								result.add("viewlog");
 							}
 						});
@@ -521,16 +392,13 @@ public class CommandBank extends ClanSubCommand implements Message.Factory {
 						return result;
 					}
 					return result;
-				}).then(TabCompletionIndex.FOUR, "setperm", TabCompletionIndex.TWO, () -> {
+				}).then(TabCompletionIndex.FOUR, "send", TabCompletionIndex.TWO, () -> {
 					List<String> result = new ArrayList<>();
 					if (!Clan.ACTION.test(p, this.getPermission() + "." + DataManager.Security.getPermission("bank")).deploy()) {
 						return result;
 					}
 					if (EconomyProvision.getInstance().isValid()) {
-						result.add("0");
-						result.add("1");
-						result.add("2");
-						result.add("3");
+						result.add("10");
 						return result;
 					}
 					return result;

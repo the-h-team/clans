@@ -50,7 +50,7 @@ import org.jetbrains.annotations.Nullable;
  */
 @Node.Pointer(value = "com.github.sanctum.clans.Clan", type = DefaultClan.class)
 @DelegateDeserialization(DefaultClan.class)
-public interface Clan extends ClanBank, ConfigurationSerializable, EntityHolder, InvasiveEntity, JsonAdapter<Clan>, Relatable<Clan> {
+public interface Clan extends ConfigurationSerializable, EntityHolder, InvasiveEntity, JsonAdapter<Clan>, Relatable<Clan> {
 
 	ClanActionEngine ACTION = new ClanActionEngine();
 
