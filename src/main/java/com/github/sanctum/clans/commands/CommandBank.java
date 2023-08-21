@@ -267,7 +267,7 @@ public class CommandBank extends ClanSubCommand implements Message.Factory {
 			}
 			final String arg1 = args[0].toLowerCase();
 			switch (arg1) {
-				case "Send":
+				case "send":
 					if (BankPermissions.BANKS_WITHDRAW.not(p)) {
 						sendMessage(p, Messages.PERM_NOT_PLAYER_COMMAND.toString());
 						return true;
