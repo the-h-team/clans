@@ -26,10 +26,8 @@ public class ClanFileBankBackend implements BankBackend {
     @Override
     public CompletableFuture<Void> updateBalance(@NotNull Clan clan, BigDecimal balance) {
         final Configurable clanFile = getClanFile(clan);
-        return CompletableFuture.runAsync(() -> {
-            clanFile.set("bank-data.balance", balance != null ? balance.toString() : null);
-            clanFile.save();
-        });
+        return CompletableFuture.runAsync(() -> clanFile.set("bank-data.balance", balance != null ? balance.toString() : null))
+                .thenRun(clanFile::save);
     }
 
     @Override
@@ -40,7 +38,7 @@ public class ClanFileBankBackend implements BankBackend {
     @Override
     public CompletableFuture<Boolean> readIsDisabled(@NotNull Clan clan) {
         return CompletableFuture.completedFuture(clan)
-                .thenApplyAsync(ClanFileBankBackend::getClanFile)
+                .thenApply(ClanFileBankBackend::getClanFile)
                 .thenApplyAsync(this::readIsDisabledFunction);
     }
 
@@ -70,7 +68,7 @@ public class ClanFileBankBackend implements BankBackend {
     @Override
     public CompletableFuture<List<BankLog.Transaction>> readTransactions(@NotNull Clan clan) {
         return CompletableFuture.completedFuture(clan)
-                .thenApplyAsync(ClanFileBankBackend::getClanFile)
+                .thenApply(ClanFileBankBackend::getClanFile)
                 .thenApplyAsync(this::readTransactionsFunction);
     }
 
@@ -90,8 +88,7 @@ public class ClanFileBankBackend implements BankBackend {
             final ArrayList<String> list = new ArrayList<>(clanFile.getStringList("bank-data.transactions"));
             list.add(encodeTransaction(transaction));
             clanFile.set("bank-data.transactions", list);
-            clanFile.save();
-        });
+        }).thenRun(clanFile::save);
     }
 
     @Override
@@ -103,8 +100,7 @@ public class ClanFileBankBackend implements BankBackend {
                 representations.add(encodeTransaction(transaction));
             }
             clanFile.set("bank-data.transactions", representations);
-            clanFile.save();
-        });
+        }).thenRun(clanFile::save);
     }
 
     private static Configurable getClanFile(Clan clan) {

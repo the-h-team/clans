@@ -24,7 +24,7 @@ public class BankImpl implements ClanBank {
 
     @Override
     public boolean deposit(@NotNull BigDecimal amount, Nameable entity) {
-        if (!getBackend().readIsDisabled(getClan()).join()) throw new DisabledException(clanId.toString());
+        if (getBackend().readIsDisabled(getClan()).join()) throw new DisabledException(clanId.toString());
         if (amount.compareTo(BigDecimal.ZERO) < 0) throw new IllegalArgumentException("amount cannot be negative");
         boolean success = true;
         if (entity instanceof Clan.Associate && ((Clan.Associate) entity).isPlayer()) {
@@ -43,7 +43,7 @@ public class BankImpl implements ClanBank {
 
     @Override
     public boolean withdraw(@NotNull BigDecimal amount, Nameable entity) {
-        if (!getBackend().readIsDisabled(getClan()).join()) throw new DisabledException(clanId.toString());
+        if (getBackend().readIsDisabled(getClan()).join()) throw new DisabledException(clanId.toString());
         if (amount.compareTo(BigDecimal.ZERO) < 0) throw new IllegalArgumentException("amount cannot be negative");
         return new LabyrinthVentCall<>(new BankPreTransactionEvent(
                 this,
@@ -66,7 +66,7 @@ public class BankImpl implements ClanBank {
 
     @Override
     public boolean setBalance(@NotNull BigDecimal newBalance) {
-        if (!getBackend().readIsDisabled(getClan()).join()) throw new DisabledException(clanId.toString());
+        if (getBackend().readIsDisabled(getClan()).join()) throw new DisabledException(clanId.toString());
         getBackend().updateBalance(getClan(), newBalance).join();
         return true;
     }
@@ -83,10 +83,6 @@ public class BankImpl implements ClanBank {
     @Override
     public @NotNull Clan getClan() {
         return ClansAPI.getInstance().getClanManager().getClan(clanId);
-    }
-
-    public void setEnabled(boolean enabled) {
-        getBackend().updateIsDisabled(getClan(), enabled).join();
     }
 
     private static BankBackend getBackend() {
