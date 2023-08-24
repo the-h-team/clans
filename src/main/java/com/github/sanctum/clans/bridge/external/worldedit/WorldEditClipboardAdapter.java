@@ -2,6 +2,9 @@ package com.github.sanctum.clans.bridge.external.worldedit;
 
 import org.jetbrains.annotations.NotNull;
 
+/**
+ * A wrapping interface that delegates basic worldedit clipboard operations.
+ */
 public interface WorldEditClipboardAdapter {
 
 	/**

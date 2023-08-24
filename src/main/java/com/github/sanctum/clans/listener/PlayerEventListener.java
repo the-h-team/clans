@@ -2,6 +2,9 @@ package com.github.sanctum.clans.listener;
 
 import com.github.sanctum.clans.bridge.ClanVentBus;
 import com.github.sanctum.clans.bridge.ClanVentCall;
+import com.github.sanctum.clans.bridge.external.worldedit.WorldEditAdapter;
+import com.github.sanctum.clans.bridge.external.worldedit.WorldEditClipboardAdapter;
+import com.github.sanctum.clans.bridge.external.worldedit.WorldEditSchematicAdapter;
 import com.github.sanctum.clans.construct.api.Claim;
 import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClanCooldown;
@@ -59,6 +62,7 @@ import com.github.sanctum.panther.util.OrdinalProcedure;
 import com.github.sanctum.panther.util.ProgressBar;
 import com.github.sanctum.panther.util.Task;
 import com.github.sanctum.panther.util.TaskPredicate;
+import java.io.File;
 import java.math.BigDecimal;
 import java.text.MessageFormat;
 import java.text.NumberFormat;
@@ -332,7 +336,18 @@ public class PlayerEventListener implements Listener {
 								data.setAssociate(t);
 								EntityEventListener.map.put(e.getClickedBlock().getLocation(), data);
 								e.getClickedBlock().setType(Material.AIR);
-								Entities.ENDER_CRYSTAL.spawn(e.getClickedBlock().getLocation());
+								// place schematic
+								WorldEditAdapter adapter = WorldEditAdapter.getInstance();
+								if (adapter.isValid()) {
+									WorldEditSchematicAdapter schematic = adapter.loadSchematic(new File("plugins/Tether/Configuration/Data/reservoir.schem"));
+									if (schematic != null) {
+										WorldEditClipboardAdapter clipboard = schematic.toClipboard(e.getClickedBlock().getLocation());
+										clipboard.paste().ignoreAir(true).toBlock(e.getClickedBlock()).run();
+										Entities.ENDER_CRYSTAL.spawn(e.getClickedBlock().getLocation());
+									}
+								} else {
+									Entities.ENDER_CRYSTAL.spawn(e.getClickedBlock().getLocation());
+								}
 							}
 						} else {
 							Clan.ACTION.sendMessage(e.getPlayer(), "&cYour clan already has a reservoir powered up!");

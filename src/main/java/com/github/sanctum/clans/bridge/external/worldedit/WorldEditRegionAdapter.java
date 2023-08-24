@@ -5,14 +5,24 @@ import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.jetbrains.annotations.NotNull;
 
+/**
+ * A wrapping interface for a worldedit cuboid region
+ */
 public interface WorldEditRegionAdapter {
 
-	@NotNull Location getCenter(@NotNull Location location);
-
+	/**
+	 * @return
+	 */
 	@NotNull Block getHighestPoint();
 
+	/**
+	 * @return
+	 */
 	@NotNull Block getLowestPoint();
 
+	/**
+	 * @return
+	 */
 	@NotNull WorldEditClipboardAdapter toClipboard();
 
 	/**
@@ -24,6 +34,9 @@ public interface WorldEditRegionAdapter {
 	 */
 	@NotNull WorldEditClipboardAdapter toClipboard(@NotNull Location origin);
 
+	/**
+	 * @return
+	 */
 	@NotNull World getWorld();
 
 }
