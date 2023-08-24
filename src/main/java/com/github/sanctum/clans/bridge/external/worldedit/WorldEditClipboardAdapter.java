@@ -43,6 +43,6 @@ public interface WorldEditClipboardAdapter {
 	 *
 	 * @return the region object for this clipboard containing block information.
 	 */
-	@NotNull com.github.sanctum.labyrinth.data.essentials.WorldEditRegionAdapter toRegion();
+	@NotNull WorldEditRegionAdapter toRegion();
 
 }
