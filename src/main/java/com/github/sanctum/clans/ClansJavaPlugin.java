@@ -2,6 +2,8 @@ package com.github.sanctum.clans;
 
 import com.github.sanctum.clans.bridge.ClanAddon;
 import com.github.sanctum.clans.bridge.ClanAddonQueue;
+import com.github.sanctum.clans.bridge.external.worldedit.DefaultWorldEditAdapter;
+import com.github.sanctum.clans.bridge.external.worldedit.WorldEditAdapter;
 import com.github.sanctum.clans.construct.ArenaManager;
 import com.github.sanctum.clans.construct.ClaimManager;
 import com.github.sanctum.clans.construct.ClanManager;
@@ -28,6 +30,7 @@ import com.github.sanctum.labyrinth.api.Service;
 import com.github.sanctum.labyrinth.api.TaskService;
 import com.github.sanctum.labyrinth.data.FileList;
 import com.github.sanctum.labyrinth.data.FileManager;
+import com.github.sanctum.labyrinth.data.ServiceType;
 import com.github.sanctum.labyrinth.data.container.KeyedServiceManager;
 import com.github.sanctum.labyrinth.data.container.PersistentContainer;
 import com.github.sanctum.labyrinth.formatting.FancyMessageChain;
@@ -42,6 +45,8 @@ import com.github.sanctum.panther.file.Node;
 import com.github.sanctum.panther.paste.PasteManager;
 import com.github.sanctum.panther.paste.type.Hastebin;
 import com.github.sanctum.panther.paste.type.Pastebin;
+import com.github.sanctum.panther.recursive.ServiceFactory;
+import com.github.sanctum.panther.recursive.ServiceLoader;
 import com.github.sanctum.panther.util.OrdinalProcedure;
 import com.github.sanctum.panther.util.Task;
 import com.github.sanctum.skulls.CustomHead;
@@ -376,7 +381,7 @@ public class ClansJavaPlugin extends JavaPlugin implements ClansAPI, Vent.Host {
 		commandManager = new CommandManager();
 		serviceManager = new KeyedServiceManager<>();
 		arenaManager = new ArenaManager();
-
+		ServiceFactory.getInstance().newLoader(WorldEditAdapter.class).supply(new DefaultWorldEditAdapter()).load();
 		// load configured arenas, each new arena allows for another war to be held.
 		FileManager config = dataManager.getConfig();
 		Node clans = config.getRoot().getNode("Clans");
