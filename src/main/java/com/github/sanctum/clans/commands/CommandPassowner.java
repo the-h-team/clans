@@ -37,7 +37,7 @@ public class CommandPassowner extends ClanSubCommand {
 				UUID target = Clan.ACTION.getId(args[0]).deploy();
 				if (target != null) {
 
-					if (associate.getRank().getLevel() == 3) {
+					if (associate.getRank().isHighest()) {
 						if (!associate.getClan().transferOwnership(ClansAPI.getInstance().getAssociate(target).get())) {
 							sendMessage(p, lib.playerUnknown("clan member"));
 						} else {

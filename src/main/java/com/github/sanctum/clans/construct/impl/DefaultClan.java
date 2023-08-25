@@ -450,7 +450,7 @@ public final class DefaultClan implements Clan, PersistentEntity {
 			palette.setStart(BukkitColor.random().toCode());
 		}
 		removeValue("clearance");
-		ClearanceOverride.Data clog = getValue(ClearanceOverride.Data.class, "permissions");
+		ClearanceOverride.ClearanceData clog = getValue(ClearanceOverride.ClearanceData.class, "permissions");
 		if (clog == null) {
 			if (!server) {
 				resetPermissions();
@@ -915,7 +915,7 @@ public final class DefaultClan implements Clan, PersistentEntity {
 
 	@Override
 	public void resetPermissions() {
-		ClearanceOverride.Data override = new ClearanceOverride.Data();
+		ClearanceOverride.ClearanceData override = new ClearanceOverride.ClearanceData();
 		setValue("permissions", override, false);
 		this.clearanceOverride = new ClearanceOverride(override);
 	}
