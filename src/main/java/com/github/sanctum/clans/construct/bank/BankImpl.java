@@ -61,7 +61,12 @@ public class BankImpl implements ClanBank {
 
     @Override
     public @NotNull BigDecimal getBalance() {
-        return getBackend().readBalance(getClan()).join();
+        return getBackend().readBalance(getClan()).thenApply(bal -> {
+            if (bal != null) return bal;
+            final BigDecimal startingBalance = BanksAPI.getInstance().startingBalance();
+            getBackend().updateBalance(getClan(), startingBalance);
+            return startingBalance;
+        }).join();
     }
 
     @Override

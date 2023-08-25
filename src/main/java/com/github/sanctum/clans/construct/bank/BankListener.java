@@ -15,7 +15,6 @@ import java.math.BigDecimal;
 import java.util.Optional;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.scheduler.BukkitRunnable;
 
 public class BankListener {
 
@@ -40,28 +39,25 @@ public class BankListener {
 	@Subscribe(priority = Vent.Priority.HIGHEST)
 	public void onTransaction(BankTransactionEvent e) {
 		if (e instanceof BankPreTransactionEvent) return;
-		new BukkitRunnable() {
-			@Override
-			public void run() {
-				switch (BanksAPI.getInstance().logToConsole()) {
-					case SILENT:
-						break;
-					case QUIET:
-						p.getLogger().info(e.toString());
-						break;
-					case VERBOSE:
-						p.getLogger().info(e.toString() + " " +
-								Messages.TRANSACTION_VERBOSE_CLAN_ID.toString()
-										.replace("{0}", e.getClan().getId())
-						);
-				}
-				if (!(e.getBank() instanceof BankImpl)) return; // Only react on our implementation
-				final BanksAPI instance = BanksAPI.getInstance();
-				if (instance instanceof DefaultBanksAPIImpl) {
-					((DefaultBanksAPIImpl) instance).getBackend().addTransaction(e.getClan(), BankLog.Transaction.from(e)).join();
-				}
-			}
-		}.runTask(p);
+		switch (BanksAPI.getInstance().logToConsole()) {
+			case SILENT:
+				break;
+			case QUIET:
+				p.getLogger().info(e.toString());
+				break;
+			case VERBOSE:
+				p.getLogger().info(e.toString() + " " +
+						Messages.TRANSACTION_VERBOSE_CLAN_ID.toString()
+								.replace("{0}", e.getClan().getId())
+				);
+		}
+		if (!(e.getBank() instanceof BankImpl)) return; // Only react on our implementation
+		final BanksAPI instance = BanksAPI.getInstance();
+		if (instance instanceof DefaultBanksAPIImpl) {
+			final BankLog.Transaction transaction = BankLog.Transaction.from(e);
+			transaction.apply(e.getBank());
+			((DefaultBanksAPIImpl) instance).getBackend().addTransaction(e.getClan(), transaction).join();
+		}
 	}
 
 	@Subscribe(priority = Vent.Priority.HIGHEST)

@@ -2,6 +2,7 @@ package com.github.sanctum.clans.construct.bank;
 
 import com.github.sanctum.clans.construct.api.Clan;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -22,6 +23,9 @@ public interface BankBackend {
      * @param clan the clan to test the balance of
      * @param amount an amount to test
      * @return a CompletableFuture expressing balance &gt;= <code>amount</code>
+     * @implNote It is possible that a bank does not yet have a balance stored
+     * in the backend. In this case, the bank's balance will be treated as the
+     * default starting balance.
      */
     default CompletableFuture<Boolean> hasBalance(@NotNull Clan clan, @NotNull BigDecimal amount) {
         return compareBalance(clan, amount).thenApply(i -> i >= 0);
@@ -33,7 +37,7 @@ public interface BankBackend {
      * @param clan the clan to read the balance of
      * @return a CompletableFuture expressing the bank's balance
      */
-    CompletableFuture<BigDecimal> readBalance(@NotNull Clan clan);
+    CompletableFuture<@Nullable BigDecimal> readBalance(@NotNull Clan clan);
 
     /**
      * Updates the bank's balance on the backend.

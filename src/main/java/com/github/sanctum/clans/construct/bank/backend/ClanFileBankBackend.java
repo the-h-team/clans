@@ -1,5 +1,6 @@
 package com.github.sanctum.clans.construct.bank.backend;
 
+import com.github.sanctum.clans.construct.api.BanksAPI;
 import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClansAPI;
 import com.github.sanctum.clans.construct.bank.BankBackend;
@@ -14,13 +15,28 @@ import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.logging.Logger;
+
+import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class ClanFileBankBackend implements BankBackend {
 
     @Override
-    public CompletableFuture<BigDecimal> readBalance(@NotNull Clan clan) {
-        return CompletableFuture.completedFuture(new BigDecimal(getClanFile(clan).getString("bank-data.balance")));
+    public CompletableFuture<@Nullable BigDecimal> readBalance(@NotNull Clan clan) {
+        return CompletableFuture.completedFuture(getClanFile(clan))
+                .thenApply(cf -> cf.getString("bank-data.balance"))
+                .thenApplyAsync(bal -> {
+                    if (bal != null) try {
+                        return new BigDecimal(bal);
+                    } catch (NumberFormatException ignored) {
+                        final Logger logger = JavaPlugin.getProvidingPlugin(getClass()).getLogger();
+                        logger.warning("Invalid balance found for clan " + clan.getId() + ": " + bal);
+                        logger.info("The balance for clan " + clan.getId() + " will be reset to the default.");
+                    }
+                    return null;
+                });
     }
 
     @Override
@@ -32,7 +48,8 @@ public class ClanFileBankBackend implements BankBackend {
 
     @Override
     public CompletableFuture<Integer> compareBalance(@NotNull Clan clan, @NotNull BigDecimal testAmount) {
-        return readBalance(clan).thenApply(bd -> bd.compareTo(testAmount));
+        return readBalance(clan).thenApply(bal -> bal != null ? bal : BanksAPI.getInstance().startingBalance())
+                .thenApplyAsync(bd -> bd.compareTo(testAmount));
     }
 
     @Override

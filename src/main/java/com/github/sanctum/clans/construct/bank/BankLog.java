@@ -1,5 +1,7 @@
 package com.github.sanctum.clans.construct.bank;
 
+import com.github.sanctum.clans.construct.api.BanksAPI;
+import com.github.sanctum.clans.construct.api.ClanBank;
 import com.github.sanctum.clans.event.bank.BankTransactionEvent;
 import java.io.Serializable;
 import java.math.BigDecimal;
@@ -11,6 +13,7 @@ import java.util.List;
 
 import com.github.sanctum.labyrinth.interfacing.Nameable;
 import net.md_5.bungee.api.ChatColor;
+import org.jetbrains.annotations.NotNull;
 
 public class BankLog implements Serializable {
     private static final long serialVersionUID = -3400485111996318187L;
@@ -31,6 +34,24 @@ public class BankLog implements Serializable {
             this.type = type;
             this.amount = amount;
             this.localDateTime = localDateTime;
+        }
+
+        public void apply(@NotNull ClanBank bank) {
+            final BanksAPI api = BanksAPI.getInstance();
+            if (api instanceof DefaultBanksAPIImpl && bank instanceof BankImpl) {
+                BigDecimal newBalance = bank.getBalance();
+                switch (type) {
+                    case DEPOSIT:
+                        newBalance = newBalance.add(amount);
+                        break;
+                    case WITHDRAWAL:
+                        newBalance = newBalance.subtract(amount);
+                        break;
+                    default:
+                        throw new IllegalStateException("Unexpected value: " + type);
+                }
+                ((DefaultBanksAPIImpl) api).getBackend().updateBalance(bank.getClan(), newBalance);
+            }
         }
 
         @Override
