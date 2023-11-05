@@ -6,6 +6,7 @@ import com.github.sanctum.clans.event.associate.AssociateTeleportEvent;
 import com.github.sanctum.clans.event.player.PlayerTeleportEvent;
 import com.github.sanctum.labyrinth.library.TimeWatch;
 import com.github.sanctum.labyrinth.task.TaskScheduler;
+import java.text.MessageFormat;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
@@ -55,12 +56,14 @@ public abstract class Teleport {
 
 	public static class Impl extends Teleport {
 		private static final Set<Teleport> REQUESTS = new HashSet<>();
+		private final InvasiveEntity entity;
 		private final Player target;
 		private final Location location;
+		private final String teleportMsg;
+		private final int seconds;
 		private Date accepted;
 		private State state;
 		private Location start;
-		private final InvasiveEntity entity;
 
 		public Impl(InvasiveEntity teleporter, TeleportationTarget target) {
 			if (target.isLocation()) {
@@ -73,6 +76,8 @@ public abstract class Teleport {
 			this.entity = teleporter;
 			this.state = State.INITIALIZED;
 			REQUESTS.add(this);
+			this.teleportMsg = ClansAPI.getDataInstance().getMessageResponse("teleporting");
+			this.seconds = ClansAPI.getDataInstance().getConfigInt("teleportation-time");
 		}
 
 		public Impl(InvasiveEntity teleporter, Player target) {
@@ -81,6 +86,8 @@ public abstract class Teleport {
 			this.entity = teleporter;
 			this.state = State.INITIALIZED;
 			REQUESTS.add(this);
+			this.teleportMsg = ClansAPI.getDataInstance().getMessageResponse("teleporting");
+			this.seconds = ClansAPI.getDataInstance().getConfigInt("teleportation-time");
 		}
 
 		public Impl(InvasiveEntity teleporter, Location target) {
@@ -89,6 +96,8 @@ public abstract class Teleport {
 			this.entity = teleporter;
 			this.state = State.INITIALIZED;
 			REQUESTS.add(this);
+			this.teleportMsg = ClansAPI.getDataInstance().getMessageResponse("teleporting");
+			this.seconds = ClansAPI.getDataInstance().getConfigInt("teleportation-time");
 		}
 
 		public Location getLocationBeforeTeleport() {
@@ -132,7 +141,7 @@ public abstract class Teleport {
 							entity.getAsAssociate().getTag().getPlayer().getPlayer().getWorld().playSound(entity.getAsAssociate().getTag().getPlayer().getPlayer().getLocation(), Sound.ENTITY_VILLAGER_AMBIENT, 10, 1);
 						}
 					} else {
-						getEntity().getAsAssociate().getMailer().chat("&aTeleporting in 10 seconds, don't move.").deploy();
+						getEntity().getAsAssociate().getMailer().chat(MessageFormat.format(teleportMsg, seconds)).deploy();
 						Clan.ACTION.sendMessage(getTarget().getAsPlayer(), "&a" + entity.getAsAssociate().getName() + " is teleporting to you.");
 						this.state = State.TELEPORTING;
 						this.accepted = new Date();
@@ -163,7 +172,7 @@ public abstract class Teleport {
 							entity.getAsAssociate().getTag().getPlayer().getPlayer().getWorld().playSound(entity.getAsAssociate().getTag().getPlayer().getPlayer().getLocation(), Sound.ENTITY_VILLAGER_AMBIENT, 10, 1);
 						}
 					} else {
-						getEntity().getAsAssociate().getMailer().chat("&aTeleporting in 10 seconds, don't move.").deploy();
+						getEntity().getAsAssociate().getMailer().chat(MessageFormat.format(teleportMsg, seconds)).deploy();
 						this.state = State.TELEPORTING;
 						this.accepted = new Date();
 						TaskScheduler.of(() -> {
@@ -187,7 +196,7 @@ public abstract class Teleport {
 					if (this.target != null) {
 						getEntity().getAsClan().getMembers().forEach(a -> {
 							if (a.getTag().isPlayer() && !a.getTag().getPlayer().isOnline()) return;
-							a.getMailer().chat("&aTeleporting in 10 seconds, don't move.").deploy();
+							a.getMailer().chat(MessageFormat.format(teleportMsg, seconds)).deploy();
 							Clan.ACTION.sendMessage(getTarget().getAsPlayer(), "&a" + a.getName() + " is teleporting to you.");
 							this.state = State.TELEPORTING;
 							this.accepted = new Date();
@@ -209,7 +218,7 @@ public abstract class Teleport {
 					} else {
 						getEntity().getAsClan().getMembers().forEach(a -> {
 							if (a.getTag().isPlayer() && !a.getTag().getPlayer().isOnline()) return;
-							a.getMailer().chat("&aTeleporting in 10 seconds, don't move.").deploy();
+							a.getMailer().chat(MessageFormat.format(teleportMsg, seconds)).deploy();
 							this.state = State.TELEPORTING;
 							this.accepted = new Date();
 							TaskScheduler.of(() -> {
@@ -232,7 +241,7 @@ public abstract class Teleport {
 				if (entity.isPlayer()) {
 					start = getEntity().getAsPlayer().getPlayer().getLocation();
 					if (this.target != null) {
-						Clan.ACTION.sendMessage(getEntity().getAsPlayer().getPlayer(), "&aTeleporting in 10 seconds, don't move.");
+						Clan.ACTION.sendMessage(getEntity().getAsPlayer().getPlayer(), MessageFormat.format(teleportMsg, seconds));
 						Clan.ACTION.sendMessage(getTarget().getAsPlayer(), "&a" + entity.getAsAssociate().getName() + " is teleporting to you.");
 						this.state = State.TELEPORTING;
 						this.accepted = new Date();
@@ -251,7 +260,7 @@ public abstract class Teleport {
 							}
 						}).scheduleLater(20 * 10);
 					} else {
-						Clan.ACTION.sendMessage(getEntity().getAsPlayer().getPlayer(), "&aTeleporting in 10 seconds, don't move.");
+						Clan.ACTION.sendMessage(getEntity().getAsPlayer().getPlayer(), MessageFormat.format(teleportMsg, seconds));
 						this.state = State.TELEPORTING;
 						this.accepted = new Date();
 						TaskScheduler.of(() -> {

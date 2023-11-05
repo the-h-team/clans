@@ -1,11 +1,10 @@
 #
 # ----------------------------------------------- #
-#     ▄▄▄▄▀ ▄███▄     ▄▄▄▄▀_▄__█_▄███▄__█▄▄▄▄
-#  ▀▀▀ █  \-█▀---▀-▀▀▀/█   █   █ █▀   ▀  █  ▄▀
-#      █    ██▄▄       █   ██▀▀█ ██▄▄    █▀▀▌
-#     █     █▄   ▄▀   █    █   █ █▄   ▄▀ █  █
-#    ▀      ▀███▀    ▀        █  ▀███▀     █
-#                            ▀            ▀
+#   ██████ ██       █████  ███    ██ ███████
+#  ██      ██      ██   ██ ████   ██ ██
+#  ██      ██      ███████ ██ ██  ██ ███████
+#  ██      ██      ██   ██ ██  ██ ██      ██
+#   ██████ ███████ ██   ██ ██   ████ ███████
 # -------- Translation by: Hempfest & Matt ------ #
 Clans:
   # Allow plugin update checks?
@@ -22,6 +21,11 @@ Clans:
 
   # Max amount of power a clan can have.
   max-power: 2000.0
+
+  # Adjust teleportation time when a player is within range of another.
+  # This is decided by who's in what clan, so if the players in range are allies or clan members you won't expect to wait to teleport.
+  # This is in seconds, if the player fails to stand still for this amount of time the teleportation will fail.
+  teleportation-time: 10
 
   # Player head settings
   # Here you can configure settings for the new head decoration feature! All head data can be found @ https://minecraft-heads.com/custom-heads
@@ -359,6 +363,15 @@ Addon:
   Borders:
     enabled: true
 
+  # A connection with a web interface geo mapping plugin to show clan claims.
+  Dynmap:
+    # Enabling this will show all clan claims by default.
+    show-by-default: false
+    # Change the default color of claims on the map.
+    # Doesn't change color of currently colored claims, will need to reclaim for now, so change this ahead of time!
+    claim-color: '#42cbf5'
+    claim-outline: '#edfffc'
+
   # An ms5984 (Regurgitator) original, map surrounding chunks around you and display information for them in chat [Premium only!]
   Map:
     # NEW feature by Hempfest, enhances interaction with map symbols.
@@ -398,5 +411,5 @@ Addon:
 ## -- DO NOT EDIT BELOW --##
 ##------------------------##
 Authors: [ "Hempfest", "ms5984" ]
-Version: 1.5.1
+Version: 1.6.0
 Language: en-US

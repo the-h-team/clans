@@ -5,6 +5,7 @@ import com.github.sanctum.clans.construct.util.BukkitColor;
 import com.github.sanctum.clans.construct.util.ClanError;
 import com.github.sanctum.clans.construct.impl.DefaultClan;
 import com.github.sanctum.clans.construct.impl.entity.ServerAssociate;
+import com.github.sanctum.clans.construct.util.Reservoir;
 import com.github.sanctum.labyrinth.LabyrinthProvider;
 import com.github.sanctum.labyrinth.data.EconomyProvision;
 import com.github.sanctum.labyrinth.data.LabyrinthUser;
@@ -18,6 +19,8 @@ import com.github.sanctum.labyrinth.library.Mailer;
 import com.github.sanctum.panther.file.JsonAdapter;
 import com.github.sanctum.panther.file.Node;
 import com.github.sanctum.panther.util.HUID;
+import com.github.sanctum.panther.util.PantherString;
+import com.github.sanctum.panther.util.ProgressBar;
 import com.github.sanctum.panther.util.TypeAdapter;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -475,6 +478,11 @@ public interface Clan extends ConfigurationSerializable, EntityHolder, InvasiveE
 			return string.replace(":member_list:", clan.getMembers().stream().map(Clan.Associate::getNickname).collect(Collectors.joining(", ")))
 					.replace(":member_count:", clan.size() + "")
 					.replace(":clan_name:", clan.getName())
+					.replace(":owner_name:", clan.getOwner().getName())
+					.replace(":reservoir_status:", (Reservoir.get(clan) != null ? "&aUP" : "&4DOWN"))
+					.replace(":reservoir_progress:", Optional.ofNullable(Reservoir.get(clan)).map(r -> new ProgressBar().setProgress((int) r.getPower()).setGoal((int) r.getMaxPower()).setFullColor("&5&l").setPrefix(null).setSuffix(null).toString()).orElse(new ProgressBar().setProgress(0).setGoal(100).setBars(10).toString()))
+					.replace(":reservoir_power:", Optional.ofNullable(Reservoir.get(clan)).map(r -> r.getPower() + "").orElse(0 + ""))
+					.replace(":reservoir_max_power:", Optional.ofNullable(Reservoir.get(clan)).map(r -> r.getMaxPower() + "").orElse(10000 + ""))
 					.replace(":clan_logo:", clan.getLogo() == null ? "" : String.join("\n", clan.getLogo()))
 					.replace(":clan_color:", clan.getPalette().toString())
 					.replace(":clan_name_colored:", clan.getPalette().toString(clan.getName()))

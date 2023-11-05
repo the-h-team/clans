@@ -120,6 +120,9 @@ public enum GUI {
 	 * List all known heads on the server
 	 */
 	HEAD_LIBRARY,
+	/**
+	 * The main menu for head related actions.
+	 */
 	HEAD_MAIN_MENU,
 	/**
 	 * The public logo market
@@ -145,6 +148,10 @@ public enum GUI {
 	 * View a clan's relation list.
 	 */
 	RELATIONS_MENU,
+	/**
+	 * View a clans reservoir.
+	 */
+	RESERVOIR,
 	/**
 	 * Modify clan arena settings live
 	 */
@@ -186,24 +193,10 @@ public enum GUI {
 	 */
 	SETTINGS_SHIELD;
 
-	private static final Map<Player, String> tempSpot = new HashMap<>();
-	private final ClansAPI api = ClansAPI.getInstance();
+		private final ClansAPI api = ClansAPI.getInstance();
 	private final ClanAddonQueue addonQueue = ClanAddonQueue.getInstance();
 	private final PrintManager printManager = LabyrinthProvider.getInstance().getLocalPrintManager();
 	private final ItemStack special = CustomHeadLoader.provide("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYWFjMTVmNmZjZjJjZTk2M2VmNGNhNzFmMWE4Njg1YWRiOTdlYjc2OWUxZDExMTk0Y2JiZDJlOTY0YTg4OTc4YyJ9fX0=");
-
-	private static Menu getTemp(Player player) {
-		if (!tempSpot.containsKey(player)) {
-			tempSpot.put(player, CLAN_ROSTER_TOP.name());
-		}
-		switch (tempSpot.get(player).toLowerCase()) {
-			case "clan_roster_top":
-				return CLAN_ROSTER_TOP.get();
-			case "clan_roster":
-				return CLAN_ROSTER.get();
-		}
-		return MenuType.SINGULAR.build().join();
-	}
 
 	public Menu get(Player p) {
 		if (this == GUI.MAIN_MENU) {
@@ -401,8 +394,6 @@ public enum GUI {
 						.setTitle("&0&l» &3&lSelect a clan")
 						.setSize(getSize())
 						.setKey("ClansPro:Roster_edit")
-						.setOpenEvent(open -> tempSpot.put(open.getElement(), CLAN_ROSTER_TOP.name()))
-						.setProcessEvent(open -> tempSpot.put(open.getElement(), CLAN_ROSTER_TOP.name()))
 						.setStock(i -> {
 							FillerElement<?> filler = new FillerElement<>(i);
 							filler.add(ed -> ed.setElement(it -> it.setType(Optional.ofNullable(Items.findMaterial("bluestainedglasspane")).orElse(Items.findMaterial("stainedglasspane"))).setTitle(" ").build()));
@@ -2103,6 +2094,11 @@ public enum GUI {
 								SETTINGS_MEMBER.get(value).open(c.getElement());
 							})));
 						}).orGet(m -> m instanceof PaginatedMenu && m.getKey().map(("ClansPro:" + clan.getName() + "-members-edit")::equals).orElse(false));
+			case RESERVOIR:
+				MemoryDocket<UnknownGeneric> docket = new MemoryDocket<>(ClansAPI.getDataInstance().getMessages().getRoot().getNode("menu.home.reservoir"));
+				docket.setUniqueDataConverter(clan, Clan.memoryDocketReplacer());
+				docket.setNamePlaceholder(":owner_name:");
+				return docket.load().toMenu();
 			case MEMBER_LIST:
 				Node h = ClansAPI.getDataInstance().getMessages().getRoot().getNode("menu.members");
 				MemoryDocket<Clan.Associate> dm = DefaultDocketRegistry.get(Clan.memoryDocketReplacer().apply(h.getNode("id").toPrimitive().getString(), clan));

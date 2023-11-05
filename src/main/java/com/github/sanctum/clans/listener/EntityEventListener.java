@@ -19,6 +19,8 @@ import org.bukkit.NamespacedKey;
 import org.bukkit.Particle;
 import org.bukkit.Sound;
 import org.bukkit.entity.EnderCrystal;
+import org.bukkit.entity.Mob;
+import org.bukkit.entity.Pig;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
 import org.bukkit.event.EventHandler;
@@ -52,6 +54,26 @@ public class EntityEventListener implements Listener {
 				} else {
 					e.getEntity().remove();
 				}
+			}
+		}
+	}
+
+	@EventHandler
+	public void onHurtEntity(EntityDamageByEntityEvent e) {
+		Claim c = ClansAPI.getInstance().getClaimManager().getClaim(e.getEntity().getLocation());
+		if (c != null) {
+			if ((e.getDamager() instanceof Player || (e.getDamager() instanceof Projectile && ((Projectile) e.getDamager()).getShooter() instanceof Player))) {
+				Player source = e.getDamager() instanceof Player ? (Player) e.getDamager() : (Player) (((Projectile) e.getDamager()).getShooter());
+				Clan.Associate a = ClansAPI.getInstance().getAssociate(source).orElse(null);
+				if (a != null) {
+					if (c.getOwner().equals(a.getClan())) {
+						return; // stop, theyre a member they can do what they want.
+					}
+				}
+			}
+			Claim.Flag flag = c.getFlag("invincible-animals");
+			if (flag != null && flag.isEnabled()) {
+				e.setCancelled(true);
 			}
 		}
 	}

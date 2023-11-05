@@ -12,12 +12,12 @@
 # Translation by: Lan
 #
 # Newly improved permission handling for functions in 1.3.9+
-# clanspro.* = New wildcard permission for giving access to all functions (Including admin functions).
-# clanspro.admin.* = New wildcard permission for giving access to all admin related functions.
-# clanspro.ally.* = New wildcard permission for giving access to all alliance related functions.
-# clanspro.enemy.* = New wildcard permission for giving access to all enemy related functions.
-# clanspro.bank.* = New wildcard permission for giving access to all bank related functions.
-# clanspro.use.* = New wildcard permission for giving access to all normal non admin related functions.
+# clans.* = New wildcard permission for giving access to all functions (Including admin functions).
+# clans.admin.* = New wildcard permission for giving access to all admin related functions.
+# clans.ally.* = New wildcard permission for giving access to all alliance related functions.
+# clans.enemy.* = New wildcard permission for giving access to all enemy related functions.
+# clans.bank.* = New wildcard permission for giving access to all bank related functions.
+# clans.use.* = New wildcard permission for giving access to all normal non admin related functions.
 #==================================================#
 Title: '&r- Command help. (&7{label} help #page&r)'
 Border: '&7&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬'
@@ -230,6 +230,7 @@ Response:
   bank-hover-withdraw: 'Retire dinheiro do banco do clã' #describes withdraw subcommand
   bank-deposit-message-player: '&7Você depositou &a{0} &7no banco do clã.'
   bank-withdraw-message-player: '&7Você retirou &c{0} &7do banco do clã.'
+  teleporting: '&aTeleporting in {0} seconds, don''t move.'
 
   #==========================================================================#
   #  ███╗   ██╗ ██████╗ ███╗   ██╗      ██╗   ██╗ █████╗ ██╗     ██╗██████╗

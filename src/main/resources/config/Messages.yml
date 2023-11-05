@@ -10,12 +10,12 @@
 # desired language each update, turn in your already translated language files!
 #
 # Newly improved permission handling for functions in 1.3.9+
-# clanspro.* = New wildcard permission for giving access to all functions (Including admin functions).
-# clanspro.admin.* = New wildcard permission for giving access to all admin related functions.
-# clanspro.ally.* = New wildcard permission for giving access to all alliance related functions.
-# clanspro.enemy.* = New wildcard permission for giving access to all enemy related functions.
-# clanspro.bank.* = New wildcard permission for giving access to all bank related functions.
-# clanspro.use.* = New wildcard permission for giving access to all normal non admin related functions.
+# clans.* = New wildcard permission for giving access to all functions (Including admin functions).
+# clans.admin.* = New wildcard permission for giving access to all admin related functions.
+# clans.ally.* = New wildcard permission for giving access to all alliance related functions.
+# clans.enemy.* = New wildcard permission for giving access to all enemy related functions.
+# clans.bank.* = New wildcard permission for giving access to all bank related functions.
+# clans.use.* = New wildcard permission for giving access to all normal non admin related functions.
 #
 # Command configurations now have a {label} placeholder, make sure to use it for fluidity when using the command.
 #==================================================#
@@ -228,6 +228,7 @@ Response:
   bank-hover-withdraw: 'Withdraw money from the clan bank' #describes withdraw subcommand
   bank-deposit-message-player: '&7You deposited &a{0} &7into the clan bank.'
   bank-withdraw-message-player: '&7You withdrew &c{0} &7from the clan bank.'
+  teleporting: '&aTeleporting in {0} seconds, don''t move.'
 
   #==========================================================================#
   #  ███╗   ██╗ ██████╗ ███╗   ██╗      ██╗   ██╗ █████╗ ██╗     ██╗██████╗
@@ -1330,6 +1331,60 @@ menu:
           enchantments:
             ARROW_DAMAGE: 2
           flags: [ "HIDE_ENCHANTS" ]
+    # This is an optional sub menu for this menu to use it simply call '/clan bank gui' in your open statement.
+    # Associate provided placeholders work here:
+    # :member_name:  "Get the associates name"
+    # :member_bio:  "Get the associates personal biography"
+    # :member_balance:  "Get the associates money balance"
+    # :member_nick_name:  "Get the associates nickname otherwise returning their normal name"
+    # :member_nick_name_colored:  "Get the associates nickname otherwise returning their normal name, all wrapped in the color of their clan"
+    # :member_rank_full:  "Get the associates rank in full"
+    # :member_rank_wordless:  "Get the associates rank symbol"
+    # :member_list:  "Get all members of this associates clan in string form."
+    # :member_count:  "Get the count of members for this associates clan"
+    # :clan_name:  "Get the name of the clan for this associate."
+    # :clan_name_colored:  "Get the name of the clan for this associate colored"
+    # :clan_logo:  "Get the clan logo (use for lore)"
+    # :clan_nick_name:  "Get the nick name of the clan for this associate"
+    # :clan_nick_name_colored:  "Get the nick name of the clan for this associate colored"
+    # Normal placeholders work here aswell.
+    reservoir:
+      title: '&6:clan_name: &0&lReservoir'
+      rows: FOUR
+      id: ':clan_name:;reservoir'
+      type: SINGULAR
+      filler:
+        name: ' '
+        locked: true
+        type: glasspane
+      border:
+        name: ' '
+        locked: true
+        type: stone
+      items:
+        '&cGo back':
+          slot: 10
+          lore: [ "&cBack to main menu." ]
+          locked: true
+          type: left_button
+          open: '/clan'
+        ':reservoir_progress:':
+          slot: 21
+          lore: [ "&f&m&l--------------------", " ", "&eOur reservoir progress", " ", "&f&m&l--------------------", " ", "&aPower: &7:reservoir_power:/:reservoir_power_max:" ]
+          locked: true
+          type: compass
+        '&aGuards':
+          slot: 23
+          lore: [ "&fCurrently active on duty: &e:%clans_guards_reservoir%:", "&7&o(Requires Guards addon)" ]
+          locked: true
+          close: true
+          type: ironaxe
+        '&eStatus&7: :reservoir_status:':
+          slot: 16
+          lore: [ "&fIf you need to purchase a reservoir you can do so by clicking this item." ]
+          locked: true
+          type: endercrystal
+          open: '/clan reservoir buy'
     title: 'Hello %player_name%'
     rows: SIX
     type: SINGULAR
@@ -1392,5 +1447,12 @@ menu:
         close: true
         type: paper
         lore: [ "&fChange your clan chat." ]
+      '&6Reservoir':
+        slot: 41
+        locked: true
+        open: '/clan reservoir'
+        close: true
+        type: obsidian
+        lore: [ "&eAccess your clans reservoir." ]
 
 default-size: SIX

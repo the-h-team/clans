@@ -224,13 +224,22 @@ public class BlockEventListener implements Listener {
 	public void onClaimInteract(ClaimInteractEvent e) {
 		Clan.Associate associate = ClansAPI.getInstance().getAssociate(e.getPlayer()).orElse(null);
 		if (!e.getClaim().isActive()) return;
+		Claim.Flag f = e.getClaim().getFlag("allies-share-land");
 		if (associate != null && associate.isValid()) {
 			switch (e.getInteraction()) {
 				case USE:
 					if (e.getBlock().getType().isInteractable()) {
 						if (!e.getClaim().getOwner().getTag().getId().equals(associate.getClan().getId().toString())) {
+							// not in the same clan
 							if (!e.getPlayer().hasPermission("clanspro.admin")) {
-								if (!((Clan) e.getClaim().getHolder()).getRelation().getAlliance().has(associate.getClan())) {
+								if (f != null && f.isEnabled()) {
+									// only deny if not ally.
+									if (!((Clan) e.getClaim().getHolder()).getRelation().getAlliance().has(associate.getClan())) {
+										e.getUtil().sendMessage(e.getPlayer(), MessageFormat.format(e.getUtil().notClaimOwner(((Clan) e.getClaim().getHolder()).getName()), ((Clan) e.getClaim().getHolder()).getName()));
+										e.setCancelled(true);
+									}
+								} else {
+									// deny
 									e.getUtil().sendMessage(e.getPlayer(), MessageFormat.format(e.getUtil().notClaimOwner(((Clan) e.getClaim().getHolder()).getName()), ((Clan) e.getClaim().getHolder()).getName()));
 									e.setCancelled(true);
 								}
@@ -245,7 +254,14 @@ public class BlockEventListener implements Listener {
 					if (!e.isCancelled() && StringUtils.use(e.getPlayer().getInventory().getItemInMainHand().getType().name()).containsIgnoreCase("bucket")) {
 						if (!e.getClaim().getOwner().getTag().getId().equals(associate.getClan().getId().toString())) {
 							if (!e.getPlayer().hasPermission("clanspro.admin")) {
-								if (!((Clan) e.getClaim().getHolder()).getRelation().getAlliance().has(associate.getClan())) {
+								if (f != null && f.isEnabled()) {
+									// only deny if not ally.
+									if (!((Clan) e.getClaim().getHolder()).getRelation().getAlliance().has(associate.getClan())) {
+										e.getUtil().sendMessage(e.getPlayer(), MessageFormat.format(e.getUtil().notClaimOwner(((Clan) e.getClaim().getHolder()).getName()), ((Clan) e.getClaim().getHolder()).getName()));
+										e.setCancelled(true);
+									}
+								} else {
+									// deny
 									e.getUtil().sendMessage(e.getPlayer(), MessageFormat.format(e.getUtil().notClaimOwner(((Clan) e.getClaim().getHolder()).getName()), ((Clan) e.getClaim().getHolder()).getName()));
 									e.setCancelled(true);
 								}
@@ -262,7 +278,14 @@ public class BlockEventListener implements Listener {
 				case BUILD:
 					if (!e.getClaim().getOwner().getTag().getId().equals(associate.getClan().getId().toString())) {
 						if (!e.getPlayer().hasPermission("clanspro.admin")) {
-							if (!((Clan) e.getClaim().getHolder()).getRelation().getAlliance().has(associate.getClan())) {
+							if (f != null && f.isEnabled()) {
+								// only deny if not ally.
+								if (!((Clan) e.getClaim().getHolder()).getRelation().getAlliance().has(associate.getClan())) {
+									e.getUtil().sendMessage(e.getPlayer(), MessageFormat.format(e.getUtil().notClaimOwner(((Clan) e.getClaim().getHolder()).getName()), ((Clan) e.getClaim().getHolder()).getName()));
+									e.setCancelled(true);
+								}
+							} else {
+								// deny
 								e.getUtil().sendMessage(e.getPlayer(), MessageFormat.format(e.getUtil().notClaimOwner(((Clan) e.getClaim().getHolder()).getName()), ((Clan) e.getClaim().getHolder()).getName()));
 								e.setCancelled(true);
 							}
@@ -276,6 +299,7 @@ public class BlockEventListener implements Listener {
 					break;
 			}
 		} else {
+			// player interacting isnt int a clan just a normal player.
 			switch (e.getInteraction()) {
 				case USE:
 					if (e.getBlock().getType().isInteractable()) {

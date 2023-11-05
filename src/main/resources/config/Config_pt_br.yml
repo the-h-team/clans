@@ -1,44 +1,31 @@
 #
 # ----------------------------------------------- #
-#     ▄▄▄▄▀ ▄███▄     ▄▄▄▄▀_▄__█_▄███▄__█▄▄▄▄
-#  ▀▀▀ █  \-█▀---▀-▀▀▀/█   █   █ █▀   ▀  █  ▄▀
-#      █    ██▄▄       █   ██▀▀█ ██▄▄    █▀▀▌
-#     █     █▄   ▄▀   █    █   █ █▄   ▄▀ █  █
-#    ▀      ▀███▀    ▀        █  ▀███▀     █
-#                            ▀            ▀
+#   ██████ ██       █████  ███    ██ ███████
+#  ██      ██      ██   ██ ████   ██ ██
+#  ██      ██      ███████ ██ ██  ██ ███████
+#  ██      ██      ██   ██ ██  ██ ██      ██
+#   ██████ ███████ ██   ██ ██   ████ ███████
 # -------- Translation by: Lan ------------------ #
 Clans:
-  #################################
-  ##                             ##
-  ## Allow plugin update checks? ##
-  ##                             ##
-  #################################
+  # Allow plugin update checks?
   check-version: true
-
-  ############################################################
-  ##                                                        ##
-  ## A single timer runs the whole show! Decide how frequent##
-  ## the timer runs here!                                   ##
-  ##                                                        ##
-  ############################################################
+  # A single timer runs the whole show! Decide how frequent-
+  # -the timer runs here!
   timer:
     # Valid thresholds: [ MILLISECONDS, SECONDS, MINUTES, HOURS, DAYS ]
     threshold: MILLISECONDS
     time-span: 40
 
-  ##############################################
-  ##                                          ##
-  ## Max amount of clans the server can have. ##
-  ##                                          ##
-  ##############################################
+  # Max amount of clans the server can have.
   max-clans: 60
 
-  ##############################################
-  ##                                          ##
-  ##   Max amount of power a clan can have.   ##
-  ##                                          ##
-  ##############################################
+  # Max amount of power a clan can have.
   max-power: 2000.0
+
+  # Adjust teleportation time when a player is within range of another.
+  # This is decided by who's in what clan, so if the players in range are allies or clan members you won't expect to wait to teleport.
+  # This is in seconds, if the player fails to stand still for this amount of time the teleportation will fail.
+  teleportation-time: 10
 
   # Player head settings
   # Here you can configure settings for the new head decoration feature! All head data can be found @ https://minecraft-heads.com/custom-heads
@@ -50,11 +37,7 @@ Clans:
     charge-to-get: true
     cost-to-get: 24
 
-  ##############################################
-  ##                                          ##
-  ##        Clan reservoir settings.          ##
-  ##                                          ##
-  ##############################################
+  # Clan reservoir settings. [Premium only]
   reservoir:
     # Disable token drops for killing players?
     players-drop-tokens: true
@@ -67,16 +50,11 @@ Clans:
       #ITEMHERE: WORTH
       #ITEMHERE: WORTH
 
-  #################################
-  ##                             ##
-  ## Modify clan pvp mode change ##
-  ##          settings.          ##
-  ##                             ##
-  #################################
+  # Modify clan pvp mode and change settings
   mode-change:
     # Change what pvp mode a clan gets put in on creation {Valid types = peace, war}
     default: peace
-    # NEW! With this option enabled clans can only switch to war mode by having a reservoir built!
+    # NEW! With this option enabled clans can only switch to war mode by having a reservoir built! [Premium only!]
     require-reservoir: true
     # Allow a cooldown every use of mode switch? If so how long.
     timer:
@@ -86,11 +64,7 @@ Clans:
     charge: false
     amount: 420.0
 
-  #################################
-  ##                             ##
-  ##      Relation Settings      ##
-  ##                             ##
-  #################################
+  # Relation Settings
   relations:
     enemy:
       # Allow players to modify enemy relations with a fully offline clan?
@@ -99,11 +73,7 @@ Clans:
       # Allow players to modify alliance relations with a fully offline clan?
       cancel-if-empty: true
 
-  ######################################
-  ##                                  ##
-  ## Clan pre-creation settings apply ##
-  ##                                  ##
-  ######################################
+  # Clan pre-creation settings apply
   creation:
     charge: false
     amount: 420.0
@@ -114,11 +84,7 @@ Clans:
       # After how long in seconds will the cooldown expire?
       time: 120
 
-  ########################
-  ##                    ##
-  ## Clan bank settings ##
-  ##                    ##
-  ########################
+  # Clan bank settings
   banks:
     # Allow clans to enable the bank functions?
     enabled: true
@@ -137,39 +103,23 @@ Clans:
       withdraw: 2 # Clan rank 2 can withdraw
       view-log: 3 # Clan rank 3 can view transaction log
 
-  ###########################
-  ##                       ##
-  ## Clan WORLD whitelist. ##
-  ##                       ##
-  ###########################
+  # Clan WORLD whitelist.
   use-whitelist: true
   world-whitelist: [ "world", "world_nether", "world_the_end" ]
 
-  ##########################
-  ##                      ##
-  ## Clan NAME blacklist. ##
-  ##                      ##
-  ##########################
+  # Clan NAME blacklist.
   # Any words here found within a clans name will NOT be tolerated and an optional action will be enforced upon use.
   name-blacklist:
     faggot:
-      action: 'kick {PLAYER} Este tipo de uso de nome não é permitido!'
+      action: 'kick {PLAYER} This type of name use is not allowed!'
     nigger:
-      action: 'ban {PLAYER} Este tipo de uso de nome não é permitido!'
+      action: 'ban {PLAYER} This type of name use is not allowed!'
 
-  ##########################
-  ##                      ##
-  ## Clan COLOR blacklist. ##
-  ##                      ##
-  ##########################
+  # Clan COLOR blacklist.
   # Any color-codes attempted to be used from this list will NOT be allowed.
   color-blacklist: [ "&k" ]
 
-  #########################
-  ##                     ##
-  ## Clan claim settings ##
-  ##                     ##
-  #########################
+  # Clan claim settings
   land-claiming:
     allow: true
     # Charge users to claim land.
@@ -210,30 +160,22 @@ Clans:
     # Change the information displayed to the player
     in-land:
       # {0} = Claim owner
-      title: '&3&oTerra possuída &6{0}'
-      sub-title: 'Este terreno é propriedade de &b{0}'
-      message: '&7Você está entrando agora {0}&7''s terra'
+      title: '&3&oOwned land &6{0}'
+      sub-title: 'This land is owned by &b{0}'
+      message: '&7You are now entering {0}&7''s land'
     wilderness:
-      title: 'Deixando &6{0}'
-      sub-title: 'Deixando {0}''s terra'
-      message: '&7Agora saindo {0}&7''s terra'
+      title: 'Leaving &6{0}'
+      sub-title: 'Leaving {0}''s land'
+      message: '&7Now leaving {0}&7''s land'
 
-  #################################
-  ##                             ##
-  ## Clan friendly-fire settings ##
-  ##                             ##
-  #################################
+  # Clan friendly-fire settings
   friendly-fire:
     # Allow a cooldown every use of friendly fire? If so how long.
     timer:
       use: false
       cooldown-in-seconds: 120
 
-  ##########################
-  ##                      ##
-  ## Raid-shield settings ##
-  ##                      ##
-  ##########################
+  # Raid-shield settings
   raid-shield:
     # Allow the raid-shield to run, enabling claim raiding?
     allow: true
@@ -254,14 +196,10 @@ Clans:
     send-messages: true
     # Change the messages for the raid-shield announcements, {0} = Configured prefix
     messages:
-      enabled: '{0} &8» &aEscudo de ataque ativado.'
-      disabled: '{0} &8» &cEscudo de ataque levantado.'
+      enabled: '{0} &8» &aRaid shield enabled.'
+      disabled: '{0} &8» &cRaid shield lifted.'
 
-  ###################################
-  ##                               ##
-  ## Clan war (TDM) & pvp settings ##
-  ##                               ##
-  ###################################
+  # Clan war (TDM) & pvp settings
   war:
     # If someone is getting spawn camped penalize the attacker?
     killstreak:
@@ -295,20 +233,15 @@ Clans:
     # The max amount of points a team can get before the winner is concluded.
     max-points: 24
 
-#-------------------------------------------------------------------
-#
-#-------------------------------------------------------------
-#     ▄████████  ▄██████▄     ▄████████   ▄▄▄▄███▄▄▄▄      ▄████████     ███
-#    ███    ███ ███    ███   ███    ███ ▄██▀▀▀███▀▀▀██▄   ███    ███ ▀█████████▄
-#    ███    █▀  ███    ███   ███    ███ ███   ███   ███   ███    ███    ▀███▀▀██
-#   ▄███▄▄▄     ███    ███  ▄███▄▄▄▄██▀ ███   ███   ███   ███    ███     ███   ▀
-#  ▀▀███▀▀▀     ███    ███ ▀▀███▀▀▀▀▀   ███   ███   ███ ▀███████████     ███
-#    ███        ███    ███ ▀███████████ ███   ███   ███   ███    ███     ███
-#    ███        ███    ███   ███    ███ ███   ███   ███   ███    ███     ███
-#    ███         ▀██████▀    ███    ███  ▀█   ███   █▀    ███    █▀     ▄████▀
-#----------------------------███----███-----------------------
-#
-#-------------------------------------------------------------------
+#----------------------------------------#
+#  ▄████  ████▄ █▄▄▄▄ █▀▄▀█ ██     ▄▄▄▄▀
+#  █▀   ▀ █   █ █  ▄▀ █ █ █ █ █ ▀▀▀ █
+#  █▀▀    █   █ █▀▀▌  █ ▄ █ █▄▄█    █
+#  █      ▀████ █  █  █   █ █  █   █
+#   █             █      █     █  ▀
+#    ▀           ▀      ▀     █
+#                            ▀
+#----------------------------------------#
 Formatting:
   # Let the plugin include native chat formatting? If your chat plugin uses BaseComponents for formatting this will not work by default,
   # and you'll need to use the placeholders from the wiki within your chat management plugin.
@@ -323,7 +256,6 @@ Formatting:
     # {0} = Clan color, {1} = Clan name
     text: '&7[{0}{1}&7] '
   # Change number formatting lang. [en = English, fr = French, de = german, nl = Dutch]
-  # NOTE: REQUIRES a full server restart.
   locale: en
   # Change the max size a clan tag can be.
   tag-size: 15
@@ -428,47 +360,36 @@ Addon:
       called-message: '&6{PLAYER} &7from clan {CLAN} put a bounty on {TARGET} for &6&l$&e{BOUNTY}'
       # The message broadcast when a players bounty gets collected.
       defeat-message: '&c&o{KILLER} from clan {KILLER_CLAN} collected the &6${BOUNTY} &c&obounty for killing {PLAYER}'
-  ##################################################################
-  ##                                                              ##
-  ## Allows users to see chunk borders in relation to clan status ##
-  ##                                                              ##
-  ##################################################################
+
+  # Allows users to see chunk borders in relation to clan status
   Borders:
     enabled: true
-  #####################################################
-  ##                                                 ##
-  ##        An ms5984 (Regurgitator) original        ##
-  ##   Map surrounding chunks around you and display ##
-  ##          information for them in chat.          ##
-  ##                                                 ##
-  #####################################################
+
+  # A connection with a web interface geo mapping plugin to show clan claims.
+  Dynmap:
+    # Enabling this will show all clan claims by default.
+    show-by-default: false
+    # Change the default color of claims on the map.
+    # Doesn't change color of currently colored claims, will need to reclaim for now, so change this ahead of time!
+    claim-color: '#42cbf5'
+    claim-outline: '#edfffc'
+
+  # An ms5984 (Regurgitator) original, map surrounding chunks around you and display information for them in chat [Premium only!]
   Map:
     # NEW feature by Hempfest, enhances interaction with map symbols.
     enhanced: true
     enabled: true
-  ###########################################################################
-  ##                                                                       ##
-  ## Kingdoms is a progression tracking feature with rewarding attributes  ##
-  ##                                                                       ##
-  ###########################################################################
+
+  # Kingdoms is a progression tracking feature with rewarding attributes [Premium only!]
   Kingdoms:
     enabled: false
     required-creation-power: 180.00
-  ################################################
-  ##                                            ##
-  ## A private clan inventory with only 9 slots ##
-  ##         Default clearance is 2             ##
-  ##                                            ##
-  ################################################
+
+  # A private clan inventory with only 9 slots
   Stashes:
     enabled: true
-  ######################################################
-  ##                                                  ##
-  ## A good additive to kingdoms, bringing back some  ##
-  ##    early clans free stuff, adds classes with     ##
-  ##                  abilities.                      ##
-  ##                                                  ##
-  ######################################################
+
+  # A good additive to kingdoms, bringing back some early clans free stuff, adds classes with abilities. [Premium only!]
   Traits:
     enabled: false
     abilities:
@@ -484,12 +405,8 @@ Addon:
       SELECTIVE_KILL:
         # Change the amount of damage dealt on a selective kill ability cast.
         damage: 7.0
-  #######################################################
-  ##                                                   ##
-  ## A virtual clan vault inventory for storing items. ##
-  ##            Default clearance is 1                 ##
-  ##                                                   ##
-  #######################################################
+
+  # A virtual clan vault inventory for storing items.
   Vaults:
     enabled: true
 ##------------------------##

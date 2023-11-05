@@ -13,13 +13,13 @@ import com.github.sanctum.clans.construct.api.InvasiveEntity;
 import com.github.sanctum.clans.construct.api.LogoHolder;
 import com.github.sanctum.clans.construct.api.Teleport;
 import com.github.sanctum.clans.construct.api.War;
-import com.github.sanctum.clans.construct.util.AsynchronousLoanableTask;
-import com.github.sanctum.clans.construct.util.AboveHeadDisplayName;
-import com.github.sanctum.clans.construct.util.ClansUpdate;
-import com.github.sanctum.clans.construct.util.ReservoirMetadata;
-import com.github.sanctum.clans.construct.util.Reservoir;
-import com.github.sanctum.clans.construct.impl.DefaultRespawnCooldown;
 import com.github.sanctum.clans.construct.impl.DefaultMapEntry;
+import com.github.sanctum.clans.construct.impl.DefaultRespawnCooldown;
+import com.github.sanctum.clans.construct.util.AboveHeadDisplayName;
+import com.github.sanctum.clans.construct.util.AsynchronousLoanableTask;
+import com.github.sanctum.clans.construct.util.ClansUpdate;
+import com.github.sanctum.clans.construct.util.Reservoir;
+import com.github.sanctum.clans.construct.util.ReservoirMetadata;
 import com.github.sanctum.clans.event.TimerEvent;
 import com.github.sanctum.clans.event.associate.AssociateClaimEvent;
 import com.github.sanctum.clans.event.associate.AssociateHitReservoirEvent;
@@ -61,6 +61,7 @@ import com.github.sanctum.panther.util.HUID;
 import com.github.sanctum.panther.util.OrdinalProcedure;
 import com.github.sanctum.panther.util.ProgressBar;
 import com.github.sanctum.panther.util.Task;
+import com.github.sanctum.panther.util.TaskChain;
 import com.github.sanctum.panther.util.TaskPredicate;
 import java.io.File;
 import java.math.BigDecimal;
@@ -112,19 +113,18 @@ public class PlayerEventListener implements Listener {
 
 	private final static PantherMap<Location, ArmorStand> STAND_MAP = new PantherEntryMap<>();
 	public static final Procedure<Object> ARMOR_STAND_REMOVAL = Procedure.request(() -> Object.class).next(o -> STAND_MAP.values().forEach(ArmorStand::remove));
+	final int time_span = ClansAPI.getDataInstance().getConfigInt("Clans.timer.time-span");
 	public static final AsynchronousLoanableTask LOANABLE_TASK = new AsynchronousLoanableTask((p, task) -> {
-		if (ClansAPI.getInstance() == null) {
-			task.stop();
-			return;
-		}
 		ClanVentBus.call(new TimerEvent(p, true) {
 		});
 		task.synchronize(() -> ClanVentBus.call(new TimerEvent(p, false) {
 		}));
 	});
-	ItemMatcher itemMatcher;
-	ItemMatcher tokenMatcher;
-	final int time_span = ClansAPI.getDataInstance().getConfigInt("Clans.timer.time-span");
+
+	public PlayerEventListener() {
+		final ItemCompost compost = LabyrinthProvider.getInstance().getItemComposter();
+		compost.registerMatcher(new TokenSync());
+	}
 
 	@Subscribe(priority = Vent.Priority.LOW)
 	public void onInitial(TimerEvent e) {
@@ -277,7 +277,7 @@ public class PlayerEventListener implements Listener {
 							armorStand.setVisible(false);
 							armorStand.setMarker(true);
 							armorStand.setSmall(true);
-							armorStand.setCustomName(new FormattedString(new ProgressBar().setProgress((int) r.getPower()).setGoal(Math.max(250, (int) c.getPower())).setFullColor("&5&l").setPrefix(null).setSuffix(null).toString() + " &f(&6" + NumberFormat.getNumberInstance().format(c.getPower()) + "&f)").color().get());
+							armorStand.setCustomName(new FormattedString(new ProgressBar().setProgress((int) r.getPower()).setGoal((int) r.getMaxPower()).setFullColor("&5&l").setPrefix(null).setSuffix(null).toString() + " &f(&6" + NumberFormat.getNumberInstance().format(r.getPower()) + "&f)").color().get());
 							armorStand.setCustomNameVisible(true);
 						});
 						ArmorStand stand2 = Entities.ARMOR_STAND.spawn(location3, armorStand -> {
@@ -334,16 +334,16 @@ public class PlayerEventListener implements Listener {
 							if (e.getClickedBlock().getType() != Material.BEDROCK) {
 								ReservoirMetadata data = new ReservoirMetadata();
 								data.setAssociate(t);
-								EntityEventListener.map.put(e.getClickedBlock().getLocation(), data);
+								final Location location = e.getClickedBlock().getLocation().add(0.5, 0, 0.5); // center the location for the ender crystal (otherwise itll spawn on the corner of the block)
+								EntityEventListener.map.put(location, data);
 								e.getClickedBlock().setType(Material.AIR);
 								// place schematic
 								WorldEditAdapter adapter = WorldEditAdapter.getInstance();
 								if (adapter.isValid()) {
-									WorldEditSchematicAdapter schematic = adapter.loadSchematic(new File("plugins/Tether/Configuration/Data/reservoir.schem"));
+									final WorldEditSchematicAdapter schematic = adapter.loadSchematic(new File("plugins/Tether/Configuration/Data/reservoir.schem"));
 									if (schematic != null) {
-										WorldEditClipboardAdapter clipboard = schematic.toClipboard(e.getClickedBlock().getLocation());
-										clipboard.paste().ignoreAir(true).toBlock(e.getClickedBlock()).run();
-										Entities.ENDER_CRYSTAL.spawn(e.getClickedBlock().getLocation());
+										final WorldEditClipboardAdapter clipboard = schematic.toClipboard();
+										TaskChain.getSynchronous().wait(() -> clipboard.paste().toLocation(location).applyAfter(() -> Entities.ENDER_CRYSTAL.spawn(location)), t.getClan().getId() + ";reservoir-build", 300L * 20L);
 									}
 								} else {
 									Entities.ENDER_CRYSTAL.spawn(e.getClickedBlock().getLocation());
@@ -352,6 +352,8 @@ public class PlayerEventListener implements Listener {
 						} else {
 							Clan.ACTION.sendMessage(e.getPlayer(), "&cYour clan already has a reservoir powered up!");
 						}
+					} else {
+						Clan.ACTION.sendMessage(e.getPlayer(), "&cYou can only build a clan reservoir in owned land!");
 					}
 				}
 			}
@@ -374,14 +376,7 @@ public class PlayerEventListener implements Listener {
 								final ItemStack itemStack = e.getPlayer().getInventory().getItemInMainHand();
 								final ItemCompost compost = LabyrinthProvider.getInstance().getItemComposter();
 								if (itemStack.getType() == Material.IRON_NUGGET) {
-									Remover sync = new Remover(itemStack.getAmount(), e.getPlayer().getInventory());
-									if (tokenMatcher == null) {
-										tokenMatcher = sync;
-										compost.registerMatcher(tokenMatcher);
-									} else {
-										compost.unregisterMatcher(tokenMatcher);
-										compost.registerMatcher(tokenMatcher = sync);
-									}
+									TokenSync sync = new TokenSync(itemStack.getAmount(), e.getPlayer().getInventory());
 									if (compost.has(sync)) {
 										double modifier = ClansAPI.getDataInstance().getConfig().read(c -> c.getNode("Clans.reservoir.power-multiplier").toPrimitive().getDouble());
 										final double worth = modifier * itemStack.getAmount();
@@ -391,15 +386,16 @@ public class PlayerEventListener implements Listener {
 									}
 									return;
 								}
-								if (r.getPower() < Math.max(250, owner.getPower())) {
-									long size = r.getEntity().getNearbyEntities(8, 8, 8).stream().filter(en -> en instanceof Player && owner.getMember(m -> m.getName().equals(en.getName())) == null).count();
-									if (size == 0) {
+								if (r.isDamaged()) {
+									long nearBy = r.getEntity().getNearbyEntities(8, 8, 8).stream().filter(en -> en instanceof Player && owner.getMember(m -> m.getName().equals(en.getName())) == null).count();
+									if (nearBy == 0) {
 										if (itemStack.getAmount() >= 1) {
 											final int am = itemStack.getAmount();
 											double modifier = ClansAPI.getDataInstance().getConfig().read(c -> c.getNode("Clans.reservoir.repair-multiplier." + itemStack.getType().name()).toPrimitive().getDouble()); // retrieve modifier based on item from config or pull default.
 											if (modifier > 0) {
+												//TODO: make it detect a crouch so you can choose to deposit individual items or all at once
 												itemStack.setAmount(0);
-												r.set(Math.min(owner.getPower(), r.getPower() + (modifier * am)));
+												r.set(Math.min(owner.getPower(), r.getPower() + (am * modifier)));
 												e.getPlayer().getWorld().spawnParticle(Particle.HEART, new Location(r.getEntity().getWorld(), r.getEntity().getLocation().getX(), r.getEntity().getLocation().getY(), r.getEntity().getLocation().getZ(), r.getEntity().getLocation().getYaw(), r.getEntity().getLocation().getPitch()).add(0, 0.5, 0), 1);
 												owner.broadcast("&aOur reservoir was repaired by &5" + a.getNickname());
 											} else {
@@ -840,7 +836,6 @@ public class PlayerEventListener implements Listener {
 							AboveHeadDisplayName.set(associate, ClansAPI.getDataInstance().formatDisplayTag("", c.getPalette().toGradient().context(c.getName()).translate()));
 						} else {
 							AboveHeadDisplayName.set(associate, ClansAPI.getDataInstance().formatDisplayTag(associate.getClan().getPalette().toString(), associate.getClan().getName()));
-
 						}
 					} else {
 						AboveHeadDisplayName.remove(associate);
@@ -1047,12 +1042,16 @@ public class PlayerEventListener implements Listener {
 		}
 	}
 
-	static final class Remover extends ItemSync<Remover> implements ItemMatcher {
+	static final class TokenSync extends ItemSync<TokenSync> implements ItemMatcher {
 
 		final String NAME = "&3[&6Token&3]";
 
-		public Remover(int amount, Inventory inv) {
-			super(Remover.class, inv, amount);
+		public TokenSync() {
+			this(0, null);
+		}
+
+		public TokenSync(int amount, Inventory inv) {
+			super(TokenSync.class, inv, amount);
 		}
 
 		@Override

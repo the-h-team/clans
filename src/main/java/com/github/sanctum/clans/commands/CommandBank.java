@@ -129,13 +129,10 @@ public class CommandBank extends ClanSubCommand implements Message.Factory {
 							.replace("{0}", BanksAPI.getInstance().getBank(clan).getBalance().toString()));
 					return true;
 				case "gui" :
-					if (ClansAPI.getDataInstance().getMessages().read(c -> c.getNode("deep-edit").toPrimitive().getBoolean())) {
-						MemoryDocket<UnknownGeneric> docket = new MemoryDocket<>(ClansAPI.getDataInstance().getMessages().getRoot().getNode("menu.home.bank"));
-						docket.setUniqueDataConverter(associate, Clan.Associate.memoryDocketReplacer());
-						docket.setNamePlaceholder(":member_name:");
-						docket.load();
-						docket.toMenu().open(p);
-					}
+					MemoryDocket<UnknownGeneric> docket = new MemoryDocket<>(ClansAPI.getDataInstance().getMessages().getRoot().getNode("menu.home.bank"));
+					docket.setUniqueDataConverter(associate, Clan.Associate.memoryDocketReplacer());
+					docket.setNamePlaceholder(":member_name:");
+					docket.load().toMenu().open(p);
 					return true;
 				case "deposit":
 					if (BankPermissions.BANKS_DEPOSIT.not(p) || !Clearance.BANK_DEPOSIT.test(associate)) {

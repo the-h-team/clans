@@ -2,6 +2,7 @@ package com.github.sanctum.clans.bridge.external.dynmap;
 
 import com.github.sanctum.clans.construct.api.Claim;
 import com.github.sanctum.clans.construct.api.Clan;
+import com.github.sanctum.clans.construct.api.ClansAPI;
 import com.github.sanctum.labyrinth.LabyrinthProvider;
 import com.github.sanctum.panther.container.PantherCollectors;
 import com.github.sanctum.panther.container.PantherSet;
@@ -13,12 +14,14 @@ import org.dynmap.markers.AreaMarker;
 import org.dynmap.markers.MarkerSet;
 import org.jetbrains.annotations.NotNull;
 
-public final class DynmapClanMarketSet {
+public final class DynmapClanMarkerSet {
 
 	MarkerSet set;
+	int outlineP = 0xedfffc;
+	int colorP = 0x42cbf5;
 	final DynmapAPI api = (DynmapAPI) Bukkit.getServer().getPluginManager().getPlugin("dynmap");
 
-	public DynmapClanMarketSet initialize() {
+	public DynmapClanMarkerSet initialize() {
 		if (Bukkit.getPluginManager().isPluginEnabled("dynmap")) {
 			try {
 				set = api.getMarkerAPI().createMarkerSet("clans.claim.markerset", "Claims", api.getMarkerAPI().getMarkerIcons(), false);
@@ -26,6 +29,12 @@ public final class DynmapClanMarketSet {
 				set = api.getMarkerAPI().getMarkerSet("clans.claim.markerset");
 			}
 		}
+		String outline = ClansAPI.getDataInstance().getConfigString("Addon.Dynmap.claim-outline");
+		String color = ClansAPI.getDataInstance().getConfigString("Addon.Dynmap.claim-color");
+		int outlineP = Integer.parseInt("0x" + outline.replace("#", ""));
+		int colorP = Integer.parseInt("0x" + color.replace("#", ""));
+		this.outlineP = outlineP;
+		this.colorP = colorP;
 		return this;
 	}
 
@@ -50,8 +59,8 @@ public final class DynmapClanMarketSet {
 			int stroke = 1;
 			double strokeOpac = 0.0;
 			double Opac = 0.3;
-			am.setLineStyle(stroke, strokeOpac, 0xedfffc);
-			am.setFillStyle(Opac, 0x42cbf5);
+			am.setLineStyle(stroke, strokeOpac, outlineP);
+			am.setFillStyle(Opac, colorP);
 		} catch (NullPointerException e) {
 			i++;
 		}
@@ -84,8 +93,8 @@ public final class DynmapClanMarketSet {
 				int stroke = 1;
 				double strokeOpac = 0.0;
 				double Opac = 0.3;
-				am.setLineStyle(stroke, strokeOpac, 0xedfffc);
-				am.setFillStyle(Opac, 0x42cbf5);
+				am.setLineStyle(stroke, strokeOpac, outlineP);
+				am.setFillStyle(Opac, colorP);
 			} catch (NullPointerException e) {
 				i++;
 			}

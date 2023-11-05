@@ -20,6 +20,8 @@ public interface Reservoir extends Savable {
 
 	double getPower();
 
+	double getMaxPower();
+
 	void add(double amount);
 
 	void take(double amount);
@@ -29,6 +31,10 @@ public interface Reservoir extends Savable {
 	void adapt(@NotNull Clan clan);
 
 	boolean destroy();
+
+	default boolean isDamaged() {
+		return getPower() < getMaxPower();
+	}
 
 	static @Nullable Reservoir get(@NotNull Entity entity) {
 		return ReservoirRegistry.map.get(entity);
@@ -42,6 +48,7 @@ public interface Reservoir extends Savable {
 		return ReservoirRegistry.map.computeIfAbsent(entity, () -> new Reservoir() {
 
 			double power = 250;
+			double maxPower = 10000;
 			Clan owner;
 
 			{
@@ -94,6 +101,11 @@ public interface Reservoir extends Savable {
 			@Override
 			public double getPower() {
 				return power;
+			}
+
+			@Override
+			public double getMaxPower() {
+				return this.maxPower;
 			}
 
 			@Override

@@ -3,7 +3,7 @@ package com.github.sanctum.clans.bridge.external;
 import com.github.sanctum.clans.bridge.ClanAddon;
 import com.github.sanctum.clans.bridge.ClanAddonQueue;
 import com.github.sanctum.clans.bridge.ClanVentBus;
-import com.github.sanctum.clans.bridge.external.dynmap.DynmapClanMarketSet;
+import com.github.sanctum.clans.bridge.external.dynmap.DynmapClanMarkerSet;
 import com.github.sanctum.clans.bridge.external.dynmap.DynmapCommand;
 import com.github.sanctum.clans.event.associate.AssociateObtainLandEvent;
 import com.github.sanctum.clans.event.associate.AssociateUnClaimEvent;
@@ -13,7 +13,7 @@ import org.jetbrains.annotations.NotNull;
 
 public class DynmapAddon extends ClanAddon {
 
-	DynmapClanMarketSet integration;
+	DynmapClanMarkerSet integration;
 
 	@Override
 	public boolean isPersistent() {
@@ -42,8 +42,10 @@ public class DynmapAddon extends ClanAddon {
 
 	@Override
 	public void onLoad() {
-		integration = new DynmapClanMarketSet().initialize();
-		getContext().stage(new DynmapCommand("globe", integration));
+		integration = new DynmapClanMarkerSet().initialize();
+		DynmapCommand command = new DynmapCommand("globe", integration);
+		getContext().stage(command);
+		getContext().stage(command);
 	}
 
 	@Override
@@ -84,7 +86,7 @@ public class DynmapAddon extends ClanAddon {
 
 	}
 
-	public DynmapClanMarketSet getMarketSet() {
+	public DynmapClanMarkerSet getMarkerSet() {
 		return integration;
 	}
 

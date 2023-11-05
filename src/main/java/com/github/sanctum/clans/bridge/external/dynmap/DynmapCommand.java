@@ -6,8 +6,12 @@ import com.github.sanctum.clans.construct.api.ClanSubCommand;
 import com.github.sanctum.clans.construct.api.ClansAPI;
 import com.github.sanctum.clans.construct.api.Clearance;
 import com.github.sanctum.clans.construct.util.StringLibrary;
+import com.github.sanctum.clans.event.associate.AssociateObtainLandEvent;
 import com.github.sanctum.labyrinth.formatting.completion.SimpleTabCompletion;
 import com.github.sanctum.labyrinth.formatting.completion.TabCompletionIndex;
+import com.github.sanctum.labyrinth.library.Mailer;
+import com.github.sanctum.panther.event.Subscribe;
+import com.github.sanctum.panther.event.Vent;
 import java.util.Arrays;
 import java.util.List;
 import org.bukkit.command.CommandSender;
@@ -15,22 +19,45 @@ import org.bukkit.entity.Player;
 
 public class DynmapCommand extends ClanSubCommand {
 
-	final DynmapClanMarketSet integration;
+	final DynmapClanMarkerSet integration;
+	final boolean showDefault;
 
-	public DynmapCommand(String label, DynmapClanMarketSet marketSet) {
+	public DynmapCommand(String label, DynmapClanMarkerSet marketSet) {
 		super(label);
+		setPermission("clans.dynmap");
 		this.integration = marketSet;
+		this.showDefault = ClansAPI.getDataInstance().isTrue("Addon.Dynmap.show-by-default");
+	}
+
+	@Subscribe(priority = Vent.Priority.HIGHEST)
+	public void onInteract(AssociateObtainLandEvent e) {
+		if (!e.isCancelled()) {
+			if (showDefault) integration.add(e.getClaim());
+		}
+	}
+
+	public boolean test(Player target, String permission) {
+		if (permission != null && !permission.isEmpty()) {
+			if (target.hasPermission(permission)) {
+				return true;
+			} else {
+				Mailer.empty(target).chat("&cYou don't have permission " + permission).deploy();
+				return false;
+			}
+		} else {
+			return true;
+		}
 	}
 
 	@Override
 	public boolean player(Player p, String label, String[] args) {
-
-
 		int length = args.length;
 		StringLibrary lib = new StringLibrary();
 		Clan.Associate associate = ClansAPI.getInstance().getAssociate(p).orElse(null);
+		if (!testPermission(p)) return true;
 		if (length == 1) {
 			if (args[0].equalsIgnoreCase("show")) {
+				if (!test(p, "clans.dynmap.show")) return true;
 				if (associate != null) {
 					Clan clan = associate.getClan();
 					lib.sendMessage(p, "&e&oUpdating dynmap with claim information..");
@@ -56,6 +83,7 @@ public class DynmapCommand extends ClanSubCommand {
 				return true;
 			}
 			if (args[0].equalsIgnoreCase("hide")) {
+				if (!test(p, "clans.dynmap.hide")) return true;
 				if (associate != null) {
 					if (Clearance.MANAGE_ALL_LAND.test(associate)) {
 						Clan clan = associate.getClan();
@@ -94,6 +122,7 @@ public class DynmapCommand extends ClanSubCommand {
 		if (length == 2) {
 			if (args[0].equalsIgnoreCase("hide")) {
 				if (args[1].equalsIgnoreCase("all")) {
+					if (!test(p, "clans.dynmap.hide")) return true;
 					if (associate != null) {
 						if (Clearance.MANAGE_ALL_LAND.test(associate)) {
 							for (Claim c : associate.getClaims()) {
@@ -106,6 +135,7 @@ public class DynmapCommand extends ClanSubCommand {
 			}
 			if (args[0].equalsIgnoreCase("show")) {
 				if (args[1].equalsIgnoreCase("all")) {
+					if (!test(p, "clans.dynmap.show")) return true;
 					if (associate != null) {
 						Clan clan = associate.getClan();
 						lib.sendMessage(p, "&e&oUpdating dynmap with claim information..");

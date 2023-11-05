@@ -81,7 +81,7 @@ public abstract class ClanSubCommand {
 			if (target.hasPermission(this.permission)) {
 				return true;
 			} else {
-				Mailer.empty(target).chat(this.permMsg).deploy();
+				Mailer.empty(target).chat(this.permMsg.replace("<permission>", permission)).deploy();
 				return false;
 			}
 		} else {
