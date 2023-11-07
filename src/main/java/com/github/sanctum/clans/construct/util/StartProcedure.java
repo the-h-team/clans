@@ -105,6 +105,7 @@ public final class StartProcedure {
 	}
 
 	List<String> getLogo() {
+		// FIXME update ascii art
 		if (instance.isTrial()) {
 			return new ArrayList<>(Arrays.asList("▄▄▄▄▄▄▄▄ .▄▄▄▄▄ ▄ .▄▄▄▄ .▄▄▄  ", "•██  ▀▄.▀·•██  ██▪▐█▀▄.▀·▀▄ █·", " ▐█.▪▐▀▀▪▄ ▐█.▪██▀▐█▐▀▀▪▄▐▀▀▄ ", " ▐█▌·▐█▄▄▌ ▐█▌·██▌▐▀▐█▄▄▌▐█•█▌", " ▀▀▀  ▀▀▀  ▀▀▀ ▀▀▀ · ▀▀▀ .▀  ▀"));
 		}

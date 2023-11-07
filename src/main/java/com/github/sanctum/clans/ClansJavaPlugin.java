@@ -66,6 +66,7 @@ import org.bukkit.plugin.ServicePriority;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 
+// FIXME update ascii art
 /**
  * <pre>
  *    ████████╗███████╗████████╗██╗  ██╗███████╗██████╗
@@ -75,7 +76,7 @@ import org.jetbrains.annotations.NotNull;
  *       ██║   ███████╗   ██║   ██║  ██║███████╗██║  ██║
  *       ╚═╝   ╚══════╝   ╚═╝   ╚═╝  ╚═╝╚══════╝╚═╝  ╚═╝
  * <pre>
- * Copyright (c) 2022 Team Sanctum
+ * Copyright (c) 2023 Team Sanctum
  */
 public class ClansJavaPlugin extends JavaPlugin implements ClansAPI, Vent.Host {
 
