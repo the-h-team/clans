@@ -37,6 +37,8 @@ public class SphericalParticleDisplay {
 		boolean result = false;
 		for (Player online : Bukkit.getOnlinePlayers()) {
 			String taskId = "ClansPro:particle-display;sphere:" + online.getUniqueId();
+			// ^FIXME change to start with "Clans:"
+			// -not doing change right now so i don't break anything
 			Task task = monitor.get(taskId);
 			if (task != null) {
 				task.cancel();
@@ -50,6 +52,8 @@ public class SphericalParticleDisplay {
 
 	public boolean hide(Player target) {
 		String taskId = "ClansPro:particle-display;sphere:" + target.getUniqueId();
+		// ^FIXME change to start with "Clans:"
+		// -not doing change right now so i don't break anything
 		Task task = monitor.get(taskId);
 		if (task == null) return false;
 		task.cancel();
@@ -69,6 +73,8 @@ public class SphericalParticleDisplay {
 		}
 
 		String taskId = "ClansPro:particle-display;sphere:" + target.getUniqueId();
+		// ^FIXME change to start with "Clans:"
+		// -not doing change right now so i don't break anything
 		if (monitor.get(taskId) != null) {
 			return false;
 		}

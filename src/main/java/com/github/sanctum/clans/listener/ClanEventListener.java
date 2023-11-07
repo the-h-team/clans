@@ -587,6 +587,8 @@ public class ClanEventListener implements Listener {
 	public void onResidency(ClaimResidencyEvent e) {
 		Clan owner = e.getClan();
 		if (owner.getMember(m -> m.getName().equals(e.getResident().getPlayer().getName())) == null) {
+			// FIXME change permissions to start with "clans." and/or make configurable
+			// -not doing change right now so i don't break anything
 			if (!e.getResident().getPlayer().hasPermission("clanspro.claim.bypass")) {
 				e.getResident().getPlayer().addPotionEffect(new PotionEffect(PotionEffectType.SLOW_DIGGING, 225, -1, false, false));
 			}

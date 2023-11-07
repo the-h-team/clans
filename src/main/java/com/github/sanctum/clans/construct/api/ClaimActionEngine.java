@@ -524,10 +524,14 @@ public class ClaimActionEngine extends StringLibrary {
 		if (player == null)
 			return 0;
 		for (int i = 1; i < 251; i++) {
+			// FIXME start with "clans"/make relative/calculated
+			// -not doing change right now so i don't break anything
 			if (player.hasPermission("clanspro." + DataManager.Security.getPermission("claim") + ".infinite")) {
 				result = -1;
 				break;
 			}
+			// FIXME start with "clans"/make relative/calculated
+			// -not doing change right now so i don't break anything
 			if (player.hasPermission("clanspro." + DataManager.Security.getPermission("claim") + "." + i)) {
 				result = i;
 				break;

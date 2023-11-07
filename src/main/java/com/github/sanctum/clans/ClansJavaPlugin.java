@@ -240,6 +240,8 @@ public class ClansJavaPlugin extends JavaPlugin implements ClansAPI, Vent.Host {
 		});
 
 		FileManager heads = getFileList().get("heads", "Configuration/Data", Configurable.Type.JSON);
+		// FIXME change to "Clans"
+		// -not doing change right now so i don't break anything
 		CustomHead.Manager.getHeads().stream().filter(h -> h.category().equals("ClansPro")).forEach(h -> {
 			heads.write(t -> {
 				t.set(h.name() + ".name", h.name());

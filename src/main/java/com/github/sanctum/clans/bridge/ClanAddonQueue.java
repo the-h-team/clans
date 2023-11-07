@@ -120,6 +120,8 @@ public final class ClanAddonQueue {
 			}
 		};
 		if (!attempt.load(addon)) {
+			// FIXME start with "Clans::"
+			// -not doing change right now so i don't break anything
 			String key = "ClansPro::" + addon.getName() + ";enable-attempt";
 			if (TaskMonitor.getLocalInstance().get(key) == null) {
 				Task t = new Task(key, Task.REPEATABLE, TaskChain.getSynchronous()) {
@@ -431,6 +433,8 @@ public final class ClanAddonQueue {
 			}
 		};
 		if (!attempt.load(e)) {
+			// FIXME start with "Clans::"
+			// -not doing change right now so i don't break anything
 			String key = "ClansPro::" + e.getName() + ";enable-attempt";
 			if (TaskMonitor.getLocalInstance().get(key) == null) {
 				Task t = new Task(key, Task.REPEATABLE, TaskChain.getSynchronous()) {
