@@ -1,13 +1,17 @@
 plugins {
-    id("tether.java-conventions")
-    id("tether.upstream-conventions")
-    id("tether.publish-conventions")
+    id("clans.java-conventions")
+    `java-library`
+    id("clans.upstream-conventions")
+    id("clans.publish-conventions")
 }
+
+setMavenName("Clans CLI")
 
 val cloudVersion by extra("1.8.3")
 
 dependencies {
-    implementation(project(":tether-api"))
+    // expose api to consumers
+    api(project(getSubproject("api")))
     // cloud (includes cloud-core)
     implementation("cloud.commandframework:cloud-annotations:$cloudVersion")
 }

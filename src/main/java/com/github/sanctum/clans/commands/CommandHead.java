@@ -118,6 +118,8 @@ public class CommandHead extends ClanSubCommand {
 
 									@Override
 									public @NotNull String category() {
+										// FIXME change to "Clans"
+										// -not doing change right now so i don't break anything
 										return "ClansPro";
 									}
 								});
@@ -147,6 +149,8 @@ public class CommandHead extends ClanSubCommand {
 
 						@Override
 						public @NotNull String category() {
+							// FIXME change to "Clans"
+							// -not doing change right now so i don't break anything
 							return "ClansPro";
 						}
 					});

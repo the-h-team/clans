@@ -16,6 +16,8 @@ public class DefaultRespawnCooldown extends Cooldown {
 	@Override
 	public String getId() {
 		return "ClansPro-war-respawn-" + id.toString();
+		// ^FIXME change to start with "Clans"
+		// -not doing change right now so i don't break anything
 	}
 
 	@Override

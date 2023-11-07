@@ -27,7 +27,7 @@ public class DefaultCreationCooldown extends ClanCooldown {
 
 	@Override
 	public String getDescriptor() {
-		return "A period of time that does not allow group formation.";
+		return "A period of time that does not allow clan formation.";
 	}
 
 	@Override

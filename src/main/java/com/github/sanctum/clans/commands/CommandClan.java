@@ -34,7 +34,7 @@ public class CommandClan extends Command implements Message.Factory {
 		super("clan");
 		setDescription("Base command for clans.");
 		List<String> array = ClansAPI.getDataInstance().getConfig().getRoot().getStringList("Formatting.aliase");
-		array.addAll(Arrays.asList("clans", "cl", "c", "tether", "f", "faction"));
+		array.addAll(Arrays.asList("clans", "cl", "c", "f", "faction"));
 		setAliases(array);
 	}
 

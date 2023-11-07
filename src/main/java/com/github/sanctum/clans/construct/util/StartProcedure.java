@@ -105,6 +105,7 @@ public final class StartProcedure {
 	}
 
 	List<String> getLogo() {
+		// FIXME update ascii art
 		if (instance.isTrial()) {
 			return new ArrayList<>(Arrays.asList("▄▄▄▄▄▄▄▄ .▄▄▄▄▄ ▄ .▄▄▄▄ .▄▄▄  ", "•██  ▀▄.▀·•██  ██▪▐█▀▄.▀·▀▄ █·", " ▐█.▪▐▀▀▪▄ ▐█.▪██▀▐█▐▀▀▪▄▐▀▀▄ ", " ▐█▌·▐█▄▄▌ ▐█▌·██▌▐▀▐█▄▄▌▐█•█▌", " ▀▀▀  ▀▀▀  ▀▀▀ ▀▀▀ · ▀▀▀ .▀  ▀"));
 		}
@@ -145,7 +146,7 @@ public final class StartProcedure {
 	@Ordinal(1)
 	void a() {
 		instance.getLogger().info("▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬");
-		instance.getLogger().info("- Tether. Loading plugin information...");
+		instance.getLogger().info("- Clans. Loading plugin information...");
 		instance.getLogger().info("▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬");
 		for (String ch : getLogo()) {
 			instance.getLogger().info("- " + ch);
@@ -185,10 +186,10 @@ public final class StartProcedure {
 		}
 		sendBorder();
 		RankRegistry registry = RankRegistry.getInstance();
-		instance.getLogger().info("- Loading groups and claims, please be patient...");
+		instance.getLogger().info("- Loading clans and claims, please be patient...");
 		registry.load();
 		registry.order();
-		instance.getLogger().info("- Loaded (" + instance.getClanManager().refresh() + ") groups ");
+		instance.getLogger().info("- Loaded (" + instance.getClanManager().refresh() + ") clans ");
 		instance.getLogger().info("- Loaded (" + instance.getClaimManager().refresh() + ") claims");
 	}
 
@@ -450,9 +451,15 @@ public final class StartProcedure {
 
 		QnA.register((player, question) -> {
 			StringUtils utils = StringUtils.use(question);
-			if (utils.containsIgnoreCase("make a clan", "create a clan", "start a clan", "start clan", "make clan", "create clan", "make a group", "create a group", "start a group", "start group", "make group", "create group")) {
+			// keeping 'group' entries for backwards compatibility
+			if (utils.containsIgnoreCase(
+					"make a clan", "create a clan", "start a clan", "start clan", "make clan", "create clan",
+					"make a group", "create a group", "start a group", "start group", "make group", "create group"
+			)) {
 				player.closeInventory();
 				String message = "To make a clan you require the permission clanspro." + DataManager.Security.getPermission("create") + ", if you have permission this message will be white.";
+				// FIXME change perm to start with "clans." and/or make it configurable
+				// -not doing change right now so i don't break anything
 				if (!player.hasPermission("clanspro." + DataManager.Security.getPermission("create"))) {
 					Clan.ACTION.sendMessage(player, "&c" + message);
 				} else {

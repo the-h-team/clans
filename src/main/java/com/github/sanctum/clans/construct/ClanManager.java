@@ -163,6 +163,8 @@ public final class ClanManager {
 					ClansAPI.getInstance().getPlugin().getLogger().warning("- A non existent clan file was attempted to be removed, ignoring...");
 				}
 			}).scheduleLater("ClansPro-removal;" + c.getId(), 1L);
+			// ^FIXME change key to start with "Clans"
+			// -not doing change right now so i don't break anything
 			return CLANS.remove(c);
 		} catch (Exception e) {
 			return false;

@@ -1,5 +1,5 @@
 plugins {
-    id("tether.java-conventions")
+    id("clans.java-conventions")
 }
 
 val placeholderApiVersion by extra("2.10.9")

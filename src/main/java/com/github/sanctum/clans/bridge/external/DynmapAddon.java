@@ -51,6 +51,8 @@ public class DynmapAddon extends ClanAddon {
 	@Override
 	public void onEnable() {
 
+		// FIXME start with "clans;"
+		// -not doing change right now so i don't break anything
 		ClanVentBus.MEDIUM_PRIORITY.subscribeTo(CommandInformationAdaptEvent.class, "clanspro;dynmap-info_adapt", (e, subscription) -> {
 			ClanAddon cycle = ClanAddonQueue.getInstance().get("Dynmap");
 
@@ -63,10 +65,14 @@ public class DynmapAddon extends ClanAddon {
 			e.insert("&7|&e) &6/c &bglobe &chide &8[all]");
 		}).queue();
 
+		// FIXME start with "clans;"
+		// -not doing change right now so i don't break anything
 		ClanVentBus.MEDIUM_PRIORITY.subscribeTo(AssociateObtainLandEvent.class, "clanspro;dynmap-land_obtain", (event, subscription) -> {
 			event.getPlayer().performCommand("c globe show");
 		}).queue();
 
+		// FIXME start with "clans;"
+		// -not doing change right now so i don't break anything
 		ClanVentBus.HIGHEST_PRIORITY.subscribeTo(AssociateUnClaimEvent.class, "clanspro;dynmap-land_loss", (event, subscription) -> {
 			if (!event.isCancelled()) {
 				event.getPlayer().performCommand("c globe hide");
@@ -79,6 +85,8 @@ public class DynmapAddon extends ClanAddon {
 	public void onDisable() {
 
 		ClanVentBus mediumPriority = ClanVentBus.MEDIUM_PRIORITY;
+		// FIXME start with "clans;" x3 lines
+		// -not doing change right now so i don't break anything
 		mediumPriority.unsubscribeFrom(CommandInformationAdaptEvent.class, "clanspro;dynmap-info_adapt").deploy();
 		mediumPriority.unsubscribeFrom(CommandInformationAdaptEvent.class, "clanspro;dynmap-land_obtain").deploy();
 		mediumPriority.unsubscribeFrom(CommandInformationAdaptEvent.class, "clanspro;dynmap-land_loss").deploy();

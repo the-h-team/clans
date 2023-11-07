@@ -66,6 +66,7 @@ import org.bukkit.plugin.ServicePriority;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 
+// FIXME update ascii art
 /**
  * <pre>
  *    ████████╗███████╗████████╗██╗  ██╗███████╗██████╗
@@ -75,7 +76,7 @@ import org.jetbrains.annotations.NotNull;
  *       ██║   ███████╗   ██║   ██║  ██║███████╗██║  ██║
  *       ╚═╝   ╚══════╝   ╚═╝   ╚═╝  ╚═╝╚══════╝╚═╝  ╚═╝
  * <pre>
- * Copyright (c) 2022 Team Sanctum
+ * Copyright (c) 2023 Team Sanctum
  */
 public class ClansJavaPlugin extends JavaPlugin implements ClansAPI, Vent.Host {
 
@@ -129,10 +130,15 @@ public class ClansJavaPlugin extends JavaPlugin implements ClansAPI, Vent.Host {
 
 	void fixDataFolder() {
 		final File pluginsDir = new File(FileManager.class.getProtectionDomain().getCodeSource().getLocation().getPath().replaceAll("%20", " "));
-		File clansDir = new File(pluginsDir.getParentFile().getPath(), "ClansPro");
-		File newDir = new File(pluginsDir.getParentFile().getPath(), getDescription().getName());
-		if (clansDir.renameTo(newDir)) {
-			getLogger().info("Renamed the old 'ClansPro' folder to 'Tether' for you.");
+		final String name = getDescription().getName();
+		final File newDir = new File(pluginsDir.getParentFile().getPath(), name);
+		// account for both folder names
+		for (String oldFolderName : new String[]{"ClansPro", "Tether"}) {
+			final File oldDir = new File(pluginsDir.getParentFile().getPath(), oldFolderName);
+			if (oldDir.renameTo(newDir)) {
+				getLogger().info("Renamed the old '" + oldFolderName + "' folder to '" + name + "' for you.");
+				break;
+			}
 		}
 	}
 
@@ -234,6 +240,8 @@ public class ClansJavaPlugin extends JavaPlugin implements ClansAPI, Vent.Host {
 		});
 
 		FileManager heads = getFileList().get("heads", "Configuration/Data", Configurable.Type.JSON);
+		// FIXME change to "Clans"
+		// -not doing change right now so i don't break anything
 		CustomHead.Manager.getHeads().stream().filter(h -> h.category().equals("ClansPro")).forEach(h -> {
 			heads.write(t -> {
 				t.set(h.name() + ".name", h.name());

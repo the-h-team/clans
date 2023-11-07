@@ -38,6 +38,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+// FIXME update ascii art
 /**
  * <pre>
  *    ████████╗███████╗████████╗██╗  ██╗███████╗██████╗
@@ -47,7 +48,7 @@ import org.jetbrains.annotations.Nullable;
  *       ██║   ███████╗   ██║   ██║  ██║███████╗██║  ██║
  *       ╚═╝   ╚══════╝   ╚═╝   ╚═╝  ╚═╝╚══════╝╚═╝  ╚═╝
  * <pre>
- * Copyright (c) 2022 Sanctum
+ * Copyright (c) 2023 Sanctum
  */
 public interface ClansAPI {
 
