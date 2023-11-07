@@ -1,5 +1,6 @@
-###### A premium alternative to Factions with unique features & chunk based claiming
-### CLANS PRO
+## Clans
+An alternative to factions with unique features, modern version support and chunk-based claiming.
 ##### LABYRINTH BUILT.
-[![](https://jitpack.io/v/the-h-team/ClansPro.svg)](https://jitpack.io/#the-h-team/ClansPro)
+NEW VERSION SOON
+
 [Click here for wiki](https://github.com/the-h-team/ClansPro/wiki)
