@@ -1,0 +1,17 @@
+# Copyright 2023 Sanctum
+# Author: ms5948
+#
+# This workflow will build Clans using Gradle (args `shadowJar`).
+#
+# All built .jars will be made available as a cache for subsequent/future builds.
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+jobs:
+  build:
+    name: "Build Clans with `gradle shadowJar`"
+    uses: the-h-team/workflows/.github/workflows/gradle.yml@main
+    with:
+      gradle_args: shadowJar
