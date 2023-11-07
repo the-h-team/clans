@@ -5,6 +5,8 @@ plugins {
     id("clans.publish-conventions")
 }
 
+setMavenName("Clans CLI")
+
 val cloudVersion by extra("1.8.3")
 
 dependencies {
