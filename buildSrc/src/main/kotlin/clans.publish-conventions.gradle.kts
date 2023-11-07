@@ -1,7 +1,7 @@
 import java.util.Base64
 
 plugins {
-    id("tether.java-conventions")
+    id("clans.java-conventions")
     `maven-publish`
 }
 

@@ -1,5 +1,5 @@
 plugins {
-    id("tether.java-conventions")
+    id("clans.java-conventions")
 }
 
 val dynmapApiVersion by extra("v2.5")

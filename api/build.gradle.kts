@@ -1,9 +1,9 @@
 plugins {
-    id("tether.java-conventions")
+    id("clans.java-conventions")
     `java-library`
-    id("tether.adventure-conventions")
-    id("tether.upstream-conventions")
-    id("tether.publish-conventions")
+    id("clans.adventure-conventions")
+    id("clans.upstream-conventions")
+    id("clans.publish-conventions")
 }
 
 dependencies {
