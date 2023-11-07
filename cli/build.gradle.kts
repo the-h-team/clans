@@ -7,7 +7,7 @@ plugins {
 val cloudVersion by extra("1.8.3")
 
 dependencies {
-    implementation(project(":tether-api"))
+    implementation(project(getSubproject("api")))
     // cloud (includes cloud-core)
     implementation("cloud.commandframework:cloud-annotations:$cloudVersion")
 }

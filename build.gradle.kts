@@ -10,15 +10,9 @@ plugins {
     id("com.github.johnrengelman.shadow")
 }
 
-tasks.wrapper {
-    gradleVersion = "8.1.1"
-    distributionType = Wrapper.DistributionType.ALL
-}
-
 dependencies {
-    implementation(project(":tether-api"))
-    implementation(project(":tether-cli"))
-//    implementation("net.kyori:adventure-platform-bukkit:${findProperty("adventureApiVersion")}")
+    implementation(project(getSubproject("api")))
+    implementation(project(getSubproject("cli")))
     implementation("com.github.the-h-team:Enterprise:${findProperty("enterpriseVersion")}")
     implementation("com.github.the-h-team.Panther:panther-placeholders:${findProperty("pantherVersion")}")
     implementation("com.github.the-h-team.Labyrinth:labyrinth-gui:${findProperty("labyrinthVersion")}")
@@ -40,7 +34,7 @@ tasks.withType<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar> {
     archiveFileName.set("${rootProject.name}-plugin-${project.version}.jar")
     archiveClassifier.set("plugin")
     dependencies {
-        include(project(":tether-api"))
-        include(project(":tether-cli"))
+        include(project(getSubproject("api")))
+        include(project(getSubproject("cli")))
     }
 }
