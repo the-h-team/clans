@@ -304,7 +304,7 @@ Formatting:
     rank-style: WORDLESS
     # This option enabled allows you to provide your own custom formatting using placeholders! Customize in the 'Channel' section.
     # Enabling this option removes the default formatting all together, allowing you to customize your chat similar to a chat control plugin.
-    # Normal placeholders will work from either PlaceholderAPI or Labyrinth such as %player_name% or ones from plugins like Tether including %clans_clan_name%
+    # Normal placeholders will work from either PlaceholderAPI or Labyrinth such as %player_name% or ones from plugins like Clans including %clans_clan_name%
     standalone: false
     Channel:
       # {0} = Clan rank formatting, {1} = Clan name w/ color

@@ -340,7 +340,8 @@ public class PlayerEventListener implements Listener {
 								// place schematic
 								WorldEditAdapter adapter = WorldEditAdapter.getInstance();
 								if (adapter.isValid()) {
-									final WorldEditSchematicAdapter schematic = adapter.loadSchematic(new File("plugins/Tether/Configuration/Data/reservoir.schem"));
+									// FIXME make relative to plugin dir
+									final WorldEditSchematicAdapter schematic = adapter.loadSchematic(new File("plugins/Clans/Configuration/Data/reservoir.schem"));
 									if (schematic != null) {
 										final WorldEditClipboardAdapter clipboard = schematic.toClipboard();
 										TaskChain.getSynchronous().wait(() -> clipboard.paste().toLocation(location).applyAfter(() -> Entities.ENDER_CRYSTAL.spawn(location)), t.getClan().getId() + ";reservoir-build", 300L * 20L);

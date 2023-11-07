@@ -53,7 +53,7 @@ public abstract class ClanAddon {
 			private final String addon;
 
 			{
-				this.addon = "Tether:" + getName();
+				this.addon = "Clan:" + getName();
 			}
 
 			public void log(Level level, String info) {
@@ -214,7 +214,7 @@ public abstract class ClanAddon {
 			private final String addon;
 
 			{
-				this.addon = "Tether:" + getName();
+				this.addon = "Clan:" + getName();
 			}
 
 			public void log(Level level, String info) {
