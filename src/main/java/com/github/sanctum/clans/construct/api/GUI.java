@@ -307,11 +307,9 @@ public enum GUI {
 				MemoryDocket<?> docket = DefaultDocketRegistry.get(id);
 				if (docket != null) return docket.toMenu();
 			case LOGO_LIST:
-				// FIXME change key to start with "Clans"
-				// -not doing change right now so i don't break anything
 				return MenuType.PAGINATED.build()
 						.setHost(api.getPlugin())
-						.setKey("ClansPro:logo-list")
+						.setKey("Clans:logo-list")
 						.setSize(getSize())
 						.setTitle("&e&lLogo Gallery &0&l»")
 						.setStock(i -> {
@@ -367,9 +365,7 @@ public enum GUI {
 								item.setElement(ed -> ed.setTitle("&e# &f(" + stand.getId() + ")").setLore(set).build());
 								item.setClick(click -> {
 									click.setCancelled(true);
-									// FIXME start with "clans" and/or make relative/calculated
-									// -not doing change right now so i don't break anything
-									if (click.getElement().hasPermission("clanspro.admin")) {
+									if (click.getElement().hasPermission("clans.admin")) {
 										if (click.getClickType().isShiftClick()) {
 											api.getLogoGallery().remove(set);
 											TaskScheduler.of(() -> GUI.LOGO_LIST.get().open(click.getElement())).scheduleLater(1);
@@ -387,21 +383,18 @@ public enum GUI {
 								});
 							});
 							i.addItem(list);
-						}).orGet(m -> m instanceof PaginatedMenu && m.getKey().map(("ClansPro:logo-list")::equals).orElse(false));
-						// ^FIXME change key to start with "Clans"
-						// -not doing change right now so i don't break anything
+						}).orGet(m -> m instanceof PaginatedMenu && m.getKey().map(("Clans:logo-list")::equals).orElse(false));
+
 			case CLAN_ROSTER:
 				String rosterId = ClansAPI.getDataInstance().getMessageString("menu.roster.id");
 				MemoryDocket<?> rosterDocket = DefaultDocketRegistry.get(rosterId);
 				if (rosterDocket != null) return rosterDocket.toMenu();
 			case SETTINGS_CLAN_ROSTER:
-				// FIXME change key to start with "Clans"
-				// -not doing change right now so i don't break anything
 				return MenuType.PAGINATED.build().setHost(api.getPlugin())
 						.setProperty(Menu.Property.CACHEABLE, Menu.Property.RECURSIVE)
 						.setTitle("&0&l» &3&lSelect a clan")
 						.setSize(getSize())
-						.setKey("ClansPro:Roster_edit")
+						.setKey("Clans:Roster_edit")
 						.setStock(i -> {
 							FillerElement<?> filler = new FillerElement<>(i);
 							filler.add(ed -> ed.setElement(it -> it.setType(Optional.ofNullable(Items.findMaterial("bluestainedglasspane")).orElse(Items.findMaterial("stainedglasspane"))).setTitle(" ").build()));
@@ -480,9 +473,7 @@ public enum GUI {
 								});
 							}).setLimit(getLimit()));
 
-						}).orGet(m -> m instanceof PaginatedMenu && m.getKey().isPresent() && m.getKey().get().equals("ClansPro:Roster_edit"));
-						// ^FIXME change key to start with "Clans"
-						// -not doing change right now so i don't break anything
+						}).orGet(m -> m instanceof PaginatedMenu && m.getKey().isPresent() && m.getKey().get().equals("Clans:Roster_edit"));
 			case CLAN_ROSTER_TOP:
 				String rosterTopId = ClansAPI.getDataInstance().getMessageString("menu.roster-top.id");
 				MemoryDocket<?> docket2 = DefaultDocketRegistry.get(rosterTopId);
@@ -492,12 +483,10 @@ public enum GUI {
 				MemoryDocket<?> docket3 = DefaultDocketRegistry.get(selectID);
 				if (docket3 != null) return docket3.toMenu();
 			case SETTINGS_SELECT:
-				// FIXME change key to start with "Clans"
-				// -not doing change right now so i don't break anything
 				return MenuType.SINGULAR.build()
 						.setHost(api.getPlugin())
 						.setProperty(Menu.Property.CACHEABLE)
-						.setKey("ClansPro:Settings")
+						.setKey("Clans:Settings")
 						.setSize(Menu.Rows.SIX)
 						.setTitle(" &0&l» &2&oManagement Area")
 						.setStock(i -> {
@@ -551,16 +540,12 @@ public enum GUI {
 								c.setCancelled(true);
 								SETTINGS_RELOAD.get().open(c.getElement());
 							}));
-						}).orGet(m -> m instanceof SingularMenu && m.getKey().map("ClansPro:Settings"::equals).orElse(false));
-						// ^FIXME change key to start with "Clans"
-						// -not doing change right now so i don't break anything
+						}).orGet(m -> m instanceof SingularMenu && m.getKey().map("Clans:Settings"::equals).orElse(false));
 			case ADDONS_SELECTION:
-				// FIXME change key to start with "Clans"
-				// -not doing change right now so i don't break anything
 				return MenuType.SINGULAR.build().setHost(api.getPlugin())
 						.setSize(Menu.Rows.ONE)
 						.setTitle("&2&oManage Addon Cycles &0&l»")
-						.setKey("ClansPro:Addons")
+						.setKey("Clans:Addons")
 						.setProperty(Menu.Property.CACHEABLE)
 						.setStock(i -> {
 							FillerElement<?> filler = new FillerElement<>(i);
@@ -583,16 +568,13 @@ public enum GUI {
 								SETTINGS_SELECT.get().open(c.getElement());
 							}).setSlot(8));
 						})
-						.orGet(m -> m instanceof SingularMenu && m.getKey().map("ClansPro:Addons"::equals).orElse(false));
-						// ^FIXME change key to start with "Clans"
-						// -not doing change right now so i don't break anything
+						.orGet(m -> m instanceof SingularMenu && m.getKey().map("Clans:Addons"::equals).orElse(false));
+
 			case SETTINGS_ARENA:
-				// FIXME change key to start with "Clans"
-				// -not doing change right now so i don't break anything
 				return MenuType.SINGULAR.build().setHost(api.getPlugin())
 						.setSize(Menu.Rows.ONE)
 						.setTitle("&2&oArena Spawns &0&l»")
-						.setKey("ClansPro:War")
+						.setKey("Clans:War")
 						.setProperty(Menu.Property.CACHEABLE)
 						.setStock(i -> {
 							FillerElement<?> filler = new FillerElement<>(i);
@@ -619,16 +601,12 @@ public enum GUI {
 								SETTINGS_SELECT.get().open(c.getElement());
 							}).setSlot(8));
 						})
-						.orGet(m -> m instanceof SingularMenu && m.getKey().map("ClansPro:War"::equals).orElse(false));
-						// ^FIXME change key to start with "Clans"
-						// -not doing change right now so i don't break anything
+						.orGet(m -> m instanceof SingularMenu && m.getKey().map("Clans:War"::equals).orElse(false));
 			case SETTINGS_RELOAD:
-				// FIXME change key to start with "Clans"
-				// -not doing change right now so i don't break anything
 				return MenuType.SINGULAR.build().setHost(api.getPlugin())
 						.setSize(Menu.Rows.ONE)
 						.setTitle("&0&l» &eReload Files")
-						.setKey("ClansPro:Reload")
+						.setKey("Clans:Reload")
 						.setProperty(Menu.Property.CACHEABLE)
 						.setStock(i -> {
 							FillerElement<?> filler = new FillerElement<>(i);
@@ -659,16 +637,12 @@ public enum GUI {
 								SETTINGS_SELECT.get().open(c.getElement());
 							}).setSlot(8));
 						})
-						.orGet(m -> m instanceof SingularMenu && m.getKey().map("ClansPro:Reload"::equals).orElse(false));
-						// ^FIXME change key to start with "Clans"
-						// -not doing change right now so i don't break anything
+						.orGet(m -> m instanceof SingularMenu && m.getKey().map("Clans:Reload"::equals).orElse(false));
 			case SETTINGS_SHIELD:
-				// FIXME change key to start with "Clans"
-				// -not doing change right now so i don't break anything
 				return MenuType.SINGULAR.build().setHost(api.getPlugin())
 						.setSize(Menu.Rows.ONE)
 						.setTitle("&2&oRaid-Shield Settings &0&l»")
-						.setKey("ClansPro:shield-edit")
+						.setKey("Clans:shield-edit")
 						.setProperty(Menu.Property.CACHEABLE)
 						.setStock(i -> {
 							FillerElement<?> filler = new FillerElement<>(i);
@@ -703,16 +677,13 @@ public enum GUI {
 								SETTINGS_SELECT.get().open(c.getElement());
 							}).setSlot(8));
 						})
-						.orGet(m -> m instanceof SingularMenu && m.getKey().map("ClansPro:shield-edit"::equals).orElse(false));
-						// ^FIXME change key to start with "Clans"
-						// -not doing change right now so i don't break anything
+						.orGet(m -> m instanceof SingularMenu && m.getKey().map("Clans:shield-edit"::equals).orElse(false));
+
 			case SETTINGS_LANGUAGE:
-				// FIXME change key to start with "Clans"
-				// -not doing change right now so i don't break anything
 				return MenuType.SINGULAR.build().setHost(api.getPlugin())
 						.setSize(Menu.Rows.ONE)
 						.setTitle("&0&l» &ePick a language")
-						.setKey("ClansPro:Lang")
+						.setKey("Clans:Lang")
 						.setProperty(Menu.Property.CACHEABLE)
 						.setStock(i -> {
 							FillerElement<?> filler = new FillerElement<>(i);
@@ -738,12 +709,9 @@ public enum GUI {
 								SETTINGS_RELOAD.get().open(c.getElement());
 							}).setSlot(8));
 						})
-						.orGet(m -> m instanceof SingularMenu && m.getKey().map("ClansPro:Lang"::equals).orElse(false));
-						// ^FIXME change key to start with "Clans"
-						// -not doing change right now so i don't break anything
+						.orGet(m -> m instanceof SingularMenu && m.getKey().map("Clans:Lang"::equals).orElse(false));
+
 			case ADDONS_ACTIVATED:
-				// FIXME change key to start with "Clans"
-				// -not doing change right now so i don't break anything
 				return MenuType.PAGINATED.build()
 						.setHost(api.getPlugin())
 						.setProperty(Menu.Property.CACHEABLE, Menu.Property.RECURSIVE)
@@ -1206,12 +1174,10 @@ public enum GUI {
 				docket.setNamePlaceholder(":member_name:");
 				return Docket.toMenu(docket);
 			case MEMBER_EDIT:
-				// FIXME change key to start with "Clans"
-				// -not doing change right now so i don't break anything
 				return MenuType.SINGULAR.build().setHost(api.getPlugin())
 						.setProperty(Menu.Property.CACHEABLE)
 						.setTitle("&0&l» " + cl.getPalette() + associate.getName() + " settings")
-						.setKey("ClansPro:member-" + associate.getName() + "-edit")
+						.setKey("Clans:member-" + associate.getName() + "-edit")
 						.setSize(Menu.Rows.THREE)
 						.setStock(i -> {
 							FillerElement<?> filler = new FillerElement<>(i);
@@ -1308,16 +1274,13 @@ public enum GUI {
 								});
 							}));
 
-						}).orGet(m -> m instanceof SingularMenu && m.getKey().isPresent() && m.getKey().get().equals("ClansPro:member-" + associate.getName() + "-edit")).addAction(c -> c.setCancelled(true));
-						// ^FIXME change key to start with "Clans"
-						// -not doing change right now so i don't break anything
+						}).orGet(m -> m instanceof SingularMenu && m.getKey().isPresent() && m.getKey().get().equals("Clans:member-" + associate.getName() + "-edit")).addAction(c -> c.setCancelled(true));
+
 			case SETTINGS_MEMBER:
-				// FIXME change key to start with "Clans"
-				// -not doing change right now so i don't break anything
 				return MenuType.SINGULAR.build().setHost(api.getPlugin())
 						.setProperty(Menu.Property.RECURSIVE, Menu.Property.CACHEABLE)
 						.setTitle("&0&l» " + cl.getPalette().toString(associate.getName()) + " settings")
-						.setKey("ClansPro:member-" + associate.getName() + "-edit-settings")
+						.setKey("Clans:member-" + associate.getName() + "-edit-settings")
 						.setSize(Menu.Rows.THREE)
 						.setStock(i -> {
 							FillerElement<?> filler = new FillerElement<>(i);
@@ -1425,9 +1388,8 @@ public enum GUI {
 								Clan.ACTION.demote(associate.getId()).deploy();
 							}));
 
-						}).orGet(m -> m instanceof SingularMenu && m.getKey().isPresent() && m.getKey().get().equals("ClansPro:member-" + associate.getName() + "-edit-settings")).addAction(c -> c.setCancelled(true));
-						// ^FIXME change key to start with "Clans"
-						// -not doing change right now so i don't break anything
+						}).orGet(m -> m instanceof SingularMenu && m.getKey().isPresent() && m.getKey().get().equals("Clans:member-" + associate.getName() + "-edit-settings")).addAction(c -> c.setCancelled(true));
+
 			default:
 				throw new IllegalArgumentException("GUI type " + name() + " not valid, contact developers.");
 		}
@@ -1515,12 +1477,10 @@ public enum GUI {
 						})
 						.join();
 			case CLAIM_TITLES:
-				// FIXME change key to start with "Clans"
-				// -not doing change right now so i don't break anything
 				return MenuType.SINGULAR.build().setHost(api.getPlugin())
 						.setProperty(Menu.Property.RECURSIVE, Menu.Property.CACHEABLE)
 						.setTitle("&0&l» " + (clan.getPalette().isGradient() ? clan.getPalette().toGradient().context(clan.getName()).translate() : clan.getPalette().toString() + clan.getName()) + " claim titles")
-						.setKey("ClansPro:titles-" + clan.getName())
+						.setKey("Clans:titles-" + clan.getName())
 						.setSize(Menu.Rows.THREE)
 						.setStock(i -> {
 							FillerElement<?> filler = new FillerElement<>(i);
@@ -1627,15 +1587,11 @@ public enum GUI {
 
 										}).open(p);
 							}));
-						}).orGet(m -> m instanceof SingularMenu && m.getKey().isPresent() && m.getKey().get().equals("ClansPro:titles-" + clan.getName())).addAction(c -> c.setCancelled(true));
-						// ^FIXME change key to start with "Clans"
-						// -not doing change right now so i don't break anything
+						}).orGet(m -> m instanceof SingularMenu && m.getKey().isPresent() && m.getKey().get().equals("Clans:titles-" + clan.getName())).addAction(c -> c.setCancelled(true));
 			case CLAIM_LIST:
-				// FIXME change key to start with "Clans"
-				// -not doing change right now so i don't break anything
 				return MenuType.PAGINATED.build()
 						.setHost(api.getPlugin())
-						.setKey("ClansPro:" + clan.getName() + "-claims")
+						.setKey("Clans:" + clan.getName() + "-claims")
 						.setSize(getSize())
 						.setProperty(Menu.Property.LIVE_META)
 						.setTitle("&3&lCLAIMS &0&l»")
@@ -1699,9 +1655,7 @@ public enum GUI {
 								});
 							});
 							i.addItem(list);
-						}).orGet(m -> m instanceof PaginatedMenu && m.getKey().map(("ClansPro:" + clan.getName() + "-claims")::equals).orElse(false));
-						// ^FIXME change key to start with "Clans"
-						// -not doing change right now so i don't break anything
+						}).orGet(m -> m instanceof PaginatedMenu && m.getKey().map(("Clans:" + clan.getName() + "-claims")::equals).orElse(false));
 			case HOLOGRAM_LIST:
 				return MenuType.PAGINATED.build()
 						.setHost(api.getPlugin())
@@ -1767,9 +1721,7 @@ public enum GUI {
 								});
 							});
 							i.addItem(list);
-						}).orGet(m -> m instanceof PaginatedMenu && m.getKey().map(("ClansPro:" + clan.getName() + "-holograms")::equals).orElse(false));
-						// ^FIXME change key to start with "Clans"; where is the key set?? possible FIXME
-						// -not doing change right now so i don't break anything
+						}).orGet(m -> m instanceof PaginatedMenu && m.getKey().map(("Clans:" + clan.getName() + "-holograms")::equals).orElse(false));
 			case SETTINGS_CLAN:
 				return MenuType.SINGULAR.build().setHost(api.getPlugin())
 						.setTitle("&0&l» " + (clan.getPalette().isGradient() ? clan.getPalette().toGradient().context(clan.getName()).translate() : clan.getPalette().toString() + clan.getName()) + " settings")
@@ -2092,11 +2044,9 @@ public enum GUI {
 
 						}).join().addAction(c -> c.setCancelled(true));
 			case SETTINGS_MEMBER_LIST:
-				// FIXME change key to start with "Clans"
-				// -not doing change right now so i don't break anything
 				return MenuType.PAGINATED.build()
 						.setHost(api.getPlugin())
-						.setKey("ClansPro:" + clan.getName() + "-members-edit")
+						.setKey("Clans:" + clan.getName() + "-members-edit")
 						.setSize(getSize())
 						.setTitle(Clan.ACTION.color("Members"))
 						.setStock(i -> {
@@ -2149,9 +2099,8 @@ public enum GUI {
 								c.setCancelled(true);
 								SETTINGS_MEMBER.get(value).open(c.getElement());
 							})));
-						}).orGet(m -> m instanceof PaginatedMenu && m.getKey().map(("ClansPro:" + clan.getName() + "-members-edit")::equals).orElse(false));
-						// ^FIXME change key to start with "Clans"
-						// -not doing change right now so i don't break anything
+						}).orGet(m -> m instanceof PaginatedMenu && m.getKey().map(("Clans:" + clan.getName() + "-members-edit")::equals).orElse(false));
+
 			case RESERVOIR:
 				MemoryDocket<UnknownGeneric> docket = new MemoryDocket<>(ClansAPI.getDataInstance().getMessages().getRoot().getNode("menu.home.reservoir"));
 				docket.setUniqueDataConverter(clan, Clan.memoryDocketReplacer());
@@ -2170,12 +2119,10 @@ public enum GUI {
 	public Menu get(War war) {
 		switch (this) {
 			case ARENA_SPAWN:
-				// FIXME change key to start with "Clans"
-				// -not doing change right now so i don't break anything
 				return MenuType.SINGULAR.build().setHost(api.getPlugin())
 						.setSize(Menu.Rows.ONE)
 						.setTitle("&2&oTeleport to &a" + war.getId() + " &0&l»")
-						.setKey("ClansPro:war-" + war.getId())
+						.setKey("Clans:war-" + war.getId())
 						.setProperty(Menu.Property.CACHEABLE)
 						.setStock(i -> {
 							FillerElement<?> filler = new FillerElement<>(i);
@@ -2194,16 +2141,12 @@ public enum GUI {
 								});
 							}));
 						})
-						.orGet(m -> m instanceof SingularMenu && m.getKey().map(("ClansPro:war-" + war.getId())::equals).orElse(false));
-						// ^FIXME change key to start with "Clans"
-						// -not doing change right now so i don't break anything
+						.orGet(m -> m instanceof SingularMenu && m.getKey().map(("Clans:war-" + war.getId())::equals).orElse(false));
 			case ARENA_TRUCE:
-				// FIXME change key to start with "Clans"
-				// -not doing change right now so i don't break anything
 				return MenuType.SINGULAR.build().setHost(api.getPlugin())
 						.setSize(Menu.Rows.ONE)
 						.setTitle("&2&oTruce Vote &0&l»")
-						.setKey("ClansPro:war-" + war.getId() + "-truce")
+						.setKey("Clans:war-" + war.getId() + "-truce")
 						.setProperty(Menu.Property.CACHEABLE)
 						.setStock(i -> {
 							FillerElement<?> filler = new FillerElement<>(i);
@@ -2260,16 +2203,12 @@ public enum GUI {
 								c.getElement().closeInventory();
 							}));
 						})
-						.orGet(m -> m instanceof SingularMenu && m.getKey().map(("ClansPro:war-" + war.getId() + "-truce")::equals).orElse(false));
-						// ^FIXME change key to start with "Clans"
-						// -not doing change right now so i don't break anything
+						.orGet(m -> m instanceof SingularMenu && m.getKey().map(("Clans:war-" + war.getId() + "-truce")::equals).orElse(false));
 			case ARENA_SURRENDER:
-				// FIXME change key to start with "Clans"
-				// -not doing change right now so i don't break anything
 				return MenuType.SINGULAR.build().setHost(api.getPlugin())
 						.setSize(Menu.Rows.ONE)
 						.setTitle("&2&oSurrender Vote &0&l»")
-						.setKey("ClansPro:war-" + war.getId() + "-surrender")
+						.setKey("Clans:war-" + war.getId() + "-surrender")
 						.setProperty(Menu.Property.CACHEABLE)
 						.setStock(i -> {
 							FillerElement<?> filler = new FillerElement<>(i);
@@ -2330,9 +2269,7 @@ public enum GUI {
 								c.getElement().closeInventory();
 							}));
 						})
-						.orGet(m -> m instanceof SingularMenu && m.getKey().map(("ClansPro:war-" + war.getId() + "-surrender")::equals).orElse(false));
-						// ^FIXME change key to start with "Clans"
-						// -not doing change right now so i don't break anything
+						.orGet(m -> m instanceof SingularMenu && m.getKey().map(("Clans:war-" + war.getId() + "-surrender")::equals).orElse(false));
 
 			default:
 				throw new IllegalArgumentException("GUI type " + name() + " not valid, contact developers.");

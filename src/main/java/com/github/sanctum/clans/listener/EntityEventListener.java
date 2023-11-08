@@ -48,9 +48,7 @@ public class EntityEventListener implements Listener {
 				AssociateBuildReservoirEvent event = ClanVentBus.call(new AssociateBuildReservoirEvent(data));
 				if (!event.isCancelled()) {
 					PersistentDataContainer container = data.getEnderCrystal().getPersistentDataContainer();
-					container.set(new NamespacedKey(ClansAPI.getInstance().getPlugin(), "clanspro_reservoir"), PersistentDataType.STRING, data.getAssociateWhoSpawned().getClan().getId().toString());
-					// ^FIXME change key to start with "clans_"
-					// -not doing change right now so i don't break anything
+					container.set(new NamespacedKey(ClansAPI.getInstance().getPlugin(), "clans_reservoir"), PersistentDataType.STRING, data.getAssociateWhoSpawned().getClan().getId().toString());
 					Reservoir r = Reservoir.of(data.getEnderCrystal());
 					r.adapt(data.getAssociateWhoSpawned().getClan());
 				} else {

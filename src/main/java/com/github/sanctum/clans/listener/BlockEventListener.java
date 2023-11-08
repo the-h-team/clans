@@ -231,9 +231,7 @@ public class BlockEventListener implements Listener {
 					if (e.getBlock().getType().isInteractable()) {
 						if (!e.getClaim().getOwner().getTag().getId().equals(associate.getClan().getId().toString())) {
 							// not in the same clan
-							// FIXME change permissions to start with "clans." and/or make configurable
-							// -not doing change right now so i don't break anything
-							if (!e.getPlayer().hasPermission("clanspro.admin")) {
+							if (!e.getPlayer().hasPermission("clans.admin")) {
 								if (f != null && f.isEnabled()) {
 									// only deny if not ally.
 									if (!((Clan) e.getClaim().getHolder()).getRelation().getAlliance().has(associate.getClan())) {
@@ -255,9 +253,7 @@ public class BlockEventListener implements Listener {
 					}
 					if (!e.isCancelled() && StringUtils.use(e.getPlayer().getInventory().getItemInMainHand().getType().name()).containsIgnoreCase("bucket")) {
 						if (!e.getClaim().getOwner().getTag().getId().equals(associate.getClan().getId().toString())) {
-							// FIXME change permissions to start with "clans." and/or make configurable
-							// -not doing change right now so i don't break anything
-							if (!e.getPlayer().hasPermission("clanspro.admin")) {
+							if (!e.getPlayer().hasPermission("clans.admin")) {
 								if (f != null && f.isEnabled()) {
 									// only deny if not ally.
 									if (!((Clan) e.getClaim().getHolder()).getRelation().getAlliance().has(associate.getClan())) {
@@ -281,9 +277,7 @@ public class BlockEventListener implements Listener {
 				case BREAK:
 				case BUILD:
 					if (!e.getClaim().getOwner().getTag().getId().equals(associate.getClan().getId().toString())) {
-						// FIXME change permissions to start with "clans." and/or make configurable
-						// -not doing change right now so i don't break anything
-						if (!e.getPlayer().hasPermission("clanspro.admin")) {
+						if (!e.getPlayer().hasPermission("clans.admin")) {
 							if (f != null && f.isEnabled()) {
 								// only deny if not ally.
 								if (!((Clan) e.getClaim().getHolder()).getRelation().getAlliance().has(associate.getClan())) {
@@ -309,17 +303,13 @@ public class BlockEventListener implements Listener {
 			switch (e.getInteraction()) {
 				case USE:
 					if (e.getBlock().getType().isInteractable()) {
-						// FIXME change permissions to start with "clans." and/or make configurable
-						// -not doing change right now so i don't break anything
-						if (!e.getPlayer().hasPermission("clanspro.admin")) {
+						if (!e.getPlayer().hasPermission("clans.admin")) {
 							e.getUtil().sendMessage(e.getPlayer(), MessageFormat.format(e.getUtil().notClaimOwner(((Clan) e.getClaim().getHolder()).getName()), ((Clan) e.getClaim().getHolder()).getName()));
 							e.setCancelled(true);
 						}
 					}
 					if (!e.isCancelled() && StringUtils.use(e.getPlayer().getInventory().getItemInMainHand().getType().name()).containsIgnoreCase("bucket")) {
-						// FIXME change permissions to start with "clans." and/or make configurable
-						// -not doing change right now so i don't break anything
-						if (!e.getPlayer().hasPermission("clanspro.admin")) {
+						if (!e.getPlayer().hasPermission("clans.admin")) {
 							e.getUtil().sendMessage(e.getPlayer(), MessageFormat.format(e.getUtil().notClaimOwner(((Clan) e.getClaim().getHolder()).getName()), ((Clan) e.getClaim().getHolder()).getName()));
 							e.setCancelled(true);
 						}
@@ -327,9 +317,7 @@ public class BlockEventListener implements Listener {
 					break;
 				case BREAK:
 				case BUILD:
-					// FIXME change permissions to start with "clans." and/or make configurable
-					// -not doing change right now so i don't break anything
-					if (!e.getPlayer().hasPermission("clanspro.admin")) {
+					if (!e.getPlayer().hasPermission("clans.admin")) {
 						e.getUtil().sendMessage(e.getPlayer(), MessageFormat.format(e.getUtil().notClaimOwner(((Clan) e.getClaim().getHolder()).getName()), ((Clan) e.getClaim().getHolder()).getName()));
 						e.setCancelled(true);
 					}

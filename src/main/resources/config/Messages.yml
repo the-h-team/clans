@@ -23,8 +23,8 @@ Title: '&r- Command help. (&7{label} help #page&r)'
 Border: '&7&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬'
 Lines: 7
 Commands:
-  # Make sure users have access to the base permission "clanspro" if allotting only specific permissions.
-  # When you give access to individual perms use "clanspro.your.configured.nodename"
+  # Make sure users have access to the base permission "clans" if allotting only specific permissions.
+  # When you give access to individual perms use "clans.your.configured.nodename"
   create:
     text: '&7|&e) &6{label} &fcreate <&7clanName&f> <&7password&f>'
     permission: 'create'
@@ -506,9 +506,7 @@ menu:
     # Allowed types are: [SINGULAR, PAGINATED, PRINTABLE]
     type: PAGINATED
     # Set this menu's unique identifier, this option is optional but without it the menu cannot cache itself.
-    id: 'ClansPro::clan_name:-members'
-    # ^FIXME change key to start with "Clans::"
-    # -not doing change right now so i don't break anything
+    id: 'Clans::clan_name:-members'
     # Setup an optional filler item for blank slots. (Comment out or remove to not use)
     filler:
       name: ' '
@@ -591,9 +589,7 @@ menu:
           name: '&cExit'
           slot: 22
           locked: true
-          open: 'ClansPro:Roster'
-          # ^FIXME change key to start with "Clans:"
-          # -not doing change right now so i don't break anything
+          open: 'Clans:Roster'
           type: enderpearl
           lore: [ "&f&oClick to escape." ]
         previous:
@@ -623,9 +619,7 @@ menu:
     title: '&3&oComplete Roster &0&l» &0{0}/{1}'
     rows: THREE
     type: PAGINATED
-    id: 'ClansPro:Roster'
-    # ^FIXME change key to start with "Clans:"
-    # -not doing change right now so i don't break anything
+    id: 'Clans:Roster'
     # =======================
     filler:
       name: ' '
@@ -650,9 +644,7 @@ menu:
       lore: [ "&f&m,----------", "Click for members.", "&f&m----------" ]
       type: clan
       locked: true
-      open: 'ClansPro::clan_name:-members'
-      # ^FIXME change key to start with "Clans:"
-      # -not doing change right now so i don't break anything
+      open: 'Clans::clan_name:-members'
       # =========================
       replacements:
         ':clan_money:': getBalanceDouble
@@ -668,9 +660,7 @@ menu:
           name: '&cExit'
           slot: 22
           locked: true
-          open: 'ClansPro:Roster:Select'
-          # ^FIXME change key to start with "Clans:"
-          # -not doing change right now so i don't break anything
+          open: 'Clans:Roster:Select'
           type: enderpearl
           lore: [ "&f&oClick to escape." ]
         previous:
@@ -684,9 +674,7 @@ menu:
     title: '&3&oTop Clans &0&l» &0{0}/{1}'
     rows: THREE
     type: PAGINATED
-    id: 'ClansPro:Roster:Top'
-    # ^FIXME change key to start with "Clans:"
-    # -not doing change right now so i don't break anything
+    id: 'Clans:Roster:Top'
     # =======================
     filler:
       name: ' '
@@ -711,9 +699,7 @@ menu:
       lore: [ "&f&m,----------", "Click for members.", "&f&m----------" ]
       type: clan
       locked: true
-      open: 'ClansPro::clan_name:-members'
-      # ^FIXME change key to start with "Clans:"
-      # -not doing change right now so i don't break anything
+      open: 'Clans::clan_name:-members'
       # =========================
       replacements:
         ':clan_money:': getBalanceDouble
@@ -729,9 +715,7 @@ menu:
           name: '&cExit'
           slot: 22
           locked: true
-          open: 'ClansPro:Roster:Select'
-          # ^FIXME change key to start with "Clans:"
-          # -not doing change right now so i don't break anything
+          open: 'Clans:Roster:Select'
           type: enderpearl
           lore: [ "&f&oClick to escape." ]
         previous:
@@ -745,9 +729,7 @@ menu:
     title: '&3Select'
     rows: ONE
     type: SINGULAR
-    id: 'ClansPro:Roster:Select'
-    # ^FIXME change key to start with "Clans:"
-    # -not doing change right now so i don't break anything
+    id: 'Clans:Roster:Select'
     filler:
       name: ' '
       locked: true
@@ -757,9 +739,7 @@ menu:
         slot: 3
         locked: true
         type: goldblock
-        open: 'ClansPro:Roster:Top'
-        # ^FIXME change key to start with "Clans:"
-        # -not doing change right now so i don't break anything
+        open: 'Clans:Roster:Top'
       '&cBack':
         slot: 4
         locked: true
@@ -770,9 +750,7 @@ menu:
         slot: 5
         locked: true
         type: clan
-        open: 'ClansPro:Roster'
-        # ^FIXME change key to start with "Clans:"
-        # -not doing change right now so i don't break anything
+        open: 'Clans:Roster'
   # A clan associates gui screen. Normal placeholders work here as-well.
   # Associate provided placeholders work here:
   # :member_name:  "Get the associates name"
@@ -836,9 +814,7 @@ menu:
         slot: 19
         locked: true
         type: barrier
-        open: 'ClansPro::clan_name:-members'
-        # ^FIXME change key to start with "Clans:"
-        # -not doing change right now so i don't break anything
+        open: 'Clans::clan_name:-members'
         lore: [ "&c&oClick to go back a step." ]
       '&9Message':
         slot: 22
@@ -868,16 +844,12 @@ menu:
         locked: true
         close: true
         type: goldingot
-        open: 'ClansPro:head-library'
-        # ^FIXME change key to start with "Clans:"
-        # -not doing change right now so i don't break anything
+        open: 'Clans:head-library'
   # A paginated menu containing all loaded heads on the server. NEW!
   head-library:
     title: 'Browse {0}/{1}'
     rows: THREE
-    id: 'ClansPro:head-library'
-    # ^FIXME change key to start with "Clans:"
-    # -not doing change right now so i don't break anything
+    id: 'Clans:head-library'
     type: PAGINATED
     filler:
       name: ' '
@@ -1017,9 +989,7 @@ menu:
           lore: [ "&f&m,----------", "Click for members.", "&f&m----------" ]
           type: clan
           locked: true
-          open: 'ClansPro::clan_name:-members'
-          # ^FIXME change key to start with "Clans:"
-          # -not doing change right now so i don't break anything
+          open: 'Clans::clan_name:-members'
           # =========================
           replacements:
             ':clan_money:': getBalanceDouble
@@ -1175,9 +1145,7 @@ menu:
           lore: [ "&f&m,----------", "Click for members.", "&f&m----------" ]
           type: clan
           locked: true
-          open: 'ClansPro::clan_name:-members'
-          # ^FIXME change key to start with "Clans:"
-          # -not doing change right now so i don't break anything
+          open: 'Clans::clan_name:-members'
           # =========================
           replacements:
             ':clan_money:': getBalanceDouble
@@ -1434,9 +1402,7 @@ menu:
       '&6Clan Roster':
         slot: 13
         locked: true
-        open: 'ClansPro:Roster:Select'
-        # ^FIXME change key to start with "Clans:"
-        # -not doing change right now so i don't break anything
+        open: 'Clans:Roster:Select'
         type: goldblock
         lore: [ "&fView the clan roster." ]
       '&eCommands':

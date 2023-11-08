@@ -4,8 +4,8 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.github.sanctum</groupId>
-    <artifactId>ClansPro</artifactId>
-    <version>1.5.1</version>
+    <artifactId>Clans</artifactId>
+    <version>1.6.0</version>
     <modules>
         <module>tether-api</module>
         <module>tether-cli</module>
@@ -13,7 +13,7 @@
     <packaging>pom</packaging>
 
     <name>Tether</name>
-    <url>https://github.com/the-h-team/ClansPro</url>
+    <url>https://github.com/the-h-team/Clans</url>
 
     <organization>
         <name>Sanctum</name>

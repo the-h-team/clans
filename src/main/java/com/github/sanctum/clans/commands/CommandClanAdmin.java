@@ -44,9 +44,7 @@ public class CommandClanAdmin extends Command {
 		super("clansadmin");
 		setDescription("Used to modify clan settings.");
 		setAliases(Arrays.asList("ca", "cla", "clanadmin"));
-		// FIXME start with "clans" and/or make relative/calculated?
-		// -not doing change right now so i don't break anything
-		setPermission("clanspro.admin");
+		setPermission("clans.admin");
 	}
 
 	private List<String> helpMenu(String label) {

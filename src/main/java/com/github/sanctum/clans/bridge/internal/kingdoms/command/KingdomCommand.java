@@ -55,7 +55,6 @@ public class KingdomCommand extends ClanSubCommand implements Message.Factory {
 	public boolean player(Player p, String label, String[] args) {
 
 		if (args.length == 0) {
-			// TODO: send help menu
 			Clan.Associate associate = ClansAPI.getInstance().getAssociate(p).orElse(null);
 			message()
 					.append(text(" "))
@@ -223,7 +222,6 @@ public class KingdomCommand extends ClanSubCommand implements Message.Factory {
 						Clan.ACTION.sendMessage(p, "&cYour clan is no longer a member of the kingdom.");
 
 						if (k.getMembers().size() == 0) {
-							// TODO: announce kingdom fallen
 							k.remove(ClanAddonQueue.getInstance().get("Kingdoms"));
 							Bukkit.getOnlinePlayers().forEach(pl -> Clan.ACTION.sendMessage(pl, "&2[&b" + k.getName() + "&2]&r &c&ohas fallen.."));
 						}

@@ -19,9 +19,7 @@ import org.bukkit.entity.Player;
 
 public final class AsynchronousLoanableTask {
 
-	public static final String KEY = "ClansPro:CONCURRENT";
-	// ^FIXME change key to start with "Clans"
-	// -not doing change right now so i don't break anything
+	public static final String KEY = "Clans:CONCURRENT";
 	private final PantherCollection<Player> players = new PantherSet<>();
 	private final Logic logic;
 

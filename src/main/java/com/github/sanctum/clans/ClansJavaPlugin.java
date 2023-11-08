@@ -133,7 +133,7 @@ public class ClansJavaPlugin extends JavaPlugin implements ClansAPI, Vent.Host {
 		final String name = getDescription().getName();
 		final File newDir = new File(pluginsDir.getParentFile().getPath(), name);
 		// account for both folder names
-		for (String oldFolderName : new String[]{"ClansPro", "Tether"}) {
+		for (String oldFolderName : new String[]{"Clans", "Tether"}) {
 			final File oldDir = new File(pluginsDir.getParentFile().getPath(), oldFolderName);
 			if (oldDir.renameTo(newDir)) {
 				getLogger().info("Renamed the old '" + oldFolderName + "' folder to '" + name + "' for you.");
@@ -240,9 +240,7 @@ public class ClansJavaPlugin extends JavaPlugin implements ClansAPI, Vent.Host {
 		});
 
 		FileManager heads = getFileList().get("heads", "Configuration/Data", Configurable.Type.JSON);
-		// FIXME change to "Clans"
-		// -not doing change right now so i don't break anything
-		CustomHead.Manager.getHeads().stream().filter(h -> h.category().equals("ClansPro")).forEach(h -> {
+		CustomHead.Manager.getHeads().stream().filter(h -> h.category().equals("Clans")).forEach(h -> {
 			heads.write(t -> {
 				t.set(h.name() + ".name", h.name());
 				t.set(h.name() + ".custom", true);

@@ -118,9 +118,7 @@ public class CommandHead extends ClanSubCommand {
 
 									@Override
 									public @NotNull String category() {
-										// FIXME change to "Clans"
-										// -not doing change right now so i don't break anything
-										return "ClansPro";
+										return "Clans";
 									}
 								});
 								sendMessage(p, MessageFormat.format(ClansAPI.getDataInstance().getMessageResponse("cached-head"), cost));
@@ -149,9 +147,7 @@ public class CommandHead extends ClanSubCommand {
 
 						@Override
 						public @NotNull String category() {
-							// FIXME change to "Clans"
-							// -not doing change right now so i don't break anything
-							return "ClansPro";
+							return "Clans";
 						}
 					});
 					sendMessage(p, MessageFormat.format(ClansAPI.getDataInstance().getMessageResponse("cached-head"), 0.0));

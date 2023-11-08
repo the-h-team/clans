@@ -38,15 +38,13 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-// FIXME update ascii art
 /**
  * <pre>
- *    ████████╗███████╗████████╗██╗  ██╗███████╗██████╗
- *    ╚══██╔══╝██╔════╝╚══██╔══╝██║  ██║██╔════╝██╔══██╗
- *       ██║   █████╗     ██║   ███████║█████╗  ██████╔╝
- *       ██║   ██╔══╝     ██║   ██╔══██║██╔══╝  ██╔══██╗
- *       ██║   ███████╗   ██║   ██║  ██║███████╗██║  ██║
- *       ╚═╝   ╚══════╝   ╚═╝   ╚═╝  ╚═╝╚══════╝╚═╝  ╚═╝
+ *   ██████ ██       █████  ███    ██ ███████
+ *  ██      ██      ██   ██ ████   ██ ██
+ *  ██      ██      ███████ ██ ██  ██ ███████
+ *  ██      ██      ██   ██ ██  ██ ██      ██
+ *   ██████ ███████ ██   ██ ██   ████ ███████
  * <pre>
  * Copyright (c) 2023 Sanctum
  */
@@ -112,7 +110,7 @@ public interface ClansAPI {
 	Optional<Clan.Associate> getAssociate(String playerName);
 
 	/**
-	 * Get the ClansPro file listing.
+	 * Get the Clans file listing.
 	 *
 	 * @return Get's the file collection for the given plugin.
 	 */

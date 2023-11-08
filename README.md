@@ -3,4 +3,4 @@ An alternative to factions with unique features, modern version support and chun
 ##### LABYRINTH BUILT.
 NEW VERSION SOON
 
-[Click here for wiki](https://github.com/the-h-team/ClansPro/wiki)
+[Click here for wiki](https://github.com/the-h-team/Clans/wiki)

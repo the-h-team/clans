@@ -182,9 +182,7 @@ public class ClanActionEngine extends StringLibrary {
 							Bukkit.broadcastMessage(color(getPrefix() + " " + format));
 						}
 						API.getClaimManager().refresh();
-					}).scheduleLater("ClansPro-deletion;" + target, 1);
-					// ^FIXME change key to start with "Clans"
-					// -not doing change right now so i don't break anything
+					}).scheduleLater("Clans-deletion;" + target, 1);
 				} else {
 					if (!silent) {
 						clanIndex.broadcast(MessageFormat.format(ClansAPI.getDataInstance().getMessageResponse("member-leave"), Bukkit.getOfflinePlayer(target).getName()));

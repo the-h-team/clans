@@ -457,10 +457,8 @@ public final class StartProcedure {
 					"make a group", "create a group", "start a group", "start group", "make group", "create group"
 			)) {
 				player.closeInventory();
-				String message = "To make a clan you require the permission clanspro." + DataManager.Security.getPermission("create") + ", if you have permission this message will be white.";
-				// FIXME change perm to start with "clans." and/or make it configurable
-				// -not doing change right now so i don't break anything
-				if (!player.hasPermission("clanspro." + DataManager.Security.getPermission("create"))) {
+				String message = "To make a clan you require the permission clans." + DataManager.Security.getPermission("create") + ", if you have permission this message will be white.";
+				if (!player.hasPermission("clans." + DataManager.Security.getPermission("create"))) {
 					Clan.ACTION.sendMessage(player, "&c" + message);
 				} else {
 					Clan.ACTION.sendMessage(player, message);

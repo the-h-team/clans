@@ -263,9 +263,7 @@ public class PlayerEventListener implements Listener {
 			EnderCrystal test = Clan.ACTION.getEnderCrystalInSight(p, 5);
 			if (test != null) {
 				PersistentDataContainer container = test.getPersistentDataContainer();
-				NamespacedKey key = new NamespacedKey(e.getApi().getPlugin(), "clanspro_reservoir");
-				// ^FIXME change key to start with "clans_"
-				// -not doing change right now so i don't break anything
+				NamespacedKey key = new NamespacedKey(e.getApi().getPlugin(), "clans_reservoir");
 				if (container.has(key, PersistentDataType.STRING)) {
 					String owner = container.get(key, PersistentDataType.STRING);
 					Clan c = e.getApi().getClanManager().getClan(HUID.parseID(owner).toID());
@@ -442,9 +440,7 @@ public class PlayerEventListener implements Listener {
 					e.setCancelled(true);
 					return;
 				}
-				Task test = TaskMonitor.getLocalInstance().get("ClansPro;reservoir_power_loss:" + victim.getId());
-				// ^FIXME change key to start with "Clans;"
-				// -not doing change right now so i don't break anything
+				Task test = TaskMonitor.getLocalInstance().get("Clans;reservoir_power_loss:" + victim.getId());
 				if (test == null) {
 					attacking.broadcast("&aAssociate &5" + e.getAssociate().getNickname() + " &apowered down " + victim.getPalette().toString(victim.getName()) + "'s &areservoir! Hurry and collect the power its leaking!");
 					PantherCollection<Integer> drain = new PantherList<>();
@@ -452,9 +448,7 @@ public class PlayerEventListener implements Listener {
 						drain.add(1);
 					}
 					Integer[] ar = drain.stream().toArray(Integer[]::new);
-					Task t = CollectionTask.processSilent(ar, "ClansPro;reservoir_power_loss:" + victim.getId(), 1, integer -> {
-						// ^FIXME change table to start with "Clans;"
-						// -not doing change right now so i don't break anything
+					Task t = CollectionTask.processSilent(ar, "Clans;reservoir_power_loss:" + victim.getId(), 1, integer -> {
 						victim.takePower(integer);
 						attacking.givePower(integer);
 						e.getPlayer().getWorld().playSound(r.getEntity().getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 10, 1);
@@ -541,9 +535,7 @@ public class PlayerEventListener implements Listener {
 	public void onPunch(PlayerPunchPlayerEvent e) {
 
 		Player attacker = e.getPlayer();
-		Cooldown test = LabyrinthProvider.getService(Service.COOLDOWNS).getCooldown("ClansPro-war-respawn-" + e.getVictim().getUniqueId());
-		// ^FIXME change key to start with "Clans-"
-		// -not doing change right now so i don't break anything
+		Cooldown test = LabyrinthProvider.getService(Service.COOLDOWNS).getCooldown("Clans-war-respawn-" + e.getVictim().getUniqueId());
 		if (test != null) {
 			if (!test.isComplete()) {
 				if (test.getSeconds() == 0) {
@@ -965,9 +957,7 @@ public class PlayerEventListener implements Listener {
 			if (war != null && war.isRunning()) {
 				War.Team t = war.getTeam(associate.getClan());
 				if (t.getSpawn() != null) {
-					Cooldown test = LabyrinthProvider.getService(Service.COOLDOWNS).getCooldown("ClansPro-war-respawn-" + p.getUniqueId().toString());
-					// ^FIXME change key to start with "Clans-"
-					// -not doing change right now so i don't break anything
+					Cooldown test = LabyrinthProvider.getService(Service.COOLDOWNS).getCooldown("Clans-war-respawn-" + p.getUniqueId());
 					if (test != null) {
 						LabyrinthProvider.getInstance().remove(test);
 					}
