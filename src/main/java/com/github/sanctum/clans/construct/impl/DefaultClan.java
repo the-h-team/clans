@@ -1503,12 +1503,7 @@ public final class DefaultClan implements Clan, PersistentEntity {
 		return Optional.of(this);
 	}
 
-	@Override
-	public Class<Clan> getSerializationSignature() {
-		return Clan.class;
-	}
-
-	final class Carrier implements LogoHolder.Carrier {
+    final class Carrier implements LogoHolder.Carrier {
 
 		Location top;
 		final Set<LogoHolder.Carrier.Line> lines = Collections.synchronizedSet(new LinkedHashSet<>());

@@ -402,11 +402,6 @@ public abstract class ClaimEvent extends AssociateEvent {
 		this.claim = claim;
 	}
 
-	@Override
-	public @Nullable Clan.Associate getAssociate() {
-		return super.getAssociate();
-	}
-
 	/**
 	 * Get the claim involved in this event.
 	 *

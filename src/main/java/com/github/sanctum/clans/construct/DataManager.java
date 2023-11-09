@@ -130,10 +130,10 @@ public class DataManager {
 				if ((Math.max(0, i - 1)) <= text.length - 1) {
 					String m = text[Math.max(0, i - 1)];
 					switch (side) {
-						case 1:
+						case Side.LEFT:
 							ar[i] = "&r" + m + "   &r" + ar[i];
 							break;
-						case 2:
+						case Side.RIGHT:
 							ar[i] = ar[i] + "   &r" + m;
 							break;
 					}
