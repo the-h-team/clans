@@ -121,9 +121,9 @@ public interface Claim extends Savable, Iterable<Block>, ConfigurationSerializab
 	}
 
 	/**
-	 * Set the claims activity. Making this false will make the claim appear invisible.
+	 * Sets the claim's activity. Making this false will make the claim appear invisible.
 	 *
-	 * @param active The status to update the claim to.
+	 * @param active new status for the claim
 	 */
 	void setActive(boolean active);
 

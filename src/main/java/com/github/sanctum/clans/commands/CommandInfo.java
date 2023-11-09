@@ -87,13 +87,13 @@ public class CommandInfo extends ClanSubCommand {
 				return true;
 			}
 			UUID target = Clan.ACTION.getId(args[0]).deploy();
-			// check if its a player, if not stop and operate.
+			// check if it's a player, if not stop and operate.
 			if (target == null) {
 				if (!Clan.ACTION.getAllClanNames().contains(args[0])) {
 					lib.sendMessage(p, lib.clanUnknown(args[0]));
 					return true;
 				}
-				// theyre in a clan and the info they wanna see is their own clans
+				// they're in a clan and the info they wanna see is their own clan's
 				if (associate != null && args[0].equals(associate.getClan().getName())) {
 					AssociateDisplayInfoEvent ev = ClanVentBus.call(new AssociateDisplayInfoEvent(associate, AssociateDisplayInfoEvent.Type.PERSONAL));
 					if (!ev.isCancelled()) {

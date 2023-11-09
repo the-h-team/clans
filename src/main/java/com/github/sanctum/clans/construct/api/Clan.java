@@ -106,9 +106,9 @@ public interface Clan extends ConfigurationSerializable, EntityHolder, InvasiveE
 	@NotNull Clan.Associate getOwner();
 
 	/**
-	 * Get's the location of the clans base
+	 * Gets the location of the clan's base.
 	 *
-	 * @return A base location.
+	 * @return the clan's base location
 	 */
 	@Nullable Location getBase();
 
@@ -168,7 +168,7 @@ public interface Clan extends ConfigurationSerializable, EntityHolder, InvasiveE
 	@Nullable ClanCooldown getCooldown(String action);
 
 	/**
-	 * Retrieve a value of specified type from this clans persistent data container.
+	 * Retrieves a value of specified type from the clan's persistent data container.
 	 *
 	 * @param type The type of object to retrieve.
 	 * @param key  The key delimiter for the object.
@@ -178,7 +178,7 @@ public interface Clan extends ConfigurationSerializable, EntityHolder, InvasiveE
 	<R> R getValue(Class<R> type, String key);
 
 	/**
-	 * Retrieve a value of specified type from this clans persistent data container.
+	 * Retrieves a value of specified type from the clan's persistent data container.
 	 *
 	 * @param flag The type of object to retrieve.
 	 * @param key  The key delimiter for the object.
@@ -190,7 +190,7 @@ public interface Clan extends ConfigurationSerializable, EntityHolder, InvasiveE
 	}
 
 	/**
-	 * Retrieve a value of specified type from this clans persistent data container.
+	 * Retrieves a value of specified type from the clan's persistent data container.
 	 *
 	 * @param key  The key delimiter for the object.
 	 * @param <R>  The desired serializable object.
@@ -557,35 +557,43 @@ public interface Clan extends ConfigurationSerializable, EntityHolder, InvasiveE
 		Mailer getMailer();
 
 		/**
-		 * The interfacing for the associate entity isnt setup yet.
-		 * <p>Its internal referencing for now uses the clan object</p>
-		 *
-		 * @inheritDoc
+		 * {@inheritDoc}
+		 * @implNote The interface for associates isn't yet set up.
+		 * Internal referencing for now uses the clan object.
 		 */
 		@Override
 		@NotNull Claim[] getClaims();
 
 		/**
-		 * The interfacing for the associate entity isnt setup yet.
-		 * <p>Its internal referencing for now uses the clan object</p>
-		 *
-		 * @inheritDoc
+		 * {@inheritDoc}
+		 * @implNote The interface for associates isn't yet set up.
+		 * Internal referencing for now uses the clan object.
 		 */
 		@Override
 		@Nullable Claim newClaim(Chunk c);
 
 		/**
-		 * @return Gets the associates possible claim information. If the user is not in a claim this will return empty.
+		 * Gets the associate's claim information, if possible.
+		 * <p>
+		 * If the user is not in a claim the optional will be empty.
+		 *
+		 * @return an Optional describing the associate's claim information
 		 */
 		Optional<Claim.Resident> toResident();
 
 		/**
-		 * @return true if the backing clan id for this user is linked with an actual clan and the backing user data is also valid.
+		 * Validates this associate's clan and user data.
+		 *
+		 * @return true if this associate's clan and user data is valid
+		 * @implNote This method returns true if the backing clan id matches a
+		 * clan and the backing user data is also valid.
 		 */
 		boolean isValid();
 
 		/**
-		 * @return Gets the user rank priority.
+		 * Gets the user's rank priority.
+		 *
+		 * @return the user's rank priority
 		 */
 		@NotNull Clan.Rank getRank();
 
@@ -600,12 +608,18 @@ public interface Clan extends ConfigurationSerializable, EntityHolder, InvasiveE
 		long getKilled(TimeUnit threshold, long time);
 
 		/**
-		 * @return Gets the users clan nick-name, if one is not present their full user-name will be returned.
+		 * Gets the user's clan nickname.
+		 * <p>
+		 * If one is not present, this method will return their full name.
+		 *
+		 * @return the user's clan nickname if possible or their full username
 		 */
 		@NotNull String getNickname();
 
 		/**
-		 * @return Gets the users clan biography.
+		 * Gets the user's clan biography.
+		 *
+		 * @return the user's clan biography
 		 */
 		@Nullable String getBiography();
 
@@ -641,9 +655,9 @@ public interface Clan extends ConfigurationSerializable, EntityHolder, InvasiveE
 		void setBio(String newBio);
 
 		/**
-		 * Update the users clan nick-name;
+		 * Updates the user's clan nickname.
 		 *
-		 * @param newName The new nick name
+		 * @param newName their new nickname
 		 */
 		void setNickname(String newName);
 

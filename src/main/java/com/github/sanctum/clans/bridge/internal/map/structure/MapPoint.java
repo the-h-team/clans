@@ -62,9 +62,9 @@ public class MapPoint {
     }
 
     /**
-     * Set an operation to be ran when this map point is clicked on.
+     * Sets an operation to be run when this map point is clicked on.
      *
-     * @param appliance The information to run when the map point is clicked on.
+     * @param appliance logic to run when the map point is clicked on
      */
     public void setAppliance(Applicable appliance) {
         this.appliance = appliance;
