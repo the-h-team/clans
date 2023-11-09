@@ -10,6 +10,10 @@ plugins {
     id("com.github.johnrengelman.shadow")
 }
 
+tasks.jar {
+    enabled = false
+}
+
 dependencies {
     implementation(project(getSubproject("api")))
     implementation(project(getSubproject("cli")))
@@ -31,7 +35,7 @@ tasks.withType<ProcessResources> {
 }
 
 tasks.withType<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar> {
-    archiveFileName.set("${rootProject.name}-plugin-${project.version}.jar")
+    archiveFileName.set("${rootProject.name}-${project.version}.jar")
     archiveClassifier.set("plugin")
     dependencies {
         include(project(getSubproject("api")))
