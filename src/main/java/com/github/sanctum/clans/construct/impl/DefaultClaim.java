@@ -5,7 +5,6 @@ import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClansAPI;
 import com.github.sanctum.clans.construct.api.EntityHolder;
 import com.github.sanctum.clans.construct.api.InvasiveEntity;
-import com.github.sanctum.clans.construct.impl.entity.DefaultClaimResident;
 import com.github.sanctum.labyrinth.LabyrinthProvider;
 import com.github.sanctum.labyrinth.data.FileManager;
 import com.github.sanctum.labyrinth.task.TaskScheduler;

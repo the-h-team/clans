@@ -1,11 +1,6 @@
 package com.github.sanctum.clans.construct.api;
 
-import com.github.sanctum.clans.construct.impl.DefaultBlockMeta;
-import com.github.sanctum.clans.construct.impl.DefaultBrokenBlock;
 import com.github.sanctum.clans.construct.impl.DefaultClaim;
-import com.github.sanctum.clans.construct.impl.DefaultPlacedBlock;
-import com.github.sanctum.clans.construct.impl.entity.DefaultClaimResident;
-import com.github.sanctum.labyrinth.interfacing.Nameable;
 import com.github.sanctum.labyrinth.library.LabyrinthEncoded;
 import com.github.sanctum.panther.file.JsonAdapter;
 import com.github.sanctum.panther.file.Node;
@@ -16,17 +11,14 @@ import java.io.Serializable;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
+
 import org.bukkit.Chunk;
 import org.bukkit.Location;
-import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.configuration.serialization.ConfigurationSerializable;
 import org.bukkit.configuration.serialization.DelegateDeserialization;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 /**
  * Encapsulated data for a clan owned <strong>chunk</strong> of land.

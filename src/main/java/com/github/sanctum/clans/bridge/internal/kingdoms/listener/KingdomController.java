@@ -15,7 +15,6 @@ import com.github.sanctum.clans.construct.util.HiddenMetadata;
 import com.github.sanctum.clans.event.associate.AssociateQuitEvent;
 import com.github.sanctum.clans.event.claim.ClaimInteractEvent;
 import com.github.sanctum.clans.event.claim.ClaimNotificationFormatEvent;
-import com.github.sanctum.clans.event.claim.ClaimResidencyEvent;
 import com.github.sanctum.clans.event.clan.ClanOverpowerClanEvent;
 import com.github.sanctum.clans.event.player.PlayerKillPlayerEvent;
 import com.github.sanctum.clans.event.player.PlayerPunchPlayerEvent;

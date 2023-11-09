@@ -3,7 +3,6 @@ package com.github.sanctum.clans.construct.util;
 import com.github.sanctum.labyrinth.gui.unity.construct.Menu;
 import com.github.sanctum.labyrinth.gui.unity.construct.MenuRegistration;
 import com.github.sanctum.labyrinth.gui.unity.construct.PaginatedMenu;
-import com.github.sanctum.labyrinth.gui.unity.construct.PrintableMenu;
 import com.github.sanctum.labyrinth.gui.unity.construct.SingularMenu;
 import com.github.sanctum.labyrinth.gui.unity.impl.BorderElement;
 import com.github.sanctum.labyrinth.gui.unity.impl.FillerElement;

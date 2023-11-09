@@ -30,7 +30,6 @@ import com.github.sanctum.labyrinth.api.Service;
 import com.github.sanctum.labyrinth.api.TaskService;
 import com.github.sanctum.labyrinth.data.FileList;
 import com.github.sanctum.labyrinth.data.FileManager;
-import com.github.sanctum.labyrinth.data.ServiceType;
 import com.github.sanctum.labyrinth.data.container.KeyedServiceManager;
 import com.github.sanctum.labyrinth.data.container.PersistentContainer;
 import com.github.sanctum.labyrinth.formatting.FancyMessageChain;
@@ -46,7 +45,6 @@ import com.github.sanctum.panther.paste.PasteManager;
 import com.github.sanctum.panther.paste.type.Hastebin;
 import com.github.sanctum.panther.paste.type.Pastebin;
 import com.github.sanctum.panther.recursive.ServiceFactory;
-import com.github.sanctum.panther.recursive.ServiceLoader;
 import com.github.sanctum.panther.util.OrdinalProcedure;
 import com.github.sanctum.panther.util.Task;
 import com.github.sanctum.skulls.CustomHead;
@@ -375,6 +373,7 @@ public class ClansJavaPlugin extends JavaPlugin implements ClansAPI, Vent.Host {
 	void initialize() {
 		origin = FileList.search(PRO = this);
 		hastebin = getPasteManager().newHaste();
+		//noinspection SpellCheckingInspection
 		pastebin = getPasteManager().newPaste("a5tsxh3c37_rmPTCN9gy9kjhd5vepz34");
 		STATE = new NamespacedKey(this, "online-state");
 		sessionId = UUID.randomUUID();

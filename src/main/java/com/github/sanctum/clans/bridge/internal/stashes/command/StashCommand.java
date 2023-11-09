@@ -7,7 +7,6 @@ import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClanSubCommand;
 import com.github.sanctum.clans.construct.api.ClansAPI;
 import com.github.sanctum.clans.construct.api.Clearance;
-import com.github.sanctum.clans.construct.impl.entity.DefaultClaimResident;
 import com.github.sanctum.labyrinth.gui.unity.construct.Menu;
 import java.util.List;
 import org.bukkit.command.CommandSender;
