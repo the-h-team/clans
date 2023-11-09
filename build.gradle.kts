@@ -35,6 +35,7 @@ tasks.withType<ProcessResources> {
 }
 
 tasks.withType<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar> {
+    dependsOn.add("${getSubproject("cli")}:shadowJar")
     archiveFileName.set("${rootProject.name}-${project.version}.jar")
     archiveClassifier.set("plugin")
     dependencies {

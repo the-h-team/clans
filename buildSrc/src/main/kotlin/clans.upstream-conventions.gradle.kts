@@ -6,6 +6,7 @@ repositories {
             includeModule("com.github.the-h-team", "Enterprise")
             includeGroup("com.github.the-h-team.Labyrinth")
             includeGroup("com.github.the-h-team.Panther")
+            includeGroup("com.github.Revxrsal.Lamp")
         }
     }
     mavenCentral()
