@@ -6,7 +6,6 @@ import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.InvasiveEntity;
 import com.github.sanctum.clans.construct.api.Relation;
 import com.github.sanctum.clans.construct.api.Teleport;
-import com.github.sanctum.clans.construct.impl.entity.DefaultClaimResident;
 import com.github.sanctum.clans.event.associate.AssociateEvent;
 import com.github.sanctum.labyrinth.library.Mailer;
 import java.util.ArrayList;
@@ -401,11 +400,6 @@ public abstract class ClaimEvent extends AssociateEvent {
 	public ClaimEvent(Clan.Associate associate, UUID id, Claim claim) {
 		super(associate, id,false);
 		this.claim = claim;
-	}
-
-	@Override
-	public @Nullable Clan.Associate getAssociate() {
-		return super.getAssociate();
 	}
 
 	/**

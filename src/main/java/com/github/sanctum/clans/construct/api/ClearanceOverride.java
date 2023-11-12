@@ -91,7 +91,7 @@ public class ClearanceOverride {
 		RankRegistry registry = RankRegistry.getInstance();
 		// make new list to live grab inheritance nodes from positions
 		List<String> list = new ArrayList<>(data.rankMap.get(position.getName()));
-		// quick check to remove old inheritance that doesnt exist.
+		// quick check to remove old inheritance that doesn't exist.
 		if (combine) {
 			List<String> toRemove = new ArrayList<>();
 			List<String> inheritance = getInheritanceNames(position);

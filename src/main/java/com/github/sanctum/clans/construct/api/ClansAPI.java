@@ -110,9 +110,9 @@ public interface ClansAPI {
 	Optional<Clan.Associate> getAssociate(String playerName);
 
 	/**
-	 * Get the Clans file listing.
+	 * Gets the Clans file listing.
 	 *
-	 * @return Get's the file collection for the given plugin.
+	 * @return the file collection for Clans
 	 */
 	@NotNull FileList getFileList();
 

@@ -17,6 +17,7 @@ public class ClaimsLoadingProcedureEvent extends ClaimEvent {
 
 	public ClaimsLoadingProcedureEvent(Map<InvasiveEntity.Tag, List<Claim>> map) {
 		super(true);
+		//noinspection Java8MapForEach
 		map.entrySet().forEach(e -> {
 			for (Claim claim : e.getValue()) {
 				if (claim.getOwner() != null) {

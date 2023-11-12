@@ -4,7 +4,7 @@ import com.github.sanctum.clans.construct.api.Clan;
 import org.bukkit.entity.Player;
 
 /**
- * Called when a clan associate displays either their own or another clans information.
+ * Called when a clan associate displays either their own or another clan's information.
  *
  * @apiNote Alternatively called when a normal (non-associate) player views another clans information.
  *

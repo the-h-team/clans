@@ -1,24 +1,15 @@
 package com.github.sanctum.clans.event.claim;
 
-import com.github.sanctum.clans.construct.ClaimManager;
-import com.github.sanctum.clans.construct.DataManager;
 import com.github.sanctum.clans.construct.api.ClaimActionEngine;
 import com.github.sanctum.clans.construct.api.Claim;
 import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClansAPI;
-import com.github.sanctum.clans.construct.api.ResidencyInfo;
-import com.github.sanctum.clans.construct.impl.entity.DefaultClaimResident;
 import com.github.sanctum.clans.event.player.PlayerEvent;
 import com.github.sanctum.labyrinth.LabyrinthProvider;
 import com.github.sanctum.labyrinth.event.LabyrinthVentCall;
-import com.github.sanctum.labyrinth.library.TimeWatch;
 import com.github.sanctum.panther.annotation.Ordinal;
 import java.text.MessageFormat;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import org.bukkit.Chunk;
-import org.bukkit.entity.Player;
+
 import org.jetbrains.annotations.NotNull;
 
 /**

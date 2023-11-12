@@ -1,7 +1,6 @@
 package com.github.sanctum.clans.event.claim;
 
 import com.github.sanctum.clans.construct.ClaimManager;
-import com.github.sanctum.clans.construct.DataManager;
 import com.github.sanctum.clans.construct.ResidentManager;
 import com.github.sanctum.clans.construct.api.ClaimActionEngine;
 import com.github.sanctum.clans.construct.api.Claim;
@@ -13,11 +12,7 @@ import com.github.sanctum.labyrinth.event.LabyrinthVentCall;
 import com.github.sanctum.panther.annotation.Ordinal;
 import com.github.sanctum.panther.util.HUID;
 import java.text.MessageFormat;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import org.bukkit.Chunk;
-import org.bukkit.World;
+
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;

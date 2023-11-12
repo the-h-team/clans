@@ -50,9 +50,4 @@ public class DefaultModeSwitchCooldown extends ClanCooldown {
 	public String fullTimeLeft() {
 		return Clan.ACTION.format(Clan.ACTION.format(Clan.ACTION.format(Clan.ACTION.format(ClansAPI.getDataInstance().getMessageResponse("cooldown-active"), "%d", String.valueOf(getDaysLeft())), "%h", String.valueOf(getHoursLeft())), "%m", String.valueOf(getMinutesLeft())), "%s", String.valueOf(getSecondsLeft()));
 	}
-
-	@Override
-	public ClanCooldown getAttached() {
-		return this;
-	}
 }

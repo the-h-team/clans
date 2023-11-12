@@ -2,24 +2,19 @@ package com.github.sanctum.clans.construct;
 
 
 import com.github.sanctum.clans.ClansJavaPlugin;
-import com.github.sanctum.clans.construct.api.Claim;
 import com.github.sanctum.clans.construct.api.Clan;
 import com.github.sanctum.clans.construct.api.ClanCooldown;
 import com.github.sanctum.clans.construct.api.ClansAPI;
 import com.github.sanctum.clans.construct.util.FancyLogoAppendage;
-import com.github.sanctum.clans.construct.impl.entity.DefaultClaimResident;
 import com.github.sanctum.clans.construct.util.FileTypeCalculator;
 import com.github.sanctum.labyrinth.data.DataTable;
 import com.github.sanctum.labyrinth.data.FileList;
 import com.github.sanctum.labyrinth.data.FileManager;
 import com.github.sanctum.labyrinth.data.LabyrinthDataTable;
 import com.github.sanctum.labyrinth.formatting.FancyMessage;
-import com.github.sanctum.labyrinth.library.Items;
-import com.github.sanctum.labyrinth.library.StringUtils;
 import com.github.sanctum.labyrinth.task.TaskScheduler;
 import com.github.sanctum.panther.file.Configurable;
-import com.github.sanctum.skulls.CustomHead;
-import com.github.sanctum.skulls.CustomHeadLoader;
+
 import java.io.File;
 import java.io.InputStream;
 import java.text.MessageFormat;
@@ -33,9 +28,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Consumer;
-import org.bukkit.Material;
+
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.intellij.lang.annotations.MagicConstant;
 import org.jetbrains.annotations.NotNull;
@@ -136,10 +130,10 @@ public class DataManager {
 				if ((Math.max(0, i - 1)) <= text.length - 1) {
 					String m = text[Math.max(0, i - 1)];
 					switch (side) {
-						case 1:
+						case Side.LEFT:
 							ar[i] = "&r" + m + "   &r" + ar[i];
 							break;
-						case 2:
+						case Side.RIGHT:
 							ar[i] = ar[i] + "   &r" + m;
 							break;
 					}

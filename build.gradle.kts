@@ -10,9 +10,13 @@ plugins {
     id("com.github.johnrengelman.shadow")
 }
 
+tasks.jar {
+    enabled = false
+}
+
 dependencies {
     implementation(project(getSubproject("api")))
-    implementation(project(getSubproject("cli")))
+//    implementation(project(getSubproject("cli")))
     implementation("com.github.the-h-team:Enterprise:${findProperty("enterpriseVersion")}")
     implementation("com.github.the-h-team.Panther:panther-placeholders:${findProperty("pantherVersion")}")
     implementation("com.github.the-h-team.Labyrinth:labyrinth-gui:${findProperty("labyrinthVersion")}")
@@ -31,10 +35,11 @@ tasks.withType<ProcessResources> {
 }
 
 tasks.withType<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar> {
-    archiveFileName.set("${rootProject.name}-plugin-${project.version}.jar")
+//    dependsOn.add("${getSubproject("cli")}:shadowJar")
+    archiveFileName.set("${rootProject.name}-${project.version}.jar")
     archiveClassifier.set("plugin")
     dependencies {
         include(project(getSubproject("api")))
-        include(project(getSubproject("cli")))
+//        include(project(getSubproject("cli")))
     }
 }
