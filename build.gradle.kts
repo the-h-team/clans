@@ -27,6 +27,12 @@ dependencies {
 }
 
 tasks.withType<ProcessResources> {
+    inputs.apply{
+        // Always check these properties for updates so that the plugin.yml is regenerated if they change (without a clean)
+        property("version", project.version)
+        property("description", project.description)
+        property("url", findProperty("url")!!)
+    }
     // Include all resources...
     filesMatching("plugin.yml") {
         // but only expand properties for the plugin.yml
