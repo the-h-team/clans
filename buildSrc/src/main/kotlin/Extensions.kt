@@ -30,3 +30,11 @@ fun Project.setMavenName(name: String) {
         }
     }
 }
+
+/**
+ * Detects whether we are building on Jitpack.
+ *
+ * @return true if we are building on Jitpack
+ */
+val isJitpackEnv: Boolean
+    get() = System.getenv("JITPACK") == "true"

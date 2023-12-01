@@ -10,10 +10,6 @@ plugins {
     id("com.github.johnrengelman.shadow")
 }
 
-tasks.jar {
-    enabled = false
-}
-
 dependencies {
     implementation(project(getSubproject("api")))
 //    implementation(project(getSubproject("cli")))

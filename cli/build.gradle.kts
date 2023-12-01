@@ -19,10 +19,6 @@ dependencies {
     implementation("com.github.Revxrsal.Lamp:bukkit:$lampVersion")
 }
 
-tasks.jar {
-    enabled = false
-}
-
 tasks.withType<JavaCompile> { // Preserve parameter names in the bytecode
     options.compilerArgs.add("-parameters")
 }
