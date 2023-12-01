@@ -18,7 +18,7 @@ tasks.withType<Javadoc> {
 
 afterEvaluate {
     publishing {
-        val publicationName = name
+        val publicationName = if (System.getenv("JITPACK") != "true") name else "mavenJava"
         publications.create<MavenPublication>(publicationName) {
             pom {
                 name.set("Clans")
