@@ -7,12 +7,9 @@ plugins {
     id("clans.upstream-conventions")
     id("clans.dynmap-conventions")
     id("clans.publish-conventions")
-    id("com.github.johnrengelman.shadow")
 }
 
 dependencies {
-    implementation(project(getSubproject("api")))
-//    implementation(project(getSubproject("cli")))
     implementation("com.github.the-h-team:Enterprise:${findProperty("enterpriseVersion")}")
     implementation("com.github.the-h-team.Panther:panther-placeholders:${findProperty("pantherVersion")}")
     implementation("com.github.the-h-team.Labyrinth:labyrinth-gui:${findProperty("labyrinthVersion")}")
@@ -33,15 +30,5 @@ tasks.withType<ProcessResources> {
     filesMatching("plugin.yml") {
         // but only expand properties for the plugin.yml
         expand(project.properties)
-    }
-}
-
-tasks.withType<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar> {
-//    dependsOn.add("${getSubproject("cli")}:shadowJar")
-    archiveFileName.set("${rootProject.name}-${project.version}.jar")
-    archiveClassifier.set("plugin")
-    dependencies {
-        include(project(getSubproject("api")))
-//        include(project(getSubproject("cli")))
     }
 }
