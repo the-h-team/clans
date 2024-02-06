@@ -1368,9 +1368,9 @@ menu:
           locked: true
           type: left_button
           open: '/clan'
-        ':reservoir_progress:':
+        ' ':
           slot: 21
-          lore: [ "&f&m&l--------------------", " ", "&eOur reservoir progress", " ", "&f&m&l--------------------", " ", "&aPower: &7:reservoir_power:/:reservoir_power_max:" ]
+          lore: [ "&f&m&l--------------------", " ", "&eOur reservoir progress", " ", ":reservoir_progress:", " ", "&f&m&l--------------------", " ", "&aPower: &7:reservoir_power:/:reservoir_power_max:" ]
           locked: true
           type: compass
         '&aGuards':
@@ -1383,7 +1383,7 @@ menu:
           slot: 16
           lore: [ "&fIf you need to purchase a reservoir you can do so by clicking this item." ]
           locked: true
-          type: endercrystal
+          type: endcrystal
           open: '/clan reservoir buy'
     title: 'Hello %player_name%'
     rows: SIX

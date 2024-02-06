@@ -50,6 +50,7 @@ public class RankRegistry {
 			if (ranksStream == null) throw new IllegalStateException("Unable to load Ranks.yml from the jar!");
 			FileList.copy(ranksStream, ranksFile.getRoot().getParent());
 		}
+		ranksFile.getRoot().reload();
 		ranksFile.read(c -> {
 			int ordinal = 0;
 			for (String section : c.getKeys(false)) {

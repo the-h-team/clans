@@ -17,6 +17,7 @@
 #  - MANAGE_PASSWORD        #
 #  - MANAGE_MODE            #
 #  - MANAGE_NICKNAMES       #
+#  - MANAGE_NICK_NAME       #
 #  - LOGO_APPLY             #
 #  - LOGO_UPLOAD            #
 #  - LOGO_DISPLAY           #
@@ -78,5 +79,6 @@ HIGHEST:
   permissions:
     - MANAGE_FRIENDLY_FIRE
     - MANAGE_NAME
+    - MANAGE_NICK_NAME
     - MANAGE_DESCRIPTION
     - MANAGE_PERMS

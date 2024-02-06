@@ -16,6 +16,7 @@ import com.github.sanctum.labyrinth.formatting.string.GradientColor;
 import com.github.sanctum.labyrinth.formatting.string.RandomHex;
 import com.github.sanctum.labyrinth.interfacing.Nameable;
 import com.github.sanctum.labyrinth.library.Mailer;
+import com.github.sanctum.panther.annotation.Note;
 import com.github.sanctum.panther.file.JsonAdapter;
 import com.github.sanctum.panther.file.Node;
 import com.github.sanctum.panther.util.HUID;
@@ -464,6 +465,12 @@ public interface Clan extends ConfigurationSerializable, EntityHolder, InvasiveE
 		return getMembers().stream().filter(predicate).findFirst().orElse(null);
 	}
 
+	@Note("This will be removed in the future. Its used temporarily in configuration.")
+	default double getBalanceDouble() {
+		ClanBank bank = BanksAPI.getInstance().getBank(this);
+		return bank != null ? bank.getBalanceDouble() : 0;
+	}
+
 	/**
 	 * @return The implementation this object provides.
 	 */
@@ -481,7 +488,7 @@ public interface Clan extends ConfigurationSerializable, EntityHolder, InvasiveE
 					.replace(":reservoir_status:", (Reservoir.get(clan) != null ? "&aUP" : "&4DOWN"))
 					.replace(":reservoir_progress:", Optional.ofNullable(Reservoir.get(clan)).map(r -> new ProgressBar().setProgress((int) r.getPower()).setGoal((int) r.getMaxPower()).setFullColor("&5&l").setPrefix(null).setSuffix(null).toString()).orElse(new ProgressBar().setProgress(0).setGoal(100).setBars(10).toString()))
 					.replace(":reservoir_power:", Optional.ofNullable(Reservoir.get(clan)).map(r -> r.getPower() + "").orElse(0 + ""))
-					.replace(":reservoir_max_power:", Optional.ofNullable(Reservoir.get(clan)).map(r -> r.getMaxPower() + "").orElse(10000 + ""))
+					.replace(":reservoir_power_max:", Optional.ofNullable(Reservoir.get(clan)).map(r -> r.getMaxPower() + "").orElse(10000 + ""))
 					.replace(":clan_logo:", clan.getLogo() == null ? "" : String.join("\n", clan.getLogo()))
 					.replace(":clan_color:", clan.getPalette().toString())
 					.replace(":clan_name_colored:", clan.getPalette().toString(clan.getName()))

@@ -1327,6 +1327,43 @@ menu:
           enchantments:
             ARROW_DAMAGE: 2
           flags: [ "HIDE_ENCHANTS" ]
+    reservoir:
+      title: '&6:clan_name: &0&lReservoir'
+      rows: FOUR
+      id: ':clan_name:;reservoir'
+      type: SINGULAR
+      filler:
+        name: ' '
+        locked: true
+        type: glasspane
+      border:
+        name: ' '
+        locked: true
+        type: stone
+      items:
+        '&cGo back':
+          slot: 10
+          lore: [ "&cBack to main menu." ]
+          locked: true
+          type: left_button
+          open: '/clan'
+        ' ':
+          slot: 21
+          lore: [ "&f&m&l--------------------", " ", "&eOur reservoir progress", " ", ":reservoir_progress:", " ", "&f&m&l--------------------", " ", "&aPower: &7:reservoir_power:/:reservoir_power_max:" ]
+          locked: true
+          type: compass
+        '&aGuards':
+          slot: 23
+          lore: [ "&fCurrently active on duty: &e:%clans_guards_reservoir%:", "&7&o(Requires Guards addon)" ]
+          locked: true
+          close: true
+          type: ironaxe
+        '&eStatus&7: :reservoir_status:':
+          slot: 16
+          lore: [ "&fIf you need to purchase a reservoir you can do so by clicking this item." ]
+          locked: true
+          type: endcrystal
+          open: '/clan reservoir buy'
     title: 'Hello %player_name%'
     rows: SIX
     type: SINGULAR
