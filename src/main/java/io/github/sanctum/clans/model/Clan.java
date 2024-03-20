@@ -32,7 +32,7 @@ public interface Clan extends MutableEntity, CanUseAlias, CanDescribe {
     /**
      * Gets the display name of the clan.
      *
-     * @return the display name of this clan
+     * @return the display name of this clan or null
      */
     @Override
     @Nullable String getAlias();
@@ -42,7 +42,7 @@ public interface Clan extends MutableEntity, CanUseAlias, CanDescribe {
     /**
      * Gets the description of the clan.
      *
-     * @return the description of this clan
+     * @return the description of this clan or null
      */
     @Override
     @Nullable String getDescription();
