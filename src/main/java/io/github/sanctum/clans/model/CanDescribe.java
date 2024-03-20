@@ -35,9 +35,9 @@ public interface CanDescribe extends MutableEntity {
          * Use {@code null} to clear.
          *
          * @param newDescription a new description, bio or null
-         * @return this element
+         * @return this edit util
          */
-        @NotNull Update setDescription(@Nullable String newDescription);
+        @NotNull Edits setDescription(@Nullable String newDescription);
     }
 
     /**

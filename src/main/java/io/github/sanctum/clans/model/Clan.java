@@ -48,6 +48,18 @@ public interface Clan extends MutableEntity, CanUseAlias, CanDescribe {
     @Nullable String getDescription();
 
     /**
+     * Gets the join password of the clan.
+     *
+     * @return the password of this clan or null
+     */
+    @Nullable String getJoinPassword();
+
+    // getOwner - Associate
+    // getBase - Location util
+    // getPermissiveHandle - obj (calculated, relational permission data)
+    // resetPermissions - clears permission data
+
+    /**
      * A clan editing utility.
      *
      * @since 1.6.1
@@ -56,11 +68,22 @@ public interface Clan extends MutableEntity, CanUseAlias, CanDescribe {
         @Override
         @NotNull Clan getMutating();
 
+        /**
+         * Sets the new join password for the clan.
+         * <p>
+         * Use {@code null} to clear.
+         *
+         * @param newPassword a new password or null
+         * @return this edit util
+         */
+        @NotNull Clan.Edits setJoinPassword(@Nullable String newPassword);
         // TODO more set methods
     }
 
     /**
      * A staged clan info update.
+     *
+     * @since 1.6.1
      */
     interface Update extends StagedUpdate, CanUseAlias.Update, CanDescribe.Update {
         @Override

@@ -37,9 +37,9 @@ public interface CanUseAlias extends MutableEntity {
          * Use {@code null} to clear.
          *
          * @param newName the nickname, display name or null
-         * @return this element
+         * @return this edit util
          */
-        @NotNull Update setAlias(@Nullable String newName);
+        @NotNull Edits setAlias(@Nullable String newName);
     }
 
     /**
