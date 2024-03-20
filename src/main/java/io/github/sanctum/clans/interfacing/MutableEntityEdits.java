@@ -2,8 +2,10 @@ package io.github.sanctum.clans.interfacing;
 
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Map;
+import java.util.function.Supplier;
 
 /**
  * An editing utility object.
@@ -23,11 +25,15 @@ public interface MutableEntityEdits {
     /**
      * Gets a map view of the edits in this utility.
      * <p>
+     * Keys represent property names; values describe a desired mapping as
+     * Suppliers. These may return null, but key-values should not be directly
+     * assigned to null.
+     * <p>
      * The map may be read-only.
      *
      * @return a map view of edits
      */
-    @NotNull Map<String, Object> getEdits();
+    @NotNull Map<String, Supplier<@Nullable Object>> getEdits();
 
     /**
      * Finalizes the edits in this utility into a staging object.
