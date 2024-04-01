@@ -16,6 +16,7 @@ dependencies {
     implementation("com.github.the-h-team.Labyrinth:labyrinth-regions:${findProperty("labyrinthVersion")}")
     implementation("com.github.the-h-team.Panther:panther-paste:${findProperty("pantherVersion")}")
     implementation("com.github.the-h-team.Labyrinth:labyrinth-common:${findProperty("labyrinthVersion")}")
+    implementation("com.github.the-h-team.Labyrinth:labyrinth-loci:${findProperty("labyrinthVersion")}")
     implementation("com.github.the-h-team.Labyrinth:labyrinth-skulls:${findProperty("labyrinthVersion")}")
 }
 
