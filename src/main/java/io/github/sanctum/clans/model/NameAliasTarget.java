@@ -12,7 +12,7 @@ import org.jetbrains.annotations.Nullable;
  * @since 1.6.1
  * @author ms5984
  */
-public interface CanUseAlias extends MutableEntity {
+public interface NameAliasTarget extends MutableEntity {
     /**
      * Gets the nickname or alternate display name of this object.
      *
@@ -25,9 +25,9 @@ public interface CanUseAlias extends MutableEntity {
      *
      * @since 1.6.1
      */
-    interface Edits extends MutableEntityEdits, CanUseAlias {
+    interface Edits extends MutableEntityEdits, NameAliasTarget {
         @Override
-        @NotNull CanUseAlias getMutating();
+        @NotNull NameAliasTarget getMutating();
 
         /**
          * Sets the new nickname/alternate display name for the object.
@@ -47,7 +47,7 @@ public interface CanUseAlias extends MutableEntity {
      */
     interface Update extends StagedUpdate {
         @Override
-        @NotNull CanUseAlias getReferenceObject();
+        @NotNull NameAliasTarget getReferenceObject();
 
         /**
          * Gets the nickname/alternative display proposed by this element.

@@ -13,7 +13,7 @@ import org.jetbrains.annotations.Nullable;
  * @since 1.6.1
  * @author ms5984
  */
-public interface Clan extends MutableEntity, CanUseAlias, CanDescribe, Grouping, FriendlyFireScope {
+public interface Clan extends MutableEntity, NameAliasTarget, DescriptionTarget, Grouping, FriendlyFireScope {
     /**
      * Gets the id of the clan.
      * <p>
@@ -106,7 +106,7 @@ public interface Clan extends MutableEntity, CanUseAlias, CanDescribe, Grouping,
      *
      * @since 1.6.1
      */
-    interface Edits extends CanUseAlias.Edits, CanDescribe.Edits, FriendlyFireScope.Edits {
+    interface Edits extends NameAliasTarget.Edits, DescriptionTarget.Edits, FriendlyFireScope.Edits {
         @Override
         @NotNull Clan getMutating();
 
@@ -166,7 +166,7 @@ public interface Clan extends MutableEntity, CanUseAlias, CanDescribe, Grouping,
      *
      * @since 1.6.1
      */
-    interface Update extends StagedUpdate, CanUseAlias.Update, CanDescribe.Update, FriendlyFireScope.Update {
+    interface Update extends StagedUpdate, NameAliasTarget.Update, DescriptionTarget.Update, FriendlyFireScope.Update {
         @Override
         @NotNull Clan getReferenceObject();
 

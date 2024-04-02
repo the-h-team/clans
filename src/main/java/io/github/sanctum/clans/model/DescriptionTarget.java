@@ -10,7 +10,7 @@ import org.jetbrains.annotations.Nullable;
  * @since 1.6.1
  * @author ms5984
  */
-public interface CanDescribe extends MutableEntity {
+public interface DescriptionTarget extends MutableEntity {
     /**
      * Gets the description or bio of the object.
      *
@@ -23,9 +23,9 @@ public interface CanDescribe extends MutableEntity {
      *
      * @since 1.6.1
      */
-    interface Edits extends MutableEntityEdits, CanDescribe {
+    interface Edits extends MutableEntityEdits, DescriptionTarget {
         @Override
-        @NotNull CanDescribe getMutating();
+        @NotNull DescriptionTarget getMutating();
 
         /**
          * Sets the new description/bio for the object.
@@ -45,7 +45,7 @@ public interface CanDescribe extends MutableEntity {
      */
     interface Update extends StagedUpdate {
         @Override
-        @NotNull CanDescribe getReferenceObject();
+        @NotNull DescriptionTarget getReferenceObject();
 
         /**
          * Gets the description/bio proposed by this element.
