@@ -1,8 +1,6 @@
 package io.github.sanctum.clans.model;
 
-import io.github.sanctum.clans.interfacing.MutableEntity;
-import io.github.sanctum.clans.interfacing.MutableEntityEdits;
-import io.github.sanctum.clans.interfacing.StagedUpdate;
+import io.github.sanctum.clans.interfacing.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -34,12 +32,12 @@ public interface CanUseAlias extends MutableEntity {
         /**
          * Sets the new nickname/alternate display name for the object.
          * <p>
-         * Use {@code null} to clear.
+         * Use {@code null} to no-op.
          *
          * @param newName the nickname, display name or null
          * @return this edit util
          */
-        @NotNull Edits setAlias(@Nullable String newName);
+        @NotNull Edits setAlias(@Nullable Value.OrNull<String> newName);
     }
 
     /**
@@ -56,6 +54,6 @@ public interface CanUseAlias extends MutableEntity {
          *
          * @return the proposed nickname, display name or null
          */
-        @Nullable String getProposedNickname();
+        @Nullable Value.OrNull<String> getProposedNickname(); // TODO match other signatures
     }
 }

@@ -1,8 +1,6 @@
 package io.github.sanctum.clans.model;
 
-import io.github.sanctum.clans.interfacing.MutableEntity;
-import io.github.sanctum.clans.interfacing.MutableEntityEdits;
-import io.github.sanctum.clans.interfacing.StagedUpdate;
+import io.github.sanctum.clans.interfacing.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -32,12 +30,12 @@ public interface CanDescribe extends MutableEntity {
         /**
          * Sets the new description/bio for the object.
          * <p>
-         * Use {@code null} to clear.
+         * Use {@code null} to no-op.
          *
          * @param newDescription a new description, bio or null
          * @return this edit util
          */
-        @NotNull Edits setDescription(@Nullable String newDescription);
+        @NotNull Edits setDescription(@Nullable Value.OrNull<String> newDescription);
     }
 
     /**
@@ -54,6 +52,6 @@ public interface CanDescribe extends MutableEntity {
          *
          * @return the proposed description, bio or null
          */
-        @Nullable String getProposedDescription();
+        @Nullable Value.OrNull<String> getProposedDescription();
     }
 }

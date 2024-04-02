@@ -17,6 +17,6 @@ public interface Grouping extends MutableEntity {
          * @param target the entity to kick
          * @return this edit util
          */
-        @NotNull Edits kick(Entity target);
+        @NotNull Edits kick(Entity target); // TODO convert to value
     }
 }

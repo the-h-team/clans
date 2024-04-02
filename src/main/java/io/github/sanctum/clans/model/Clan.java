@@ -113,24 +113,26 @@ public interface Clan extends MutableEntity, CanUseAlias, CanDescribe, Grouping,
         /**
          * Sets the new join password for the clan.
          * <p>
-         * Use {@code null} to clear.
+         * Use {@code null} to no-op.
          *
          * @param newPassword a new password or null
          * @return this edit util
          * @see #getJoinPassword()
          */
-        @NotNull Clan.Edits setJoinPassword(@Nullable String newPassword);
+        @NotNull Clan.Edits setJoinPassword(@Nullable Value.OrNull<String> newPassword);
         // TODO more set methods
 
         /**
          * Transfers ownership of the clan to a specified member.
          * <p>
          * If also a player, the provided entity must be a member of the clan.
+         * <p>
+         * Use {@code null} to no-op.
          *
-         * @param target an entity
+         * @param target an entity value or null
          * @return this edit util
          */
-        @NotNull Clan.Edits transferOwnership(@NotNull Entity target);
+        @NotNull Clan.Edits transferOwnership(@Nullable Value.Required<Entity> target);
 
         /**
          * Changes the clan tag (the name of the clan).
@@ -138,21 +140,25 @@ public interface Clan extends MutableEntity, CanUseAlias, CanDescribe, Grouping,
          * Generally, clan tags must not have spaces or special characters.
          * However, this method does not perform such validation. It is up
          * to the underlying implementation when the edit is applied.
+         * <p>
+         * Use {@code null} to no-op.
          *
-         * @param tag a new tag
+         * @param tag a new tag value or null
          * @return this edit util
          * @see #getTag()
          */
-        @NotNull Clan.Edits setTag(@NotNull String tag);
+        @NotNull Clan.Edits setTag(@Nullable Value.Required<String> tag);
 
         /**
          * Changes the pvp mode of the clan.
+         * <p>
+         * Use {@code null} to no-op.
          *
-         * @param peaceful a peaceful state
+         * @param peaceful a peaceful state or null
          * @return this edit util
          * @see #isPeaceful()
          */
-        @NotNull Clan.Edits setPeaceful(boolean peaceful);
+        @NotNull Clan.Edits setPeaceful(@Nullable Value.Required<Boolean> peaceful);
     }
 
     /**

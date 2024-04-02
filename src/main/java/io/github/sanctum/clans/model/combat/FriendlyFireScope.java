@@ -39,7 +39,7 @@ public interface FriendlyFireScope extends MutableEntity, GroupingLike {
          * @param newFriendlyFire the desired friendly fire state or null
          * @return this edit util
          */
-        @NotNull Edits setFriendlyFire(@Nullable Boolean newFriendlyFire);
+        @NotNull Edits setFriendlyFire(@Nullable Value.Required<Boolean> newFriendlyFire);
     }
 
     /**
@@ -56,6 +56,6 @@ public interface FriendlyFireScope extends MutableEntity, GroupingLike {
          *
          * @return the proposed state or null
          */
-        @Nullable Boolean getProposedFriendlyFire();
+        @Nullable Value.Required<Boolean> getProposedFriendlyFire();
     }
 }
