@@ -4,6 +4,8 @@ import com.github.sanctum.panther.util.HUID;
 import io.github.sanctum.clans.interfacing.*;
 import io.github.sanctum.clans.model.association.*;
 import io.github.sanctum.clans.model.combat.FriendlyFireScope;
+import io.github.sanctum.clans.model.meta.DescriptionTarget;
+import io.github.sanctum.clans.model.meta.NameAliasTarget;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 

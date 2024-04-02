@@ -1,4 +1,4 @@
-package io.github.sanctum.clans.model;
+package io.github.sanctum.clans.model.meta;
 
 import io.github.sanctum.clans.interfacing.*;
 import org.jetbrains.annotations.NotNull;
