@@ -5,9 +5,9 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 /**
- * An object that can have a separate alias.
+ * An object that can have a separate name alias.
  * <p>
- * Aliases are nicknames/display names.
+ * Name aliases are nicknames/display names.
  *
  * @since 1.6.1
  * @author ms5984
@@ -18,10 +18,10 @@ public interface NameAliasTarget extends MutableEntity {
      *
      * @return the nickname, display name or null
      */
-    @Nullable String getAlias();
+    @Nullable String getNameAlias();
 
     /**
-     * An alias editing utility.
+     * A name alias editing utility.
      *
      * @since 1.6.1
      */
@@ -34,14 +34,14 @@ public interface NameAliasTarget extends MutableEntity {
          * <p>
          * Use {@code null} to no-op.
          *
-         * @param newName the nickname, display name or null
+         * @param newNameAlias the nickname, display name or null
          * @return this edit util
          */
-        @NotNull Edits setAlias(@Nullable Value.OrNull<String> newName);
+        @NotNull Edits setNameAlias(@Nullable Value.OrNull<String> newNameAlias);
     }
 
     /**
-     * A staged alias update.
+     * A staged name alias update.
      *
      * @since 1.6.1
      */
@@ -54,6 +54,6 @@ public interface NameAliasTarget extends MutableEntity {
          *
          * @return the proposed nickname, display name or null
          */
-        @Nullable Value.OrNull<String> getProposedNickname(); // TODO match other signatures
+        @Nullable Value.OrNull<String> getProposedNameAlias();
     }
 }

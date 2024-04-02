@@ -36,7 +36,7 @@ public interface Clan extends MutableEntity, NameAliasTarget, DescriptionTarget,
      * @return the display name of this clan or null
      */
     @Override
-    @Nullable String getAlias();
+    @Nullable String getNameAlias();
 
     // Move Clan.Color for getPalette
 
