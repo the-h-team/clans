@@ -134,7 +134,7 @@ public interface Clan extends MutableEntity, NameAliasTarget, DescriptionTarget,
          * @param target an entity value or null
          * @return this edit util
          */
-        @NotNull Clan.Edits transferOwnership(@Nullable Value.Required<Entity> target);
+        @NotNull Clan.Edits transferOwnership(@Nullable Value.Required<AssociableEntity> target);
 
         /**
          * Changes the clan tag (the name of the clan).
