@@ -1,25 +1,18 @@
 package com.github.sanctum.clans.listener;
 
-import com.github.sanctum.clans.bridge.ClanVentBus;
-import com.github.sanctum.clans.bridge.ClanVentCall;
-import com.github.sanctum.clans.bridge.external.worldedit.WorldEditAdapter;
-import com.github.sanctum.clans.bridge.external.worldedit.WorldEditClipboardAdapter;
-import com.github.sanctum.clans.bridge.external.worldedit.WorldEditSchematicAdapter;
-import com.github.sanctum.clans.construct.api.Claim;
-import com.github.sanctum.clans.construct.api.Clan;
-import com.github.sanctum.clans.construct.api.ClanCooldown;
-import com.github.sanctum.clans.construct.api.ClansAPI;
-import com.github.sanctum.clans.construct.api.InvasiveEntity;
-import com.github.sanctum.clans.construct.api.LogoHolder;
-import com.github.sanctum.clans.construct.api.Teleport;
-import com.github.sanctum.clans.construct.api.War;
-import com.github.sanctum.clans.construct.impl.DefaultMapEntry;
-import com.github.sanctum.clans.construct.impl.DefaultRespawnCooldown;
-import com.github.sanctum.clans.construct.util.AboveHeadDisplayName;
-import com.github.sanctum.clans.construct.util.AsynchronousLoanableTask;
-import com.github.sanctum.clans.construct.util.ClansUpdate;
-import com.github.sanctum.clans.construct.util.Reservoir;
-import com.github.sanctum.clans.construct.util.ReservoirMetadata;
+import com.github.sanctum.clans.model.ClanVentBus;
+import com.github.sanctum.clans.model.ClanVentCall;
+import com.github.sanctum.clans.model.addon.worldedit.WorldEditAdapter;
+import com.github.sanctum.clans.model.addon.worldedit.WorldEditClipboardAdapter;
+import com.github.sanctum.clans.model.addon.worldedit.WorldEditSchematicAdapter;
+import com.github.sanctum.clans.model.*;
+import com.github.sanctum.clans.impl.DefaultMapEntry;
+import com.github.sanctum.clans.impl.DefaultRespawnCooldown;
+import com.github.sanctum.clans.util.AboveHeadDisplayName;
+import com.github.sanctum.clans.util.AsynchronousLoanableTask;
+import com.github.sanctum.clans.util.ClansUpdate;
+import com.github.sanctum.clans.util.Reservoir;
+import com.github.sanctum.clans.util.ReservoirMetadata;
 import com.github.sanctum.clans.event.TimerEvent;
 import com.github.sanctum.clans.event.associate.AssociateClaimEvent;
 import com.github.sanctum.clans.event.associate.AssociateHitReservoirEvent;
@@ -67,11 +60,7 @@ import java.io.File;
 import java.math.BigDecimal;
 import java.text.MessageFormat;
 import java.text.NumberFormat;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 import org.bukkit.Bukkit;
 import org.bukkit.Color;
@@ -82,11 +71,7 @@ import org.bukkit.NamespacedKey;
 import org.bukkit.Particle;
 import org.bukkit.Sound;
 import org.bukkit.block.data.type.Farmland;
-import org.bukkit.entity.ArmorStand;
-import org.bukkit.entity.EnderCrystal;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.Player;
-import org.bukkit.entity.Tameable;
+import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -154,36 +139,36 @@ public class PlayerEventListener implements Listener {
 			return;
 		}
 
-		War war = ClansAPI.getInstance().getArenaManager().get("PRO");
+		Arena arena = ClansAPI.getInstance().getArenaManager().get("PRO");
 
-		if (war != null) {
+		if (arena != null) {
 
-			if (war.isRunning()) {
-				if (war.getTimer().isComplete()) {
-					if (war.stop()) {
-						War.Team winner = war.getMostPoints().getKey();
-						int points = war.getMostPoints().getValue();
-						Clan w = war.getClan(winner);
+			if (arena.isRunning()) {
+				if (arena.getTimer().isComplete()) {
+					if (arena.stop()) {
+						Arena.Team winner = arena.getMostPoints().getKey();
+						int points = arena.getMostPoints().getValue();
+						Clan w = arena.getClan(winner);
 						Map<Clan, Integer> map = new HashMap<>();
-						for (Clan clan : war.getQueue().getTeams()) {
+						for (Clan clan : arena.getQueue().getTeams()) {
 							if (!clan.getName().equals(w.getName())) {
-								War.Team t = war.getTeam(clan);
-								map.put(clan, war.getPoints(t));
+								Arena.Team t = arena.getTeam(clan);
+								map.put(clan, arena.getPoints(t));
 							}
 						}
 						TaskScheduler.of(() -> {
-							WarWonEvent event = ClanVentBus.call(new WarWonEvent(war, new DefaultMapEntry<>(w, points), map));
+							WarWonEvent event = ClanVentBus.call(new WarWonEvent(arena, new DefaultMapEntry<>(w, points), map));
 							if (!event.isCancelled()) {
 								Mailer msg = LabyrinthProvider.getService(Service.MESSENGER).getEmptyMailer().prefix().start(ClansAPI.getInstance().getPrefix().toString()).finish();
 								Bukkit.broadcastMessage(" ");
-								msg.announce(pl -> true, "&3A war between clans &b[" + Arrays.stream(war.getQueue().getTeams()).map(Clan::getName).collect(Collectors.joining(",")) + "]&3 in arena &7#&e" + war.getId() + " &3concluded with winner &6&l" + w.getName() + " &f(&a" + points + "&f)");
+								msg.announce(pl -> true, "&3A war between clans &b[" + Arrays.stream(arena.getQueue().getTeams()).map(Clan::getName).collect(Collectors.joining(",")) + "]&3 in arena &7#&e" + arena.getId() + " &3concluded with winner &6&l" + w.getName() + " &f(&a" + points + "&f)");
 								Bukkit.broadcastMessage(" ");
 							}
-							war.reset();
+							arena.reset();
 						}).schedule();
 					}
 				} else {
-					TaskScheduler.of(() -> ClanVentBus.call(new WarActiveEvent(war))).schedule();
+					TaskScheduler.of(() -> ClanVentBus.call(new WarActiveEvent(arena))).schedule();
 				}
 			}
 
@@ -551,7 +536,7 @@ public class PlayerEventListener implements Listener {
 		}
 
 		ClansAPI.getInstance().getAssociate(e.getPlayer()).ifPresent(a -> {
-			War w = ClansAPI.getInstance().getArenaManager().get(a);
+			Arena w = ClansAPI.getInstance().getArenaManager().get(a);
 			if (w != null && !w.isRunning()) {
 				ClansAPI.getInstance().getAssociate(e.getVictim()).ifPresent(as -> {
 					if (w.getTeam(as.getClan()) != null) {
@@ -778,13 +763,13 @@ public class PlayerEventListener implements Listener {
 
 			if (associate != null) {
 				associate.getClan().takePower(0.11);
-				War war = ClansAPI.getInstance().getArenaManager().get(associate);
-				if (war != null) {
-					if (war.isRunning()) {
+				Arena arena = ClansAPI.getInstance().getArenaManager().get(associate);
+				if (arena != null) {
+					if (arena.isRunning()) {
 						ClansAPI.getInstance().getAssociate(killer).ifPresent(a -> {
-							War.Team t = war.getTeam(a.getClan());
-							int points = war.getPoints(t);
-							war.setPoints(t, points + 1);
+							Arena.Team t = arena.getTeam(a.getClan());
+							int points = arena.getPoints(t);
+							arena.setPoints(t, points + 1);
 							a.getClan().broadcast("&aWe just scored 1 point");
 						});
 						e.setClearDrops(true);
@@ -799,7 +784,7 @@ public class PlayerEventListener implements Listener {
 	public void onProcess(PlayerCommandPreprocessEvent e) {
 		ClansAPI.getInstance().getAssociate(e.getPlayer()).ifPresent(a -> {
 
-			War w = ClansAPI.getInstance().getArenaManager().get(a);
+			Arena w = ClansAPI.getInstance().getArenaManager().get(a);
 			if (w != null) {
 				if (w.isRunning()) {
 					for (String c : LabyrinthProvider.getInstance().getLocalPrintManager().getPrint(ClansAPI.getInstance().getLocalPrintKey()).getStringList("blocked_commands_war")) {
@@ -878,7 +863,7 @@ public class PlayerEventListener implements Listener {
 			if (ClansAPI.getDataInstance().isDisplayTagsAllowed()) {
 				AboveHeadDisplayName.remove(p);
 			}
-			War current = ClansAPI.getInstance().getArenaManager().get(associate);
+			Arena current = ClansAPI.getInstance().getArenaManager().get(associate);
 			if (current != null) {
 				Mailer m = Mailer.empty(ClansAPI.getInstance().getPlugin()).prefix().start(ClansAPI.getInstance().getPrefix().toString()).finish();
 				if (current.isRunning()) {
@@ -910,7 +895,7 @@ public class PlayerEventListener implements Listener {
 						}).schedule();
 					}
 				} else {
-					if (current.getQueue().getAssociates().length <= ClansAPI.getDataInstance().getConfigInt("Clans.war.que-needed") + 1) {
+					if (current.getQueue().getAssociates().length <= ClansAPI.getDataInstance().getConfigInt("Clans.arena.que-needed") + 1) {
 						if (current.avoid()) {
 							current.reset();
 							m.announce(player -> true, "&cEvery queued member has left the game. War in &7#&6" + current.getId() + " &cfailed to start.").deploy();
@@ -953,9 +938,9 @@ public class PlayerEventListener implements Listener {
 		Player p = e.getPlayer();
 		Clan.Associate associate = ClansAPI.getInstance().getAssociate(p).orElse(null);
 		if (associate != null && associate.isValid()) {
-			War war = ClansAPI.getInstance().getArenaManager().get(associate);
-			if (war != null && war.isRunning()) {
-				War.Team t = war.getTeam(associate.getClan());
+			Arena arena = ClansAPI.getInstance().getArenaManager().get(associate);
+			if (arena != null && arena.isRunning()) {
+				Arena.Team t = arena.getTeam(associate.getClan());
 				if (t.getSpawn() != null) {
 					Cooldown test = LabyrinthProvider.getService(Service.COOLDOWNS).getCooldown("Clans-war-respawn-" + p.getUniqueId());
 					if (test != null) {
@@ -968,8 +953,8 @@ public class PlayerEventListener implements Listener {
 							Player pl = (Player) s;
 							Clan.Associate a = ClansAPI.getInstance().getAssociate(pl).orElse(null);
 							if (a != null) {
-								if (war.getTeam(a.getClan()) != null) {
-									if (war.getTeam(a.getClan()) != t) {
+								if (arena.getTeam(a.getClan()) != null) {
+									if (arena.getTeam(a.getClan()) != t) {
 										Location difference = pl.getLocation().subtract(p.getLocation());
 										Vector normalizedDifference = difference.toVector().normalize();
 										Vector multiplied = normalizedDifference.multiply(1.5);

@@ -1,7 +1,7 @@
 package com.github.sanctum.clans.event.command;
 
-import com.github.sanctum.clans.construct.api.Clan;
-import com.github.sanctum.clans.construct.api.ClansAPI;
+import com.github.sanctum.clans.model.Clan;
+import com.github.sanctum.clans.model.ClansAPI;
 import com.github.sanctum.clans.event.ClanEvent;
 import com.github.sanctum.panther.util.HUID;
 import java.util.ArrayList;

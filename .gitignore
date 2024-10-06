@@ -19,7 +19,7 @@ out/
 
 # Package Files #
 *.jar
-*.war
+*.arena
 *.nar
 *.ear
 *.zip

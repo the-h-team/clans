@@ -1,12 +1,12 @@
 package com.github.sanctum.clans.commands;
 
-import com.github.sanctum.clans.construct.DataManager;
-import com.github.sanctum.clans.construct.api.Clan;
-import com.github.sanctum.clans.construct.api.ClanSubCommand;
-import com.github.sanctum.clans.construct.api.ClansAPI;
-import com.github.sanctum.clans.construct.api.GUI;
-import com.github.sanctum.clans.construct.api.War;
-import com.github.sanctum.clans.construct.util.StringLibrary;
+import com.github.sanctum.clans.DataManager;
+import com.github.sanctum.clans.model.Clan;
+import com.github.sanctum.clans.model.ClanSubCommand;
+import com.github.sanctum.clans.model.ClansAPI;
+import com.github.sanctum.clans.model.GUI;
+import com.github.sanctum.clans.model.Arena;
+import com.github.sanctum.clans.util.StringLibrary;
 import com.github.sanctum.labyrinth.library.TextLib;
 import org.bukkit.Location;
 import org.bukkit.Sound;
@@ -33,9 +33,9 @@ public class CommandWar extends ClanSubCommand {
 				lib.sendMessage(p, lib.notInClan());
 				return true;
 			}
-			War current = ClansAPI.getInstance().getArenaManager().get(associate);
+			Arena current = ClansAPI.getInstance().getArenaManager().get(associate);
 			if (current == null) {
-				War joined = ClansAPI.getInstance().getArenaManager().queue(associate);
+				Arena joined = ClansAPI.getInstance().getArenaManager().queue(associate);
 				if (joined != null) {
 					if (!joined.isRunning()) {
 						joined.populate();
@@ -69,10 +69,10 @@ public class CommandWar extends ClanSubCommand {
 		if (args.length == 1) {
 			if (args[0].equalsIgnoreCase("teleport")) {
 				if (associate != null && associate.isValid()) {
-					War w = ClansAPI.getInstance().getArenaManager().get(associate);
+					Arena w = ClansAPI.getInstance().getArenaManager().get(associate);
 					if (w != null) {
 						if (!w.isRunning()) {
-							War.Team t = w.getTeam(associate.getClan());
+							Arena.Team t = w.getTeam(associate.getClan());
 							Location loc = t.getSpawn();
 							if (loc == null) {
 								lib.sendMessage(p, "&cYour team's spawn location isn't properly setup. Contact staff for support.");

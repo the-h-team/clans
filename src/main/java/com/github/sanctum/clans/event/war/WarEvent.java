@@ -1,7 +1,7 @@
 package com.github.sanctum.clans.event.war;
 
-import com.github.sanctum.clans.construct.api.Clan;
-import com.github.sanctum.clans.construct.api.War;
+import com.github.sanctum.clans.model.Arena;
+import com.github.sanctum.clans.model.Clan;
 import com.github.sanctum.clans.event.ClanEvent;
 import org.jetbrains.annotations.NotNull;
 
@@ -10,11 +10,11 @@ import org.jetbrains.annotations.NotNull;
  */
 public abstract class WarEvent extends ClanEvent {
 
-	private final War war;
+	private final Arena arena;
 
-	public WarEvent(War war, @NotNull State state) {
+	public WarEvent(Arena arena, @NotNull State state) {
 		super(null, state, false);
-		this.war = war;
+		this.arena = arena;
 	}
 
 	@Override
@@ -22,7 +22,7 @@ public abstract class WarEvent extends ClanEvent {
 		return null;
 	}
 
-	public War getWar() {
-		return war;
+	public Arena getWar() {
+		return arena;
 	}
 }

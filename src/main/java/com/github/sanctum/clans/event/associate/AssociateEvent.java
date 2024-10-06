@@ -1,6 +1,6 @@
 package com.github.sanctum.clans.event.associate;
 
-import com.github.sanctum.clans.construct.api.Clan;
+import com.github.sanctum.clans.model.Clan;
 import com.github.sanctum.clans.event.player.PlayerEvent;
 import java.util.UUID;
 import org.jetbrains.annotations.NotNull;

@@ -1,7 +1,7 @@
 package com.github.sanctum.clans.event.associate;
 
-import com.github.sanctum.clans.construct.api.Clan;
-import com.github.sanctum.clans.construct.util.TeleportationTarget;
+import com.github.sanctum.clans.model.Clan;
+import com.github.sanctum.clans.util.TeleportationTarget;
 
 /**
  * Called when a clan associate attempts to teleport to somewhere.

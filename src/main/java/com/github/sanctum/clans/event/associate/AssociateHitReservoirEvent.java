@@ -1,7 +1,7 @@
 package com.github.sanctum.clans.event.associate;
 
-import com.github.sanctum.clans.construct.api.Clan;
-import com.github.sanctum.clans.construct.util.Reservoir;
+import com.github.sanctum.clans.model.Clan;
+import com.github.sanctum.clans.util.Reservoir;
 
 public class AssociateHitReservoirEvent extends AssociateEvent {
 	final Reservoir reservoir;

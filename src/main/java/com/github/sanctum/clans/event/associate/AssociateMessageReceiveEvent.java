@@ -1,7 +1,7 @@
 package com.github.sanctum.clans.event.associate;
 
-import com.github.sanctum.clans.construct.api.Channel;
-import com.github.sanctum.clans.construct.api.Clan;
+import com.github.sanctum.clans.model.Channel;
+import com.github.sanctum.clans.model.Clan;
 
 /**
  * Called when a clan associate receives a message from a chat channel on successful submission from {@link AssociateChatEvent}.

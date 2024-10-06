@@ -1,29 +1,22 @@
 package com.github.sanctum.clans;
 
-import com.github.sanctum.clans.bridge.ClanAddon;
-import com.github.sanctum.clans.bridge.ClanAddonQueue;
-import com.github.sanctum.clans.bridge.external.worldedit.DefaultWorldEditAdapter;
-import com.github.sanctum.clans.bridge.external.worldedit.WorldEditAdapter;
-import com.github.sanctum.clans.construct.ArenaManager;
-import com.github.sanctum.clans.construct.ClaimManager;
-import com.github.sanctum.clans.construct.ClanManager;
-import com.github.sanctum.clans.construct.CommandManager;
-import com.github.sanctum.clans.construct.DataManager;
-import com.github.sanctum.clans.construct.ShieldManager;
-import com.github.sanctum.clans.construct.api.Claim;
-import com.github.sanctum.clans.construct.api.Clan;
-import com.github.sanctum.clans.construct.api.ClansAPI;
-import com.github.sanctum.clans.construct.api.LogoGallery;
-import com.github.sanctum.clans.construct.util.AsynchronousLoanableTask;
-import com.github.sanctum.clans.construct.util.ClansUpdate;
-import com.github.sanctum.clans.construct.util.FileTypeCalculator;
-import com.github.sanctum.clans.construct.util.MessagePrefix;
-import com.github.sanctum.clans.construct.util.ReservedLogoCarrier;
-import com.github.sanctum.clans.construct.util.Reservoir;
-import com.github.sanctum.clans.construct.util.StartProcedure;
-import com.github.sanctum.clans.construct.impl.DefaultArena;
-import com.github.sanctum.clans.construct.impl.DefaultClaimFlag;
-import com.github.sanctum.clans.construct.impl.entity.EntityAssociate;
+import com.github.sanctum.clans.model.ClanAddonRegistry;
+import com.github.sanctum.clans.model.addon.worldedit.DefaultWorldEditAdapter;
+import com.github.sanctum.clans.model.addon.worldedit.WorldEditAdapter;
+import com.github.sanctum.clans.model.Claim;
+import com.github.sanctum.clans.model.Clan;
+import com.github.sanctum.clans.model.ClansAPI;
+import com.github.sanctum.clans.model.LogoGallery;
+import com.github.sanctum.clans.util.AsynchronousLoanableTask;
+import com.github.sanctum.clans.util.ClansUpdate;
+import com.github.sanctum.clans.util.FileTypeCalculator;
+import com.github.sanctum.clans.util.MessagePrefix;
+import com.github.sanctum.clans.util.ReservedLogoCarrier;
+import com.github.sanctum.clans.util.Reservoir;
+import com.github.sanctum.clans.util.StartProcedure;
+import com.github.sanctum.clans.impl.DefaultArena;
+import com.github.sanctum.clans.impl.DefaultClaimFlag;
+import com.github.sanctum.clans.impl.entity.EntityAssociate;
 import com.github.sanctum.clans.listener.PlayerEventListener;
 import com.github.sanctum.labyrinth.LabyrinthProvider;
 import com.github.sanctum.labyrinth.api.Service;
@@ -92,7 +85,7 @@ public class ClansJavaPlugin extends JavaPlugin implements ClansAPI, Vent.Host {
 	public DataManager dataManager;
 	private Hastebin hastebin;
 	private Pastebin pastebin;
-	private KeyedServiceManager<ClanAddon> serviceManager;
+	private KeyedServiceManager<Clan.Addon> serviceManager;
 
 	public String USER_ID = "%%__USER__%%";
 	public String NONCE = "%%__NONCE__%%";
@@ -177,7 +170,7 @@ public class ClansJavaPlugin extends JavaPlugin implements ClansAPI, Vent.Host {
 	}
 
 	public void onDisable() {
-		ClanAddonQueue addonQueue = ClanAddonQueue.getInstance();
+		ClanAddonRegistry addonQueue = ClanAddonRegistry.getInstance();
 		Optional.ofNullable(LabyrinthProvider.getService(Service.TASK).getScheduler(TaskService.ASYNCHRONOUS).get(AsynchronousLoanableTask.KEY)).ifPresent(Task::cancel);
 		for (PersistentContainer component : LabyrinthProvider.getService(Service.DATA).getContainers(this)) {
 			for (String key : component.keySet()) {
@@ -192,8 +185,8 @@ public class ClansJavaPlugin extends JavaPlugin implements ClansAPI, Vent.Host {
 
 		PlayerEventListener.LOANABLE_TASK.stop();
 
-		for (ClanAddon addon : addonQueue.get()) {
-			AnnotationDiscovery<Ordinal, ClanAddon> discovery = AnnotationDiscovery.of(Ordinal.class, ClanAddon.class);
+		for (Clan.Addon addon : addonQueue.get()) {
+			AnnotationDiscovery<Ordinal, Clan.Addon> discovery = AnnotationDiscovery.of(Ordinal.class, Clan.Addon.class);
 			discovery.filter(method -> method.getName().equals("remove"), true);
 			discovery.ifPresent((ordinal, method) -> {
 				try {
@@ -252,7 +245,7 @@ public class ClansJavaPlugin extends JavaPlugin implements ClansAPI, Vent.Host {
 	}
 
 	@Override
-	public @NotNull KeyedServiceManager<ClanAddon> getServiceManager() {
+	public @NotNull KeyedServiceManager<Clan.Addon> getServiceManager() {
 		return this.serviceManager;
 	}
 
@@ -380,7 +373,7 @@ public class ClansJavaPlugin extends JavaPlugin implements ClansAPI, Vent.Host {
 		dataManager = new DataManager();
 		gallery = new LogoGallery();
 		TYPE = new FileTypeCalculator(dataManager).getType();
-		clanManager = new ClanManager();
+		clanManager = new ClanManager(this);
 		claimManager = new ClaimManager();
 		shieldManager = new ShieldManager();
 		commandManager = new CommandManager();
@@ -390,7 +383,7 @@ public class ClansJavaPlugin extends JavaPlugin implements ClansAPI, Vent.Host {
 		// load configured arenas, each new arena allows for another war to be held.
 		FileManager config = dataManager.getConfig();
 		Node clans = config.getRoot().getNode("Clans");
-		int arenas = clans.getNode("war").getNode("max-wars").toPrimitive().getInt();
+		int arenas = clans.getNode("war").getNode("max-arenas").toPrimitive().getInt();
 		for (int i = 0; i < arenas; i++) {
 			arenaManager.load(new DefaultArena("PRO-" + (i + 1)));
 		}

@@ -1,7 +1,7 @@
 package com.github.sanctum.clans.event.war;
 
-import com.github.sanctum.clans.construct.api.Clan;
-import com.github.sanctum.clans.construct.api.War;
+import com.github.sanctum.clans.model.Clan;
+import com.github.sanctum.clans.model.Arena;
 import java.util.Map;
 
 /**
@@ -12,8 +12,8 @@ public class WarWonEvent extends WarEvent {
 	private final Map.Entry<Clan, Integer> winner;
 	private final Map<Clan, Integer> losers;
 
-	public WarWonEvent(War war, Map.Entry<Clan, Integer> winner, Map<Clan, Integer> losers) {
-		super(war, State.CANCELLABLE);
+	public WarWonEvent(Arena arena, Map.Entry<Clan, Integer> winner, Map<Clan, Integer> losers) {
+		super(arena, State.CANCELLABLE);
 		this.winner = winner;
 		this.losers = losers;
 	}

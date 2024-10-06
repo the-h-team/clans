@@ -1,7 +1,7 @@
 package com.github.sanctum.clans.event.associate;
 
-import com.github.sanctum.clans.construct.api.Channel;
-import com.github.sanctum.clans.construct.api.Clan;
+import com.github.sanctum.clans.model.Channel;
+import com.github.sanctum.clans.model.Clan;
 import java.util.Set;
 import net.md_5.bungee.api.chat.BaseComponent;
 import org.bukkit.Sound;

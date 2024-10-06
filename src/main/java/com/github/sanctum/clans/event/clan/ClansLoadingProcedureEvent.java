@@ -1,6 +1,6 @@
 package com.github.sanctum.clans.event.clan;
 
-import com.github.sanctum.clans.construct.api.Clan;
+import com.github.sanctum.clans.model.Clan;
 import com.github.sanctum.clans.event.ClanEvent;
 import java.util.Collection;
 import java.util.Collections;

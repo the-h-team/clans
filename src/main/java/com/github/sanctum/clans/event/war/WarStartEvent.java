@@ -1,6 +1,6 @@
 package com.github.sanctum.clans.event.war;
 
-import com.github.sanctum.clans.construct.api.War;
+import com.github.sanctum.clans.model.Arena;
 import com.github.sanctum.labyrinth.library.TimeWatch;
 
 /**
@@ -8,8 +8,8 @@ import com.github.sanctum.labyrinth.library.TimeWatch;
  */
 public class WarStartEvent extends WarEvent {
 
-	public WarStartEvent(War war) {
-		super(war, State.CANCELLABLE);
+	public WarStartEvent(Arena arena) {
+		super(arena, State.CANCELLABLE);
 	}
 
 	public void start() {

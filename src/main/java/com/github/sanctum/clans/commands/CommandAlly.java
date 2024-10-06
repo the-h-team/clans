@@ -1,11 +1,11 @@
 package com.github.sanctum.clans.commands;
 
-import com.github.sanctum.clans.construct.DataManager;
-import com.github.sanctum.clans.construct.api.Clan;
-import com.github.sanctum.clans.construct.api.ClanSubCommand;
-import com.github.sanctum.clans.construct.api.ClansAPI;
-import com.github.sanctum.clans.construct.api.Clearance;
-import com.github.sanctum.clans.construct.util.StringLibrary;
+import com.github.sanctum.clans.DataManager;
+import com.github.sanctum.clans.model.Clan;
+import com.github.sanctum.clans.model.ClanSubCommand;
+import com.github.sanctum.clans.model.ClansAPI;
+import com.github.sanctum.clans.model.Clearance;
+import com.github.sanctum.clans.util.StringLibrary;
 import com.github.sanctum.labyrinth.formatting.completion.SimpleTabCompletion;
 import com.github.sanctum.labyrinth.formatting.completion.TabCompletionIndex;
 import java.util.ArrayList;

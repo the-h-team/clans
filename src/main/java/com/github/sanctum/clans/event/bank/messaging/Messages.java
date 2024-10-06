@@ -1,6 +1,6 @@
 package com.github.sanctum.clans.event.bank.messaging;
 
-import com.github.sanctum.clans.construct.api.ClansAPI;
+import com.github.sanctum.clans.model.ClansAPI;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 

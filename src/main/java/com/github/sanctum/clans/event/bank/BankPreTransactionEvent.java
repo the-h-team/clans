@@ -1,6 +1,6 @@
 package com.github.sanctum.clans.event.bank;
 
-import com.github.sanctum.clans.construct.api.ClanBank;
+import com.github.sanctum.clans.model.Clan;
 import com.github.sanctum.clans.event.bank.messaging.Messages;
 import java.math.BigDecimal;
 
@@ -14,8 +14,8 @@ public class BankPreTransactionEvent extends BankTransactionEvent implements Can
     private boolean success;
     private boolean cancelled;
 
-    public BankPreTransactionEvent(@NotNull ClanBank clanBank, @NotNull BigDecimal amount, @Nullable Nameable entity, boolean success, Type type) {
-        super(clanBank, amount, entity, success, type);
+    public BankPreTransactionEvent(@NotNull Clan.Bank bank, @NotNull BigDecimal amount, @Nullable Nameable entity, boolean success, Type type) {
+        super(bank, amount, entity, success, type);
         this.success = success;
     }
 

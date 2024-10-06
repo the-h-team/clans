@@ -1,7 +1,7 @@
 package com.github.sanctum.clans.event.claim;
 
-import com.github.sanctum.clans.construct.api.Claim;
-import com.github.sanctum.clans.construct.api.InvasiveEntity;
+import com.github.sanctum.clans.model.Claim;
+import com.github.sanctum.clans.model.InvasiveEntity;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;

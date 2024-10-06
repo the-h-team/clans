@@ -1,12 +1,12 @@
 package com.github.sanctum.clans.listener;
 
-import com.github.sanctum.clans.bridge.ClanVentBus;
-import com.github.sanctum.clans.construct.api.Claim;
-import com.github.sanctum.clans.construct.api.Clan;
-import com.github.sanctum.clans.construct.api.ClansAPI;
-import com.github.sanctum.clans.construct.api.InvasiveEntity;
-import com.github.sanctum.clans.construct.util.ReservoirMetadata;
-import com.github.sanctum.clans.construct.util.Reservoir;
+import com.github.sanctum.clans.model.ClanVentBus;
+import com.github.sanctum.clans.model.Claim;
+import com.github.sanctum.clans.model.Clan;
+import com.github.sanctum.clans.model.ClansAPI;
+import com.github.sanctum.clans.model.InvasiveEntity;
+import com.github.sanctum.clans.util.ReservoirMetadata;
+import com.github.sanctum.clans.util.Reservoir;
 import com.github.sanctum.clans.event.associate.AssociateBuildReservoirEvent;
 import com.github.sanctum.clans.event.associate.AssociateHitReservoirEvent;
 import com.github.sanctum.labyrinth.LabyrinthProvider;

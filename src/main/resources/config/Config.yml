@@ -128,7 +128,7 @@ Clans:
     amount: 420.0
     # NEW! Modes: [PERCENTAGE, ADD, STATIC] Use along-side claim charging for a more in depth cost system!
     # PERCENTAGE will use a configurable percentage for the progressive equation, (current_claims * charge) * percentage
-    # STATIC use the exact amount configured above for cost, (charge)
+    # STATIC uses the exact amount configured above for cost, (charge)
     # ADD use claim amount * charge amount. (current_claims * charge)
     mode: PERCENTAGE
     percent: 10
@@ -200,7 +200,7 @@ Clans:
       disabled: '{0} &8» &cRaid shield lifted.'
 
   # Clan war (TDM) & pvp settings
-  war:
+  arena:
     # If someone is getting spawn camped penalize the attacker?
     killstreak:
       # The amount of kills to call for.
@@ -223,7 +223,7 @@ Clans:
     # Change the max amount of clans allowed within a clan war. Hard-cap = 4
     max-clans: 2
     # NEW! Change the max amount of clan wars allowed to be held.
-    max-wars: 3
+    max-arenas: 3
     # The amount of members queued required to start a war.
     que-needed: 4
     # The amount of seconds to wait when a war is ready to start.
@@ -307,27 +307,46 @@ Formatting:
     # Normal placeholders will work from either PlaceholderAPI or Labyrinth such as %player_name% or ones from plugins like Clans including %clans_clan_name%
     standalone: false
     Channel:
-      # {0} = Clan rank formatting, {1} = Clan name w/ color
+      # {0} = Clan rank formatting, {1} = Clan name w/ color, {2} = chat message
       # Example w/ WORDLESS: (•❂•) [Test] <Hempfest> Hello world!
-      # This section is useless when used in tandem with some chat plugins!
-      global: '&8(&b{0}&8)&r &8[&3{1}&8]&r'
-      clan:
-        # {0} = Player name, {1} = Clan name colored, {2} = Clan color, {3} = Player rank, {4} = Clan name colorless
-        prefix: '&8(&3&lCC&8) &b{0} '
-        divider: '&8: &r'
-        highlight: '&8({2}{1}&8)'
-        hover: 'My clan rank is: &a{3}'
-        # NEW! Words used from here will be filtered in game!
+      # NEW: You can now append as many sections as you want and custom your chat how you see fit! Have fun :)
+      # NOTE: The global section is useless to an extent beyond section 1 when used in tandem with some chat plugins as they will use their own format.
+      # NOTE: When using not in standalone mode it will default to 'section-1' so make sure you follow the name schema.
+      global:
+        section-1:
+          text: '&8(&b{0}&8)&r &8[&3{1}&8]&r'
+          # Un-comment the below sections to use.
+          #hover: 'Click me to view your clan info!'
+          #click: 'clan info %player_name%'
+        section-2:
+          text: ' %player_name% '
+        section-3:
+          text: ': {2}'
         filters:
           faggot: 'cake'
           nigger: 'cheese'
-
+      clan:
+        # {0} = Player name, {1} = Clan name colored, {2} = Clan color, {3} = Player rank, {4} = Clan name colorless, {5} = message
+        section-1:
+          text: '&8(&3&lCC&8) &b{0} &8: &r'
+        section-2:
+          text: '&8({2}{1}&8)'
+          hover: 'My clan rank is: &a{3}'
+        # NEW! Words used from here will be filtered in game!
+        section-3:
+          text: ' {5}'
+        filters:
+          faggot: 'cake'
+          nigger: 'cheese'
       ally:
-        # {0} = Player name, {1} = Clan name colored, {2} = Clan color, {3} = Player rank, {4} = Clan name colorless
-        prefix: '&8(&2&lAC&8) &b{0} '
-        divider: '&8: &r'
-        highlight: '&8({2}{1}&8)'
-        hover: 'My clan rank is: &d{3}'
+        # {0} = Player name, {1} = Clan name colored, {2} = Clan color, {3} = Player rank, {4} = Clan name colorless, {5} = message
+        section-1:
+          text: '&8(&2&lAC&8) &b{0} &8: &r'
+        section-2:
+          text: '&8({2}{1}&8)'
+          hover: 'My clan rank is: &d{3}'
+        section-3:
+          text: ' {5}'
         # NEW! Words used from here will be filtered in game!
         filters:
           faggot: 'cake'
@@ -411,5 +430,5 @@ Addon:
 ## -- DO NOT EDIT BELOW --##
 ##------------------------##
 Authors: [ "Hempfest", "ms5984" ]
-Version: 1.6.0
+Version: 1.6.1
 Language: en-US

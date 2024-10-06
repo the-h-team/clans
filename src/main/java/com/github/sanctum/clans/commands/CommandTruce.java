@@ -1,12 +1,12 @@
 package com.github.sanctum.clans.commands;
 
-import com.github.sanctum.clans.construct.DataManager;
-import com.github.sanctum.clans.construct.api.Clan;
-import com.github.sanctum.clans.construct.api.ClanSubCommand;
-import com.github.sanctum.clans.construct.api.ClansAPI;
-import com.github.sanctum.clans.construct.api.GUI;
-import com.github.sanctum.clans.construct.api.War;
-import com.github.sanctum.clans.construct.util.StringLibrary;
+import com.github.sanctum.clans.DataManager;
+import com.github.sanctum.clans.model.Clan;
+import com.github.sanctum.clans.model.ClanSubCommand;
+import com.github.sanctum.clans.model.ClansAPI;
+import com.github.sanctum.clans.model.GUI;
+import com.github.sanctum.clans.model.Arena;
+import com.github.sanctum.clans.util.StringLibrary;
 import org.bukkit.entity.Player;
 
 public class CommandTruce extends ClanSubCommand {
@@ -26,7 +26,7 @@ public class CommandTruce extends ClanSubCommand {
 				return true;
 			}
 			if (associate != null) {
-				War current = ClansAPI.getInstance().getArenaManager().get(associate);
+				Arena current = ClansAPI.getInstance().getArenaManager().get(associate);
 				if (current != null && current.isRunning()) {
 					GUI.ARENA_TRUCE.get(current).open(p);
 				}

@@ -1,6 +1,6 @@
 package com.github.sanctum.clans.event.associate;
 
-import com.github.sanctum.clans.construct.api.Clan;
+import com.github.sanctum.clans.model.Clan;
 
 /**
  * Called when a clan associate successfully attempts to kick another associate from the clan.

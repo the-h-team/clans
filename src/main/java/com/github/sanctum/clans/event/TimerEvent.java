@@ -1,6 +1,6 @@
 package com.github.sanctum.clans.event;
 
-import com.github.sanctum.clans.construct.api.Clan;
+import com.github.sanctum.clans.model.Clan;
 import com.github.sanctum.clans.event.player.PlayerEvent;
 import com.github.sanctum.panther.event.Vent;
 import org.bukkit.OfflinePlayer;

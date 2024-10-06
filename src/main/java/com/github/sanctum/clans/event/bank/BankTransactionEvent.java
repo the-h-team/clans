@@ -1,6 +1,6 @@
 package com.github.sanctum.clans.event.bank;
 
-import com.github.sanctum.clans.construct.api.ClanBank;
+import com.github.sanctum.clans.model.Clan;
 import com.github.sanctum.clans.event.bank.messaging.Messages;
 import java.math.BigDecimal;
 
@@ -19,8 +19,8 @@ public class BankTransactionEvent extends BankEvent {
     protected final boolean success;
     protected final Type type;
 
-    public BankTransactionEvent(@NotNull ClanBank clanBank, @NotNull BigDecimal amount, @Nullable Nameable entity, boolean success, Type type) {
-        super(clanBank, false);
+    public BankTransactionEvent(@NotNull Clan.Bank bank, @NotNull BigDecimal amount, @Nullable Nameable entity, boolean success, Type type) {
+        super(bank, false);
         this.entity = entity;
         this.amount = amount;
         this.success = success;

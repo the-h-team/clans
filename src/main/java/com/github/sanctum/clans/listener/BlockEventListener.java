@@ -1,14 +1,14 @@
 package com.github.sanctum.clans.listener;
 
-import com.github.sanctum.clans.bridge.ClanVentBus;
-import com.github.sanctum.clans.bridge.ClanVentCall;
-import com.github.sanctum.clans.construct.api.ClanActionEngine;
-import com.github.sanctum.clans.construct.api.Claim;
-import com.github.sanctum.clans.construct.api.Clan;
-import com.github.sanctum.clans.construct.api.ClansAPI;
-import com.github.sanctum.clans.construct.api.Clearance;
-import com.github.sanctum.clans.construct.api.LogoHolder;
-import com.github.sanctum.clans.construct.util.ShieldTamper;
+import com.github.sanctum.clans.model.ClanVentBus;
+import com.github.sanctum.clans.model.ClanVentCall;
+import com.github.sanctum.clans.model.backend.ClanFileBackend;
+import com.github.sanctum.clans.model.Claim;
+import com.github.sanctum.clans.model.Clan;
+import com.github.sanctum.clans.model.ClansAPI;
+import com.github.sanctum.clans.model.Clearance;
+import com.github.sanctum.clans.model.LogoHolder;
+import com.github.sanctum.clans.util.ShieldTamper;
 import com.github.sanctum.clans.event.claim.ClaimInteractEvent;
 import com.github.sanctum.clans.event.claim.RaidShieldEvent;
 import com.github.sanctum.labyrinth.data.EconomyProvision;
@@ -180,7 +180,7 @@ public class BlockEventListener implements Listener {
 	@Subscribe(priority = Vent.Priority.READ_ONLY)
 	public void onShield(RaidShieldEvent e) {
 		final ClansAPI api = e.getApi();
-		final ClanActionEngine action = Clan.ACTION;
+		final ClanFileBackend action = Clan.ACTION;
 		final World world = Optional.ofNullable(Bukkit.getWorld(ClansAPI.getDataInstance().getConfig().getRoot().getString("Clans.raid-shield.main-world"))).orElse(Bukkit.getWorlds().get(0));
 		if (action.isNight(world, e.getStartTime(), e.getStopTime())) {
 			if (api.getShieldManager().isEnabled()) {

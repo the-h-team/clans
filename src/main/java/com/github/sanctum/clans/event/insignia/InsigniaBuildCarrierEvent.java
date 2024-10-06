@@ -1,6 +1,6 @@
 package com.github.sanctum.clans.event.insignia;
 
-import com.github.sanctum.clans.construct.api.LogoHolder;
+import com.github.sanctum.clans.model.LogoHolder;
 import com.github.sanctum.clans.event.ClanEvent;
 
 /**

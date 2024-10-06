@@ -1,6 +1,6 @@
 package com.github.sanctum.clans.event.associate;
 
-import com.github.sanctum.clans.construct.util.ReservoirMetadata;
+import com.github.sanctum.clans.util.ReservoirMetadata;
 
 /**
  * Called when a clan associate attempts to build a clan reservoir.

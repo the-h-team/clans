@@ -1,6 +1,7 @@
 package com.github.sanctum.clans.event.bank;
 
-import com.github.sanctum.clans.construct.api.ClanBank;
+import com.github.sanctum.clans.model.Clan;
+
 import java.math.BigDecimal;
 import org.bukkit.event.Cancellable;
 import org.jetbrains.annotations.NotNull;
@@ -10,8 +11,8 @@ public class BankSetBalanceEvent extends BankEvent implements Cancellable {
     private final BigDecimal newBalance;
     private boolean cancelled = false;
 
-    public BankSetBalanceEvent(@NotNull ClanBank clanBank, @NotNull BigDecimal newBalance) {
-        super(clanBank, false);
+    public BankSetBalanceEvent(@NotNull Clan.Bank bank, @NotNull BigDecimal newBalance) {
+        super(bank, false);
         this.newBalance = newBalance;
     }
 

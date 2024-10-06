@@ -1,12 +1,12 @@
 package com.github.sanctum.clans.event.claim;
 
-import com.github.sanctum.clans.construct.ClaimManager;
-import com.github.sanctum.clans.construct.ResidentManager;
-import com.github.sanctum.clans.construct.api.ClaimActionEngine;
-import com.github.sanctum.clans.construct.api.Claim;
-import com.github.sanctum.clans.construct.api.Clan;
-import com.github.sanctum.clans.construct.api.ClansAPI;
-import com.github.sanctum.clans.construct.impl.entity.DefaultClaimResident;
+import com.github.sanctum.clans.ClaimManager;
+import com.github.sanctum.clans.ResidentManager;
+import com.github.sanctum.clans.model.backend.ClaimFileBackend;
+import com.github.sanctum.clans.model.Claim;
+import com.github.sanctum.clans.model.Clan;
+import com.github.sanctum.clans.model.ClansAPI;
+import com.github.sanctum.clans.impl.entity.DefaultClaimResident;
 import com.github.sanctum.labyrinth.LabyrinthProvider;
 import com.github.sanctum.labyrinth.event.LabyrinthVentCall;
 import com.github.sanctum.panther.annotation.Ordinal;
@@ -58,7 +58,7 @@ public class ClaimResidencyEvent extends ClaimEvent {
 		return r;
 	}
 
-	public ClaimActionEngine getClaimEngine() {
+	public ClaimFileBackend getClaimEngine() {
 		return Claim.ACTION;
 	}
 

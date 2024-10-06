@@ -1,21 +1,13 @@
 package com.github.sanctum.clans.listener;
 
-import com.github.sanctum.clans.bridge.internal.stashes.events.StashInteractEvent;
-import com.github.sanctum.clans.bridge.internal.vaults.events.VaultInteractEvent;
-import com.github.sanctum.clans.construct.api.AbstractGameRule;
-import com.github.sanctum.clans.construct.api.Channel;
-import com.github.sanctum.clans.construct.api.Claim;
-import com.github.sanctum.clans.construct.api.Clan;
-import com.github.sanctum.clans.construct.api.ClanBlueprint;
-import com.github.sanctum.clans.construct.api.ClanCooldown;
-import com.github.sanctum.clans.construct.api.ClansAPI;
-import com.github.sanctum.clans.construct.api.Consultant;
-import com.github.sanctum.clans.construct.api.Ticket;
-import com.github.sanctum.clans.construct.api.War;
-import com.github.sanctum.clans.construct.util.AnimalConsultantListener;
-import com.github.sanctum.clans.construct.impl.DefaultFancyInfoSection;
-import com.github.sanctum.clans.construct.impl.DefaultCreationCooldown;
-import com.github.sanctum.clans.construct.impl.DefaultMapEntry;
+import com.github.sanctum.clans.model.addon.stashes.events.StashInteractEvent;
+import com.github.sanctum.clans.model.addon.vaults.events.VaultInteractEvent;
+import com.github.sanctum.clans.model.*;
+import com.github.sanctum.clans.model.Arena;
+import com.github.sanctum.clans.util.AnimalConsultantListener;
+import com.github.sanctum.clans.impl.DefaultFancyInfoSection;
+import com.github.sanctum.clans.impl.DefaultCreationCooldown;
+import com.github.sanctum.clans.impl.DefaultMapEntry;
 import com.github.sanctum.clans.event.associate.AssociateDisplayInfoEvent;
 import com.github.sanctum.clans.event.associate.AssociateFromAnimalEvent;
 import com.github.sanctum.clans.event.associate.AssociateMessageReceiveEvent;
@@ -556,7 +548,7 @@ public class ClanEventListener implements Listener {
 
 	@Subscribe
 	public void onWarStart(WarStartEvent e) {
-		War w = e.getWar();
+		Arena w = e.getWar();
 		if (w.getQueue().getAssociates().length == 0) {
 			e.setCancelled(true);
 			return;
@@ -622,7 +614,7 @@ public class ClanEventListener implements Listener {
 		e.getWar().forEach(a -> {
 			Player p = a.getTag().getPlayer().getPlayer();
 			if (p != null) {
-				War.Team t = e.getWar().getTeam(a.getClan());
+				Arena.Team t = e.getWar().getTeam(a.getClan());
 				int points = e.getWar().getPoints(t);
 				String time = calc(timer.getMinutes()) + ":" + calc(timer.getSeconds());
 				msg.accept(p).action("&3Points&f:&b " + points + " &6| &3Time left&f:&e " + time).deploy();
@@ -634,9 +626,9 @@ public class ClanEventListener implements Listener {
 	public void onWarWin(WarWonEvent e) {
 		double reward = new Random().nextInt(e.getWinner().getValue()) + 0.17;
 		FileManager config = ClansAPI.getDataInstance().getConfig();
-		double additional = config.read(c -> c.getNode("Clans.war.conclusion.winning").toPrimitive().getDouble());
+		double additional = config.read(c -> c.getNode("Clans.arena.conclusion.winning").toPrimitive().getDouble());
 		e.getWinner().getKey().givePower(reward + additional);
-		double losing = config.read(c -> c.getNode("Clans.war.conclusion.losing").toPrimitive().getDouble());
+		double losing = config.read(c -> c.getNode("Clans.arena.conclusion.losing").toPrimitive().getDouble());
 		e.getLosers().forEach((clan, integer) -> clan.takePower(reward + losing));
 	}
 

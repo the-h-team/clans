@@ -1,12 +1,11 @@
 package com.github.sanctum.clans.commands;
 
-import com.github.sanctum.clans.bridge.ClanAddon;
-import com.github.sanctum.clans.bridge.ClanAddonQueue;
-import com.github.sanctum.clans.construct.api.Clan;
-import com.github.sanctum.clans.construct.api.ClanSubCommand;
-import com.github.sanctum.clans.construct.api.ClansAPI;
-import com.github.sanctum.clans.construct.api.GUI;
-import com.github.sanctum.clans.construct.util.StringLibrary;
+import com.github.sanctum.clans.model.ClanAddonRegistry;
+import com.github.sanctum.clans.model.Clan;
+import com.github.sanctum.clans.model.ClanSubCommand;
+import com.github.sanctum.clans.model.ClansAPI;
+import com.github.sanctum.clans.model.GUI;
+import com.github.sanctum.clans.util.StringLibrary;
 import com.github.sanctum.labyrinth.LabyrinthProvider;
 import com.github.sanctum.labyrinth.formatting.Message;
 import com.github.sanctum.labyrinth.library.StringUtils;
@@ -54,7 +53,7 @@ public class CommandClan extends Command implements Message.Factory {
 
 		List<String> result = new ArrayList<>();
 
-		for (ClanAddon cycle : ClanAddonQueue.getInstance().get()) {
+		for (Clan.Addon cycle : ClanAddonRegistry.getInstance().get()) {
 			if (cycle.getContext().isActive()) {
 				for (ClanSubCommand subCommand : cycle.getContext().getCommands()) {
 					if (subCommand.tab(p, alias, args) != null) {
@@ -76,7 +75,7 @@ public class CommandClan extends Command implements Message.Factory {
 		if (!(sender instanceof Player)) {
 			if (sender instanceof ConsoleCommandSender) {
 
-				for (ClanAddon cycle : ClanAddonQueue.getInstance().get()) {
+				for (Clan.Addon cycle : ClanAddonRegistry.getInstance().get()) {
 					if (cycle.getContext().isActive()) {
 						for (ClanSubCommand subCommand : cycle.getContext().getCommands()) {
 							if (subCommand.getLabel() != null) {
@@ -125,7 +124,7 @@ public class CommandClan extends Command implements Message.Factory {
 			}
 
 			if (length > 0) {
-				for (ClanAddon cycle : ClanAddonQueue.getInstance().get()) {
+				for (Clan.Addon cycle : ClanAddonRegistry.getInstance().get()) {
 					if (cycle.getContext().isActive()) {
 						for (ClanSubCommand subCommand : cycle.getContext().getCommands()) {
 							if (subCommand.getLabel() != null) {

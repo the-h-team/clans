@@ -1,18 +1,13 @@
 package com.github.sanctum.clans.commands;
 
-import com.github.sanctum.clans.bridge.ClanAddonQueue;
-import com.github.sanctum.clans.bridge.internal.StashesAddon;
-import com.github.sanctum.clans.bridge.internal.VaultsAddon;
-import com.github.sanctum.clans.construct.ClanManager;
-import com.github.sanctum.clans.construct.api.BanksAPI;
-import com.github.sanctum.clans.construct.api.Claim;
-import com.github.sanctum.clans.construct.api.Clan;
-import com.github.sanctum.clans.construct.api.ClanBlueprint;
-import com.github.sanctum.clans.construct.api.ClansAPI;
-import com.github.sanctum.clans.construct.api.GUI;
-import com.github.sanctum.clans.construct.api.War;
-import com.github.sanctum.clans.construct.util.ReloadUtility;
-import com.github.sanctum.clans.construct.util.StringLibrary;
+import com.github.sanctum.clans.model.ClanAddonRegistry;
+import com.github.sanctum.clans.model.addon.StashesAddon;
+import com.github.sanctum.clans.model.addon.VaultsAddon;
+import com.github.sanctum.clans.ClanManager;
+import com.github.sanctum.clans.model.*;
+import com.github.sanctum.clans.model.Arena;
+import com.github.sanctum.clans.util.ReloadUtility;
+import com.github.sanctum.clans.util.StringLibrary;
 import com.github.sanctum.labyrinth.data.FileManager;
 import com.github.sanctum.labyrinth.formatting.pagination.EasyPagination;
 import com.github.sanctum.labyrinth.library.StringUtils;
@@ -605,16 +600,16 @@ public class CommandClanAdmin extends Command {
 			if (args0.equalsIgnoreCase("setspawn")) {
 				switch (args1.toUpperCase()) {
 					case "A":
-						War.setSpawn(War.Team.A, p.getLocation());
+						Arena.setSpawn(Arena.Team.A, p.getLocation());
 						break;
 					case "B":
-						War.setSpawn(War.Team.B, p.getLocation());
+						Arena.setSpawn(Arena.Team.B, p.getLocation());
 						break;
 					case "C":
-						War.setSpawn(War.Team.C, p.getLocation());
+						Arena.setSpawn(Arena.Team.C, p.getLocation());
 						break;
 					case "D":
-						War.setSpawn(War.Team.D, p.getLocation());
+						Arena.setSpawn(Arena.Team.D, p.getLocation());
 						break;
 				}
 				lib.sendMessage(p, "&aUpdated team '&b" + args1.toUpperCase() + "&a' spawn location.");
@@ -810,7 +805,7 @@ public class CommandClanAdmin extends Command {
 					case "vault":
 						if (id != null) {
 							Clan target = ClansAPI.getInstance().getClanManager().getClan(id);
-							if (ClanAddonQueue.getInstance().getEnabled().contains("Vaults")) {
+							if (ClanAddonRegistry.getInstance().getEnabled().contains("Vaults")) {
 								VaultsAddon.getVault(target.getName()).open(p);
 								return true;
 							} else {
@@ -826,7 +821,7 @@ public class CommandClanAdmin extends Command {
 					case "stash":
 						if (id != null) {
 							Clan target = ClansAPI.getInstance().getClanManager().getClan(id);
-							if (ClanAddonQueue.getInstance().getEnabled().contains("Stashes")) {
+							if (ClanAddonRegistry.getInstance().getEnabled().contains("Stashes")) {
 								StashesAddon.getStash(target.getName()).open(p);
 								return true;
 							} else {

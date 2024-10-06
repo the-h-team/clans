@@ -1,9 +1,9 @@
 package com.github.sanctum.clans.event.claim;
 
-import com.github.sanctum.clans.construct.api.ClaimActionEngine;
-import com.github.sanctum.clans.construct.api.Claim;
-import com.github.sanctum.clans.construct.api.Clan;
-import com.github.sanctum.clans.construct.api.ClansAPI;
+import com.github.sanctum.clans.model.backend.ClaimFileBackend;
+import com.github.sanctum.clans.model.Claim;
+import com.github.sanctum.clans.model.Clan;
+import com.github.sanctum.clans.model.ClansAPI;
 import com.github.sanctum.clans.event.player.PlayerEvent;
 import com.github.sanctum.labyrinth.LabyrinthProvider;
 import com.github.sanctum.labyrinth.event.LabyrinthVentCall;
@@ -41,7 +41,7 @@ public class WildernessResidencyEvent extends PlayerEvent {
 		return ((Clan)getPreviousClaim().getHolder());
 	}
 
-	public ClaimActionEngine getClaimEngine() {
+	public ClaimFileBackend getClaimEngine() {
 		return Claim.ACTION;
 	}
 

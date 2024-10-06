@@ -1,25 +1,22 @@
 package com.github.sanctum.clans.listener;
 
-import com.github.sanctum.clans.bridge.ClanVentBus;
-import com.github.sanctum.clans.construct.api.Channel;
-import com.github.sanctum.clans.construct.api.Clan;
-import com.github.sanctum.clans.construct.api.ClansAPI;
-import com.github.sanctum.clans.construct.util.StringLibrary;
+import com.github.sanctum.clans.model.ClanVentBus;
+import com.github.sanctum.clans.model.Channel;
+import com.github.sanctum.clans.model.Clan;
+import com.github.sanctum.clans.model.ClansAPI;
+import com.github.sanctum.clans.util.ChatChannelBackend;
+import com.github.sanctum.clans.util.StringLibrary;
 import com.github.sanctum.clans.event.associate.AssociateChatEvent;
 import com.github.sanctum.clans.event.associate.AssociateMessageReceiveEvent;
 import com.github.sanctum.labyrinth.library.Mailer;
 import com.github.sanctum.labyrinth.library.StringUtils;
-import com.github.sanctum.labyrinth.library.TextLib;
 import com.github.sanctum.panther.event.Subscribe;
 import com.github.sanctum.panther.event.Vent;
 import java.text.MessageFormat;
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
-import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
-import net.md_5.bungee.api.chat.BaseComponent;
+
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -29,6 +26,9 @@ import org.bukkit.event.player.AsyncPlayerChatEvent;
 
 public class ChatEventListener implements Listener {
 
+	final ChatChannelBackend globalChat = new ChatChannelBackend(ClansAPI.getDataInstance().getConfig().getRoot().getNode("Formatting.Chat.Channel.global"));
+	final ChatChannelBackend allyChat = new ChatChannelBackend(ClansAPI.getDataInstance().getConfig().getRoot().getNode("Formatting.Chat.Channel.ally"));
+	final ChatChannelBackend clanChat = new ChatChannelBackend(ClansAPI.getDataInstance().getConfig().getRoot().getNode("Formatting.Chat.Channel.clan"));
 
 	@Subscribe(priority = Vent.Priority.MEDIUM)
 	public void onAllyChat(AssociateChatEvent e) {
@@ -41,21 +41,21 @@ public class ChatEventListener implements Listener {
 		String color = associate.getClan().getPalette().toString();
 		String name = associate.getClan().getPalette().isGradient() ? associate.getClan().getPalette().toString(associate.getClan().getNickname() != null ? associate.getClan().getNickname() : associate.getClan().getName()) : color + (associate.getClan().getNickname() != null ? associate.getClan().getNickname() : associate.getClan().getName());
 		if (e.getChannel().equals(Channel.ALLY)) {
-			List<BaseComponent> list = new ArrayList<>();
-			list.add(TextLib.getInstance().textHoverable(MessageFormat.format(ClansAPI.getDataInstance().getConfig().getRoot().getString("Formatting.Chat.Channel.ally.prefix"), associate.getNickname(), name, color, associate.getRankFull(), (associate.getClan().getNickname() != null ? associate.getClan().getNickname() : associate.getClan().getName())), MessageFormat.format(ClansAPI.getDataInstance().getConfig().getRoot().getString("Formatting.Chat.Channel.ally.highlight"), associate.getNickname(), name, color, associate.getRankFull(), (associate.getClan().getNickname() != null ? associate.getClan().getNickname() : associate.getClan().getName())), MessageFormat.format(ClansAPI.getDataInstance().getConfig().getRoot().getString("Formatting.Chat.Channel.ally.divider") + message, associate.getNickname(), name, color, associate.getRankFull(), (associate.getClan().getNickname() != null ? associate.getClan().getNickname() : associate.getClan().getName())), MessageFormat.format(ClansAPI.getDataInstance().getConfig().getRoot().getString("Formatting.Chat.Channel.ally.hover"), associate.getNickname(), name, color, associate.getRankFull(), (associate.getClan().getNickname() != null ? associate.getClan().getNickname() : associate.getClan().getName()))));
+			String finalMessage = message;
+			allyChat.setFormat(s -> MessageFormat.format(StringUtils.use(s).laby(e.getPlayer()), associate.getNickname(), name, color, associate.getRankFull(), (associate.getClan().getNickname() != null ? associate.getClan().getNickname() : associate.getClan().getName()), finalMessage));
+			e.setComponents(allyChat.toMessage().build());
 			e.setPingSound(Sound.ENTITY_VILLAGER_YES);
-			e.setComponents(list.toArray(new BaseComponent[0]));
 		}
 		if (e.getChannel().equals(Channel.CLAN)) {
-			List<BaseComponent> list = new ArrayList<>();
-			list.add(TextLib.getInstance().textHoverable(MessageFormat.format(ClansAPI.getDataInstance().getConfig().getRoot().getString("Formatting.Chat.Channel.clan.prefix"), associate.getNickname(), name, color, associate.getRankFull(), associate.getClan().getName()), MessageFormat.format(ClansAPI.getDataInstance().getConfig().getRoot().getString("Formatting.Chat.Channel.clan.highlight"), associate.getNickname(), name, color, associate.getRankFull(), associate.getClan().getName()), MessageFormat.format(ClansAPI.getDataInstance().getConfig().getRoot().getString("Formatting.Chat.Channel.clan.divider") + message, associate.getNickname(), name, color, associate.getRankFull(), associate.getClan().getName()), MessageFormat.format(ClansAPI.getDataInstance().getConfig().getRoot().getString("Formatting.Chat.Channel.clan.hover"), associate.getNickname(), name, color, associate.getRankFull(), associate.getClan().getName())));
+			String finalMessage1 = message;
+			clanChat.setFormat(s -> MessageFormat.format(StringUtils.use(s).laby(e.getPlayer()), associate.getNickname(), name, color, associate.getRankFull(), associate.getClan().getName(), finalMessage1));
+			e.setComponents(clanChat.toMessage().build());
 			e.setPingSound(Sound.ENTITY_VILLAGER_YES);
-			e.setComponents(list.toArray(new BaseComponent[0]));
 		}
 	}
 
 	@EventHandler(priority = EventPriority.HIGH)
-	public void onFormat(AsyncPlayerChatEvent event) throws ExecutionException, InterruptedException {
+	public void onFormat(AsyncPlayerChatEvent event) {
 		Player p = event.getPlayer();
 		Clan.Associate associate = ClansAPI.getInstance().getAssociate(p.getName()).orElse(null);
 		if (associate != null) {
@@ -63,28 +63,20 @@ public class ChatEventListener implements Listener {
 				if (associate.getChannel().equals(Channel.GLOBAL)) {
 					Clan clan = associate.getClan();
 					StringLibrary lib = Clan.ACTION;
-					String rank;
 					String clanName = clan.getPalette().isGradient() ? clan.getPalette().toString(clan.getName()) : clan.getPalette() + clan.getName();
 					for (Channel.Filter f : Channel.GLOBAL.getFilters()) {
 						event.setMessage(f.run(event.getMessage()));
 					}
-					switch (lib.getRankStyle().toUpperCase()) {
-						case "WORDLESS":
-							rank = associate.getRank().getSymbol();
-							if (ClansAPI.getDataInstance().isTrue("Formatting.Chat.standalone")) {
-								event.setFormat(lib.color(MessageFormat.format(StringUtils.use(lib.getChatFormat()).translate(p), rank, clanName, event.getMessage())));
-							} else {
-								event.setFormat(lib.color(MessageFormat.format(StringUtils.use(lib.getChatFormat()).translate(p), rank, clanName) + " " + event.getFormat()));
-							}
-							break;
-						case "FULL":
-							rank = associate.getRank().getName();
-							if (ClansAPI.getDataInstance().isTrue("Formatting.Chat.standalone")) {
-								event.setFormat(lib.color(MessageFormat.format(StringUtils.use(lib.getChatFormat()).translate(p), rank, clanName, event.getMessage())));
-							} else {
-								event.setFormat(lib.color(MessageFormat.format(StringUtils.use(lib.getChatFormat()).translate(p), rank, clanName) + " " + event.getFormat()));
-							}
-							break;
+					String rank = lib.getRankStyle().equalsIgnoreCase("WORDLESS") ? associate.getRank().getSymbol() : associate.getRank().getName();
+					if (ClansAPI.getDataInstance().isTrue("Formatting.Chat.standalone")) { // use own format
+						if (!event.isCancelled()) {
+							globalChat.setFormat(s -> MessageFormat.format(StringUtils.use(s).laby(p), rank, clanName, event.getMessage()));
+							globalChat.toMessage().send(player -> true).queue();
+							event.setCancelled(true);
+						}
+					} else { // add to format
+						globalChat.setFormat(s -> MessageFormat.format(StringUtils.use(s).translate(p), rank, clanName));
+						event.setFormat(globalChat.getDefault() + " " + event.getFormat());
 					}
 					return;
 				}

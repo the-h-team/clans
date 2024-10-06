@@ -1,6 +1,6 @@
 package com.github.sanctum.clans.event.associate;
 
-import com.github.sanctum.clans.construct.api.ClansAPI;
+import com.github.sanctum.clans.model.ClansAPI;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 

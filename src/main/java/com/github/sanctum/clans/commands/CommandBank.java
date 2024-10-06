@@ -1,16 +1,15 @@
 package com.github.sanctum.clans.commands;
 
-import com.github.sanctum.clans.construct.ClanManager;
-import com.github.sanctum.clans.construct.DataManager;
-import com.github.sanctum.clans.construct.api.BanksAPI;
-import com.github.sanctum.clans.construct.api.Clan;
-import com.github.sanctum.clans.construct.api.ClanBank;
-import com.github.sanctum.clans.construct.api.ClanSubCommand;
-import com.github.sanctum.clans.construct.api.ClansAPI;
-import com.github.sanctum.clans.construct.api.Clearance;
-import com.github.sanctum.clans.construct.bank.BankPermissions;
-import com.github.sanctum.clans.construct.util.StringLibrary;
-import com.github.sanctum.clans.construct.impl.DefaultClan;
+import com.github.sanctum.clans.ClanManager;
+import com.github.sanctum.clans.DataManager;
+import com.github.sanctum.clans.model.BanksAPI;
+import com.github.sanctum.clans.model.Clan;
+import com.github.sanctum.clans.model.ClanSubCommand;
+import com.github.sanctum.clans.model.ClansAPI;
+import com.github.sanctum.clans.model.Clearance;
+import com.github.sanctum.clans.model.ClanBankPermissions;
+import com.github.sanctum.clans.util.StringLibrary;
+import com.github.sanctum.clans.impl.DefaultClan;
 import com.github.sanctum.clans.event.bank.messaging.Messages;
 import com.github.sanctum.labyrinth.data.EconomyProvision;
 import com.github.sanctum.labyrinth.formatting.Message;
@@ -48,7 +47,7 @@ public class CommandBank extends ClanSubCommand implements Message.Factory {
 				sendMessage(p, "&c&oNo economy interface found. Bank feature disabled.");
 				return true;
 			}
-			if (BankPermissions.BANKS_USE.not(p)) {
+			if (ClanBankPermissions.BANKS_USE.not(p)) {
 				sendMessage(p, Messages.PERM_NOT_PLAYER_COMMAND.toString());
 				return true;
 			} else {
@@ -65,7 +64,7 @@ public class CommandBank extends ClanSubCommand implements Message.Factory {
 			final String greetingHover = Messages.BANKS_GREETING_HOVER.toString();
 			final String hoverTextMessage = greetingHover.substring(0, greetingHover.indexOf("\n"))
 					.replace("{0}", clan_name);
-			if (BankPermissions.BANKS_BALANCE.not(p)) {
+			if (ClanBankPermissions.BANKS_BALANCE.not(p)) {
 				p.spigot().sendMessage(TextLib.getInstance().textHoverable(
 						split[0], "&o" + p.getName(), split[1],
 						hoverTextMessage)
@@ -121,7 +120,7 @@ public class CommandBank extends ClanSubCommand implements Message.Factory {
 			DefaultClan clan = (DefaultClan) associate.getClan();
 			switch (args[0].toLowerCase()) {
 				case "balance":
-					if (BankPermissions.BANKS_BALANCE.not(p) || !Clearance.BANK_BALANCE.test(associate)) {
+					if (ClanBankPermissions.BANKS_BALANCE.not(p) || !Clearance.BANK_BALANCE.test(associate)) {
 						sendMessage(p, Messages.PERM_NOT_PLAYER_COMMAND.toString());
 						return true;
 					}
@@ -135,7 +134,7 @@ public class CommandBank extends ClanSubCommand implements Message.Factory {
 					docket.load().toMenu().open(p);
 					return true;
 				case "deposit":
-					if (BankPermissions.BANKS_DEPOSIT.not(p) || !Clearance.BANK_DEPOSIT.test(associate)) {
+					if (ClanBankPermissions.BANKS_DEPOSIT.not(p) || !Clearance.BANK_DEPOSIT.test(associate)) {
 						sendMessage(p, Messages.PERM_NOT_PLAYER_COMMAND.toString());
 						return true;
 					}
@@ -162,7 +161,7 @@ public class CommandBank extends ClanSubCommand implements Message.Factory {
 					}
 					return true;
 				case "withdraw":
-					if (BankPermissions.BANKS_WITHDRAW.not(p) || !Clearance.BANK_WITHDRAW.test(associate)) {
+					if (ClanBankPermissions.BANKS_WITHDRAW.not(p) || !Clearance.BANK_WITHDRAW.test(associate)) {
 						sendMessage(p, Messages.PERM_NOT_PLAYER_COMMAND.toString());
 						return true;
 					}
@@ -189,7 +188,7 @@ public class CommandBank extends ClanSubCommand implements Message.Factory {
 					}
 					return true;
 				case "send":
-					if (BankPermissions.BANKS_WITHDRAW.not(p)) {
+					if (ClanBankPermissions.BANKS_WITHDRAW.not(p)) {
 						sendMessage(p, Messages.PERM_NOT_PLAYER_COMMAND.toString());
 						return true;
 					}
@@ -221,7 +220,7 @@ public class CommandBank extends ClanSubCommand implements Message.Factory {
 			final String arg1 = args[0].toLowerCase();
 			switch (arg1) {
 				case "send":
-					if (BankPermissions.BANKS_WITHDRAW.not(p)) {
+					if (ClanBankPermissions.BANKS_WITHDRAW.not(p)) {
 						sendMessage(p, Messages.PERM_NOT_PLAYER_COMMAND.toString());
 						return true;
 					}
@@ -236,10 +235,10 @@ public class CommandBank extends ClanSubCommand implements Message.Factory {
 							sendMessage(p, Messages.BANK_INVALID_AMOUNT.toString());
 							return true;
 						}
-						final ClanBank theBank = BanksAPI.getInstance().getBank(associate.getClan());
+						final Clan.Bank theBank = BanksAPI.getInstance().getBank(associate.getClan());
 						switch (arg1) {
 							case "deposit":
-								if (BankPermissions.BANKS_DEPOSIT.not(p)) {
+								if (ClanBankPermissions.BANKS_DEPOSIT.not(p)) {
 									sendMessage(p, Messages.PERM_NOT_PLAYER_COMMAND.toString());
 									return true;
 								}
@@ -252,7 +251,7 @@ public class CommandBank extends ClanSubCommand implements Message.Factory {
 								}
 								break;
 							case "withdraw":
-								if (BankPermissions.BANKS_WITHDRAW.not(p)) {
+								if (ClanBankPermissions.BANKS_WITHDRAW.not(p)) {
 									sendMessage(p, Messages.PERM_NOT_PLAYER_COMMAND.toString());
 									return true;
 								}
@@ -286,7 +285,7 @@ public class CommandBank extends ClanSubCommand implements Message.Factory {
 			}
 			final Clan clan = associate.getClan();
 			if (args[0].equalsIgnoreCase("send")) {
-				final ClanBank theBank = BanksAPI.getInstance().getBank(clan);
+				final Clan.Bank theBank = BanksAPI.getInstance().getBank(clan);
 				final BigDecimal amount = new BigDecimal(args[2]);
 				if (amount.signum() != 1) {
 					sendMessage(p, Messages.BANK_INVALID_AMOUNT.toString());
@@ -299,7 +298,7 @@ public class CommandBank extends ClanSubCommand implements Message.Factory {
 					return true;
 				}
 				final Clan theOtherClan = manager.getClan(id);
-				if (BankPermissions.BANKS_WITHDRAW.not(p)) {
+				if (ClanBankPermissions.BANKS_WITHDRAW.not(p)) {
 					sendMessage(p, Messages.PERM_NOT_PLAYER_COMMAND.toString());
 					return true;
 				}
