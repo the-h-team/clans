@@ -1,13 +1,6 @@
 package com.github.sanctum.clans.impl.entity;
 
-import com.github.sanctum.clans.model.Channel;
-import com.github.sanctum.clans.model.Claim;
-import com.github.sanctum.clans.model.Clan;
-import com.github.sanctum.clans.model.ClansAPI;
-import com.github.sanctum.clans.model.InvasiveEntity;
-import com.github.sanctum.clans.model.PersistentEntity;
-import com.github.sanctum.clans.model.Relation;
-import com.github.sanctum.clans.model.Teleport;
+import com.github.sanctum.clans.model.*;
 import com.github.sanctum.clans.util.HiddenMetadata;
 import com.github.sanctum.clans.util.InvalidAssociateTypeException;
 import com.github.sanctum.labyrinth.data.Atlas;
@@ -15,6 +8,7 @@ import com.github.sanctum.labyrinth.data.AtlasMap;
 import com.github.sanctum.labyrinth.data.service.PlayerSearch;
 import com.github.sanctum.labyrinth.library.Items;
 import com.github.sanctum.labyrinth.library.Mailer;
+import com.github.sanctum.labyrinth.library.Teleport;
 import com.github.sanctum.labyrinth.library.TimeWatch;
 import com.github.sanctum.labyrinth.task.TaskScheduler;
 import com.github.sanctum.panther.annotation.Ordinal;
@@ -54,7 +48,7 @@ public final class PlayerAssociate implements Clan.Associate, PersistentEntity {
 	private final UUID id;
 	private final Clan clanObject;
 	private Clan.Rank rank;
-	private Channel chat;
+	private ChatChannel chat;
 	private ItemStack head = SkullType.PLAYER.get();
 	private final Object data;
 	private final Tag tag;
@@ -120,7 +114,7 @@ public final class PlayerAssociate implements Clan.Associate, PersistentEntity {
 			}
 		};
 		this.rank = priority;
-		this.chat = Channel.GLOBAL;
+		this.chat = ChatChannel.GLOBAL;
 		TaskScheduler.of(() -> {
 			this.head = CustomHead.Manager.get(name);
 		}).scheduleLaterAsync(2L);
@@ -132,7 +126,7 @@ public final class PlayerAssociate implements Clan.Associate, PersistentEntity {
 	}
 
 	public UUID getId() {
-		return search != null ? search.getId() : this.id;
+		return search != null ? search.getUniqueId() : this.id;
 	}
 
 	/**
@@ -145,7 +139,7 @@ public final class PlayerAssociate implements Clan.Associate, PersistentEntity {
 	/**
 	 * @return The chat channel this user resides in.
 	 */
-	public Channel getChannel() {
+	public ChatChannel getChannel() {
 		return chat;
 	}
 
@@ -155,7 +149,7 @@ public final class PlayerAssociate implements Clan.Associate, PersistentEntity {
 	 * @param chat The channel to switch them to.
 	 */
 	public void setChannel(String chat) {
-		this.chat = Channel.valueOf(chat);
+		this.chat = ChatChannel.valueOf(chat);
 	}
 
 	/**
@@ -394,21 +388,6 @@ public final class PlayerAssociate implements Clan.Associate, PersistentEntity {
 	}
 
 	@Override
-	public List<Carrier> getCarriers() {
-		return getClan().getCarriers();
-	}
-
-	@Override
-	public List<Carrier> getCarriers(Chunk chunk) {
-		return getClan().getCarriers(chunk);
-	}
-
-	@Override
-	public Carrier newCarrier(Location location) {
-		return getClan().newCarrier(location);
-	}
-
-	@Override
 	public void save() {
 		Optional<MemorySpace> memorySpace = getClan().getMemorySpace();
 		if (memorySpace.isPresent()) {
@@ -421,11 +400,6 @@ public final class PlayerAssociate implements Clan.Associate, PersistentEntity {
 			}
 			user_data.save();
 		}
-	}
-
-	@Override
-	public void remove(Carrier carrier) {
-		getClan().remove(carrier);
 	}
 
 	@Override

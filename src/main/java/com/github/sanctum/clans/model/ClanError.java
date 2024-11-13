@@ -1,4 +1,4 @@
-package com.github.sanctum.clans.util;
+package com.github.sanctum.clans.model;
 
 public class ClanError extends Error {
 

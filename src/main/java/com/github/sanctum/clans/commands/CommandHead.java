@@ -65,7 +65,7 @@ public class CommandHead extends ClanSubCommand {
 									sendMessage(p, MessageFormat.format(ClansAPI.getDataInstance().getMessageResponse("purchased-head"), cost));
 								}
 							} else {
-								sendMessage(p, MessageFormat.format(ClansAPI.getDataInstance().getMessageResponse("not-enough-head"), (cost.subtract(BigDecimal.valueOf(provision.balance(p).orElse(0.0))))));
+								sendMessage(p, MessageFormat.format(ClansAPI.getDataInstance().getMessageResponse("not-enough-money"), (cost.subtract(BigDecimal.valueOf(provision.balance(p).orElse(0.0))))));
 							}
 						} else {
 							sendMessage(p, "&cNo economy found feature disabled.");
@@ -124,7 +124,7 @@ public class CommandHead extends ClanSubCommand {
 								sendMessage(p, MessageFormat.format(ClansAPI.getDataInstance().getMessageResponse("cached-head"), cost));
 							}
 						} else {
-							sendMessage(p, MessageFormat.format(ClansAPI.getDataInstance().getMessageResponse("not-enough-head"), (cost.subtract(BigDecimal.valueOf(provision.balance(p).orElse(0.0))))));
+							sendMessage(p, MessageFormat.format(ClansAPI.getDataInstance().getMessageResponse("not-enough-money"), (cost.subtract(BigDecimal.valueOf(provision.balance(p).orElse(0.0))))));
 						}
 					}
 				} else {

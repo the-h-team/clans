@@ -11,7 +11,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import com.github.sanctum.labyrinth.interfacing.Nameable;
+import com.github.sanctum.labyrinth.interfacing.Identifiable;
 import net.md_5.bungee.api.ChatColor;
 import org.jetbrains.annotations.NotNull;
 
@@ -82,11 +82,11 @@ public class ClanBankLog implements Serializable {
         return Collections.unmodifiableList(transactions);
     }
 
-    private static String unwrapNameable(Nameable entity) {
+    private static String unwrapNameable(Identifiable entity) {
         if (entity != null) { // Handles associates too
             return entity.getName();
         } else {
-            return "";
+            return "{YOU-SHOULD-NEVER-SEE-THIS}";
         }
     }
 }

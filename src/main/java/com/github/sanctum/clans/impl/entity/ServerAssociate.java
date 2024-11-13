@@ -1,20 +1,11 @@
 package com.github.sanctum.clans.impl.entity;
 
-import com.github.sanctum.clans.model.Channel;
-import com.github.sanctum.clans.model.Claim;
-import com.github.sanctum.clans.model.Clan;
-import com.github.sanctum.clans.model.ClansAPI;
-import com.github.sanctum.clans.model.Consultant;
-import com.github.sanctum.clans.model.IncomingConsultationListener;
-import com.github.sanctum.clans.model.InvasiveEntity;
-import com.github.sanctum.clans.model.OutgoingConsultationListener;
-import com.github.sanctum.clans.model.Relation;
-import com.github.sanctum.clans.model.Teleport;
-import com.github.sanctum.clans.model.Ticket;
+import com.github.sanctum.clans.model.*;
 import com.github.sanctum.clans.util.HiddenMetadata;
 import com.github.sanctum.labyrinth.data.Atlas;
 import com.github.sanctum.labyrinth.data.AtlasMap;
 import com.github.sanctum.labyrinth.library.Mailer;
+import com.github.sanctum.labyrinth.library.Teleport;
 import com.github.sanctum.labyrinth.library.TimeWatch;
 import com.github.sanctum.labyrinth.task.TaskScheduler;
 import com.github.sanctum.panther.annotation.Ordinal;
@@ -44,7 +35,7 @@ public class ServerAssociate implements Clan.Associate, Consultant {
 	private final Clan clan;
 	private final Date join;
 	private Clan.Rank rank;
-	private Channel chat;
+	private ChatChannel chat;
 	private final Object data;
 	private final Tag tag;
 	private final Map<Long, Long> killMap;
@@ -87,7 +78,7 @@ public class ServerAssociate implements Clan.Associate, Consultant {
 			}
 		};
 		this.rank = priority;
-		this.chat = Channel.valueOf("CONSOLE");
+		this.chat = ChatChannel.valueOf("CONSOLE");
 		this.killMap = new HashMap<>();
 	}
 
@@ -109,7 +100,7 @@ public class ServerAssociate implements Clan.Associate, Consultant {
 	/**
 	 * @return The chat channel this user resides in.
 	 */
-	public Channel getChannel() {
+	public ChatChannel getChannel() {
 		return chat;
 	}
 
@@ -119,7 +110,7 @@ public class ServerAssociate implements Clan.Associate, Consultant {
 	 * @param chat The channel to switch them to.
 	 */
 	public void setChannel(String chat) {
-		this.chat = Channel.valueOf(chat);
+		this.chat = ChatChannel.valueOf(chat);
 	}
 
 	/**
@@ -292,21 +283,6 @@ public class ServerAssociate implements Clan.Associate, Consultant {
 	}
 
 	@Override
-	public List<Carrier> getCarriers() {
-		return getClan().getCarriers();
-	}
-
-	@Override
-	public List<Carrier> getCarriers(Chunk chunk) {
-		return getClan().getCarriers(chunk);
-	}
-
-	@Override
-	public Carrier newCarrier(Location location) {
-		return getClan().newCarrier(location);
-	}
-
-	@Override
 	public void save() {
 	}
 
@@ -352,11 +328,6 @@ public class ServerAssociate implements Clan.Associate, Consultant {
 	@Override
 	public boolean hasOutgoingListener(@NotNull Tag holder) {
 		return outgoingResponseListeners.containsKey(holder.getId());
-	}
-
-	@Override
-	public void remove(Carrier carrier) {
-		getClan().remove(carrier);
 	}
 
 	@Override

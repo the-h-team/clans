@@ -99,7 +99,7 @@ public class CommandLogo extends ClanSubCommand {
 				return true;
 			}
 
-			if (args[0].equalsIgnoreCase("share")) {
+			if (args[0].equalsIgnoreCase("upload")) {
 				if (!Clearance.LOGO_SHARE.test(associate)) {
 					lib.sendMessage(p, lib.noClearance());
 					return true;
@@ -127,7 +127,7 @@ public class CommandLogo extends ClanSubCommand {
 
 						for (String lore : item.getItemMeta().getLore()) {
 							if (isAlphaNumeric(ChatColor.stripColor(lore))) {
-								lib.sendMessage(p, "&cInvalid insignia request. Error 420");
+								lib.sendMessage(p, "&cInvalid insignia request. Error 420"); // means illegal chars with no color it should just be symbols
 								return true;
 							}
 						}
@@ -146,7 +146,7 @@ public class CommandLogo extends ClanSubCommand {
 				return true;
 			}
 
-			if (args[0].equalsIgnoreCase("upload")) {
+			if (args[0].equalsIgnoreCase("use")) {
 				if (!Clearance.LOGO_UPLOAD.test(associate)) {
 					lib.sendMessage(p, lib.noClearance());
 					return true;
@@ -375,7 +375,7 @@ public class CommandLogo extends ClanSubCommand {
 	public List<String> tab(Player player, String label, String[] args) {
 		return SimpleTabCompletion.of(args)
 				.then(TabCompletionIndex.ONE, getBaseCompletion(args))
-				.then(TabCompletionIndex.TWO, getLabel(), TabCompletionIndex.ONE, "edit", "apply", "upload", "color", "redraw", "share", "browse", "carriers")
+				.then(TabCompletionIndex.TWO, getLabel(), TabCompletionIndex.ONE, "edit", "apply", "upload", "color", "redraw", "use", "browse", "carriers", "print")
 				.get();
 	}
 }

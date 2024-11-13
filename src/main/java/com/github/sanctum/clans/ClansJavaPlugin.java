@@ -11,7 +11,6 @@ import com.github.sanctum.clans.util.AsynchronousLoanableTask;
 import com.github.sanctum.clans.util.ClansUpdate;
 import com.github.sanctum.clans.util.FileTypeCalculator;
 import com.github.sanctum.clans.util.MessagePrefix;
-import com.github.sanctum.clans.util.ReservedLogoCarrier;
 import com.github.sanctum.clans.util.Reservoir;
 import com.github.sanctum.clans.util.StartProcedure;
 import com.github.sanctum.clans.impl.DefaultArena;
@@ -109,26 +108,21 @@ public class ClansJavaPlugin extends JavaPlugin implements ClansAPI, Vent.Host {
 		getClaimManager().getFlagManager().register(DefaultClaimFlag.values());
 
 		OrdinalProcedure.process(new StartProcedure(this));
-
-		LogoGallery gallery = getLogoGallery();
-		ReservedLogoCarrier reserved2 = ReservedLogoCarrier.SUMMER;
-		gallery.load(reserved2.getId(), reserved2.get());
-		ReservedLogoCarrier reserved3 = ReservedLogoCarrier.HALLOWEEN;
-		gallery.load(reserved3.getId(), reserved3.get());
-		ReservedLogoCarrier reserved4 = ReservedLogoCarrier.BIG_LANDSCAPE;
-		gallery.load(reserved4.getId(), reserved4.get());
 	}
 
+	// TODO: Deleted after a few version as this wont be needed. it was only to mitigate tether bs.
 	void fixDataFolder() {
 		final File pluginsDir = new File(FileManager.class.getProtectionDomain().getCodeSource().getLocation().getPath().replaceAll("%20", " "));
 		final String name = getDescription().getName();
 		final File newDir = new File(pluginsDir.getParentFile().getPath(), name);
-		// account for both folder names
-		for (String oldFolderName : new String[]{"Clans", "Tether"}) {
-			final File oldDir = new File(pluginsDir.getParentFile().getPath(), oldFolderName);
-			if (oldDir.renameTo(newDir)) {
-				getLogger().info("Renamed the old '" + oldFolderName + "' folder to '" + name + "' for you.");
-				break;
+		if (!newDir.exists()) {
+			// account for both folder names
+			for (String oldFolderName : new String[]{"Clans", "Tether"}) {
+				final File oldDir = new File(pluginsDir.getParentFile().getPath(), oldFolderName);
+				if (oldDir.renameTo(newDir)) {
+					getLogger().info("Renamed the old '" + oldFolderName + "' folder to '" + name + "' for you.");
+					break;
+				}
 			}
 		}
 	}

@@ -1,10 +1,6 @@
 package com.github.sanctum.clans.model;
 
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
-import java.util.Spliterator;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 import org.jetbrains.annotations.NotNull;
@@ -176,7 +172,12 @@ public interface Relation extends Iterable<InvasiveEntity>, Relatable<Relation>,
 			return get().spliterator();
 		}
 
-		@Override
+        @Override
+        default boolean has(@NotNull UUID uuid) {
+            return false;
+        }
+
+        @Override
 		default Stream<InvasiveEntity> stream() {
 			return get().stream();
 		}

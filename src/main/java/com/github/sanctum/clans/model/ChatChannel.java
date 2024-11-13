@@ -14,23 +14,23 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.jetbrains.annotations.NotNull;
 
-public interface Channel {
+public interface ChatChannel {
 
-	Channel CLAN = valueOf("CLAN");
+	ChatChannel CLAN = valueOf("CLAN");
 
-	Channel ALLY = valueOf("ALLY");
+	ChatChannel ALLY = valueOf("ALLY");
 
-	Channel GLOBAL = valueOf("GLOBAL");
+	ChatChannel GLOBAL = valueOf("GLOBAL");
 
-	static Channel[] values() {
-		return Constant.values(Channel.class, Channel.class).toArray(new Channel[0]);
+	static ChatChannel[] values() {
+		return Constant.values(ChatChannel.class, ChatChannel.class).toArray(new ChatChannel[0]);
 	}
 
 	/**
 	 * @apiNote Safe to use for custom chat channel provision!
 	 */
-	static Channel valueOf(String name) {
-		return Constant.values(Channel.class).stream().filter(c -> c.getName().equals(name)).map(Constant::getValue).findFirst().orElse(new Channel() {
+	static ChatChannel valueOf(String name) {
+		return Constant.values(ChatChannel.class).stream().filter(c -> c.getName().equals(name)).map(Constant::getValue).findFirst().orElse(new ChatChannel() {
 			@Override
 			public @NotNull String getId() {
 				return name;
@@ -39,8 +39,8 @@ public interface Channel {
 			@Override
 			public boolean equals(Object obj) {
 				if (obj == null) return false;
-				if (!(obj instanceof Channel)) return false;
-				Channel chatChannel = (Channel) obj;
+				if (!(obj instanceof ChatChannel)) return false;
+				ChatChannel chatChannel = (ChatChannel) obj;
 				return chatChannel.getId().equals(getId());
 			}
 
@@ -54,18 +54,18 @@ public interface Channel {
 	@NotNull String getId();
 
 	default Filter[] getFilters() {
-		return InoperableSpecialMemory.FILTERS.stream().filter(f -> f.getChannel().equals(this)).toArray(Filter[]::new);
+		return InoperableSharedMemory.FILTERS.stream().filter(f -> f.getChannel().equals(this)).toArray(Filter[]::new);
 	}
 
 	default void register(Filter filter) {
-		InoperableSpecialMemory.FILTERS.add(filter);
+		InoperableSharedMemory.FILTERS.add(filter);
 	}
 
 	default void register(Function<String, String> filter) {
-		InoperableSpecialMemory.FILTERS.add(new Filter() {
+		InoperableSharedMemory.FILTERS.add(new Filter() {
 			@Override
-			public @NotNull Channel getChannel() {
-				return Channel.this;
+			public @NotNull ChatChannel getChannel() {
+				return ChatChannel.this;
 			}
 
 			@Override
@@ -134,7 +134,7 @@ public interface Channel {
 
 	interface Filter {
 
-		@NotNull Channel getChannel();
+		@NotNull ChatChannel getChannel();
 
 		@NotNull String run(String context);
 

@@ -3,7 +3,8 @@ package com.github.sanctum.clans.model;
 import com.github.sanctum.clans.impl.entity.EntityAssociate;
 import com.github.sanctum.clans.impl.entity.ServerAssociate;
 import com.github.sanctum.labyrinth.data.EconomyProvision;
-import com.github.sanctum.labyrinth.interfacing.Nameable;
+import com.github.sanctum.labyrinth.interfacing.Identifiable;
+import com.github.sanctum.labyrinth.library.Teleport;
 import com.github.sanctum.panther.annotation.Experimental;
 import com.github.sanctum.panther.file.MemorySpace;
 import com.github.sanctum.panther.util.HUID;
@@ -32,7 +33,7 @@ import org.jetbrains.annotations.Nullable;
  * @see Clan
  * @see Clan.Associate
  */
-public interface InvasiveEntity extends Nameable, LogoHolder, Comparable<InvasiveEntity> {
+public interface InvasiveEntity extends Identifiable, LogoHolder, Comparable<InvasiveEntity> {
 
 	@Experimental(dueTo = "Utility method for retaining cached entity references.")
 	static @NotNull InvasiveEntity wrapNonAssociated(@NotNull ServerOperator entity) {
@@ -59,25 +60,10 @@ public interface InvasiveEntity extends Nameable, LogoHolder, Comparable<Invasiv
 			}
 		}
 		String finalN = n;
-		return InoperableSpecialMemory.ENTITY_MAP.computeIfAbsent(id, i -> new InvasiveEntity() {
+		return InoperableSharedMemory.ENTITY_MAP.computeIfAbsent(id, i -> new InvasiveEntity() {
 
 			@Override
 			public List<String> getLogo() {
-				return null;
-			}
-
-			@Override
-			public List<Carrier> getCarriers() {
-				return null;
-			}
-
-			@Override
-			public List<Carrier> getCarriers(Chunk chunk) {
-				return null;
-			}
-
-			@Override
-			public Carrier newCarrier(Location location) {
 				return null;
 			}
 
@@ -89,11 +75,6 @@ public interface InvasiveEntity extends Nameable, LogoHolder, Comparable<Invasiv
 			@Override
 			public void remove() {
 				InvasiveEntity.removeNonAssociated(this, true);
-			}
-
-			@Override
-			public void remove(Carrier carrier) {
-
 			}
 
 			private final Tag tag;
@@ -227,6 +208,11 @@ public interface InvasiveEntity extends Nameable, LogoHolder, Comparable<Invasiv
 
 						@Override
 						public <T extends InvasiveEntity> boolean has(T o) {
+							return false;
+						}
+
+						@Override
+						public boolean has(@NotNull UUID uuid) {
 							return false;
 						}
 
@@ -333,6 +319,11 @@ public interface InvasiveEntity extends Nameable, LogoHolder, Comparable<Invasiv
 			public @NotNull String getName() {
 				return name;
 			}
+
+			@Override
+			public @NotNull UUID getUniqueId() {
+				return tag.getEntity().getUniqueId();
+			}
 		});
 	}
 
@@ -356,25 +347,10 @@ public interface InvasiveEntity extends Nameable, LogoHolder, Comparable<Invasiv
 				id = ClansAPI.getInstance().getSessionId().toString();
 			}
 		}
-		return InoperableSpecialMemory.ENTITY_MAP.computeIfAbsent(id, i -> new InvasiveEntity() {
+		return InoperableSharedMemory.ENTITY_MAP.computeIfAbsent(id, i -> new InvasiveEntity() {
 
 			@Override
 			public List<String> getLogo() {
-				return null;
-			}
-
-			@Override
-			public List<Carrier> getCarriers() {
-				return null;
-			}
-
-			@Override
-			public List<Carrier> getCarriers(Chunk chunk) {
-				return null;
-			}
-
-			@Override
-			public Carrier newCarrier(Location location) {
 				return null;
 			}
 
@@ -386,11 +362,6 @@ public interface InvasiveEntity extends Nameable, LogoHolder, Comparable<Invasiv
 			@Override
 			public void remove() {
 				InvasiveEntity.removeNonAssociated(this, true);
-			}
-
-			@Override
-			public void remove(Carrier carrier) {
-
 			}
 
 			private final Tag tag;
@@ -528,6 +499,11 @@ public interface InvasiveEntity extends Nameable, LogoHolder, Comparable<Invasiv
 						}
 
 						@Override
+						public boolean has(@NotNull UUID uuid) {
+							return false;
+						}
+
+						@Override
 						public <T extends InvasiveEntity> boolean hasAll(Collection<T> c) {
 							return false;
 						}
@@ -630,11 +606,16 @@ public interface InvasiveEntity extends Nameable, LogoHolder, Comparable<Invasiv
 			public @NotNull String getName() {
 				return name;
 			}
+
+			@Override
+			public @NotNull UUID getUniqueId() {
+				return UUID.randomUUID();
+			}
 		});
 	}
 
 	static <T extends InvasiveEntity> void registerNonAssociated(T entity) {
-		InoperableSpecialMemory.ENTITY_MAP.put(entity.getTag().getId(), entity);
+		InoperableSharedMemory.ENTITY_MAP.put(entity.getTag().getId(), entity);
 	}
 
 	static <T extends InvasiveEntity> void removeNonAssociated(T entity, boolean kill) {
@@ -645,7 +626,7 @@ public interface InvasiveEntity extends Nameable, LogoHolder, Comparable<Invasiv
 				}
 			}
 		}
-		InoperableSpecialMemory.ENTITY_MAP.remove(entity.getTag().getId());
+		InoperableSharedMemory.ENTITY_MAP.remove(entity.getTag().getId());
 	}
 
 	/**
@@ -879,7 +860,7 @@ public interface InvasiveEntity extends Nameable, LogoHolder, Comparable<Invasiv
 	 * @see InvasiveEntity#isPlayer()
 	 * @return This entity instance as an offline player.
 	 */
-	default OfflinePlayer getAsPlayer() {
+	default OfflinePlayer getAsOfflinePlayer() {
 		if (isClan()) return null;
 		return getTag().getPlayer();
 	}
@@ -896,7 +877,7 @@ public interface InvasiveEntity extends Nameable, LogoHolder, Comparable<Invasiv
 	 * @return This entity instance as an entity.
 	 */
 	default Entity getAsEntity() {
-		if (isPlayer() && getAsPlayer().isOnline()) return getAsPlayer().getPlayer();
+		if (isPlayer() && getAsOfflinePlayer().isOnline()) return getAsOfflinePlayer().getPlayer();
 		return getTag().getEntity();
 	}
 

@@ -4,7 +4,6 @@ import com.github.sanctum.clans.DataManager;
 import com.github.sanctum.clans.model.Clan;
 import com.github.sanctum.clans.model.ClanSubCommand;
 import com.github.sanctum.clans.model.ClansAPI;
-import com.github.sanctum.clans.model.Teleport;
 import com.github.sanctum.clans.util.StringLibrary;
 import com.github.sanctum.labyrinth.formatting.completion.SimpleTabCompletion;
 import com.github.sanctum.labyrinth.formatting.completion.TabCompletionIndex;
@@ -12,6 +11,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import com.github.sanctum.labyrinth.library.Teleport;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
@@ -42,9 +43,9 @@ public class CommandTeleport extends ClanSubCommand {
 			if (search != null) {
 				Clan.Associate associate = ClansAPI.getInstance().getAssociate(search).orElse(null);
 				if (associate != null && associate.getClan().equals(passociate.getClan())) {
-					Teleport teleport = passociate.newTeleport(associate.getAsPlayer().getPlayer());
+					Teleport teleport = passociate.newTeleport(associate.getAsOfflinePlayer().getPlayer());
 					if (teleport != null) {
-						teleport.teleport();
+						teleport.run();
 					}
 				}
 			} else {

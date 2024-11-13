@@ -70,22 +70,6 @@ public class BlockEventListener implements Listener {
 				}
 			}
 		}
-		if (event.isCancelled()) return;
-		if (StringUtils.use(b.getType().name()).containsIgnoreCase("sign")) {
-			Sign sign = (Sign) b.getState();
-			if (sign.getLine(1).equals(StringUtils.use("&6&lLogo").translate())) {
-				LogoHolder.Carrier test = LogoHolder.getCarrier(b.getLocation());
-				if (test != null) {
-					Clan.ACTION.sendMessage(event.getPlayer(), "&aClan logo removed.");
-					if (test.getHolder() != null) {
-						test.getHolder().remove(test);
-					}
-					Set<ArmorStand> doubleCheck = LogoHolder.getStands(b.getLocation().add(0.5, 0, 0.5));
-					doubleCheck.forEach(Entity::remove);
-					test.getHolder().save();
-				}
-			}
-		}
 	}
 
 	@Subscribe
@@ -99,68 +83,6 @@ public class BlockEventListener implements Listener {
 					Claim.getResident(event.getPlayer()).getInfo().addPlaced(event.getBlock());
 				}
 			}
-		}
-		if (event.isCancelled()) return;
-		if (StringUtils.use(event.getBlock().getType().name()).containsIgnoreCase("fence")) {
-			LogoHolder.Carrier test = LogoHolder.getCarrier(event.getBlock().getLocation());
-			if (test != null) {
-				Clan.ACTION.sendMessage(event.getPlayer(), "&aClan logo removed.");
-				if (test.getHolder() != null) {
-					test.getHolder().remove(test);
-				}
-				Set<ArmorStand> doubleCheck = LogoHolder.getStands(event.getBlock().getLocation().add(0.5, 0, 0.5));
-				doubleCheck.forEach(Entity::remove);
-				test.getHolder().save();
-			}
-		}
-	}
-
-	@EventHandler
-	public void onSign(SignChangeEvent e) {
-		if (e.getLines().length == 1 && e.getLine(0).equalsIgnoreCase("[Clan]")) {
-			ClansAPI.getInstance().getAssociate(e.getPlayer()).ifPresent(a -> {
-				Sign s = (Sign) e.getBlock().getState();
-				if (!Clearance.LOGO_DISPLAY.test(a)) {
-					e.setLine(0, StringUtils.use("&4[Clan]").translate());
-					Clan.ACTION.sendMessage(e.getPlayer(), "&cFailed to display logo, " + Clan.ACTION.noClearance());
-					return;
-				}
-				if (LogoHolder.getCarrier(s.getLocation().add(0.5, 0, 0.5)) != null) {
-					e.setLine(0, StringUtils.use("&4[Clan]").translate());
-					Clan.ACTION.sendMessage(e.getPlayer(), "&cToo close to another hologram! Max logo hologram's per chunk is 1.");
-					return;
-				}
-				List<String> list = a.getClan().getLogo();
-				if (list != null) {
-					int length = ChatColor.stripColor(StringUtils.use(list.get(0)).translate()).length();
-					if (length > 16) {
-						e.setLine(0, StringUtils.use("&4[Clan]").translate());
-						Clan.ACTION.sendMessage(e.getPlayer(), "&cMaximum logo hologram size is 16x16, ours is too big.");
-						return;
-					}
-					if (EconomyProvision.getInstance().isValid()) {
-						final EconomyProvision provision = EconomyProvision.getInstance();
-						final BigDecimal am = BigDecimal.valueOf(125);
-						if (provision.has(am, e.getPlayer()).orElse(false)) {
-							provision.withdraw(am, e.getPlayer()).orElse(false);
-							e.setLine(0, StringUtils.use("&l[Clan]").translate());
-							e.setLine(1, StringUtils.use("&6&lLogo").translate());
-							e.setLine(2, a.getClan().getId().toString());
-							Clan.ACTION.sendMessage(e.getPlayer(), "&aClan logo now on display &r(&e#&2" + a.getClan().newCarrier(e.getBlock().getLocation()).getId() + "&r)");
-							a.getClan().save();
-						} else {
-							e.setLine(0, StringUtils.use("&4[Clan]").translate());
-							Clan.ACTION.sendMessage(e.getPlayer(), "&cFailed to display logo, not enough money.");
-						}
-					} else {
-						e.setLine(0, StringUtils.use("&l[Clan]").translate());
-						e.setLine(1, StringUtils.use("&6&lLogo").translate());
-						e.setLine(2, a.getClan().getId().toString());
-						Clan.ACTION.sendMessage(e.getPlayer(), "&aClan logo now on display &r(&e#&2" + a.getClan().newCarrier(e.getBlock().getLocation()).getId() + "&r)");
-						a.getClan().save();
-					}
-				}
-			});
 		}
 	}
 

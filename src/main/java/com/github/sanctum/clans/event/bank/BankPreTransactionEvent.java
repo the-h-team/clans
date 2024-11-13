@@ -4,7 +4,7 @@ import com.github.sanctum.clans.model.Clan;
 import com.github.sanctum.clans.event.bank.messaging.Messages;
 import java.math.BigDecimal;
 
-import com.github.sanctum.labyrinth.interfacing.Nameable;
+import com.github.sanctum.labyrinth.interfacing.Identifiable;
 import org.bukkit.event.Cancellable;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -14,7 +14,7 @@ public class BankPreTransactionEvent extends BankTransactionEvent implements Can
     private boolean success;
     private boolean cancelled;
 
-    public BankPreTransactionEvent(@NotNull Clan.Bank bank, @NotNull BigDecimal amount, @Nullable Nameable entity, boolean success, Type type) {
+    public BankPreTransactionEvent(@NotNull Clan.Bank bank, @NotNull BigDecimal amount, @Nullable Identifiable entity, boolean success, Type type) {
         super(bank, amount, entity, success, type);
         this.success = success;
     }

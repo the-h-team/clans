@@ -3,7 +3,6 @@ package com.github.sanctum.clans.model;
 import com.github.sanctum.clans.ClanManager;
 import com.github.sanctum.clans.model.backend.ClanFileBackend;
 import com.github.sanctum.clans.util.BukkitColor;
-import com.github.sanctum.clans.util.ClanError;
 import com.github.sanctum.clans.impl.DefaultClan;
 import com.github.sanctum.clans.impl.entity.ServerAssociate;
 import com.github.sanctum.clans.util.Reservoir;
@@ -18,7 +17,7 @@ import com.github.sanctum.labyrinth.formatting.string.CustomColor;
 import com.github.sanctum.labyrinth.formatting.string.FormattedString;
 import com.github.sanctum.labyrinth.formatting.string.GradientColor;
 import com.github.sanctum.labyrinth.formatting.string.RandomHex;
-import com.github.sanctum.labyrinth.interfacing.Nameable;
+import com.github.sanctum.labyrinth.interfacing.Identifiable;
 import com.github.sanctum.labyrinth.library.Mailer;
 import com.github.sanctum.labyrinth.task.TaskScheduler;
 import com.github.sanctum.panther.annotation.AnnotationDiscovery;
@@ -65,7 +64,7 @@ import org.jetbrains.annotations.Nullable;
  */
 @Node.Pointer(value = "com.github.sanctum.clans.Clan", type = DefaultClan.class)
 @DelegateDeserialization(DefaultClan.class)
-public interface Clan extends ConfigurationSerializable, EntityHolder, InvasiveEntity, JsonAdapter<Clan>, Relatable<Clan> {
+public interface Clan extends Savable, ConfigurationSerializable, EntityHolder, InvasiveEntity, JsonAdapter<Clan>, Relatable<Clan> {
 
 	ClanFileBackend ACTION = new ClanFileBackend();
 
@@ -224,6 +223,17 @@ public interface Clan extends ConfigurationSerializable, EntityHolder, InvasiveE
 	<R> R setValue(String key, R value, boolean temporary);
 
 	/**
+	 * Check if any members of this clan are online.
+	 *
+	 * @return true if atleast one member is online
+	 */
+    default boolean isOnline() {
+        return getMembers().stream().anyMatch(a -> a.getAsOfflinePlayer().isOnline());
+    }
+
+    /**
+	 * Check if this clan is saved into local memory.
+	 *
 	 * @return true if this clan is valid.
 	 */
 	boolean isValid();
@@ -514,7 +524,7 @@ public interface Clan extends ConfigurationSerializable, EntityHolder, InvasiveE
 		DEFAULT, CUSTOM, UNKNOWN
 	}
 
-	interface Rank extends Nameable {
+	interface Rank extends Identifiable {
 
 		@NotNull String getSymbol();
 
@@ -543,7 +553,7 @@ public interface Clan extends ConfigurationSerializable, EntityHolder, InvasiveE
 	/**
 	 * A type of invasive entity that belongs to a parent entity known as a {@link Clan}.
 	 */
-	interface Associate extends InvasiveEntity {
+	interface Associate extends Savable, InvasiveEntity {
 
 		/**
 		 * @return The users display name.
@@ -555,6 +565,11 @@ public interface Clan extends ConfigurationSerializable, EntityHolder, InvasiveE
 		 */
 		UUID getId();
 
+		@Override
+		default @NotNull UUID getUniqueId() {
+			return getId();
+		}
+
 		/**
 		 * @return The users cached head skin.
 		 */
@@ -563,7 +578,7 @@ public interface Clan extends ConfigurationSerializable, EntityHolder, InvasiveE
 		/**
 		 * @return The chat channel this user resides in.
 		 */
-		Channel getChannel();
+		ChatChannel getChannel();
 
 		/**
 		 * @return Gets the clan this user belongs to.
@@ -759,7 +774,7 @@ public interface Clan extends ConfigurationSerializable, EntityHolder, InvasiveE
 				return string.replace(":member_name:", associate.getName())
 						.replace(":member_kd:", associate.getKD() + "")
 						.replace(":member_bio:", associate.getBiography())
-						.replace(":member_balance:", (EconomyProvision.getInstance().isValid() && associate.isPlayer() ? EconomyProvision.getInstance().balance(associate.getAsPlayer()).orElse(0.0) : 0.0) + "")
+						.replace(":member_balance:", (EconomyProvision.getInstance().isValid() && associate.isPlayer() ? EconomyProvision.getInstance().balance(associate.getAsOfflinePlayer()).orElse(0.0) : 0.0) + "")
 						.replace(":member_nick_name:", associate.getNickname())
 						.replace(":member_nick_name_colored:", associate.getClan().getPalette().toString(associate.getNickname()))
 						.replace(":member_rank_full:", associate.getRankFull())
@@ -771,7 +786,7 @@ public interface Clan extends ConfigurationSerializable, EntityHolder, InvasiveE
 						.replace(":clan_name_colored:", associate.getClan().getPalette().toString(associate.getClan().getName()))
 						.replace(":clan_nick_name:", associate.getClan().getNickname() != null ? associate.getClan().getNickname() : associate.getClan().getName())
 						.replace(":clan_nick_name_colored:", associate.getClan().getName())
-						.translate(associate.getAsPlayer())
+						.translate(associate.getAsOfflinePlayer())
 						.get();
 			};
 		}
@@ -784,7 +799,7 @@ public interface Clan extends ConfigurationSerializable, EntityHolder, InvasiveE
 		private String end;
 
 		public Color(Clan c) {
-			ClanException.call(ClanError::new).check(c).run("Null clan cannot have color!");
+			ClanExceptionFactory.call(ClanError::new).check(c).run("Null clan cannot have color!");
 		}
 
 		public Color setStart(String start) {
@@ -980,6 +995,22 @@ public interface Clan extends ConfigurationSerializable, EntityHolder, InvasiveE
 		return clan;
 	}
 
+	static @NotNull Identifiable newIdentifiable(@NotNull Supplier<String> element) {
+		return new Identifiable() {
+			final UUID id = UUID.nameUUIDFromBytes(element.get().getBytes());
+			final String name = element.get();
+			@Override
+			public @NotNull String getName() {
+				return name;
+			}
+
+			@Override
+			public @NotNull UUID getUniqueId() {
+				return id;
+			}
+		};
+	}
+
 	interface Action<O> extends Runnable {
 
 		O deploy();
@@ -995,10 +1026,10 @@ public interface Clan extends ConfigurationSerializable, EntityHolder, InvasiveE
 		/**
 		 * Thrown when an action is attempted on a bank that has been disabled.
 		 */
-		class DisabledException extends RuntimeException {
+		class DisabledClanBankError extends ClanError {
 			private static final long serialVersionUID = 4810589456756119379L;
 
-			public DisabledException(String clanId) {
+			public DisabledClanBankError(String clanId) {
 				super("The bank for [" + clanId + "] is disabled.");
 			}
 		}
@@ -1009,10 +1040,10 @@ public interface Clan extends ConfigurationSerializable, EntityHolder, InvasiveE
 		 * @param amount the amount to deposit
 		 * @param source the source of the deposit
 		 * @return true if the deposit was successful
-		 * @throws DisabledException if the bank is disabled
+		 * @throws DisabledClanBankError if the bank is disabled
 		 * @throws IllegalArgumentException if {@code amount} is negative
 		 */
-		boolean deposit(@NotNull BigDecimal amount, Nameable source) throws DisabledException, IllegalArgumentException;
+		boolean deposit(@NotNull BigDecimal amount, Identifiable source) throws DisabledClanBankError, IllegalArgumentException;
 
 		/**
 		 * Withdraws an amount from the bank.
@@ -1020,10 +1051,10 @@ public interface Clan extends ConfigurationSerializable, EntityHolder, InvasiveE
 		 * @param amount the amount to withdraw
 		 * @param recipient the recipient of the withdrawal
 		 * @return true if the withdrawal was successful
-		 * @throws DisabledException if the bank is disabled
+		 * @throws DisabledClanBankError if the bank is disabled
 		 * @throws IllegalArgumentException if {@code amount} is negative
 		 */
-		boolean withdraw(@NotNull BigDecimal amount, Nameable recipient) throws DisabledException, IllegalArgumentException;
+		boolean withdraw(@NotNull BigDecimal amount, Identifiable recipient) throws DisabledClanBankError, IllegalArgumentException;
 
 		/**
 		 * Checks if the bank has an amount.
@@ -1054,9 +1085,9 @@ public interface Clan extends ConfigurationSerializable, EntityHolder, InvasiveE
 		 *
 		 * @param newBalance the desired balance as a double
 		 * @return true if successful
-		 * @throws DisabledException if the bank is disabled
+		 * @throws DisabledClanBankError if the bank is disabled
 		 */
-		default boolean setBalanceDouble(double newBalance) throws DisabledException {
+		default boolean setBalanceDouble(double newBalance) throws DisabledClanBankError {
 			return setBalance(BigDecimal.valueOf(newBalance));
 		}
 
@@ -1065,9 +1096,9 @@ public interface Clan extends ConfigurationSerializable, EntityHolder, InvasiveE
 		 *
 		 * @param newBalance the desired balance as a BigDecimal
 		 * @return true if successful
-		 * @throws DisabledException if the bank is disabled
+		 * @throws DisabledClanBankError if the bank is disabled
 		 */
-		boolean setBalance(@NotNull BigDecimal newBalance) throws DisabledException;
+		boolean setBalance(@NotNull BigDecimal newBalance) throws DisabledClanBankError;
 
 		/**
 		 * Gets a copy of the log of the bank's transactions.

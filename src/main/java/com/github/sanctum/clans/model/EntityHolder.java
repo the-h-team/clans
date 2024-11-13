@@ -1,11 +1,10 @@
 package com.github.sanctum.clans.model;
 
-import com.github.sanctum.clans.util.TeleportationTarget;
+import com.github.sanctum.clans.util.Teleportation;
+import com.github.sanctum.labyrinth.library.Teleport;
 import com.github.sanctum.panther.util.Check;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.Spliterator;
+
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
@@ -38,9 +37,9 @@ public interface EntityHolder extends Iterable<InvasiveEntity> {
 	 * @return a new teleportation object or null.
 	 */
 	default @Nullable Teleport newTeleport(InvasiveEntity entity, Object location) {
-		TeleportationTarget target = new TeleportationTarget(location);
+		Teleport.Location target = new Teleport.Location(location);
 		if (target.isPlayer() || target.isLocation()) {
-			return new Teleport.Impl(entity, target);
+			return new Teleportation(entity, target);
 		}
 		return null;
 	}
@@ -76,6 +75,14 @@ public interface EntityHolder extends Iterable<InvasiveEntity> {
 	 * @return true if this holder contains the entity.
 	 */
 	<T extends InvasiveEntity> boolean has(T o);
+
+	/**
+	 * Check if this holder contains an entity with the provided uuid.
+	 *
+	 * @param uuid the uuid to check for
+	 * @return true if this holder contains an entity with the provided unique id.
+	 */
+	boolean has(@NotNull UUID uuid);
 
 	/**
 	 * Check if this holder contains every entity from a given collection of invasive entities.

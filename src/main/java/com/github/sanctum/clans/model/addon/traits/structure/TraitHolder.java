@@ -4,7 +4,7 @@ import com.github.sanctum.clans.model.Clan;
 import com.github.sanctum.clans.model.addon.TraitsAddon;
 import com.github.sanctum.clans.model.Savable;
 import com.github.sanctum.labyrinth.data.FileManager;
-import com.github.sanctum.labyrinth.interfacing.Nameable;
+import com.github.sanctum.labyrinth.interfacing.Identifiable;
 import com.github.sanctum.panther.file.Configurable;
 import com.github.sanctum.panther.file.Node;
 import java.util.Arrays;
@@ -13,7 +13,7 @@ import org.bukkit.OfflinePlayer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class TraitHolder implements Nameable, Savable {
+public class TraitHolder implements Identifiable, Savable {
 
 	final String name;
 	final UUID id;
@@ -62,6 +62,11 @@ public class TraitHolder implements Nameable, Savable {
 	@Override
 	public @NotNull String getName() {
 		return name;
+	}
+
+	@Override
+	public @NotNull UUID getUniqueId() {
+		return UUID.nameUUIDFromBytes(this.name.getBytes());
 	}
 
 	public @NotNull UUID getId() {

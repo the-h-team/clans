@@ -67,7 +67,7 @@ public class BorderTaskEvent extends Event implements Cancellable {
 					int i = 0;
 					i++;
 					p.getWorld().spawnParticle(Particle.HEART, p.getLocation().getX(), p.getEyeLocation().getY() + 0.5, p.getLocation().getZ(), 1);
-					boundary.deploy(Cuboid.VisualBoundary.Particle.GREEN);
+					boundary.deploy(Cuboid.VisualBoundary.Color.GREEN);
 					boundary.deploy(action -> action.getPlayer().spawnParticle(Particle.HEART, action.getX(), action.getY(), action.getZ(), 1));
 					double add = p.getHealth() + i;
 					int addF = p.getFoodLevel() + i;
@@ -82,17 +82,17 @@ public class BorderTaskEvent extends Event implements Cancellable {
 					return;
 				}
 				if (((Clan)claim.getHolder()).getRelation().isNeutral(associate.getClan())) {
-					boundary.deploy(Cuboid.VisualBoundary.Particle.WHITE);
+					boundary.deploy(Cuboid.VisualBoundary.Color.WHITE);
 				} else {
 					if (((Clan)claim.getHolder()).getRelation().getAlliance().has(associate.getClan())) {
-						boundary.deploy(Cuboid.VisualBoundary.Particle.GREEN);
+						boundary.deploy(Cuboid.VisualBoundary.Color.GREEN);
 					}
 					if (((Clan)claim.getHolder()).getRelation().getRivalry().has(associate.getClan())) {
-						boundary.deploy(Cuboid.VisualBoundary.Particle.RED);
+						boundary.deploy(Cuboid.VisualBoundary.Color.RED);
 					}
 				}
 			} else {
-				boundary.deploy(Cuboid.VisualBoundary.Particle.WHITE);
+				boundary.deploy(Cuboid.VisualBoundary.Color.WHITE);
 			}
 		} else {
 			int cy1 = p.getLocation().getBlockY() + 5;
@@ -104,7 +104,7 @@ public class BorderTaskEvent extends Event implements Cancellable {
 			Region r = new BorderRegion(cx1, cx2, cy2, cy1, cz1, cz2, p.getWorld(), HUID.randomID());
 			Cuboid.VisualBoundary boundary = r.getBoundary(p);
 			boundary.setViewer(p);
-			boundary.deploy(Cuboid.VisualBoundary.Particle.YELLOW);
+			boundary.deploy(Cuboid.VisualBoundary.Color.YELLOW);
 			if (associate != null) {
 				Clan clan = associate.getClan();
 				Location base = clan.getBase();

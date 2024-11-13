@@ -2,7 +2,7 @@ plugins {
     id("clans.java-conventions")
 }
 
-val placeholderApiVersion by extra("2.10.9")
+val placeholderApiVersion by extra("2.11.6")
 
 repositories {
     maven("https://repo.extendedclip.com/content/repositories/placeholderapi/") {

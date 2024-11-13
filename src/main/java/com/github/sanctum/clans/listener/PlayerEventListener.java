@@ -1,5 +1,6 @@
 package com.github.sanctum.clans.listener;
 
+import com.github.sanctum.clans.DataManager;
 import com.github.sanctum.clans.model.ClanVentBus;
 import com.github.sanctum.clans.model.ClanVentCall;
 import com.github.sanctum.clans.model.addon.worldedit.WorldEditAdapter;
@@ -8,11 +9,7 @@ import com.github.sanctum.clans.model.addon.worldedit.WorldEditSchematicAdapter;
 import com.github.sanctum.clans.model.*;
 import com.github.sanctum.clans.impl.DefaultMapEntry;
 import com.github.sanctum.clans.impl.DefaultRespawnCooldown;
-import com.github.sanctum.clans.util.AboveHeadDisplayName;
-import com.github.sanctum.clans.util.AsynchronousLoanableTask;
-import com.github.sanctum.clans.util.ClansUpdate;
-import com.github.sanctum.clans.util.Reservoir;
-import com.github.sanctum.clans.util.ReservoirMetadata;
+import com.github.sanctum.clans.util.*;
 import com.github.sanctum.clans.event.TimerEvent;
 import com.github.sanctum.clans.event.associate.AssociateClaimEvent;
 import com.github.sanctum.clans.event.associate.AssociateHitReservoirEvent;
@@ -20,11 +17,10 @@ import com.github.sanctum.clans.event.claim.ClaimInteractEvent;
 import com.github.sanctum.clans.event.clan.ClanCooldownCompleteEvent;
 import com.github.sanctum.clans.event.player.PlayerCooldownCompleteEvent;
 import com.github.sanctum.clans.event.player.PlayerKillPlayerEvent;
-import com.github.sanctum.clans.event.player.PlayerLookAtCarrierEvent;
 import com.github.sanctum.clans.event.player.PlayerPunchPlayerEvent;
 import com.github.sanctum.clans.event.player.PlayerShootPlayerEvent;
-import com.github.sanctum.clans.event.war.WarActiveEvent;
-import com.github.sanctum.clans.event.war.WarWonEvent;
+import com.github.sanctum.clans.event.arena.ArenaActiveEvent;
+import com.github.sanctum.clans.event.arena.ArenaWonEvent;
 import com.github.sanctum.labyrinth.LabyrinthProvider;
 import com.github.sanctum.labyrinth.api.Service;
 import com.github.sanctum.labyrinth.data.EconomyProvision;
@@ -56,12 +52,14 @@ import com.github.sanctum.panther.util.ProgressBar;
 import com.github.sanctum.panther.util.Task;
 import com.github.sanctum.panther.util.TaskChain;
 import com.github.sanctum.panther.util.TaskPredicate;
+
 import java.io.File;
 import java.math.BigDecimal;
 import java.text.MessageFormat;
 import java.text.NumberFormat;
 import java.util.*;
 import java.util.stream.Collectors;
+
 import org.bukkit.Bukkit;
 import org.bukkit.Color;
 import org.bukkit.FireworkEffect;
@@ -98,7 +96,9 @@ public class PlayerEventListener implements Listener {
 
 	private final static PantherMap<Location, ArmorStand> STAND_MAP = new PantherEntryMap<>();
 	public static final Procedure<Object> ARMOR_STAND_REMOVAL = Procedure.request(() -> Object.class).next(o -> STAND_MAP.values().forEach(ArmorStand::remove));
-	final int time_span = ClansAPI.getDataInstance().getConfigInt("Clans.timer.time-span");
+	final DataManager dataInstance = ClansAPI.getDataInstance();
+	final int time_span = dataInstance.getConfigInt("Clans.timer.time-span");
+	final ClansTeleportationRunner teleportationRunner = new ClansTeleportationRunner();
 	public static final AsynchronousLoanableTask LOANABLE_TASK = new AsynchronousLoanableTask((p, task) -> {
 		ClanVentBus.call(new TimerEvent(p, true) {
 		});
@@ -127,11 +127,11 @@ public class PlayerEventListener implements Listener {
 					ClanVentBus.call(new ClanCooldownCompleteEvent(c, clanCooldown));
 					if (clanCooldown.getDescriptor() != null && !clanCooldown.getDescriptor().isEmpty()) {
 						FancyMessage m = new FancyMessage();
-						m.then(MessageFormat.format(ClansAPI.getDataInstance().getMessageResponse("cooldown-expired"), clanCooldown.getAction().replace("Clans:", "")));
+						m.then(MessageFormat.format(dataInstance.getMessageResponse("cooldown-expired"), clanCooldown.getAction().replace("Clans:", "")));
 						m.hover("&3&o" + clanCooldown.getDescriptor());
 						c.broadcast(m.build());
 					} else {
-						c.broadcast(MessageFormat.format(ClansAPI.getDataInstance().getMessageResponse("cooldown-expired"), clanCooldown.getAction().replace("Clans:", "")));
+						c.broadcast(MessageFormat.format(dataInstance.getMessageResponse("cooldown-expired"), clanCooldown.getAction().replace("Clans:", "")));
 					}
 					ClanCooldown.remove(clanCooldown);
 				}
@@ -139,10 +139,7 @@ public class PlayerEventListener implements Listener {
 			return;
 		}
 
-		Arena arena = ClansAPI.getInstance().getArenaManager().get("PRO");
-
-		if (arena != null) {
-
+		for (Arena arena : ClansAPI.getInstance().getArenaManager()) {
 			if (arena.isRunning()) {
 				if (arena.getTimer().isComplete()) {
 					if (arena.stop()) {
@@ -157,21 +154,20 @@ public class PlayerEventListener implements Listener {
 							}
 						}
 						TaskScheduler.of(() -> {
-							WarWonEvent event = ClanVentBus.call(new WarWonEvent(arena, new DefaultMapEntry<>(w, points), map));
+							ArenaWonEvent event = ClanVentBus.call(new ArenaWonEvent(arena, new DefaultMapEntry<>(w, points), map));
 							if (!event.isCancelled()) {
 								Mailer msg = LabyrinthProvider.getService(Service.MESSENGER).getEmptyMailer().prefix().start(ClansAPI.getInstance().getPrefix().toString()).finish();
 								Bukkit.broadcastMessage(" ");
-								msg.announce(pl -> true, "&3A war between clans &b[" + Arrays.stream(arena.getQueue().getTeams()).map(Clan::getName).collect(Collectors.joining(",")) + "]&3 in arena &7#&e" + arena.getId() + " &3concluded with winner &6&l" + w.getName() + " &f(&a" + points + "&f)");
+								msg.announce(pl -> true, "&3A death-match between clans &b[" + Arrays.stream(arena.getQueue().getTeams()).map(Clan::getName).collect(Collectors.joining(",")) + "]&3 in arena &7#&e" + arena.getId() + " &3concluded with winner &6&l" + w.getName() + " &f(&a" + points + "&f)");
 								Bukkit.broadcastMessage(" ");
 							}
 							arena.reset();
 						}).schedule();
 					}
 				} else {
-					TaskScheduler.of(() -> ClanVentBus.call(new WarActiveEvent(arena))).schedule();
+					TaskScheduler.of(() -> ClanVentBus.call(new ArenaActiveEvent(arena))).schedule();
 				}
 			}
-
 		}
 
 	}
@@ -180,59 +176,20 @@ public class PlayerEventListener implements Listener {
 	public void onTimer(TimerEvent e) {
 		if (!e.isAsynchronous()) {
 			Player p = e.getPlayer();
-			ClansAPI.getInstance().getAssociate(p.getName()).ifPresent(a -> {
-				Teleport teleport = Teleport.get(a);
-				if (teleport != null) {
-					if (p.getLocation().distance(teleport.getLocationBeforeTeleport()) > 0) {
-						teleport.setState(Teleport.State.EXPIRED);
-						Clan.ACTION.sendMessage(p, "&cYou moved! Teleportation cancelled.");
-						teleport.cancel();
-					}
-				}
-			});
-			for (ClanCooldown clanCooldown : ClansAPI.getDataInstance().getCooldowns()) {
+			ClansAPI.getInstance().getAssociate(p.getName()).ifPresent(teleportationRunner::run);
+			for (ClanCooldown clanCooldown : dataInstance.getCooldowns()) {
 				if (clanCooldown.getId().equals(p.getUniqueId().toString())) {
 					if (clanCooldown.isComplete()) {
 						ClanVentBus.call(new PlayerCooldownCompleteEvent(p, clanCooldown));
 						TaskScheduler.of(() -> ClanCooldown.remove(clanCooldown)).schedule();
 						if (clanCooldown.getDescriptor() != null && !clanCooldown.getDescriptor().isEmpty()) {
 							FancyMessage m = new FancyMessage();
-							m.then(MessageFormat.format(ClansAPI.getDataInstance().getMessageResponse("cooldown-expired"), clanCooldown.getAction().replace("Clans:", "")));
+							m.then(MessageFormat.format(dataInstance.getMessageResponse("cooldown-expired"), clanCooldown.getAction().replace("Clans:", "")));
 							m.hover("&3&o" + clanCooldown.getDescriptor());
 							m.send(p).queue();
 						} else {
-							Clan.ACTION.sendMessage(p, MessageFormat.format(ClansAPI.getDataInstance().getMessageResponse("cooldown-expired"), clanCooldown.getAction().replace("Clans:", "")));
+							Clan.ACTION.sendMessage(p, MessageFormat.format(dataInstance.getMessageResponse("cooldown-expired"), clanCooldown.getAction().replace("Clans:", "")));
 						}
-					}
-				}
-			}
-		}
-	}
-
-	@Subscribe(priority = Vent.Priority.READ_ONLY, processCancelled = true)
-	public void onViewLogo(TimerEvent e) {
-		Player p = e.getPlayer();
-		if (!e.isAsynchronous()) {
-			if (e.getApi().isTrial()) return; // no pro, no provided holograms
-			ArmorStand test = Clan.ACTION.getArmorStandInSight(p, 5);
-			if (test != null) {
-				LogoHolder.Carrier t = LogoHolder.getCarrier(test.getLocation());
-				if (t != null) {
-					Location location = new Location(t.getTop().getWorld(), t.getTop().getX(), t.getTop().getY(), t.getTop().getZ(), t.getTop().getYaw(), t.getTop().getPitch()).add(0, 0.5, 0);
-					PlayerLookAtCarrierEvent event = ClanVentBus.call(new PlayerLookAtCarrierEvent(p, t, "(" + t.getId() + ") " + OrdinalProcedure.select(t, 2).cast(() -> Clan.class).getName(), time_span));
-					if (!event.isCancelled()) {
-						ArmorStand stand = Entities.ARMOR_STAND.spawn(location, armorStand -> {
-							armorStand.setVisible(false);
-							armorStand.setMarker(true);
-							armorStand.setSmall(true);
-							armorStand.setCustomName(event.getTitle());
-							armorStand.setCustomNameVisible(true);
-						});
-						TaskScheduler.of(() -> {
-							if (stand.isValid()) {
-								stand.remove();
-							}
-						}).scheduleLater(event.getDespawn());
 					}
 				}
 			}
@@ -243,6 +200,7 @@ public class PlayerEventListener implements Listener {
 	public void onViewReservoir(TimerEvent e) {
 		Player p = e.getPlayer();
 		if (!e.isAsynchronous()) {
+			// not 1.16+ no hologram
 			if (!LabyrinthProvider.getInstance().isNew()) return;
 			if (e.getApi().isTrial()) return; // no pro no reservoir
 			EnderCrystal test = Clan.ACTION.getEnderCrystalInSight(p, 5);
@@ -255,24 +213,24 @@ public class PlayerEventListener implements Listener {
 					if (c != null) {
 						Reservoir r = Reservoir.of(test);
 						if (r.getOwner() == null) r.adapt(c);
-						Location location = new Location(test.getLocation().getWorld(), test.getLocation().getX(), test.getLocation().getY(), test.getLocation().getZ(), test.getLocation().getYaw(), test.getLocation().getPitch()).add(0, 1.5, 0);
-						Location location2 = new Location(test.getLocation().getWorld(), test.getLocation().getX(), test.getLocation().getY(), test.getLocation().getZ(), test.getLocation().getYaw(), test.getLocation().getPitch()).add(0, 1.2, 0);
-						Location location3 = new Location(test.getLocation().getWorld(), test.getLocation().getX(), test.getLocation().getY(), test.getLocation().getZ(), test.getLocation().getYaw(), test.getLocation().getPitch()).add(0, 1.8, 0);
-						ArmorStand stand = Entities.ARMOR_STAND.spawn(location, armorStand -> {
+						Location progressLocation = new Location(test.getLocation().getWorld(), test.getLocation().getX(), test.getLocation().getY(), test.getLocation().getZ(), test.getLocation().getYaw(), test.getLocation().getPitch()).add(0, 1.5, 0);
+						Location titleLocation = new Location(test.getLocation().getWorld(), test.getLocation().getX(), test.getLocation().getY(), test.getLocation().getZ(), test.getLocation().getYaw(), test.getLocation().getPitch()).add(0, 1.2, 0);
+						Location nameLocation = new Location(test.getLocation().getWorld(), test.getLocation().getX(), test.getLocation().getY(), test.getLocation().getZ(), test.getLocation().getYaw(), test.getLocation().getPitch()).add(0, 1.8, 0);
+						ArmorStand progressBar = Entities.ARMOR_STAND.spawn(progressLocation, armorStand -> {
 							armorStand.setVisible(false);
 							armorStand.setMarker(true);
 							armorStand.setSmall(true);
 							armorStand.setCustomName(new FormattedString(new ProgressBar().setProgress((int) r.getPower()).setGoal((int) r.getMaxPower()).setFullColor("&5&l").setPrefix(null).setSuffix(null).toString() + " &f(&6" + NumberFormat.getNumberInstance().format(r.getPower()) + "&f)").color().get());
 							armorStand.setCustomNameVisible(true);
 						});
-						ArmorStand stand2 = Entities.ARMOR_STAND.spawn(location3, armorStand -> {
+						ArmorStand clanName = Entities.ARMOR_STAND.spawn(nameLocation, armorStand -> {
 							armorStand.setVisible(false);
 							armorStand.setMarker(true);
 							armorStand.setSmall(true);
 							armorStand.setCustomName(new FormattedString(c.getPalette().toString(c.getName())).color().get());
 							armorStand.setCustomNameVisible(true);
 						});
-						ArmorStand stand3 = Entities.ARMOR_STAND.spawn(location2, armorStand -> {
+						ArmorStand title = Entities.ARMOR_STAND.spawn(titleLocation, armorStand -> {
 							armorStand.setVisible(false);
 							armorStand.setMarker(true);
 							armorStand.setSmall(true);
@@ -280,14 +238,14 @@ public class PlayerEventListener implements Listener {
 							armorStand.setCustomNameVisible(true);
 						});
 						TaskScheduler.of(() -> {
-							if (stand.isValid()) {
-								stand.remove();
+							if (progressBar.isValid()) {
+								progressBar.remove();
 							}
-							if (stand2.isValid()) {
-								stand2.remove();
+							if (clanName.isValid()) {
+								clanName.remove();
 							}
-							if (stand3.isValid()) {
-								stand3.remove();
+							if (title.isValid()) {
+								title.remove();
 							}
 						}).scheduleLater(time_span);
 					}
@@ -325,8 +283,7 @@ public class PlayerEventListener implements Listener {
 								// place schematic
 								WorldEditAdapter adapter = WorldEditAdapter.getInstance();
 								if (adapter.isValid()) {
-									// FIXME make relative to plugin dir
-									final WorldEditSchematicAdapter schematic = adapter.loadSchematic(new File("plugins/Clans/Configuration/Data/reservoir.schem"));
+									final WorldEditSchematicAdapter schematic = adapter.loadSchematic(new File(ClansAPI.getInstance().getPlugin().getDataFolder(), "Configuration/Data/reservoir.schem"));
 									if (schematic != null) {
 										final WorldEditClipboardAdapter clipboard = schematic.toClipboard();
 										TaskChain.getSynchronous().wait(() -> clipboard.paste().toLocation(location).applyAfter(() -> Entities.ENDER_CRYSTAL.spawn(location)), t.getClan().getId() + ";reservoir-build", 300L * 20L);
@@ -336,10 +293,10 @@ public class PlayerEventListener implements Listener {
 								}
 							}
 						} else {
-							Clan.ACTION.sendMessage(e.getPlayer(), "&cYour clan already has a reservoir powered up!");
+							Clan.ACTION.sendMessage(e.getPlayer(), dataInstance.getMessageResponse("reservoir-already-active"));
 						}
 					} else {
-						Clan.ACTION.sendMessage(e.getPlayer(), "&cYou can only build a clan reservoir in owned land!");
+						Clan.ACTION.sendMessage(e.getPlayer(), dataInstance.getMessageResponse("reservoir-not-homeland"));
 					}
 				}
 			}
@@ -364,11 +321,11 @@ public class PlayerEventListener implements Listener {
 								if (itemStack.getType() == Material.IRON_NUGGET) {
 									TokenSync sync = new TokenSync(itemStack.getAmount(), e.getPlayer().getInventory());
 									if (compost.has(sync)) {
-										double modifier = ClansAPI.getDataInstance().getConfig().read(c -> c.getNode("Clans.reservoir.power-multiplier").toPrimitive().getDouble());
+										double modifier = dataInstance.getConfig().read(c -> c.getNode("Clans.reservoir.power-multiplier").toPrimitive().getDouble());
 										final double worth = modifier * itemStack.getAmount();
 										compost.remove(sync);
 										owner.givePower(worth);
-										owner.broadcast("&5" + a.getNickname() + " &6obtained power for us.");
+										owner.broadcast(MessageFormat.format(dataInstance.getMessageResponse("reservoir-power-obtained"), a.getNickname()));
 									}
 									return;
 								}
@@ -377,21 +334,22 @@ public class PlayerEventListener implements Listener {
 									if (nearBy == 0) {
 										if (itemStack.getAmount() >= 1) {
 											final int am = itemStack.getAmount();
-											double modifier = ClansAPI.getDataInstance().getConfig().read(c -> c.getNode("Clans.reservoir.repair-multiplier." + itemStack.getType().name()).toPrimitive().getDouble()); // retrieve modifier based on item from config or pull default.
+											double modifier = dataInstance.getConfig().read(c -> c.getNode("Clans.reservoir.repair-multiplier." + itemStack.getType().name()).toPrimitive().getDouble()); // retrieve modifier based on item from config or pull default.
 											if (modifier > 0) {
 												//TODO: make it detect a crouch so you can choose to deposit individual items or all at once
 												itemStack.setAmount(0);
 												r.set(Math.min(owner.getPower(), r.getPower() + (am * modifier)));
 												e.getPlayer().getWorld().spawnParticle(Particle.HEART, new Location(r.getEntity().getWorld(), r.getEntity().getLocation().getX(), r.getEntity().getLocation().getY(), r.getEntity().getLocation().getZ(), r.getEntity().getLocation().getYaw(), r.getEntity().getLocation().getPitch()).add(0, 0.5, 0), 1);
-												owner.broadcast("&aOur reservoir was repaired by &5" + a.getNickname());
+												owner.broadcast(MessageFormat.format(dataInstance.getMessageResponse("reservoir-repaired"), a.getNickname()));
 											} else {
-												a.getMailer().chat("&cThis item has no value to the reservoir.").queue();
+												Clan.ACTION.sendMessage(e.getPlayer(), MessageFormat.format(dataInstance.getMessageResponse("reservoir-repair-failed"), itemStack.getType().name().toLowerCase().replace("_", "")));
 											}
 										} else {
-											Clan.ACTION.sendMessage(e.getPlayer(), "&cYou cannot feed the reservoir air!");
+											Clan.ACTION.sendMessage(e.getPlayer(), MessageFormat.format(dataInstance.getMessageResponse("reservoir-repair-failed"), "air"));
+
 										}
 									} else {
-										a.getMailer().chat("&cThere are enemies too close by to perform this action.").queue();
+										Clan.ACTION.sendMessage(e.getPlayer(), dataInstance.getMessageResponse("reservoir-repair-failed-enemies"));
 									}
 								}
 							}
@@ -409,53 +367,53 @@ public class PlayerEventListener implements Listener {
 		Clan victim = r.getOwner();
 		if (victim != null) {
 			if (attacking.equals(victim)) {
-				e.getAssociate().getMailer().chat("&cYou cannot damage your own reservoir only repair it!").deploy();
+				Clan.ACTION.sendMessage(e.getPlayer(), dataInstance.getMessageResponse("reservoir-self-damage-denied"));
 				new FancyMessage("Are you attempting to destroy it?").then(" ").then("&7[").then("&6Yes").hover("&eClick to confirm.").action(() -> {
 					e.getPlayer().getWorld().spawnParticle(Particle.EXPLOSION_HUGE, r.getEntity().getLocation(), 1);
 					e.getPlayer().getWorld().playSound(r.getEntity().getLocation(), Sound.ENTITY_GENERIC_EXPLODE, 10, 1);
 					r.remove();
-					attacking.broadcast("&5" + e.getAssociate().getNickname() + " &ehas removed our clan reservoir.");
+					attacking.broadcast(MessageFormat.format(dataInstance.getMessageResponse("reservoir-removed"), e.getAssociate().getNickname()));
 				}).then("&7]").send(e.getPlayer()).queue();
 				e.setCancelled(true);
 				return;
 			}
 			if (r.getPower() == 0) {
 				if (victim.getPower() < 1) {
-					e.getAssociate().getMailer().chat("&cAll resources here have been tapped! No power to siphon.").queue();
+					Clan.ACTION.sendMessage(e.getPlayer(), dataInstance.getMessageResponse("reservoir-power-tapped"));
 					e.setCancelled(true);
 					return;
 				}
 				Task test = TaskMonitor.getLocalInstance().get("Clans;reservoir_power_loss:" + victim.getId());
 				if (test == null) {
-					attacking.broadcast("&aAssociate &5" + e.getAssociate().getNickname() + " &apowered down " + victim.getPalette().toString(victim.getName()) + "'s &areservoir! Hurry and collect the power its leaking!");
+					attacking.broadcast(MessageFormat.format(dataInstance.getMessageResponse("reservoir-powered-down-attacking"), e.getAssociate().getNickname(), victim.getPalette().toString(victim.getName())));
 					PantherCollection<Integer> drain = new PantherList<>();
 					for (int i = 1; i < victim.getPower() + 1; i++) {
 						drain.add(1);
 					}
 					Integer[] ar = drain.stream().toArray(Integer[]::new);
-					Task t = CollectionTask.processSilent(ar, "Clans;reservoir_power_loss:" + victim.getId(), 1, integer -> {
+					Task powerLossTask = CollectionTask.processSilent(ar, "Clans;reservoir_power_loss:" + victim.getId(), 1, integer -> {
 						victim.takePower(integer);
 						attacking.givePower(integer);
 						e.getPlayer().getWorld().playSound(r.getEntity().getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 10, 1);
 						e.getPlayer().getWorld().spawnParticle(Particle.DAMAGE_INDICATOR, r.getEntity().getLocation(), 1);
 					});
-					TaskPredicate<Task> predicate = TaskPredicate.cancelAfter(task -> {
-						if (r.getEntity().getNearbyEntities(4, 4, 4).stream().noneMatch(en -> en instanceof Player && attacking.getMember(a -> a.getName().equals(en.getName())) != null)) {
+					TaskPredicate<Task> powerLossTaskPredicate = TaskPredicate.cancelAfter(task -> {
+						if (r.getEntity().getNearbyEntities(8, 8, 8).stream().noneMatch(en -> en instanceof Player && attacking.getMember(a -> a.getName().equals(en.getName())) != null)) {
 							task.cancel();
-							attacking.broadcast("&cPower siphoning stopped. Not close enough to reservoir.");
-							victim.broadcast("&cOur power loss has stopped but our reservoir is badly damaged. Repair it with items to prevent further loss.");
+							attacking.broadcast(dataInstance.getMessageResponse("reservoir-siphoning-stopped-attacking"));
+							victim.broadcast(dataInstance.getMessageResponse("reservoir-siphoning-stopped-victim"));
 							return false;
 						}
 						return true;
 					});
-					t.listen(predicate);
-					TaskScheduler.of(t).scheduleTimer(t.getKey(), 0, 20);
-					victim.broadcast("&4&lBreach &7» &cOur reservoir was powered down! Hurry and repair it before we lose too much power!");
+					powerLossTask.listen(powerLossTaskPredicate);
+					TaskScheduler.of(powerLossTask).scheduleTimer(powerLossTask.getKey(), 0, 20);
+					victim.broadcast(MessageFormat.format(dataInstance.getMessageResponse("reservoir-powered-down-victim"), e.getAssociate().getName(), attacking.getNickname()));
 					Location location = r.getEntity().getLocation();
 					Item.CustomFirework firework = Item.CustomFirework.from(new Location(location.getWorld(), location.getX(), location.getY(), location.getZ(), location.getYaw(), location.getPitch()).add(0, 2.5, 0));
 					firework.addEffects(b -> b.trail(true).with(FireworkEffect.Type.CREEPER).withColor(Color.ORANGE, Color.FUCHSIA, Color.MAROON, Color.OLIVE).withFade(Color.PURPLE).flicker(true)).build().detonate();
 				} else {
-					e.getAssociate().getMailer().chat("&cThis reservoir is already being drained!").queue();
+					e.getAssociate().getMailer().chat(dataInstance.getMessageResponse("reservoir-already-under-attack")).queue();
 				}
 			}
 		}
@@ -465,11 +423,11 @@ public class PlayerEventListener implements Listener {
 	public void onClaim(AssociateClaimEvent e) {
 		EconomyProvision eco = EconomyProvision.getInstance();
 		if (eco.isValid()) {
-			if (ClansAPI.getDataInstance().isTrue("Clans.land-claiming.charge")) {
+			if (dataInstance.isTrue("Clans.land-claiming.charge")) {
 				if (e.getClan().getClaims().length + 1 > e.getClan().getClaimLimit()) return;
-				String MODE = Optional.ofNullable(ClansAPI.getDataInstance().getConfigString("Clans.land-claiming.mode")).orElse("STATIC");
-				double cost = ClansAPI.getDataInstance().getConfig().read(f -> f.getDouble("Clans.land-claiming.amount"));
-				String percent = ClansAPI.getDataInstance().getConfig().read(co -> co.getNode("Clans.land-claiming.percent").toPrimitive().getString());
+				String MODE = Optional.ofNullable(dataInstance.getConfigString("Clans.land-claiming.mode")).orElse("STATIC");
+				double cost = dataInstance.getConfig().read(f -> f.getDouble("Clans.land-claiming.amount"));
+				String percent = dataInstance.getConfig().read(co -> co.getNode("Clans.land-claiming.percent").toPrimitive().getString());
 				String s1 = "0." + percent;
 				double per = Double.parseDouble(s1);
 				switch (MODE.toLowerCase(Locale.ROOT)) {
@@ -555,7 +513,7 @@ public class PlayerEventListener implements Listener {
 				return;
 			}
 			Player p = event.getPlayer();
-			if (!ClansAPI.getDataInstance().getConfig().getRoot().getStringList("Clans.world-whitelist").contains(p.getWorld().getName()))
+			if (!dataInstance.getConfig().getRoot().getStringList("Clans.world-whitelist").contains(p.getWorld().getName()))
 				return;
 			PlayerPunchPlayerEvent e = ClanVentBus.call(new PlayerPunchPlayerEvent(p, event.getVictim()));
 
@@ -620,7 +578,7 @@ public class PlayerEventListener implements Listener {
 			if (!Bukkit.getOnlinePlayers().contains(event.getVictim())) {
 				return;
 			}
-			if (!ClansAPI.getDataInstance().getConfig().getRoot().getStringList("Clans.world-whitelist").contains(event.getPlayer().getWorld().getName())) {
+			if (!dataInstance.getConfig().getRoot().getStringList("Clans.world-whitelist").contains(event.getPlayer().getWorld().getName())) {
 				return;
 			}
 			PlayerShootPlayerEvent e = ClanVentBus.call(new PlayerShootPlayerEvent(event.getPlayer(), event.getVictim()));
@@ -699,7 +657,7 @@ public class PlayerEventListener implements Listener {
 									if (item.getAmount() == 0) {
 										p.getInventory().remove(item);
 									}
-									c.broadcast(MessageFormat.format(ClansAPI.getDataInstance().getMessageResponse("member-leave"), test.getName()));
+									c.broadcast(MessageFormat.format(dataInstance.getMessageResponse("member-leave"), test.getName()));
 								}
 							}
 						}
@@ -733,7 +691,7 @@ public class PlayerEventListener implements Listener {
 								if (newAssociate != null) {
 									c.add(newAssociate);
 									// TODO: make ClanBroadcastMessageEvent
-									c.broadcast(MessageFormat.format(ClansAPI.getDataInstance().getMessageResponse("member-join"), newAssociate.getName()));
+									c.broadcast(MessageFormat.format(dataInstance.getMessageResponse("member-join"), newAssociate.getName()));
 								}
 							}
 						}
@@ -752,7 +710,7 @@ public class PlayerEventListener implements Listener {
 		}
 		Player killer = e.getPlayer();
 		if (killer != null) {
-			if (ClansAPI.getDataInstance().isTrue("Clans.reservoir.players-drop-tokens")) {
+			if (dataInstance.isTrue("Clans.reservoir.players-drop-tokens")) {
 				ItemStack rew = Items.edit().setType(Material.IRON_NUGGET).setTitle("&3[&6Token&3]").setAmount(1).build();
 				LabyrinthProvider.getInstance().getItemComposter().add(rew, killer);
 			}
@@ -816,12 +774,12 @@ public class PlayerEventListener implements Listener {
 		if (canDisplay) {
 			if (associate != null) {
 				if (associate.isValid()) {
-					if (ClansAPI.getDataInstance().isDisplayTagsAllowed()) {
+					if (dataInstance.isDisplayTagsAllowed()) {
 						if (associate.getClan().getPalette().isGradient()) {
 							Clan c = associate.getClan();
-							AboveHeadDisplayName.set(associate, ClansAPI.getDataInstance().formatDisplayTag("", c.getPalette().toGradient().context(c.getName()).translate()));
+							AboveHeadDisplayName.set(associate, dataInstance.formatDisplayTag("", c.getPalette().toGradient().context(c.getName()).translate()));
 						} else {
-							AboveHeadDisplayName.set(associate, ClansAPI.getDataInstance().formatDisplayTag(associate.getClan().getPalette().toString(), associate.getClan().getName()));
+							AboveHeadDisplayName.set(associate, dataInstance.formatDisplayTag(associate.getClan().getPalette().toString(), associate.getClan().getName()));
 						}
 					} else {
 						AboveHeadDisplayName.remove(associate);
@@ -832,8 +790,8 @@ public class PlayerEventListener implements Listener {
 			}
 		}
 		if (Clan.ACTION.test(p, "clans.admin").deploy()) {
-			if (ClansAPI.getDataInstance().isTrue("Clans.check-version")) {
-				if (ClansAPI.getDataInstance().updateConfigs()) {
+			if (dataInstance.isTrue("Clans.check-version")) {
+				if (dataInstance.updateConfigs()) {
 					Clan.ACTION.sendMessage(p, "&b&oUpdated configuration to the latest plugin version.");
 				}
 				ClansUpdate check = new ClansUpdate(ClansAPI.getInstance().getPlugin());
@@ -860,7 +818,7 @@ public class PlayerEventListener implements Listener {
 		LOANABLE_TASK.leave(p);
 		Clan.Associate associate = ClansAPI.getInstance().getAssociate(p).orElse(null);
 		if (associate != null) {
-			if (ClansAPI.getDataInstance().isDisplayTagsAllowed()) {
+			if (dataInstance.isDisplayTagsAllowed()) {
 				AboveHeadDisplayName.remove(p);
 			}
 			Arena current = ClansAPI.getInstance().getArenaManager().get(associate);
@@ -895,7 +853,7 @@ public class PlayerEventListener implements Listener {
 						}).schedule();
 					}
 				} else {
-					if (current.getQueue().getAssociates().length <= ClansAPI.getDataInstance().getConfigInt("Clans.arena.que-needed") + 1) {
+					if (current.getQueue().getAssociates().length <= dataInstance.getConfigInt("Clans.arena.que-needed") + 1) {
 						if (current.avoid()) {
 							current.reset();
 							m.announce(player -> true, "&cEvery queued member has left the game. War in &7#&6" + current.getId() + " &cfailed to start.").deploy();
@@ -929,7 +887,7 @@ public class PlayerEventListener implements Listener {
 	@EventHandler
 	public void onPortal(PlayerPortalEvent e) {
 		if (ClansAPI.getInstance().getClaimManager().isInClaim(e.getTo())) {
-			e.setCanCreatePortal(ClansAPI.getDataInstance().isTrue("Clans.land-claiming.portals-in-claims"));
+			e.setCanCreatePortal(dataInstance.isTrue("Clans.land-claiming.portals-in-claims"));
 		}
 	}
 
@@ -996,7 +954,7 @@ public class PlayerEventListener implements Listener {
 			if (e.isCancelled()) {
 				//e.getUtil().sendMessage(e.getPlayer(), MessageFormat.format(e.getUtil().notClaimOwner(e.getClaim().getClan().getName()), e.getClaim().getClan().getName()));
 				final Material bucketType = event.getBucket();
-				if (ClansAPI.getDataInstance().isTrue("Clans.land-claiming.debug")) {
+				if (dataInstance.isTrue("Clans.land-claiming.debug")) {
 					TaskScheduler.of(() -> {
 						event.getBlock().setType(Material.AIR);
 						event.getPlayer().getInventory().getItemInMainHand().setType(bucketType);
@@ -1016,7 +974,7 @@ public class PlayerEventListener implements Listener {
 				//e.getUtil().sendMessage(e.getPlayer(), MessageFormat.format(e.getUtil().notClaimOwner(e.getClaim().getClan().getName()), e.getClaim().getClan().getName()));
 				final Material bucketType = event.getBucket();
 				final Material type = event.getBlockClicked().getType();
-				if (ClansAPI.getDataInstance().isTrue("Clans.land-claiming.debug")) {
+				if (dataInstance.isTrue("Clans.land-claiming.debug")) {
 					TaskScheduler.of(() -> {
 						event.getBlock().setType(type);
 						event.getPlayer().getInventory().getItemInMainHand().setType(bucketType);

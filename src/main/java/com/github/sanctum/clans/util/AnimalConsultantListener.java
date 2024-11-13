@@ -1,10 +1,6 @@
 package com.github.sanctum.clans.util;
 
-import com.github.sanctum.clans.model.Channel;
-import com.github.sanctum.clans.model.Clan;
-import com.github.sanctum.clans.model.IncomingConsultationListener;
-import com.github.sanctum.clans.model.OutgoingConsultationListener;
-import com.github.sanctum.clans.model.Ticket;
+import com.github.sanctum.clans.model.*;
 import com.github.sanctum.clans.impl.DefaultMapEntry;
 import com.github.sanctum.labyrinth.formatting.Message;
 import com.github.sanctum.labyrinth.library.Mailer;
@@ -30,7 +26,7 @@ public final class AnimalConsultantListener implements IncomingConsultationListe
 	public @NotNull Ticket onReceiveMessage(@NotNull Object object) {
 		Ticket ticket = new Ticket();
 		if (object instanceof DefaultMapEntry) {
-			DefaultMapEntry<String, DefaultMapEntry<Channel, Clan.Associate>> entry = (DefaultMapEntry<String, DefaultMapEntry<Channel, Clan.Associate>>) object;
+			DefaultMapEntry<String, DefaultMapEntry<ChatChannel, Clan.Associate>> entry = (DefaultMapEntry<String, DefaultMapEntry<ChatChannel, Clan.Associate>>) object;
 			StringUtils utils = StringUtils.use(entry.getKey());
 			String user = entry.getValue().getValue().getName();
 			if ((utils.containsIgnoreCase(tag.getName(), tag.getNickname()) || utils.containsIgnoreCase(tag.getName().replace("'", ""), tag.getNickname())) && utils.containsIgnoreCase("welcome")) {
@@ -93,7 +89,7 @@ public final class AnimalConsultantListener implements IncomingConsultationListe
 	public void onReceiveResponse(@NotNull Ticket response) {
 		if (response.isEmpty()) return;
 		String r = response.get(Ticket.Field.STRING).toString();
-		DefaultMapEntry<Channel, Clan.Associate> chan = (DefaultMapEntry<Channel, Clan.Associate>) response.get(Ticket.Field.CUSTOM);
+		DefaultMapEntry<ChatChannel, Clan.Associate> chan = (DefaultMapEntry<ChatChannel, Clan.Associate>) response.get(Ticket.Field.CUSTOM);
 		Message ar = chan.getKey().tryFormat(tag);
 		for (Message.Chunk ch : ar) {
 			ch.replace("%MESSAGE%", r);

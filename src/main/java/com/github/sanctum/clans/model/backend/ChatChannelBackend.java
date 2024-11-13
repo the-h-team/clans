@@ -1,5 +1,6 @@
-package com.github.sanctum.clans.util;
+package com.github.sanctum.clans.model.backend;
 
+import com.github.sanctum.clans.model.ClanError;
 import com.github.sanctum.labyrinth.formatting.FancyMessage;
 import com.github.sanctum.labyrinth.formatting.Message;
 import com.github.sanctum.panther.file.Node;
@@ -15,7 +16,7 @@ public class ChatChannelBackend {
         this.node = node;
     }
 
-    public void setFormat(Function<String, String> function) {
+    public void setFormatter(Function<String, String> function) {
         this.function = function;
     }
 
@@ -30,7 +31,7 @@ public class ChatChannelBackend {
         throw new ClanError("The first section of this channel is missing! Please configure one.");
     }
 
-    public Message toMessage() {
+    public Message getFormat() {
         FancyMessage message = new FancyMessage();
         for (String section : node.getKeys(false)) {
             if (!section.equalsIgnoreCase("filters")) { // make sure its not the filters at the end

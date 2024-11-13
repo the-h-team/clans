@@ -308,8 +308,8 @@ public class CommandBank extends ClanSubCommand implements Message.Factory {
 					return true;
 				}
 
-				if (theBank.withdraw(amount, () -> "Sent to " + theOtherClan.getName())) {
-					if (BanksAPI.getInstance().getBank(theOtherClan).deposit(amount, () -> "Received from " + clan.getName())) {
+				if (theBank.withdraw(amount, Clan.newIdentifiable(() -> "Sent to " + theOtherClan.getName()))) {
+					if (BanksAPI.getInstance().getBank(theOtherClan).deposit(amount, Clan.newIdentifiable(() -> "Received from " + clan.getName()))) {
 						associate.getClan().broadcast("&f&l&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬");
 						associate.getClan().broadcast("&aOur clan sent money in the amount of &6" + amount + " &ato clan " + theOtherClan.getPalette().toString(theOtherClan.getName()));
 						associate.getClan().broadcast("&f&l&m▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬");

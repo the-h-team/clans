@@ -12,10 +12,10 @@ import org.bukkit.Location;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 
-public class CommandWar extends ClanSubCommand {
-	public CommandWar() {
-		super("war");
-		setUsage(ClansAPI.getDataInstance().getMessageString("Commands.war.text"));
+public class CommandArena extends ClanSubCommand {
+	public CommandArena() {
+		super("arena");
+		setUsage(ClansAPI.getDataInstance().getMessageString("Commands.arena.text"));
 	}
 
 	@Override
@@ -24,8 +24,8 @@ public class CommandWar extends ClanSubCommand {
 		Clan.Associate associate = ClansAPI.getInstance().getAssociate(p).orElse(null);
 
 		if (args.length == 0) {
-			if (!Clan.ACTION.test(p, this.getPermission() + "." + DataManager.Security.getPermission("war")).deploy()) {
-				lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("war")));
+			if (!Clan.ACTION.test(p, this.getPermission() + "." + DataManager.Security.getPermission("arena")).deploy()) {
+				lib.sendMessage(p, lib.noPermission(this.getPermission() + "." + DataManager.Security.getPermission("arena")));
 				return true;
 			}
 
@@ -40,7 +40,7 @@ public class CommandWar extends ClanSubCommand {
 					if (!joined.isRunning()) {
 						joined.populate();
 						lib.sendMessage(p, "&aYou queued in position &7#&6" + joined.getQueue().size() + " &ain team &6" + joined.getTeam(associate.getClan()));
-						lib.sendComponent(p, TextLib.getInstance().textRunnable("&eYou can teleport to the arena ", "&6&nnow", "&e, otherwise the war will &6automatically &eteleport you on start when queue reaches the required amount.", "&6&oClick to teleport.", "c war teleport"));
+						lib.sendComponent(p, TextLib.getInstance().textRunnable("&eYou can teleport to the arena ", "&6&nnow", "&e, otherwise the death-match will &6automatically &eteleport you on start when queue reaches the required amount.", "&6&oClick to teleport.", "c war teleport"));
 					} else {
 						p.playSound(p.getLocation(), Sound.ENTITY_ENDER_DRAGON_DEATH, 10, 1);
 						associate.getClan().broadcast("&a" + associate.getNickname() + " has joined the battle.");
@@ -57,7 +57,7 @@ public class CommandWar extends ClanSubCommand {
 					lib.sendMessage(p, "&cThere is no space on the battlefield right now.");
 				}
 			} else {
-				lib.sendMessage(p, ClansAPI.getDataInstance().getMessageResponse("already-at-war"));
+				lib.sendMessage(p, ClansAPI.getDataInstance().getMessageResponse("already-in-match"));
 				if (!current.isRunning()) {
 					lib.sendMessage(p, "&cAll teams are still getting ready for battle. Queue still building.");
 				}

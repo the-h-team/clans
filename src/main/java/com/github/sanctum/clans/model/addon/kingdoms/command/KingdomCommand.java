@@ -12,8 +12,8 @@ import com.github.sanctum.clans.model.Clan;
 import com.github.sanctum.clans.model.ClanSubCommand;
 import com.github.sanctum.clans.model.ClansAPI;
 import com.github.sanctum.clans.model.Clearance;
-import com.github.sanctum.clans.model.Teleport;
 import com.github.sanctum.clans.util.MessagePrefix;
+import com.github.sanctum.clans.util.Teleportation;
 import com.github.sanctum.labyrinth.formatting.Message;
 import com.github.sanctum.labyrinth.formatting.completion.SimpleTabCompletion;
 import com.github.sanctum.labyrinth.formatting.completion.TabCompletionIndex;
@@ -21,6 +21,7 @@ import com.github.sanctum.labyrinth.formatting.pagination.EasyPagination;
 import com.github.sanctum.labyrinth.formatting.string.DefaultColor;
 import com.github.sanctum.labyrinth.formatting.string.RandomHex;
 import com.github.sanctum.labyrinth.library.StringUtils;
+import com.github.sanctum.labyrinth.library.Teleport;
 import com.github.sanctum.panther.util.ProgressBar;
 import java.util.Arrays;
 import java.util.List;
@@ -158,9 +159,13 @@ public class KingdomCommand extends ClanSubCommand implements Message.Factory {
 						if (kingdom.getCastle() != null) {
 							Teleport test = Teleport.get(associate);
 							if (test == null) {
-								Teleport n = new Teleport.Impl(associate, kingdom.getCastle());
-								n.success(parent -> parent.getAsAssociate().getMailer().action("&aWelcome to the castle.").deploy());
-								n.teleport();
+								Teleport n = new Teleportation(associate, new Teleport.Location(kingdom.getCastle()));
+								n.addCompletionRunner(parent -> {
+									if (parent instanceof Clan.Associate) {
+										((Clan.Associate)parent).getMailer().action("&aWelcome to the castle.").deploy();
+									}
+								});
+								n.run();
 							} else {
 								sendMessage(p, "&cCannot teleport to the castle right now.");
 							}

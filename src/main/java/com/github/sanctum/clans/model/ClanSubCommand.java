@@ -5,6 +5,8 @@ import com.github.sanctum.labyrinth.formatting.completion.TabCompletionIndex;
 import com.github.sanctum.labyrinth.library.Mailer;
 import java.util.Collections;
 import java.util.List;
+
+import com.github.sanctum.labyrinth.library.StringUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;

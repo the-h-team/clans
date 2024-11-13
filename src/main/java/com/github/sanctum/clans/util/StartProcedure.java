@@ -1,29 +1,13 @@
 package com.github.sanctum.clans.util;
 
 import com.github.sanctum.clans.ClansJavaPlugin;
-import com.github.sanctum.clans.model.ClanAddonDependencyException;
-import com.github.sanctum.clans.model.ClanAddonRegistry;
-import com.github.sanctum.clans.model.ClanAddonRegistrationException;
-import com.github.sanctum.clans.model.ClanVentBus;
-import com.github.sanctum.clans.model.ClanVentCall;
+import com.github.sanctum.clans.model.*;
 import com.github.sanctum.clans.model.addon.BountyAddon;
 import com.github.sanctum.clans.model.addon.DynmapAddon;
 import com.github.sanctum.clans.model.addon.StashesAddon;
 import com.github.sanctum.clans.model.addon.VaultsAddon;
 import com.github.sanctum.clans.DataManager;
-import com.github.sanctum.clans.model.AbstractGameRule;
-import com.github.sanctum.clans.model.BanksAPI;
-import com.github.sanctum.clans.model.Channel;
-import com.github.sanctum.clans.model.Claim;
-import com.github.sanctum.clans.model.Clan;
-import com.github.sanctum.clans.model.ClanException;
-import com.github.sanctum.clans.model.ClanSubCommand;
-import com.github.sanctum.clans.model.ClansAPI;
-import com.github.sanctum.clans.model.LogoHolder;
-import com.github.sanctum.clans.model.RankRegistry;
-import com.github.sanctum.clans.model.QnA;
 import com.github.sanctum.clans.listener.ClanBankListener;
-import com.github.sanctum.clans.model.ClanBankPermissions;
 import com.github.sanctum.clans.impl.DefaultDocketRegistry;
 import com.github.sanctum.clans.event.TimerEvent;
 import com.github.sanctum.clans.event.claim.RaidShieldEvent;
@@ -127,13 +111,13 @@ public final class StartProcedure {
 			DataManager manager = ClansAPI.getDataInstance();
 			manager.getConfig().getRoot().reload();
 			manager.getMessages().getRoot().reload();
-			map.put(AbstractGameRule.WAR_START_TIME, manager.getConfigInt("Clans.arena.start-wait"));
-			map.put(AbstractGameRule.BLOCKED_WAR_COMMANDS, manager.getConfig().getRoot().getStringList("Clans.arena.blocked-commands"));
-			map.put(AbstractGameRule.MAX_CLANS, manager.getConfigInt("Clans.max-clans"));
-			map.put(AbstractGameRule.MAX_POWER, manager.getConfig().getRoot().getNode("Clans.max-power").toPrimitive().getDouble());
-			map.put(AbstractGameRule.DEFAULT_WAR_MODE, manager.getConfigString("Clans.mode-change.default"));
-			map.put(AbstractGameRule.CLAN_INFO_SIMPLE, manager.getMessages().getRoot().getStringList("info-simple"));
-			map.put(AbstractGameRule.CLAN_INFO_SIMPLE_OTHER, manager.getMessages().getRoot().getStringList("info-simple-other"));
+			map.put(ClanGameRule.WAR_START_TIME, manager.getConfigInt("Clans.arena.start-wait"));
+			map.put(ClanGameRule.BLOCKED_WAR_COMMANDS, manager.getConfig().getRoot().getStringList("Clans.arena.blocked-commands"));
+			map.put(ClanGameRule.MAX_CLANS, manager.getConfigInt("Clans.max-clans"));
+			map.put(ClanGameRule.MAX_POWER, manager.getConfig().getRoot().getNode("Clans.max-power").toPrimitive().getDouble());
+			map.put(ClanGameRule.DEFAULT_WAR_MODE, manager.getConfigString("Clans.mode-change.default"));
+			map.put(ClanGameRule.CLAN_INFO_SIMPLE, manager.getMessages().getRoot().getStringList("info-simple"));
+			map.put(ClanGameRule.CLAN_INFO_SIMPLE_OTHER, manager.getMessages().getRoot().getStringList("info-simple-other"));
 			map.putAll(manager.getResetTable().values());
 			manager.getResetTable().clear();
 			return map;
@@ -245,7 +229,7 @@ public final class StartProcedure {
 	@Ordinal(9)
 	void i() {
 		ClanAddonRegistry queue = ClanAddonRegistry.getInstance();
-		queue.load(instance, "com.github.sanctum.clans.bridge.internal");
+		queue.load(instance, "com.github.sanctum.clans.model.addon", value -> !new FormattedString(value).contains(DynmapAddon.class.getSimpleName(), BountyAddon.class.getSimpleName()));
 		TaskScheduler.of(() -> {
 			if (Bukkit.getPluginManager().isPluginEnabled("dynmap")) {
 				for (String s : queue.register(DynmapAddon.class).read()) {
@@ -265,7 +249,7 @@ public final class StartProcedure {
 				try {
 					for (String precursor : e.getContext().getDependencies()) {
 						Clan.Addon addon = queue.get(precursor);
-						ClanException.call(ClanAddonDependencyException::new).check(addon).run("Missing dependency " + precursor + " for addon " + e.getName() + ". Please install the missing dependency for this addon.");
+						ClanExceptionFactory.call(ClanAddonDependencyError::new).check(addon).run("Missing dependency " + precursor + " for addon " + e.getName() + ". Please install the missing dependency for this addon.");
 					}
 					e.onEnable();
 					e.getContext().setActive(true);
@@ -383,24 +367,12 @@ public final class StartProcedure {
 
 	@Ordinal(13)
 	void m() {
-		// System adapter for locating MOTD carriers.
-		LogoHolder.newAdapter(location -> {
-			LogoHolder.Carrier def = ReservedLogoCarrier.MOTD;
-			for (LogoHolder.Carrier.Line line : def.getLines()) {
-				for (int i = 1; i < 23; i++) {
-					Block up = location.getBlock().getRelative(BlockFace.UP, i);
-					if (line.getStand().getLocation().distance(up.getLocation().add(0.5, 0, 0.5)) <= 1) {
-						return def;
-					}
-				}
-			}
-			return null;
-		}).deploy();
+
 	}
 
 	@Ordinal(14)
 	void n() {
-		Channel.GLOBAL.register(context -> {
+		ChatChannel.GLOBAL.register(context -> {
 			String test = context;
 			for (String word : instance.dataManager.getConfig().getRoot().getNode("Formatting.Chat.Channel.global.filters").getKeys(false)) {
 				String replacement = instance.dataManager.getConfig().getRoot().getNode("Formatting.Chat.Channel.global.filters").getNode(word).toPrimitive().getString();
@@ -409,7 +381,7 @@ public final class StartProcedure {
 			return test;
 		});
 
-		Channel.CLAN.register(context -> {
+		ChatChannel.CLAN.register(context -> {
 			String test = context;
 			for (String word : instance.dataManager.getConfig().getRoot().getNode("Formatting.Chat.Channel.clan.filters").getKeys(false)) {
 				String replacement = instance.dataManager.getConfig().getRoot().getNode("Formatting.Chat.Channel.clan.filters").getNode(word).toPrimitive().getString();
@@ -418,7 +390,7 @@ public final class StartProcedure {
 			return test;
 		});
 
-		Channel.ALLY.register(context -> {
+		ChatChannel.ALLY.register(context -> {
 			String test = context;
 			for (String word : instance.dataManager.getConfig().getRoot().getNode("Formatting.Chat.Channel.ally.filters").getKeys(false)) {
 				String replacement = instance.dataManager.getConfig().getRoot().getNode("Formatting.Chat.Channel.ally.filters").getNode(word).toPrimitive().getString();

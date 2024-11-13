@@ -229,6 +229,14 @@ Response:
   bank-deposit-message-player: '&7You deposited &a{0} &7into the clan bank.'
   bank-withdraw-message-player: '&7You withdrew &c{0} &7from the clan bank.'
   teleporting: '&aTeleporting in {0} seconds, don''t move.'
+  teleported: '&aYou have been teleported.'
+  teleport-cancelled: '&cYou moved! Teleportation cancelled!'
+  reservoir-power-obtained: '{0} obtained clan power through the reservoir for us'
+  reservoir-repaired: '&aOur reservoir was repaired by {0}'
+  reservoir-removed: '&c{0} has taken down our clans reservoir.'
+  reservoir-powered-down-attacking: '&aAssociate &6{0} &apowered down &6{1}''s &areservoir! Hurry to defend and collect! If you give the enemy team too much time siphoning will stop!'
+  reservoir-powered-down-victim: '&4&lBreach &7» &cOur reservoir was powered down by player &6{0} &cof clan &6{1}&c! Hurry and repair it before we lose too much power!'
+  reservoir-siphoning-stopped-victim: '&cReservoir siphoning has stopped, but our reservoir is badly damaged, repair it to prevent further siphoning.'
 
   #==========================================================================#
   #  ███╗   ██╗ ██████╗ ███╗   ██╗      ██╗   ██╗ █████╗ ██╗     ██╗██████╗
@@ -247,7 +255,7 @@ Response:
   no-clearance: '&cYou do not have clan clearance.'
   no-permission: '&cYou do not have permission &4{0}'
   no-removal: '&c&oThis clan initiated you as an &4enemy. &cUnable to pardon.'
-  not-enough-head: '&cYou don''t have enough money you need {0} more dollars'
+  not-enough-money: '&cYou don''t have enough money you need {0} more dollars'
   friendly-fire: '&cYou cannot hurt allies!'
   clan-unknown: '&c{0} was not found.'
   blocked: '&c{0} has you blocked, unable to send invite.'
@@ -264,7 +272,7 @@ Response:
   already-made: '&c&oA clan with this name already exists! Try another.'
   already-max: '&c&oThis player is rank &b&o{0} &c&omost powerful next to &b&l{1}'
   already-min: '&c&oThis player is already the lowest rank possible ({0})!'
-  already-at-war: '&c&oAlready in a war.'
+  already-in-match: '&c&oAlready in a death-match.'
   hard-max-claims: '&c&oClaim hardcap reached. You have as much land as you can get! Or you don''t have any... consult with local admins.'
   clan-max-claims: '&c&oMax claim limit reached grow your clan power and size to obtain more land.'
   already-max-claims: '&c&oMax claim limit reached, contact a staff member for more info.'
@@ -297,6 +305,15 @@ Response:
   bank-invalid-amount: '&cInvalid number!'
   bank-invalid-subcommand: '&cInvalid subcommand!'
   bank-no-permission-command: '&cYou do not have permission to run this command.'
+  max-clans: '&cYour server already has its max amount of clans created.'
+  reservoir-already-active: '&cYour clan already has a reservoir powered up!'
+  reservoir-not-homeland: '&cYour clan reservoir must be within an owned claim.'
+  reservoir-repair-failed: '&c{0] is not a valid item to repair the reservoir with.'
+  reservoir-repair-failed-enemies: '&cEnemy players are too close! 8 blocks of space is required to repair!'
+  reservoir-self-damage-denied: '&cYou cannot damage your own reservoir!'
+  reservoir-power-tapped: '&cAll the power from this reservoir has been tapped!'
+  reservoir-siphoning-stopped-attacking: '&cReservoir siphoning has stopped, at-least one member of the clan must be within 8 blocks of the reservoir during siphoning.'
+  reservoir-already-under-attack: '&cThis reservoir is already being siphoned.'
 
   #=================================================#
   #  ██╗   ██╗███████╗ █████╗  ██████╗ ███████╗
@@ -486,6 +503,8 @@ help-book: ["&lYou may have a few questions so we'll answer them here.", "", "&6
 menu:
   # Allow the plugin to forward use of GUI?
   enabled: true
+  # If no size is specified for a menu what ROW size will default?
+  default-menu-size: SIX
   # A roster screen of members for a given clan.
   # Clan provided placeholders work here:
   # :member_list:  "Get all members of this clan in string form."
@@ -511,12 +530,12 @@ menu:
     filler:
       name: ' '
       locked: true
-      type: stone
+      type: glasspane
     # Set up an optional border item to use. (Comment out or remove to not use)
     border:
       name: ' '
       locked: true
-      type: glasspane
+      type: graystainedglasspane
     # This section is optional as its only required for use with PAGINATED inventory types. Customize the inventory space into further depth.
     # Associate provided placeholders work here:
     # :member_name:  "Get the associates name"
@@ -583,36 +602,36 @@ menu:
           name: '&cNext'
           slot: 26
           locked: true
-          type: enderpearl
+          type: right_button
           lore: [ "&f&oClick to go to the next page." ]
         exit:
-          name: '&cExit'
+          name: '&cBack'
           slot: 22
           locked: true
           open: 'Clans:Roster'
-          type: enderpearl
+          type: arrow
           lore: [ "&f&oClick to escape." ]
         previous:
           name: '&cBack'
           slot: 18
           locked: true
-          type: enderpearl
+          type: left_button
           lore: [ "&f&oClick to go back a page." ]
-    # Add additional items to your menu here. Works on any menu type (Uncomment to use)
-    ##items:
-      #'&6Example Extra Item &f[&7&k420&f]':
-        #slot: 10
-        #locked: true
-        #close: true
-        #type: goldingot
-        #open: /shop
-        #lore: [ "&f&oWaddup du" ]
+          # Add additional items to your menu here. Works on any menu type (Uncomment to use)
+          ##items:
+          #'&6Example Extra Item &f[&7&k420&f]':
+          #slot: 10
+          #locked: true
+          #close: true
+          #type: goldingot
+          #open: /shop
+          #lore: [ "&f&oWaddup du" ]
           # Optionally add enchantments to your item, unsafe enchantments allowed. (Uncomment to use)
           # Allowed enchantments are: [PROTECTION_ENVIRONMENTAL, PROTECTION_FIRE, PROTECTION_FALL, PROTECTION_EXPLOSIONS, PROTECTION_PROJECTILE,
           # OXYGEN, WATER_WORKER, THORNS, DEPTH_STRIDER, FROST_WALKER, BINDING_CURSE, DAMAGE_ALL, DAMAGE_UNDEAD, DAMAGE_ARTHROPODS, KNOCKBACK,
           # LOOT_BONUS_MOBS, SWEEPING_EDGE, DIG_SPEED, SILK_TOUCH, DURABILITY, LOOT_BONUS_BLOCKS, ARROW_DAMAGE, ARROW_KNOCKBACK, ARROW_FIRE,
           # ARROW_INFINITE, LUCK, LURE, LOYALTY, IMPALING, RIPTIDE, CHANNELING, MULTISHOT, QUICK_CHARGE, PIERCING, MENDING, VANISHING_CURSE, SOUL_SPEED]
-        #enchantments:
+          #enchantments:
           #ARROW_DAMAGE: 3
   # A roster screen of all registered clans.
   roster:
@@ -624,11 +643,11 @@ menu:
     filler:
       name: ' '
       locked: true
-      type: stone
+      type: redstainedglasspane
     border:
       name: ' '
       locked: true
-      type: glasspane
+      type: graystainedglasspane
     # =======================
     # Clan provided placeholders work here:
     # :member_list:  "Get all members of this clan in string form."
@@ -654,20 +673,20 @@ menu:
           name: '&cNext'
           slot: 26
           locked: true
-          type: enderpearl
+          type: right_button
           lore: [ "&f&oClick to go to the next page." ]
         exit:
-          name: '&cExit'
+          name: '&cBack'
           slot: 22
           locked: true
           open: 'Clans:Roster:Select'
-          type: enderpearl
+          type: arrow
           lore: [ "&f&oClick to escape." ]
         previous:
           name: '&cBack'
           slot: 18
           locked: true
-          type: enderpearl
+          type: left_button
           lore: [ "&f&oClick to go back a page." ]
   # A roster screen of all registered clans ordered by most power.
   roster-top:
@@ -679,11 +698,11 @@ menu:
     filler:
       name: ' '
       locked: true
-      type: stone
+      type: redstainedglasspane
     border:
       name: ' '
       locked: true
-      type: glasspane
+      type: graystainedglasspane
     # =======================
     # Clan provided placeholders work here:
     # :member_list:  "Get all members of this clan in string form."
@@ -709,20 +728,20 @@ menu:
           name: '&cNext'
           slot: 26
           locked: true
-          type: enderpearl
+          type: right_button
           lore: [ "&f&oClick to go to the next page." ]
         exit:
-          name: '&cExit'
-          slot: 22
+          name: '&cBack'
+          slot: 19
           locked: true
           open: 'Clans:Roster:Select'
-          type: enderpearl
-          lore: [ "&f&oClick to escape." ]
+          type: arrow
+          lore: [ "&f&oClick to go back." ]
         previous:
           name: '&cBack'
           slot: 18
           locked: true
-          type: enderpearl
+          type: left_button
           lore: [ "&f&oClick to go back a page." ]
   # A roster type selection screen.
   roster-select:
@@ -733,24 +752,26 @@ menu:
     filler:
       name: ' '
       locked: true
-      type: ironbars
+      type: graystainedglasspane
     items:
-      '&7[&6Leaderboard&7]':
+      '&7[&6By Power&7]':
         slot: 3
         locked: true
-        type: goldblock
+        type: goldenhelmet
         open: 'Clans:Roster:Top'
+        lore: ["&fView from most to least powerful all clans."]
       '&cBack':
-        slot: 4
+        slot: 1
         locked: true
-        type: barrier
+        type: arrow
         open: '/clan'
         lore: ["&cClick to go back a step."]
-      '&7[&bRoster&7]':
+      '&7[&bUn-ranked&7]':
         slot: 5
         locked: true
         type: clan
         open: 'Clans:Roster'
+        lore: ["&fView a plain list of all clans."]
   # A clan associates gui screen. Normal placeholders work here as-well.
   # Associate provided placeholders work here:
   # :member_name:  "Get the associates name"
@@ -784,10 +805,14 @@ menu:
     title: '%player_name% member info:'
     rows: THREE
     type: SINGULAR
+    border:
+      name: ' '
+      locked: true
+      type: graystainedglasspane
     filler:
       name: ' '
       locked: true
-      type: glasspane
+      type: graystainedglasspane
     items:
       '&6Click to teleport':
         slot: 4
@@ -808,12 +833,12 @@ menu:
       '&6Rank':
         slot: 16
         locked: true
-        type: goldenpickaxe
+        type: glasspane
         lore: [ "&f:member_rank_full:" ]
       '&cBack':
         slot: 19
         locked: true
-        type: barrier
+        type: arrow
         open: 'Clans::clan_name:-members'
         lore: [ "&c&oClick to go back a step." ]
       '&9Message':
@@ -1385,25 +1410,29 @@ menu:
           locked: true
           type: endcrystal
           open: '/clan reservoir buy'
-    title: 'Hello %player_name%'
-    rows: SIX
+    title: '&lMENU &3&l» &8viewer &3&o%player_name%'
+    rows: FIVE
     type: SINGULAR
     border:
-      name: ''
+      name: ' '
       locked: true
-      type: glasspane
+      type: graystainedglasspane
+    filler:
+      name: ' '
+      locked: true
+      type: graystainedglasspane
     items:
       '&9Ask a question':
         slot: 10
         locked: true
         open: '/c ask'
-        type: bone
+        type: waterbucket
         lore: [ "&fAsk a plugin related question." ]
       '&6Clan Roster':
         slot: 13
         locked: true
         open: 'Clans:Roster:Select'
-        type: goldblock
+        type: book
         lore: [ "&fView the clan roster." ]
       '&eCommands':
         slot: 16
@@ -1441,18 +1470,22 @@ menu:
         type: chest
         lore: [ "&fView your clan vault." ]
       '&bClan Chat':
-        slot: 40
+        slot: 29
         locked: true
         open: '/clan chat'
         close: true
-        type: paper
+        type: greenstainedglasspane
         lore: [ "&fChange your clan chat." ]
       '&6Reservoir':
-        slot: 41
+        slot: 33
         locked: true
         open: '/clan reservoir'
         close: true
-        type: obsidian
+        type: endcrystal
         lore: [ "&eAccess your clans reservoir." ]
-
-default-size: SIX
+      '&cClose Menu':
+        slot: 40
+        locked: true
+        close: true
+        type: redstainedglasspane
+        lore: [ "&fClose the menu." ]

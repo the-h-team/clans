@@ -11,7 +11,7 @@ import com.github.sanctum.clans.event.bank.BankTransactionEvent;
 import com.github.sanctum.clans.event.bank.messaging.Messages;
 import com.github.sanctum.labyrinth.data.EconomyProvision;
 import com.github.sanctum.labyrinth.event.LabyrinthVentCall;
-import com.github.sanctum.labyrinth.interfacing.Nameable;
+import com.github.sanctum.labyrinth.interfacing.Identifiable;
 import com.github.sanctum.panther.event.Subscribe;
 import com.github.sanctum.panther.event.Vent;
 import java.math.BigDecimal;
@@ -79,9 +79,9 @@ public class ClanBankListener {
 				return;
 			}
 		}
-		final Nameable entity = event.getEntity();
+		final Identifiable entity = event.getEntity();
 		if (entity instanceof Clan.Associate && ((Clan.Associate) entity).isPlayer()) {
-			final Player player = ((Clan.Associate) entity).getAsPlayer().getPlayer();
+			final Player player = ((Clan.Associate) entity).getAsOfflinePlayer().getPlayer();
 			final BigDecimal amount = event.getAmount();
 			final boolean success;
 
@@ -105,9 +105,9 @@ public class ClanBankListener {
 			return; // The bank didn't have enough money or is not allowed, no transaction
 		}
 		final DefaultClanBank bank = (DefaultClanBank) event.getBank();
-		final Nameable entity = event.getEntity();
+		final Identifiable entity = event.getEntity();
 		if (entity instanceof Clan.Associate && ((Clan.Associate) entity).isPlayer()) {
-			final Player player = ((Clan.Associate) entity).getAsPlayer().getPlayer();
+			final Player player = ((Clan.Associate) entity).getAsOfflinePlayer().getPlayer();
 			final BigDecimal amount = event.getAmount();
 			final boolean success;
 			//noinspection DataFlowIssue

@@ -2,6 +2,7 @@ package com.github.sanctum.clans.model;
 
 import com.github.sanctum.labyrinth.LabyrinthProvider;
 import com.github.sanctum.labyrinth.data.Registry;
+import com.github.sanctum.labyrinth.formatting.string.FormattedString;
 import com.github.sanctum.labyrinth.task.TaskMonitor;
 import com.github.sanctum.panther.annotation.AnnotationDiscovery;
 import com.github.sanctum.panther.annotation.Ordinal;
@@ -19,6 +20,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import org.bukkit.Bukkit;
@@ -51,7 +53,7 @@ public final class ClanAddonRegistry {
 	}
 
 	public @NotNull ClanAddonLoadResult register(@NotNull Clan.Addon addon) {
-		ClanException.call(ClanAddonRegistrationException::new).check(get(addon.getName())).run("Addon's can only be registered one time!", true);
+		ClanExceptionFactory.call(ClanAddonRegistrationException::new).check(get(addon.getName())).run("Addon's can only be registered one time!", true);
 		if (addon.getContext().isActive()) return new ClanAddonLoadResult() {
 			@Override
 			public boolean get() {
@@ -74,7 +76,7 @@ public final class ClanAddonRegistry {
 		bump(addon);
 		for (String precursor : addon.getContext().getDependencies()) {
 			Clan.Addon a = get(precursor);
-			ClanException.call(ClanAddonDependencyException::new).check(a).run("Missing dependency " + precursor + " for addon " + addon.getName() + ". Please install the missing dependency for this addon.");
+			ClanExceptionFactory.call(ClanAddonDependencyError::new).check(a).run("Missing dependency " + precursor + " for addon " + addon.getName() + ". Please install the missing dependency for this addon.");
 		}
 		final ClanAddonLoadAttempt attempt = new ClanAddonLoadAttempt() {
 			int attempts;
@@ -277,7 +279,7 @@ public final class ClanAddonRegistry {
 				.source(plugin)
 				.filter(packageName)
 				.operate(e -> {
-					ClanException.call(ClanAddonRegistrationException::new).check(e).run("Addon's can only be registered one time!", true);
+					ClanExceptionFactory.call(ClanAddonRegistrationException::new).check(e).run("Addon's can only be registered one time!", true);
 					load(e);
 				}).getData();
 
@@ -297,7 +299,7 @@ public final class ClanAddonRegistry {
 	}
 
 	public @NotNull ClanAddonLoadResult load(@NotNull Clan.Addon addon) {
-		ClanException.call(ClanAddonRegistrationException::new).check(get(addon.getName())).run("Addon's can only be loaded one time!", true);
+		ClanExceptionFactory.call(ClanAddonRegistrationException::new).check(get(addon.getName())).run("Addon's can only be loaded one time!", true);
 		try {
 			addon.onLoad();
 			addon.register();
@@ -385,7 +387,7 @@ public final class ClanAddonRegistry {
 		};
 		for (String precursor : e.getContext().getDependencies()) {
 			Clan.Addon addon = get(precursor);
-			ClanException.call(ClanAddonDependencyException::new).check(addon).run("Missing dependency " + precursor + " for addon " + e.getName() + ". Please install the missing dependency for this addon.");
+			ClanExceptionFactory.call(ClanAddonDependencyError::new).check(addon).run("Missing dependency " + precursor + " for addon " + e.getName() + ". Please install the missing dependency for this addon.");
 		}
 		final ClanAddonLoadAttempt attempt = new ClanAddonLoadAttempt() {
 			int attempts;
@@ -601,6 +603,17 @@ public final class ClanAddonRegistry {
 		List<Clan.Addon> data = new Registry<>(Clan.Addon.class)
 				.source(plugin)
 				.filter(packageName)
+				.confine()
+				.getData();
+		List<ClanAddonLoadResult> results = new ArrayList<>();
+		data.forEach(addon -> results.add(load(addon)));
+		return results.toArray(new ClanAddonLoadResult[0]);
+	}
+
+	public @NotNull ClanAddonLoadResult[] load(@NotNull Plugin plugin, @NotNull String packageName, @NotNull Predicate<String> predicate) {
+		List<Clan.Addon> data = new Registry<>(Clan.Addon.class)
+				.source(plugin)
+				.filter(s -> new FormattedString(s).contains(packageName) && predicate.test(s))
 				.confine()
 				.getData();
 		List<ClanAddonLoadResult> results = new ArrayList<>();

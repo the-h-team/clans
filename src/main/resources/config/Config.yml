@@ -140,6 +140,8 @@ Clans:
       ## NORMAL = Depend on a clans bank balance for obtaining land.
       ## LOW = Assist the base multiplier and all other power additions for no / slower bank situations.
       dependence: NORMAL
+      # If the dependence is set to LOW how many claims will clans get to start with?
+      low-dependence-base: 12
     # All claims must be connected to their initial claim.
     claim-connections: true
     # Turn on or off titles as players traverse land-scape.
@@ -199,7 +201,7 @@ Clans:
       enabled: '{0} &8» &aRaid shield enabled.'
       disabled: '{0} &8» &cRaid shield lifted.'
 
-  # Clan war (TDM) & pvp settings
+  # Clan arena (TDM) & pvp settings
   arena:
     # If someone is getting spawn camped penalize the attacker?
     killstreak:
@@ -232,6 +234,14 @@ Clans:
     max-length: 240
     # The max amount of points a team can get before the winner is concluded.
     max-points: 24
+
+  hologram:
+    # Toggle whether or not to allow players to display logos on holograms (doesn't stop them from using logos)
+    enabled: true
+    # Set whether or not to charge using a custom economy provision for hologram usage
+    charge: true
+    # Set the price to charge users for hologram usage. Default is $125
+    price: 125.0
 
 #----------------------------------------#
 #  ▄████  ████▄ █▄▄▄▄ █▀▄▀█ ██     ▄▄▄▄▀

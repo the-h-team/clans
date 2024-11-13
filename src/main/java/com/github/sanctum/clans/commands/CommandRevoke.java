@@ -10,7 +10,7 @@ import com.github.sanctum.clans.model.RankRegistry;
 import com.github.sanctum.clans.util.StringLibrary;
 import com.github.sanctum.labyrinth.formatting.completion.SimpleTabCompletion;
 import com.github.sanctum.labyrinth.formatting.completion.TabCompletionIndex;
-import com.github.sanctum.labyrinth.interfacing.Nameable;
+import com.github.sanctum.labyrinth.interfacing.Identifiable;
 import com.github.sanctum.labyrinth.library.StringUtils;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -112,7 +112,7 @@ public class CommandRevoke extends ClanSubCommand {
 					if (!Clan.ACTION.test(p, this.getPermission() + "." + DataManager.Security.getPermission("permit")).deploy()) {
 						return result;
 					}
-					result.addAll(Arrays.stream(Clearance.values()).map(Nameable::getName).map(String::toLowerCase).collect(Collectors.toList()));
+					result.addAll(Arrays.stream(Clearance.values()).map(Identifiable::getName).map(String::toLowerCase).collect(Collectors.toList()));
 					return result;
 				})
 				.then(TabCompletionIndex.THREE, getLabel(), TabCompletionIndex.ONE, Arrays.stream(Clearance.Level.values()).sorted(Integer::compareTo).map(String::valueOf).collect(Collectors.toList()))

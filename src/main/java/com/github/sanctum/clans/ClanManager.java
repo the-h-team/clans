@@ -118,7 +118,7 @@ public final class ClanManager {
 	 * @return A clan object or null
 	 */
 	public Clan getClan(OfflinePlayer player) {
-		return getClan(PlayerSearch.of(player.getName()).getId());
+		return getClan(PlayerSearch.of(player.getName()).getUniqueId());
 	}
 
 	/**

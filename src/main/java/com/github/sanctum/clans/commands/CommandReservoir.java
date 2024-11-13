@@ -8,7 +8,13 @@ import com.github.sanctum.clans.util.StringLibrary;
 import com.github.sanctum.labyrinth.formatting.completion.SimpleTabCompletion;
 import com.github.sanctum.labyrinth.formatting.completion.TabCompletionIndex;
 import java.util.List;
+
+import com.github.sanctum.labyrinth.library.Item;
+import com.github.sanctum.labyrinth.library.NamespacedKey;
+import org.bukkit.Material;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.persistence.PersistentDataType;
 
 public class CommandReservoir extends ClanSubCommand {
 	public CommandReservoir() {
@@ -27,6 +33,16 @@ public class CommandReservoir extends ClanSubCommand {
 				sendMessage(p, lib.notInClan());
 			}
 			return true;
+		}
+
+		if (args.length == 1) {
+			if (args[0].equalsIgnoreCase("buy")) {
+				ItemStack item = new Item.Edit(Material.END_CRYSTAL).setTitle("&3&lRESERVOIR").editContainer(lc -> {
+					lc.set(new NamespacedKey(ClansAPI.getInstance().getPlugin(), "clans_reservoir"), PersistentDataType.STRING, associate.getClan().getId().toString());
+				}).build();
+				p.getWorld().dropItem(p.getLocation(), item);
+				return true;
+			}
 		}
 		return true;
 	}

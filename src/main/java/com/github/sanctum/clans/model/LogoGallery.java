@@ -1,6 +1,6 @@
 package com.github.sanctum.clans.model;
 
-import com.github.sanctum.clans.util.SimpleLogoCarrier;
+import com.github.sanctum.clans.util.ClansLogoDelegation;
 import com.github.sanctum.labyrinth.LabyrinthProvider;
 import com.github.sanctum.labyrinth.data.container.PersistentContainer;
 import com.github.sanctum.labyrinth.library.NamespacedKey;
@@ -16,7 +16,7 @@ import org.bukkit.block.BlockFace;
 
 public class LogoGallery implements Savable {
 
-	private final Map<String, SimpleLogoCarrier> carriers = new HashMap<>();
+	private final Map<String, ClansLogoDelegation> carriers = new HashMap<>();
 	private final PersistentContainer container;
 
 	public LogoGallery() {
@@ -27,16 +27,16 @@ public class LogoGallery implements Savable {
 		}
 	}
 
-	public Collection<SimpleLogoCarrier> getLogos() {
+	public Collection<ClansLogoDelegation> getLogos() {
 		return carriers.values();
 	}
 
-	public SimpleLogoCarrier getLogo(String label) {
+	public ClansLogoDelegation getLogo(String label) {
 		return carriers.get(label);
 	}
 
-	public SimpleLogoCarrier getLogo(List<String> logo) {
-		for (Map.Entry<String, SimpleLogoCarrier> c : carriers.entrySet()) {
+	public ClansLogoDelegation getLogo(List<String> logo) {
+		for (Map.Entry<String, ClansLogoDelegation> c : carriers.entrySet()) {
 			if (Arrays.equals(c.getValue().toRaw(), logo.toArray(new String[0]))) {
 				return c.getValue();
 			}
@@ -46,24 +46,13 @@ public class LogoGallery implements Savable {
 
 	public void load(String label, List<String> list) {
 		if (!list.isEmpty()) {
-			for (Map.Entry<String, SimpleLogoCarrier> c : carriers.entrySet()) {
+			for (Map.Entry<String, ClansLogoDelegation> c : carriers.entrySet()) {
 				if (Arrays.equals(c.getValue().toRaw(), list.toArray(new String[0]))) {
 					return;
 				}
 			}
 			if (getLogo(label) != null) return;
-			SimpleLogoCarrier def = new SimpleLogoCarrier(list);
-			LogoHolder.newAdapter(location -> {
-				for (LogoHolder.Carrier.Line line : def.getLines()) {
-					for (int i = 1; i < 2; i++) {
-						Block up = location.getBlock().getRelative(BlockFace.UP, i);
-						if (line.getStand().getLocation().distanceSquared(up.getLocation().add(0.5, 0, 0.5)) <= 1) {
-							return def;
-						}
-					}
-				}
-				return null;
-			}).deploy();
+			ClansLogoDelegation def = new ClansLogoDelegation(list);
 			carriers.put(label, def);
 			container.attach(label, list);
 		}
@@ -78,7 +67,7 @@ public class LogoGallery implements Savable {
 	}
 
 	public void remove(List<String> logo) {
-		for (Map.Entry<String, SimpleLogoCarrier> c : carriers.entrySet()) {
+		for (Map.Entry<String, ClansLogoDelegation> c : carriers.entrySet()) {
 			if (Arrays.equals(c.getValue().toRaw(), logo.toArray(new String[0]))) {
 				TaskScheduler.of(() -> {
 					carriers.get(c.getKey()).remove();

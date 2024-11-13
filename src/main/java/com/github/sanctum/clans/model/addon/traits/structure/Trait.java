@@ -1,12 +1,12 @@
 package com.github.sanctum.clans.model.addon.traits.structure;
 
-import com.github.sanctum.labyrinth.interfacing.Nameable;
+import com.github.sanctum.labyrinth.interfacing.Identifiable;
 import com.github.sanctum.panther.annotation.Note;
 import com.github.sanctum.panther.util.Deployable;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public interface Trait extends Nameable {
+public interface Trait extends Identifiable {
 
 	@NotNull String getName();
 
@@ -22,7 +22,7 @@ public interface Trait extends Nameable {
 		return new UserTrait(this);
 	}
 
-	interface Ability extends Nameable {
+	interface Ability extends Identifiable {
 
 		@NotNull String getName();
 

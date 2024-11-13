@@ -429,7 +429,7 @@ public interface ClansAPI {
 	}
 
 	default Optional<Clan.Associate> getAssociate(LabyrinthUser user) {
-		return getAssociate(user.getId());
+		return getAssociate(user.getUniqueId());
 	}
 
 	default ClanAddonRegistry getAddonQueue() {
@@ -448,7 +448,7 @@ public interface ClansAPI {
 
 	@Experimental(dueTo = "Involving usage of the brand new api! Use at your own risk.")
 	default PantherCollection<? extends InvasiveEntity> getEntities() {
-		PantherCollection<InvasiveEntity> list = InoperableSpecialMemory.ENTITY_MAP.values().stream().collect(PantherCollectors.toList());
+		PantherCollection<InvasiveEntity> list = InoperableSharedMemory.ENTITY_MAP.values().stream().collect(PantherCollectors.toList());
 		getClanManager().getClans().forEach(c -> {
 			c.getMembers().forEach(list::add);
 			list.add(c);

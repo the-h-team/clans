@@ -11,7 +11,7 @@ import com.github.sanctum.labyrinth.data.EconomyProvision;
 import com.github.sanctum.labyrinth.event.LabyrinthVentCall;
 import java.math.BigDecimal;
 
-import com.github.sanctum.labyrinth.interfacing.Nameable;
+import com.github.sanctum.labyrinth.interfacing.Identifiable;
 import com.github.sanctum.panther.util.HUID;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
@@ -24,12 +24,12 @@ public class DefaultClanBank implements Clan.Bank {
     }
 
     @Override
-    public boolean deposit(@NotNull BigDecimal amount, Nameable entity) {
-        if (getBackend().readIsDisabled(getClan()).join()) throw new DisabledException(clanId.toString());
+    public boolean deposit(@NotNull BigDecimal amount, Identifiable entity) {
+        if (getBackend().readIsDisabled(getClan()).join()) throw new DisabledClanBankError(clanId.toString());
         if (amount.compareTo(BigDecimal.ZERO) < 0) throw new IllegalArgumentException("amount cannot be negative");
         boolean success = true;
         if (entity instanceof Clan.Associate && ((Clan.Associate) entity).isPlayer()) {
-            final Player p = ((Clan.Associate) entity).getAsPlayer().getPlayer();
+            final Player p = ((Clan.Associate) entity).getAsOfflinePlayer().getPlayer();
             //noinspection DataFlowIssue
             success = EconomyProvision.getInstance().has(amount, p, p.getWorld().getName()).orElse(false);
         }
@@ -43,8 +43,8 @@ public class DefaultClanBank implements Clan.Bank {
     }
 
     @Override
-    public boolean withdraw(@NotNull BigDecimal amount, Nameable entity) {
-        if (getBackend().readIsDisabled(getClan()).join()) throw new DisabledException(clanId.toString());
+    public boolean withdraw(@NotNull BigDecimal amount, Identifiable entity) {
+        if (getBackend().readIsDisabled(getClan()).join()) throw new DisabledClanBankError(clanId.toString());
         if (amount.compareTo(BigDecimal.ZERO) < 0) throw new IllegalArgumentException("amount cannot be negative");
         return new LabyrinthVentCall<>(new BankPreTransactionEvent(
                 this,
@@ -72,7 +72,7 @@ public class DefaultClanBank implements Clan.Bank {
 
     @Override
     public boolean setBalance(@NotNull BigDecimal newBalance) {
-        if (getBackend().readIsDisabled(getClan()).join()) throw new DisabledException(clanId.toString());
+        if (getBackend().readIsDisabled(getClan()).join()) throw new DisabledClanBankError(clanId.toString());
         getBackend().updateBalance(getClan(), newBalance).join();
         return true;
     }

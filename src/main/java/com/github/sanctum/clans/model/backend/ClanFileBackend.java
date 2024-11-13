@@ -16,12 +16,14 @@ import com.github.sanctum.clans.event.clan.ClanKickAssociateEvent;
 import com.github.sanctum.clans.event.command.ClanInformationAdaptEvent;
 import com.github.sanctum.clans.event.player.PlayerCreateClanEvent;
 import com.github.sanctum.clans.event.player.PlayerJoinClanEvent;
+import com.github.sanctum.clans.util.Teleportation;
 import com.github.sanctum.labyrinth.LabyrinthProvider;
 import com.github.sanctum.labyrinth.data.EconomyProvision;
 import com.github.sanctum.labyrinth.data.FileManager;
 import com.github.sanctum.labyrinth.data.service.PlayerSearch;
 import com.github.sanctum.labyrinth.formatting.pagination.EasyPagination;
 import com.github.sanctum.labyrinth.library.StringUtils;
+import com.github.sanctum.labyrinth.library.Teleport;
 import com.github.sanctum.labyrinth.task.TaskScheduler;
 import com.github.sanctum.panther.container.PantherCollection;
 import com.github.sanctum.panther.container.PantherList;
@@ -110,7 +112,7 @@ public class ClanFileBackend extends StringLibrary {
 						instance.setName(name);
 						boolean war = LabyrinthProvider.getInstance().getLocalPrintManager()
 								.getPrint(ClansAPI.getInstance().getLocalPrintKey())
-								.getString(AbstractGameRule.DEFAULT_WAR_MODE)
+								.getString(ClanGameRule.DEFAULT_WAR_MODE)
 								.equalsIgnoreCase("peace");
 						instance.setPeaceful(war);
 						if (e.getPassword() != null) {
@@ -384,7 +386,7 @@ public class ClanFileBackend extends StringLibrary {
 					if (request != null) {
 						sendMessage(p, "&cYou already have a pending teleportation in progress.");
 					} else {
-						new Teleport.Impl(API.getAssociate(p).get(), location).teleport();
+						new Teleportation(API.getAssociate(p).get(), new Teleport.Location(location)).run();
 						return true;
 					}
 				} else {
@@ -400,7 +402,7 @@ public class ClanFileBackend extends StringLibrary {
 			final PlayerSearch user = PlayerSearch.of(playerName);
 			@Override
 			public UUID deploy() {
-				return user != null ? user.getId() : null;
+				return user != null ? user.getUniqueId() : null;
 			}
 		};
 	}
@@ -605,7 +607,7 @@ public class ClanFileBackend extends StringLibrary {
 		if (associate == null) return;
 		Clan clan =  associate.getClan();
 		List<String> array = new ArrayList<>();
-		List<String> info_board = (List<String>) AbstractGameRule.of(LabyrinthProvider.getInstance().getLocalPrintManager().getPrint(API.getLocalPrintKey())).get(AbstractGameRule.CLAN_INFO_SIMPLE);
+		List<String> info_board = (List<String>) ClanGameRule.of(LabyrinthProvider.getInstance().getLocalPrintManager().getPrint(API.getLocalPrintKey())).get(ClanGameRule.CLAN_INFO_SIMPLE);
 		info_board.forEach(s -> {
 			if (clan instanceof DefaultClan) {
 				array.add(((DefaultClan)clan).replacePlaceholders(s));

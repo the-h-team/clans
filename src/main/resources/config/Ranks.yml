@@ -1,4 +1,4 @@
-# # # # # # # # # # # # # # #
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # default=permissions:      #
 #  - LAND_USE               #
 #  - LAND_USE_INTERACTABLE  #
@@ -29,6 +29,21 @@
 #  - MANAGE_DESCRIPTION     #
 #  - MANAGE_PERMS           #
 # # # # # # # # # # # # # # #
+# NOTE: When renaming a rank, make sure you put an "old-name:" value with the old name next to it so the application has a way to smoothly transition players ranks automagically.
+#
+# An example can be found below:
+#
+# Say we wanted to rename Owner to Mayor
+# # # # # # # # # # # #
+# HIGHEST:
+#   name: 'Mayor'
+#   old-name: 'Owner'
+#   sy...
+#   .....
+# # # # # # # # # # # #
+# Now when we start our server or reload all users that were once apart-
+# of the "Owner" rank will now be in the "Mayor" rank.
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 NORMAL:
   name: 'Member'
   symbol: '•'

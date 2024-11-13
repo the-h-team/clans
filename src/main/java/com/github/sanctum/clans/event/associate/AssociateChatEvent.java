@@ -1,8 +1,9 @@
 package com.github.sanctum.clans.event.associate;
 
-import com.github.sanctum.clans.model.Channel;
 import com.github.sanctum.clans.model.Clan;
 import java.util.Set;
+
+import com.github.sanctum.clans.model.ChatChannel;
 import net.md_5.bungee.api.chat.BaseComponent;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
@@ -25,7 +26,7 @@ public class AssociateChatEvent extends AssociateEvent {
 		this.recipients = recipients;
 	}
 
-	public Channel getChannel() {
+	public ChatChannel getChannel() {
 		return getAssociate().getChannel();
 	}
 

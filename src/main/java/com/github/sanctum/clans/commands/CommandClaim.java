@@ -184,8 +184,13 @@ public class CommandClaim extends ClanSubCommand {
 			if (args[0].equalsIgnoreCase("enter-title")) {
 				if (associate != null) {
 					if (Clearance.MANAGE_ALL_LAND.test(associate)) {
-						associate.getClan().setValue("claim_title", args[1], false);
-						lib.sendMessage(p, "&aTitle updated.");
+						if (args[1].equalsIgnoreCase("reset")) {
+							associate.getClan().removeValue("claim_title");
+							lib.sendMessage(p, "&eTitle reset.");
+						} else {
+							associate.getClan().setValue("claim_title", args[1], false);
+							lib.sendMessage(p, "&aTitle updated.");
+						}
 					} else {
 						lib.sendMessage(p, lib.noClearance());
 					}
@@ -197,8 +202,13 @@ public class CommandClaim extends ClanSubCommand {
 			if (args[0].equalsIgnoreCase("enter-sub-title")) {
 				if (associate != null) {
 					if (Clearance.MANAGE_ALL_LAND.test(associate)) {
-						associate.getClan().setValue("claim_sub_title", args[1], false);
-						lib.sendMessage(p, "&aTitle updated.");
+						if (args[1].equalsIgnoreCase("reset")) {
+							associate.getClan().removeValue("claim_sub_title");
+							lib.sendMessage(p, "&eSub-Title reset.");
+						} else {
+							associate.getClan().setValue("claim_sub_title", args[1], false);
+							lib.sendMessage(p, "&aSub-Title updated.");
+						}
 					} else {
 						lib.sendMessage(p, lib.noClearance());
 					}
@@ -210,8 +220,13 @@ public class CommandClaim extends ClanSubCommand {
 			if (args[0].equalsIgnoreCase("leave-title")) {
 				if (associate != null) {
 					if (Clearance.MANAGE_ALL_LAND.test(associate)) {
-						associate.getClan().setValue("leave_claim_title", args[1], false);
-						lib.sendMessage(p, "&aTitle updated.");
+						if (args[1].equalsIgnoreCase("reset")) {
+							associate.getClan().removeValue("leave_claim_title");
+							lib.sendMessage(p, "&eTitle reset.");
+						} else {
+							associate.getClan().setValue("leave_claim_title", args[1], false);
+							lib.sendMessage(p, "&aTitle updated.");
+						}
 					} else {
 						lib.sendMessage(p, lib.noClearance());
 					}
@@ -223,8 +238,13 @@ public class CommandClaim extends ClanSubCommand {
 			if (args[0].equalsIgnoreCase("leave-sub-title")) {
 				if (associate != null) {
 					if (Clearance.MANAGE_ALL_LAND.test(associate)) {
-						associate.getClan().setValue("leave_claim_sub_title", args[1], false);
-						lib.sendMessage(p, "&aTitle updated.");
+						if (args[1].equalsIgnoreCase("reset")) {
+							associate.getClan().removeValue("leave_claim_sub_title");
+							lib.sendMessage(p, "&eSub-Title reset.");
+						} else {
+							associate.getClan().setValue("leave_claim_sub_title", args[1], false);
+							lib.sendMessage(p, "&aSub-Title updated.");
+						}
 					} else {
 						lib.sendMessage(p, lib.noClearance());
 					}

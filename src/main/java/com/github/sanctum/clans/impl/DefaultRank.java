@@ -8,6 +8,8 @@ import com.github.sanctum.panther.container.PantherCollection;
 import com.github.sanctum.panther.container.PantherSet;
 import com.github.sanctum.panther.file.MemorySpace;
 import java.util.List;
+import java.util.UUID;
+
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -83,6 +85,11 @@ public class DefaultRank implements Clan.Rank {
 	@Override
 	public @NotNull String getName() {
 		return this.name;
+	}
+
+	@Override
+	public @NotNull UUID getUniqueId() {
+		return null;
 	}
 
 	@Override

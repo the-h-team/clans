@@ -14,13 +14,13 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class ClanRelationElement extends UniformedComponents<Clan> implements Serializable {
+public class ClanRelationList extends UniformedComponents<Clan> implements Serializable {
 
 	private static final long serialVersionUID = -5063742983811634219L;
 	private final Clan clan;
 	private final RelationType relation;
 
-	public ClanRelationElement(Clan clan, RelationType type) {
+	public ClanRelationList(Clan clan, RelationType type) {
 		this.clan = clan;
 		this.relation = type;
 	}
@@ -45,11 +45,12 @@ public class ClanRelationElement extends UniformedComponents<Clan> implements Se
 
 	@Override
 	public List<Clan> sort() {
-		list().sort(Comparator.comparingDouble(Clan::getPower));
+		List<Clan> list = list();
+		list.sort(Comparator.comparingDouble(Clan::getPower));
 		switch (relation) {
 			case Ally:
 			case Enemy:
-				return list();
+				return list;
 			default:
 				throw new IllegalStateException("Invalid relation type!");
 		}
@@ -57,11 +58,12 @@ public class ClanRelationElement extends UniformedComponents<Clan> implements Se
 
 	@Override
 	public List<Clan> sort(Comparator<? super Clan> comparable) {
-		list().sort(comparable);
+		List<Clan> list = list();
+		list.sort(comparable);
 		switch (relation) {
 			case Ally:
 			case Enemy:
-				return list();
+				return list;
 			default:
 				throw new IllegalStateException("Invalid relation type!");
 		}
@@ -142,6 +144,10 @@ public class ClanRelationElement extends UniformedComponents<Clan> implements Se
 			default:
 				throw new IllegalStateException("Invalid relation type!");
 		}
+	}
+
+	public RelationType getType() {
+		return relation;
 	}
 
 	public enum RelationType {

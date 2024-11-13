@@ -1,11 +1,6 @@
 package com.github.sanctum.clans.event.claim;
 
-import com.github.sanctum.clans.model.Channel;
-import com.github.sanctum.clans.model.Claim;
-import com.github.sanctum.clans.model.Clan;
-import com.github.sanctum.clans.model.InvasiveEntity;
-import com.github.sanctum.clans.model.Relation;
-import com.github.sanctum.clans.model.Teleport;
+import com.github.sanctum.clans.model.*;
 import com.github.sanctum.clans.event.associate.AssociateEvent;
 import com.github.sanctum.labyrinth.library.Mailer;
 import java.util.ArrayList;
@@ -15,6 +10,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
+
+import com.github.sanctum.labyrinth.library.Teleport;
 import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
 import org.bukkit.Location;
@@ -35,27 +32,7 @@ public abstract class ClaimEvent extends AssociateEvent {
 		}
 
 		@Override
-		public List<Carrier> getCarriers() {
-			return null;
-		}
-
-		@Override
-		public List<Carrier> getCarriers(Chunk chunk) {
-			return null;
-		}
-
-		@Override
-		public Carrier newCarrier(Location location) {
-			return null;
-		}
-
-		@Override
 		public void save() {
-
-		}
-
-		@Override
-		public void remove(Carrier carrier) {
 
 		}
 
@@ -70,6 +47,11 @@ public abstract class ClaimEvent extends AssociateEvent {
 		}
 
 		@Override
+		public @NotNull UUID getUniqueId() {
+			return UUID.randomUUID();
+		}
+
+		@Override
 		public UUID getId() {
 			return UUID.randomUUID();
 		}
@@ -79,8 +61,8 @@ public abstract class ClaimEvent extends AssociateEvent {
 		}
 
 		@Override
-		public Channel getChannel() {
-			return Channel.GLOBAL;
+		public ChatChannel getChannel() {
+			return ChatChannel.GLOBAL;
 		}
 
 		@Override
@@ -242,6 +224,11 @@ public abstract class ClaimEvent extends AssociateEvent {
 
 						@Override
 						public <T extends InvasiveEntity> boolean has(T o) {
+							return false;
+						}
+
+						@Override
+						public boolean has(@NotNull UUID uuid) {
 							return false;
 						}
 

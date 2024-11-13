@@ -2,7 +2,7 @@ package com.github.sanctum.clans.model;
 
 import com.github.sanctum.clans.impl.DefaultDocketRegistry;
 import com.github.sanctum.clans.util.ReloadUtility;
-import com.github.sanctum.clans.util.SimpleLogoCarrier;
+import com.github.sanctum.clans.util.ClansLogoDelegation;
 import com.github.sanctum.labyrinth.LabyrinthProvider;
 import com.github.sanctum.labyrinth.api.Service;
 import com.github.sanctum.labyrinth.data.EconomyProvision;
@@ -232,7 +232,7 @@ public enum GUI {
 								}
 							}
 							i.addItem(border);
-							ListElement<String> rules = new ListElement<>(Constant.values(AbstractGameRule.class, String.class));
+							ListElement<String> rules = new ListElement<>(Constant.values(ClanGameRule.class, String.class));
 							rules.setLimit(getLimit());
 							rules.setPopulate((flag, element) -> {
 								Material mat = new RandomObject<>(Arrays.stream(Material.values()).filter(material -> !material.name().contains("LEGACY")).collect(Collectors.toList())).get(flag);
@@ -240,21 +240,21 @@ public enum GUI {
 								Material finalMat = mat;
 								element.setElement(edit -> edit.setType(finalMat).setTitle("&6Edit &r" + flag).setLore(" ", "&eLeft-click to &aadd&e stuff", "&eRight-click to &cremove&e stuff", "&eShift-click to &3&loverwrite&e stuff").build()).setClick(c -> {
 									c.setCancelled(true);
-									AbstractGameRule rule = AbstractGameRule.of(printManager.getPrint(api.getLocalPrintKey()));
+									ClanGameRule rule = ClanGameRule.of(printManager.getPrint(api.getLocalPrintKey()));
 									if (c.getClickType().isShiftClick()) {
-										InventoryElement inventory = rule.edit(AbstractGameRule.Modification.SET, flag);
+										InventoryElement inventory = rule.edit(ClanGameRule.Modification.SET, flag);
 										if (inventory != null) {
 											inventory.open(c.getElement());
 										}
 
 									} else if (c.getClickType().isLeftClick()) {
-										InventoryElement inventory = rule.edit(AbstractGameRule.Modification.ADD, flag);
+										InventoryElement inventory = rule.edit(ClanGameRule.Modification.ADD, flag);
 										if (inventory != null) {
 											inventory.open(c.getElement());
 										}
 
 									} else if (c.getClickType().isRightClick()) {
-										InventoryElement inventory = rule.edit(AbstractGameRule.Modification.REMOVE, flag);
+										InventoryElement inventory = rule.edit(ClanGameRule.Modification.REMOVE, flag);
 										if (inventory != null) {
 											inventory.open(c.getElement());
 										}
@@ -353,8 +353,8 @@ public enum GUI {
 								click.setHotbarAllowed(false);
 								click.getElement().closeInventory();
 							}));
-							ListElement<SimpleLogoCarrier> list = new ListElement<>(new ArrayList<>(api.getLogoGallery().getLogos()));
-							list.setLimit(getLimit()).setComparator(Comparator.comparingInt(value -> value.getData().get().getLines().size()));
+							ListElement<ClansLogoDelegation> list = new ListElement<>(new ArrayList<>(api.getLogoGallery().getLogos()));
+							list.setLimit(getLimit()).setComparator(Comparator.comparingInt(value -> value.getData().get().getLogo().size()));
 							list.setPopulate((stand, item) -> {
 								List<String> set = Arrays.asList(stand.toRaw());
 								item.setElement(ed -> ed.setTitle("&e# &f(" + stand.getId() + ")").setLore(set).build());
@@ -519,7 +519,7 @@ public enum GUI {
 								c.setCancelled(true);
 								SETTINGS_CLAN_ROSTER.get().open(c.getElement());
 							}));
-							i.addItem(b -> b.setElement(new ItemStack(Material.DIAMOND_SWORD)).setElement(ed -> ed.setTitle("&7[&2War&7]").setLore("&7Click to manage arena spawns.").build()).setSlot(16).setClick(c -> {
+							i.addItem(b -> b.setElement(new ItemStack(Material.DIAMOND_SWORD)).setElement(ed -> ed.setTitle("&7[&2Arena&7]").setLore("&7Click to manage arena spawns.").build()).setSlot(16).setClick(c -> {
 								c.setCancelled(true);
 								SETTINGS_ARENA.get().open(c.getElement());
 							}));
@@ -1639,7 +1639,7 @@ public enum GUI {
 							ListElement<Claim> list = new ListElement<>(Arrays.asList(clan.getClaims()));
 							list.setLimit(getLimit());
 							list.setPopulate((claim, item) -> {
-								item.setElement(ed -> ed.setTitle("&e# &f(" + claim.getId() + ")").setLore("&bCarriers: &f" + clan.getCarriers(claim.getChunk()).size(), "&bActive Residents: &f" + claim.getResidents().size(), "&bActive Flags: &f" + Arrays.stream(claim.getFlags()).filter(Claim.Flag::isEnabled).count()).build());
+								item.setElement(ed -> ed.setTitle("&e# &f(" + claim.getId() + ")").setLore("&bActive Residents: &f" + claim.getResidents().size(), "&bActive Flags: &f" + Arrays.stream(claim.getFlags()).filter(Claim.Flag::isEnabled).count()).build());
 								item.setClick(click -> {
 									click.setCancelled(true);
 									api.getAssociate(click.getElement()).ifPresent(a -> {
@@ -1651,72 +1651,6 @@ public enum GUI {
 							});
 							i.addItem(list);
 						}).orGet(m -> m instanceof PaginatedMenu && m.getKey().map(("Clans:" + clan.getName() + "-claims")::equals).orElse(false));
-			case HOLOGRAM_LIST:
-				return MenuType.PAGINATED.build()
-						.setHost(api.getPlugin())
-						.setSize(getSize())
-						.setTitle("&b&lHOLOGRAMS &0&l»")
-						.setStock(i -> {
-							FillerElement<?> filler = new FillerElement<>(i);
-							filler.add(ed -> ed.setElement(it -> it.setType(Optional.ofNullable(Items.findMaterial("bluestainedglasspane")).orElse(Items.findMaterial("stainedglasspane"))).setTitle(" ").build()));
-							i.addItem(filler);
-							BorderElement<?> border = new BorderElement<>(i);
-							for (Menu.Panel p : Menu.Panel.values()) {
-								if (p == Menu.Panel.MIDDLE) continue;
-								if (LabyrinthProvider.getInstance().isLegacy()) {
-									border.add(p, ed -> ed.setType(ItemElement.ControlType.ITEM_BORDER).setElement(it -> it.setType(Items.findMaterial("STAINED_GLASS_PANE")).setTitle(" ").build()));
-								} else {
-									border.add(p, ed -> ed.setType(ItemElement.ControlType.ITEM_BORDER).setElement(it -> it.setType(Material.GRAY_STAINED_GLASS_PANE).setTitle(" ").build()));
-								}
-							}
-							i.addItem(border);
-							i.addItem(b -> b.setElement(getLeftItem()).setSlot(getLeft()).setTypeAndAddAction(ItemElement.ControlType.BUTTON_BACK, click -> {
-								click.setCancelled(true);
-								click.setHotbarAllowed(false);
-								click.setConsumer((target, success) -> {
-
-									if (success) {
-										i.open(target);
-									} else {
-										Clan.ACTION.sendMessage(target, Clan.ACTION.color(Clan.ACTION.alreadyFirstPage()));
-									}
-
-								});
-							}));
-
-							i.addItem(b -> b.setElement(getRightItem()).setSlot(getRight()).setTypeAndAddAction(ItemElement.ControlType.BUTTON_NEXT, click -> {
-								click.setCancelled(true);
-								click.setHotbarAllowed(false);
-								click.setConsumer((target, success) -> {
-									if (success) {
-										i.open(target);
-									} else {
-										Clan.ACTION.sendMessage(target, Clan.ACTION.color(Clan.ACTION.alreadyLastPage()));
-									}
-
-								});
-							}));
-
-							i.addItem(b -> b.setElement(getBackItem()).setSlot(getBack()).setTypeAndAddAction(ItemElement.ControlType.BUTTON_EXIT, click -> {
-								click.setCancelled(true);
-								click.setHotbarAllowed(false);
-								click.getElement().closeInventory();
-							}));
-							ListElement<LogoHolder.Carrier> list = new ListElement<>(clan.getCarriers());
-							list.setLimit(getLimit()).setComparator(Comparator.comparingInt(value -> value.getData().get().getLines().size()));
-							list.setPopulate((stand, item) -> {
-								List<String> set = stand.getLines().stream().map(line -> line.getStand().getCustomName()).collect(Collectors.toCollection(ArrayList::new));
-								Collections.reverse(set);
-								item.setElement(ed -> ed.setTitle("&e# &f(" + stand.getId() + ")").setLore(set).build());
-								item.setClick(click -> {
-									click.setCancelled(true);
-									api.getAssociate(click.getElement()).ifPresent(a -> {
-										Clan.ACTION.teleport(click.getElement(), stand.getLines().stream().findFirst().get().getStand().getLocation()).deploy();
-									});
-								});
-							});
-							i.addItem(list);
-						}).orGet(m -> m instanceof PaginatedMenu && m.getKey().map(("Clans:" + clan.getName() + "-holograms")::equals).orElse(false));
 			case SETTINGS_CLAN:
 				return MenuType.SINGULAR.build().setHost(api.getPlugin())
 						.setTitle("&0&l» " + (clan.getPalette().isGradient() ? clan.getPalette().toGradient().context(clan.getName()).translate() : clan.getPalette().toString() + clan.getName()) + " settings")
@@ -2272,7 +2206,7 @@ public enum GUI {
 	}
 
 	Menu.Rows getSize() {
-		return Menu.Rows.valueOf(ClansAPI.getDataInstance().getMessageString("default-size"));
+		return Menu.Rows.valueOf(ClansAPI.getDataInstance().getMessageString("default-menu-size"));
 	}
 
 	List<String> color(String... text) {

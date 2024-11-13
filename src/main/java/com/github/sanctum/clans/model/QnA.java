@@ -11,11 +11,11 @@ public interface QnA {
 	boolean test(Player player, String question);
 
 	static void register(@NotNull QnA qnA) {
-		InoperableSpecialMemory.QNA.add(qnA);
+		InoperableSharedMemory.QNA.add(qnA);
 	}
 
 	static @NotNull PantherCollection<QnA> getAll() {
-		return ImmutablePantherCollection.of(InoperableSpecialMemory.QNA);
+		return ImmutablePantherCollection.of(InoperableSharedMemory.QNA);
 	}
 
 }

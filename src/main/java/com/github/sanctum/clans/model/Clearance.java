@@ -2,7 +2,7 @@ package com.github.sanctum.clans.model;
 
 import com.github.sanctum.labyrinth.data.service.Constant;
 import com.github.sanctum.labyrinth.interfacing.JsonIntermediate;
-import com.github.sanctum.labyrinth.interfacing.Nameable;
+import com.github.sanctum.labyrinth.interfacing.Identifiable;
 import com.github.sanctum.panther.annotation.Json;
 import com.github.sanctum.panther.util.Check;
 import com.google.gson.JsonObject;
@@ -11,12 +11,13 @@ import java.io.Serializable;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import org.jetbrains.annotations.NotNull;
 
 
 // all fields here are persistently cached and available like a normal enum.
-public final class Clearance implements Nameable, Comparable<Clearance>, JsonIntermediate, Serializable {
+public final class Clearance implements Identifiable, Comparable<Clearance>, JsonIntermediate, Serializable {
 	private static final long serialVersionUID = -8205377987907270525L;
 
 	public static final Clearance INVITE_PLAYERS = new Clearance("INVITE_PLAYERS");
@@ -68,6 +69,11 @@ public final class Clearance implements Nameable, Comparable<Clearance>, JsonInt
 	@Override
 	public @NotNull String getName() {
 		return this.name;
+	}
+
+	@Override
+	public @NotNull UUID getUniqueId() {
+		return UUID.nameUUIDFromBytes(this.name.getBytes());
 	}
 
 	public int getDefault() {

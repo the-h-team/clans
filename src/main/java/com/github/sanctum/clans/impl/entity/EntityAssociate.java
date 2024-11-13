@@ -1,23 +1,12 @@
 package com.github.sanctum.clans.impl.entity;
 
-import com.github.sanctum.clans.model.ClanVentBus;
-import com.github.sanctum.clans.model.Channel;
-import com.github.sanctum.clans.model.Claim;
-import com.github.sanctum.clans.model.Clan;
-import com.github.sanctum.clans.model.ClansAPI;
-import com.github.sanctum.clans.model.Consultant;
-import com.github.sanctum.clans.model.IncomingConsultationListener;
-import com.github.sanctum.clans.model.InvasiveEntity;
-import com.github.sanctum.clans.model.OutgoingConsultationListener;
-import com.github.sanctum.clans.model.PersistentEntity;
-import com.github.sanctum.clans.model.Relation;
-import com.github.sanctum.clans.model.Teleport;
-import com.github.sanctum.clans.model.Ticket;
+import com.github.sanctum.clans.model.*;
 import com.github.sanctum.clans.util.HiddenMetadata;
 import com.github.sanctum.clans.event.associate.AssociateFromAnimalEvent;
 import com.github.sanctum.labyrinth.data.Atlas;
 import com.github.sanctum.labyrinth.data.AtlasMap;
 import com.github.sanctum.labyrinth.library.Mailer;
+import com.github.sanctum.labyrinth.library.Teleport;
 import com.github.sanctum.labyrinth.library.TimeWatch;
 import com.github.sanctum.labyrinth.task.TaskScheduler;
 import com.github.sanctum.panther.annotation.Ordinal;
@@ -56,7 +45,7 @@ public final class EntityAssociate implements PersistentEntity, Clan.Associate, 
 	private String nickname;
 	private final Date join;
 	private Clan.Rank rank;
-	private Channel chat;
+	private ChatChannel chat;
 	private final ItemStack head;
 	private final Object data;
 	private final Map<Long, Long> killMap;
@@ -100,7 +89,7 @@ public final class EntityAssociate implements PersistentEntity, Clan.Associate, 
 			}
 		};
 		this.rank = priority;
-		this.chat = Channel.GLOBAL;
+		this.chat = ChatChannel.GLOBAL;
 		this.head = CustomHead.Manager.get(parent.getName());
 		this.killMap = new HashMap<>();
 		ClanVentBus.call(new AssociateFromAnimalEvent(this));
@@ -124,7 +113,7 @@ public final class EntityAssociate implements PersistentEntity, Clan.Associate, 
 	/**
 	 * @return The chat channel this user resides in.
 	 */
-	public Channel getChannel() {
+	public ChatChannel getChannel() {
 		return chat;
 	}
 
@@ -134,7 +123,7 @@ public final class EntityAssociate implements PersistentEntity, Clan.Associate, 
 	 * @param chat The channel to switch them to.
 	 */
 	public void setChannel(String chat) {
-		this.chat = Channel.valueOf(chat);
+		this.chat = ChatChannel.valueOf(chat);
 	}
 
 	/**
@@ -307,28 +296,8 @@ public final class EntityAssociate implements PersistentEntity, Clan.Associate, 
 	}
 
 	@Override
-	public List<Carrier> getCarriers() {
-		return getClan().getCarriers();
-	}
-
-	@Override
-	public List<Carrier> getCarriers(Chunk chunk) {
-		return getClan().getCarriers(chunk);
-	}
-
-	@Override
-	public Carrier newCarrier(Location location) {
-		return getClan().newCarrier(location);
-	}
-
-	@Override
 	public void save() {
 
-	}
-
-	@Override
-	public void remove(Carrier carrier) {
-		getClan().remove(carrier);
 	}
 
 	@Override

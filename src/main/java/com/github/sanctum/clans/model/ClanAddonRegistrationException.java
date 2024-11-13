@@ -1,7 +1,6 @@
 package com.github.sanctum.clans.model;
 
 import com.github.sanctum.clans.ClansJavaPlugin;
-import com.github.sanctum.clans.util.ClanError;
 import com.github.sanctum.labyrinth.data.FileList;
 import com.github.sanctum.labyrinth.task.Procedure;
 import java.io.File;
@@ -28,7 +27,8 @@ public class ClanAddonRegistrationException extends ClanError {
 					instance.getLogger().info("- Injected: " + addon.getName() + " v" + addon.getVersion());
 					instance.getLogger().info("▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬");
 					amount++;
-				} catch (IOException | InvalidAddonException | ClanAddonRegistrationException | ClanAddonDependencyException e) {
+				} catch (IOException | InvalidAddonException | ClanAddonRegistrationException |
+						 ClanAddonDependencyError e) {
 					e.printStackTrace();
 				}
 			}

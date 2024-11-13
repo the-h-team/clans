@@ -4,7 +4,7 @@ import com.github.sanctum.clans.model.Clan;
 import com.github.sanctum.clans.event.bank.messaging.Messages;
 import java.math.BigDecimal;
 
-import com.github.sanctum.labyrinth.interfacing.Nameable;
+import com.github.sanctum.labyrinth.interfacing.Identifiable;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -14,12 +14,12 @@ public class BankTransactionEvent extends BankEvent {
         DEPOSIT, WITHDRAWAL
     }
 
-    protected final Nameable entity;
+    protected final Identifiable entity;
     protected final BigDecimal amount;
     protected final boolean success;
     protected final Type type;
 
-    public BankTransactionEvent(@NotNull Clan.Bank bank, @NotNull BigDecimal amount, @Nullable Nameable entity, boolean success, Type type) {
+    public BankTransactionEvent(@NotNull Clan.Bank bank, @NotNull BigDecimal amount, @Nullable Identifiable entity, boolean success, Type type) {
         super(bank, false);
         this.entity = entity;
         this.amount = amount;
@@ -36,7 +36,7 @@ public class BankTransactionEvent extends BankEvent {
      *
      * @return the entity or null if none
      */
-    public final @Nullable Nameable getEntity() {
+    public final @Nullable Identifiable getEntity() {
         return entity;
     }
 

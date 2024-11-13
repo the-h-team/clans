@@ -5,8 +5,8 @@ import com.github.sanctum.clans.model.Arena;
 import com.github.sanctum.clans.model.Clan;
 import com.github.sanctum.clans.model.ClansAPI;
 import com.github.sanctum.clans.impl.DefaultMapEntry;
-import com.github.sanctum.clans.event.war.WarStartEvent;
-import com.github.sanctum.clans.event.war.WarWonEvent;
+import com.github.sanctum.clans.event.arena.ArenaStartingEvent;
+import com.github.sanctum.clans.event.arena.ArenaWonEvent;
 import com.github.sanctum.labyrinth.LabyrinthProvider;
 import com.github.sanctum.labyrinth.api.Service;
 import com.github.sanctum.labyrinth.library.Cooldown;
@@ -113,7 +113,7 @@ public final class ArenaManager implements Iterable<Arena> {
 						return this.time;
 					}
 				};
-				LabyrinthProvider.getService(Service.MESSENGER).getEmptyMailer().prefix().start(ClansAPI.getInstance().getPrefix().toString()).finish().announce(p -> true, "&3A new clan war between clans &b[" + Arrays.stream(q.getTeams()).map(Clan::getName).collect(Collectors.joining(",")) + "] &3starts in " + time.getMinutes() + " minute(s) & " + time.getSeconds() + " second(s)").deploy();
+				LabyrinthProvider.getService(Service.MESSENGER).getEmptyMailer().prefix().start(ClansAPI.getInstance().getPrefix().toString()).finish().announce(p -> true, "&3A new death-match between clans &b[" + Arrays.stream(q.getTeams()).map(Clan::getName).collect(Collectors.joining(",")) + "] &3starts in " + time.getMinutes() + " minute(s) & " + time.getSeconds() + " second(s)").deploy();
 				free.stamp();
 				new Cooldown() {
 
@@ -137,8 +137,8 @@ public final class ArenaManager implements Iterable<Arena> {
 				}.save();
 				TaskScheduler.of(() -> {
 				}).scheduleTimer(UUID.randomUUID().toString(), 0, 1, BukkitTaskPredicate.cancelAfter(t -> {
-					WarStartEvent e = ClanVentBus.call(new WarStartEvent(free));
-					if (e.isCancelled()) {
+					ArenaStartingEvent e = ClanVentBus.call(new ArenaStartingEvent(free));
+					if (e.getStatus() == ArenaStartingEvent.Status.STARTED || e.isCancelled()) {
 						t.cancel();
 						return false;
 					}
@@ -263,11 +263,11 @@ public final class ArenaManager implements Iterable<Arena> {
 					c.takeWins(1);
 				}
 			}
-			WarWonEvent e = ClanVentBus.call(new WarWonEvent(arena, new DefaultMapEntry<>(w, points), map));
+			ArenaWonEvent e = ClanVentBus.call(new ArenaWonEvent(arena, new DefaultMapEntry<>(w, points), map));
 			if (!e.isCancelled()) {
 				Mailer msg = LabyrinthProvider.getService(Service.MESSENGER).getEmptyMailer().prefix().start(ClansAPI.getInstance().getPrefix().toString()).finish();
 				Bukkit.broadcastMessage(" ");
-				msg.announce(p -> true, "&3A war between clans &b[" + Arrays.stream(arena.getQueue().getTeams()).map(Clan::getName).collect(Collectors.joining(",")) + "]&3 in arena &7#&e" + arena.getId() + " &3concluded with winner &6&l" + w.getName() + " &f(&a" + points + "&f)");
+				msg.announce(p -> true, "&3A death-match between clans &b[" + Arrays.stream(arena.getQueue().getTeams()).map(Clan::getName).collect(Collectors.joining(",")) + "]&3 in arena &7#&e" + arena.getId() + " &3concluded with winner &6&l" + w.getName() + " &f(&a" + points + "&f)");
 				Bukkit.broadcastMessage(" ");
 			}
 			arena.reset();

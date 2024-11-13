@@ -1,4 +1,4 @@
-package com.github.sanctum.clans.event.war;
+package com.github.sanctum.clans.event.arena;
 
 import com.github.sanctum.clans.model.Arena;
 import com.github.sanctum.labyrinth.library.TimeWatch;
@@ -6,19 +6,29 @@ import com.github.sanctum.labyrinth.library.TimeWatch;
 /**
  * Called while a clan war is waiting to start fully queued.
  */
-public class WarStartEvent extends WarEvent {
+public class ArenaStartingEvent extends ArenaEvent {
 
-	public WarStartEvent(Arena arena) {
+	private Status status = Status.STARTING;
+
+	public ArenaStartingEvent(Arena arena) {
 		super(arena, State.CANCELLABLE);
 	}
 
 	public void start() {
+		status = Status.STARTED;
 		getWar().start();
-		setCancelled(true);
+	}
+
+	public Status getStatus() {
+		return status;
 	}
 
 	public TimeWatch.Recording getRecording() {
 		return TimeWatch.Recording.subtract(getWar().stamp());
+	}
+
+	public enum Status {
+		STARTING, STARTED
 	}
 
 }

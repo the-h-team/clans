@@ -17,7 +17,7 @@ import org.bukkit.inventory.ItemFlag;
 import org.intellij.lang.annotations.MagicConstant;
 import org.jetbrains.annotations.NotNull;
 
-public abstract class AbstractGameRule {
+public abstract class ClanGameRule {
 
 	public static final String BLOCKED_WAR_COMMANDS = "blocked_commands_war";
 	public static final String WAR_START_TIME = "war_start_time";
@@ -29,36 +29,36 @@ public abstract class AbstractGameRule {
 
 	private final FingerPrint print;
 
-	protected AbstractGameRule(FingerPrint print) {
+	protected ClanGameRule(FingerPrint print) {
 		this.print = print;
 	}
 
-	public static AbstractGameRule of(@NotNull FingerPrint print) {
-		return InoperableSpecialMemory.SCANNER_MAP.computeIfAbsent(print, print1 -> new AbstractGameRule(print1) {
+	public static ClanGameRule of(@NotNull FingerPrint print) {
+		return InoperableSharedMemory.SCANNER_MAP.computeIfAbsent(print, print1 -> new ClanGameRule(print1) {
 		});
 	}
 
 	@Note("Local only game rules!")
-	public static AbstractGameRule[] of() {
-		if (InoperableSpecialMemory.SCANNER_MAP.isEmpty()) {
-			LabyrinthProvider.getInstance().getLocalPrintManager().getPrints(ClansAPI.getInstance().getPlugin()).forEach(AbstractGameRule::of);
+	public static ClanGameRule[] getAll() {
+		if (InoperableSharedMemory.SCANNER_MAP.isEmpty()) {
+			LabyrinthProvider.getInstance().getLocalPrintManager().getPrints(ClansAPI.getInstance().getPlugin()).forEach(ClanGameRule::of);
 		}
-		return InoperableSpecialMemory.SCANNER_MAP.entries().stream().filter(entry -> entry.getKey().getKey().equals(ClansAPI.getInstance().getLocalPrintKey())).map(Map.Entry::getValue).toArray(AbstractGameRule[]::new);
+		return InoperableSharedMemory.SCANNER_MAP.entries().stream().filter(entry -> entry.getKey().getKey().equals(ClansAPI.getInstance().getLocalPrintKey())).map(Map.Entry::getValue).toArray(ClanGameRule[]::new);
 	}
 
-	public void set(@MagicConstant(valuesFromClass = AbstractGameRule.class) String key, Object o) {
+	public void set(@MagicConstant(valuesFromClass = ClanGameRule.class) String key, Object o) {
 		ClansAPI.getDataInstance().getResetTable().set(key, o);
 	}
 
-	public Object get(@MagicConstant(valuesFromClass = AbstractGameRule.class) String key) {
+	public Object get(@MagicConstant(valuesFromClass = ClanGameRule.class) String key) {
 		return print.get(key);
 	}
 
-	public void reload(@MagicConstant(valuesFromClass = AbstractGameRule.class) String key) {
+	public void reload(@MagicConstant(valuesFromClass = ClanGameRule.class) String key) {
 		print.reload(key).deploy();
 	}
 
-	public InventoryElement.Printable edit(@NotNull Modification modification, @MagicConstant(valuesFromClass = AbstractGameRule.class) String key) {
+	public InventoryElement.Printable edit(@NotNull Modification modification, @MagicConstant(valuesFromClass = ClanGameRule.class) String key) {
 		Object o = print.get(key);
 		if (o instanceof List) {
 			switch (modification) {
