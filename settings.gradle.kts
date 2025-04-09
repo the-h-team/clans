@@ -14,6 +14,12 @@ plugins {
 
 dependencyResolutionManagement {
     versionCatalogs {
-        // TODO
+        // Adventure
+        create("libs") {
+            version("adventure", "4.20.0")
+            sequenceOf("api", "text-minimessage").map { "adventure-$it" }.forEach {
+                library(it, "net.kyori", it).versionRef("adventure")
+            }
+        }
     }
 }
