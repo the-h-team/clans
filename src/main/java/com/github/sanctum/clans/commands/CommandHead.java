@@ -10,7 +10,7 @@ import com.github.sanctum.labyrinth.data.service.PlayerSearch;
 import com.github.sanctum.labyrinth.formatting.completion.SimpleTabCompletion;
 import com.github.sanctum.labyrinth.formatting.completion.TabCompletionIndex;
 import com.github.sanctum.skulls.CustomHead;
-import com.github.sanctum.skulls.CustomHeadLoader;
+import com.github.sanctum.skulls.SkullReferenceUtility;
 import java.math.BigDecimal;
 import java.text.MessageFormat;
 import java.util.List;
@@ -53,7 +53,7 @@ public class CommandHead extends ClanSubCommand {
 				return true;
 			}
 			if (args0.equalsIgnoreCase("buy")) {
-				ItemStack target = CustomHead.Manager.get(args[1]);
+				ItemStack target = SkullReferenceUtility.getItem(args[1]);
 				if (chargeToGet) {
 					if (target != null) {
 						if (EconomyProvision.getInstance().isValid()) {
@@ -83,7 +83,7 @@ public class CommandHead extends ClanSubCommand {
 			PlayerSearch search = PlayerSearch.of(args0);
 			if (search != null && search.isOnline()) {
 				Player foundYa = search.getPlayer().getPlayer();
-				CustomHead head = CustomHead.Manager.pick(args0);
+				CustomHead head = SkullReferenceUtility.getHead(foundYa);
 				// announce retrieval of head
 			}
 			return true;
