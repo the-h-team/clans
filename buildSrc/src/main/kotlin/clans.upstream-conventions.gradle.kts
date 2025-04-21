@@ -15,5 +15,5 @@ repositories {
 
 // Define versions as extra properties
 val enterpriseVersion by extra("1.5")
-val labyrinthVersion by extra("master-SNAPSHOT")
+val labyrinthVersion by extra("d8e7bd3113")
 val pantherVersion by extra("1.0.4-SNAPSHOT")
